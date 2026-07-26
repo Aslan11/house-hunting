@@ -50,16 +50,29 @@ Supporting rules:
 
 ## How a run works
 
-1. **Fetch** Redfin filtered search pages for each city and ZIP:
+1. **Fetch** Redfin filtered search pages for each ZIP (and city, as a cross-check):
 
    ```
-   https://www.redfin.com/city/25976/CA/Shingle-Springs/filter/property-type=house,min-beds=4,min-baths=3,max-price=1.5M,min-lot-size=2.5-acre
-   https://www.redfin.com/city/14760/CA/Placerville/filter/...
-   https://www.redfin.com/city/16218/CA/Rescue/filter/...
-   https://www.redfin.com/zipcode/95682/filter/...   # Shingle Springs
+   https://www.redfin.com/zipcode/95682/filter/min-beds=4,min-baths=3,max-price=1.6M,min-lot-size=2.5-acre
    https://www.redfin.com/zipcode/95672/filter/...   # Rescue
    https://www.redfin.com/zipcode/95667/filter/...   # Placerville
+   https://www.redfin.com/city/25976/CA/Shingle-Springs/filter/...
+   https://www.redfin.com/city/14760/CA/Placerville/filter/...
+   https://www.redfin.com/city/16218/CA/Rescue/filter/...
    ```
+
+   **Two filter rules, both learned the hard way on 2026-07-26:**
+
+   - **Do not add `property-type=house`.** It silently dropped two qualifying listings, including
+     1781 Springvale Rd — a 5BR/6BA pool property on 10.27 acres. Multi-structure and
+     mixed-classification properties get excluded. Filter property type yourself, afterwards, if
+     you want to.
+   - **Query above the price ceiling and filter locally.** Use `max-price=1.6M` for a $1.5M budget.
+     A listing priced at exactly the ceiling is in budget and must not be lost to an off-by-one in
+     someone else's filter.
+
+   Same principle generally: let Redfin narrow coarsely, and apply every hard criterion yourself
+   against the parsed records.
 
    Use a desktop browser User-Agent. Redfin's `/stingray/api/*` JSON endpoints are CloudFront-blocked
    from datacenter IPs, but the **HTML search pages are not** — and they embed the same

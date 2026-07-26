@@ -16,10 +16,10 @@
   },
   "lastRun": "2026-07-26",
   "dataQuality": {
-    "verifiedActiveListings": 8,
+    "verifiedActiveListings": 9,
     "method": "Redfin filtered search pages for Shingle Springs, Rescue, Placerville and ZIPs 95682/95672/95667 were fetched live, and the embedded MetroList feed parsed. Every candidate that cleared the numeric filters had its own listing page fetched and its POOL_PRIVATE_YN amenity read directly. Page-wide text search was explicitly avoided: Redfin detail pages embed a \"nearby homes\" carousel whose remarks mention other properties’ pools, which produced false positives during this run until the check was scoped to the subject property’s own amenity block.",
-    "candidatesScreened": 21,
-    "note": "All 8 matches below are confirmed Active with a confirmed private pool, cross-checked against two independent fields on the same page. The 4 properties the 2026-07-26 earlier run reported were off market and remain in the archive."
+    "candidatesScreened": 23,
+    "note": "All 9 matches below are confirmed Active with a confirmed private pool, cross-checked against two independent fields on the same page. The 4 properties an earlier run reported were off market and remain in the archive."
   },
   "listings": [
     {
@@ -95,7 +95,7 @@
       "status": "match",
       "verifiedOn": "2026-07-26",
       "verification": "Redfin listing page read live on 2026-07-26: mlsStatus \"Active\", amenity POOL_PRIVATE_YN = \"Yes\", corroborated by the page's own hasPrivatePool flag. MLS 226059973 (226… = 2026 listing).",
-      "blurb": "The standout on value. <strong>The only 5-bedroom in the set</strong>, and the only property under $1M with 5+ acres <em>and</em> a pool. Custom estate on 5.05 acres in gated Greenstone Country; fenced gunite pool with waterfall, 4-car garage plus a detached 2-car carport, 5–6 bedrooms with the primary suite upstairs on its own balcony. Listed 4 days ago — move fast.",
+      "blurb": "The standout on value: <strong>the only property under $1M with 5+ acres, 5 bedrooms and a pool</strong>. Custom estate on 5.05 acres in gated Greenstone Country; fenced gunite pool with waterfall, 4-car garage plus a detached 2-car carport, 5–6 bedrooms with the primary suite upstairs on its own balcony. Listed 4 days ago — move fast.",
       "firstSeen": "2026-07-26",
       "lastSeen": "2026-07-26",
       "url": "https://www.redfin.com/CA/Placerville/2565-Stagecoach-Rd-95667/home/167376488"
@@ -251,7 +251,7 @@
       "status": "match",
       "verifiedOn": "2026-07-26",
       "verification": "Redfin listing page read live on 2026-07-26: mlsStatus \"Active\", amenity POOL_PRIVATE_YN = \"Yes\", corroborated by the page's own hasPrivatePool flag. MLS 226087456 (226… = 2026 listing).",
-      "blurb": "Fully remodeled hilltop estate at the end of a private court, with 360° views over Folsom Lake, Bass Lake, the Sutter Buttes and the Sierras. 9.64 acres. Pool has <strong>solar heating</strong> and its own pool house; there is also an attached guest house with full bath. 4–6 bedrooms, nearly all opening onto new multi-level balconies. The most photographed listing of the eight (82 images).",
+      "blurb": "Fully remodeled hilltop estate at the end of a private court, with 360° views over Folsom Lake, Bass Lake, the Sutter Buttes and the Sierras. 9.64 acres. Pool has <strong>solar heating</strong> and its own pool house; there is also an attached guest house with full bath. 4–6 bedrooms, nearly all opening onto new multi-level balconies. One of the most photographed listings here (82 images).",
       "firstSeen": "2026-07-26",
       "lastSeen": "2026-07-26",
       "url": "https://www.redfin.com/CA/Rescue/3565-Farview-Ct-95672/home/167348177"
@@ -290,7 +290,7 @@
       "status": "match",
       "verifiedOn": "2026-07-26",
       "verification": "Redfin listing page read live on 2026-07-26: mlsStatus \"Active\", amenity POOL_PRIVATE_YN = \"Yes\", corroborated by the page's own hasPrivatePool flag. MLS 226074530 (226… = 2026 listing).",
-      "blurb": "The energy-independence play: <strong>fully owned solar, two Tesla Powerwalls, and an EV charger</strong>, plus well and septic — very low running costs. Gated community, 5 acres, lake and valley views. The pool is only about 3 years old, so it is the newest of the eight and least likely to need work.",
+      "blurb": "The energy-independence play: <strong>fully owned solar, two Tesla Powerwalls, and an EV charger</strong>, plus well and septic — very low running costs. Gated community, 5 acres, lake and valley views. The pool is only about 3 years old, so it is the newest of the nine and least likely to need work.",
       "firstSeen": "2026-07-26",
       "lastSeen": "2026-07-26",
       "url": "https://www.redfin.com/CA/Rescue/3033-Ridgeline-Dr-95672/home/167348617"
@@ -333,6 +333,45 @@
       "firstSeen": "2026-07-26",
       "lastSeen": "2026-07-26",
       "url": "https://www.redfin.com/CA/Placerville/6881-Sagittarius-Rd-95667/home/167310935"
+    },
+    {
+      "id": "1781-springvale-rd-placerville",
+      "address": "1781 Springvale Rd",
+      "city": "Placerville",
+      "zip": "95667",
+      "mls": "226093241",
+      "currentPrice": 1500000,
+      "priceHistory": [
+        {
+          "date": "2026-07-26",
+          "price": 1500000
+        }
+      ],
+      "beds": 5,
+      "baths": 6,
+      "sqft": 2025,
+      "acres": 10.27,
+      "yearBuilt": 1930,
+      "daysOnMarket": 3,
+      "pool": true,
+      "poolDetail": "Built-In",
+      "listedBy": "eXp Realty of California Inc.",
+      "photos": [
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/241/genMid.226093241_1_3.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/241/genMid.226093241_2_3.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/241/genMid.226093241_3.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/241/genMid.226093241_3_3.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/241/genMid.226093241_4_3.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/241/genMid.226093241_5_3.jpg"
+      ],
+      "gallery": "https://www.redfin.com/CA/Placerville/1781-Springvale-Rd-95667/home/167348318",
+      "status": "match",
+      "verifiedOn": "2026-07-26",
+      "verification": "Redfin listing page read live on 2026-07-26: mlsStatus \"Active\", amenity POOL_PRIVATE_YN = \"Yes\", corroborated by the page's own hasPrivatePool flag. MLS 226093241 (226… = 2026 listing).",
+      "blurb": "The odd one out, and worth a look only if the concept appeals. 10.27 acres with a <strong>150,000-gallon pool</strong> — one of the largest residential pools in the county — plus a large barn and a substantial solar system. <strong>Read the numbers carefully:</strong> the 5 bed / 6 bath count is spread across <em>three separate structures</em> (a main home and two detached guest suites, sleeping up to 16), and the 2,025 sq ft figure covers the main house only, so this is not a single 5-bedroom family home. Built 1930, fully remodeled, and explicitly marketed as a short-term-rental / wedding-venue play with a pro-forma cap rate. Listed 3 days ago at exactly your $1.5M ceiling.",
+      "firstSeen": "2026-07-26",
+      "lastSeen": "2026-07-26",
+      "url": "https://www.redfin.com/CA/Placerville/1781-Springvale-Rd-95667/home/167348318"
     },
     {
       "id": "1601-velvet-horn-ln-rescue",
@@ -599,6 +638,16 @@
       "mls": "226083409",
       "reason": "Active and meets bed/bath/acreage/price — but POOL_PRIVATE_YN = No",
       "url": "https://www.redfin.com/CA/Placerville/4810-Robledo-Dr-95667/home/167346243"
+    },
+    {
+      "address": "4773 Jacarah Rd, Placerville",
+      "price": 1084900,
+      "beds": 4,
+      "baths": 3.5,
+      "acres": 4.58,
+      "mls": "226068965",
+      "reason": "Active and meets bed/bath/acreage/price — but POOL_PRIVATE_YN = No",
+      "url": "https://www.redfin.com/CA/Placerville/4773-Jacarah-Rd-95667/home/167351128"
     },
     {
       "address": "2661 Oak Lane Dr, Rescue",

@@ -133,6 +133,8 @@ const noPoolRows = noPool
 
 const cheapest = matches.length ? matches.reduce((a, b) => (a.currentPrice <= b.currentPrice ? a : b)) : null;
 const mostLand = matches.length ? matches.reduce((a, b) => (a.acres >= b.acres ? a : b)) : null;
+const fourBed = matches.filter((l) => l.beds === 4).length;
+const fiveBed = matches.filter((l) => l.beds >= 5).length;
 
 const html = `<!DOCTYPE html>
 <html lang="en">
@@ -314,9 +316,9 @@ ${rejectedRows}
 </div>
 
 <h2>Reading the market</h2>
-<p class="sectnote">Relaxing the bedroom minimum from 5 to 4 is what opened this search up — seven of
-the ${matches.length} matches are 4-bedroom, and only one (Stagecoach Rd) would have qualified under the
-old 5-bedroom rule. The earlier read still holds otherwise: <strong>the pool is the binding
+<p class="sectnote">Relaxing the bedroom minimum from 5 to 4 is what opened this search up —
+${fourBed} of the ${matches.length} matches are 4-bedroom, and only ${fiveBed} would have qualified
+under the old 5-bedroom rule. The earlier read still holds otherwise: <strong>the pool is the binding
 constraint, not the budget.</strong> ${noPool.length} homes are actively listed that meet everything
 except the pool, several of them well under $1M on 5–20 acres. Placerville in particular is thick with
 large-acreage homes at $600K–$1.05M that have ponds and streams rather than pools. If you are willing
