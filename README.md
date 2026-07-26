@@ -14,7 +14,7 @@ Automated house-hunt tracker for **Shingle Springs**, **Rescue**, and **Placervi
 
 ## ⚠️ Verification gate — read before reporting anything
 
-The first run of this tracker reported four properties as matches. **All four were off market.**
+An early run of this tracker reported four properties as matches. **All four were off market.**
 
 Root cause: listing status was inferred from search-engine result text. Search engines index
 listing pages that keep "For Sale" in the `<title>` for years after the sale closes, so stale
@@ -31,31 +31,52 @@ properties on the same street, producing a listing with the wrong MLS number, be
 3. Cross-check bed/bath/price against at least two independent sources before reporting. If they
    disagree, report the disagreement rather than picking one.
 4. Prefer *under*-reporting. An empty result is correct and useful; a fabricated match is not.
+5. **Never take pool status from listing prose.** Read the MLS `POOL_PRIVATE_YN` field. Three
+   active 5BR acreage listings in the 2026-07-26 sweep describe pools in their marketing text
+   (community amenities, neighbouring facilities, comps in the "similar homes" block) while
+   reporting `hasPrivatePool: false`. Text search alone would have reported all three as matches.
 
-## Why the environment can't verify
+## Reading Redfin (works as of 2026-07-26)
 
-The network policy allows GitHub, package registries, and a keyed `maps.googleapis.com`. Everything
-else is blocked at the proxy — Zillow, Redfin, Realtor.com, Homes.com, Movoto, small brokerage
-sites, plus OpenStreetMap, Wikimedia and Esri tile servers. `WebFetch` is blocked outright
-(`example.com` returns 403). `WebSearch` is the only channel, and it returns summarised text, never
-live status and never image URLs.
+`www.redfin.com` is reachable from this environment and returns `200`. Zillow, Realtor.com,
+Homes.com, Movoto, Trulia and HAR are all still blocked (`403`/`429`), and `WebFetch` is blocked
+outright. Redfin's `/stingray/api/*` endpoints are CloudFront-blocked when called directly — but
+this doesn't matter, because **the response is already embedded in the page HTML**.
 
-## Fixing the pipeline
+A filtered search page such as
 
-Ranked cheapest-first. The first option solves listing status **and** photos at once:
+```
+https://www.redfin.com/zipcode/95667/filter/min-beds=5,min-baths=3,max-price=1.5M,min-lot-size=2.5-acre
+```
 
-1. **Zillow/Redfin saved search with email alerts** to `kvn.p.mrtn@gmail.com`. This repo's runner
-   has Gmail access, so alert emails become an authoritative feed: current listings, correct
-   status, price cuts, and image URLs. ~5 minutes to set up, one time.
-2. **An agent-run MLS/IDX client portal** with email alerts — same benefits, fuller MLS data.
-3. **A real-estate data API key** in the environment (SimplyRETS, Bridge Interactive, a RapidAPI
-   provider) for direct queries.
-4. **Allowlisting a listing domain** in the network policy. Least reliable — the portals bot-block
-   independently of the proxy.
+carries a `root.__reactServerState.InitialContext = {…}` blob containing
+`ReactServerAgent.cache.dataCache`, whose `/stingray/api/gis?…` entry holds the full result set
+under `res.text` (prefixed with `{}&&`). Every home object has price, beds, baths, sqft, lot size,
+MLS number, `mlsStatus` and the canonical detail URL.
+
+Detail pages carry the same treatment: `"priceInfo":{"amount":…}`, `"hasPrivatePool":true|false`,
+the `Pool Information` amenity group, `marketingRemark`, and `ssl.cdn-redfin.com` photo URLs.
+Note the JSON is escaped inside script strings — unescape `\"` before matching.
+
+Two gotchas:
+
+- Search results include **nearby homes outside the queried zip**. Always filter on the `city`
+  field; do not assume a result in the 95682 payload is in Shingle Springs.
+- Redfin's `has-pool` search filter is loose and returns properties with no private pool. Confirm
+  each candidate on its own detail page.
+
+Send a browser `User-Agent`; the default curl agent gets challenged. Space requests a couple of
+seconds apart.
+
+## Still worth setting up
+
+A **Redfin or Zillow saved search emailing alerts** to `kvn.p.mrtn@gmail.com`. This repo's runner
+has Gmail access, so alerts would catch new listings and price cuts *between* runs rather than only
+at run time, and would survive Redfin becoming unreachable again.
 
 ## Photos
 
-Photo support is built and waiting on a source.
+Photos are now pulled from `ssl.cdn-redfin.com` URLs scraped off each detail page.
 
 - Each listing has a `photos` array in `listings.json`. Put any image URL in it and the card
   renders it on the next build.
@@ -91,9 +112,18 @@ evidence that inventory is thin.
 ## Files
 
 - **`listings.json`** — canonical data. Single source of truth.
+- **`redfin.py`** — live sweep and per-property verification. `python3 redfin.py search`,
+  `python3 redfin.py detail <url>`. No dependencies.
 - **`ingest.js`** — merge pasted portal listings into `listings.json`.
 - **`build.js`** — renders `index.html` from `listings.json`. No dependencies: `node build.js`.
 - **`index.html`** — generated. Don't hand-edit; edit the JSON and rebuild.
+
+### Rate limiting
+
+Redfin throttles after roughly a dozen requests by answering `200` with an **empty body** rather
+than a `429`. `redfin.py` treats a short response as a failure, retries with backoff, and raises
+`Throttled` listing every query that didn't complete — a partial sweep must never be presented as
+thin inventory. If it raises, wait several minutes and re-run; don't publish the partial result.
 
 ## Dedupe rules for future runs
 

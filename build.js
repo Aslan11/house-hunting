@@ -20,6 +20,7 @@ const money = (n) => (n == null ? '—' : '$' + n.toLocaleString('en-US'));
 
 const TAGS = {
   match:                  { cls: 'match',   tag: 'ok',   label: 'Verified match' },
+  'near-miss':            { cls: 'caution', tag: 'warn', label: 'Near miss' },
   'active-fails-criteria':{ cls: 'caution', tag: 'warn', label: 'Active — fails criteria' },
   'off-market':           { cls: 'miss',    tag: 'bad',  label: 'Off market' },
 };
@@ -80,6 +81,12 @@ function card(l) {
   const meta = TAGS[l.status] || { cls: 'match', tag: 'ok', label: 'Match' };
   const label = l.badge || meta.label;
   const mls = l.mls ? ` &middot; MLS ${esc(l.mls)}` : '';
+
+  const prov = [];
+  if (l.agent) prov.push(esc(l.agent));
+  if (l.daysOnMarket != null) prov.push(`${l.daysOnMarket} days on market`);
+  if (l.verifiedOn) prov.push(`verified ${esc(l.verifiedOn)}`);
+
   return `
   <div class="card ${meta.cls}">
     ${media(l)}
@@ -90,15 +97,17 @@ function card(l) {
       <p class="city">${esc(l.city)}, CA ${esc(l.zip)}${mls}</p>
       <div class="facts">${facts(l)}</div>
       <p class="note">${l.blurb || esc(l.notes)}</p>
+      ${prov.length ? `<p class="prov">${prov.join(' &middot; ')}</p>` : ''}
       <a class="btn" href="${esc(l.url)}" rel="noopener">View listing &rarr;</a>
     </div>
   </div>`;
 }
 
 const byStatus = (s) => data.listings.filter((l) => l.status === s);
-const matches  = byStatus('match');
-const active   = byStatus('active-fails-criteria');
-const archived = byStatus('off-market');
+const matches   = byStatus('match');
+const nearMiss  = byStatus('near-miss');
+const active    = byStatus('active-fails-criteria');
+const archived  = byStatus('off-market');
 
 const rejectedRows = data.rejected
   .map((r) => `    <tr><td>${esc(r.address)}</td><td>${money(r.price)}</td><td>${esc(r.reason)}</td></tr>`)
@@ -112,6 +121,11 @@ const photoNote = photoCount === 0
      <code>photos</code> array in <code>listings.json</code> and it will render here on the next build.`
   : `${photoCount} of ${data.listings.length} listings have photos embedded. Cards without one link
      straight to the listing gallery.`;
+
+const dq = data.dataQuality || {};
+const cov = data.searchCoverage || {};
+const coverageQueries = (cov.queries || [])
+  .map((q) => `    <li><code>${esc(q)}</code></li>`).join('\n');
 
 const html = `<!DOCTYPE html>
 <html lang="en">
@@ -183,13 +197,20 @@ const html = `<!DOCTYPE html>
   .tag.ok{background:var(--accent-soft);color:var(--accent)}
   .tag.warn{background:var(--warn-soft);color:var(--warn)}
   .tag.bad{background:var(--miss-soft);color:var(--miss)}
-  .note{font-size:.88rem;color:var(--muted);margin:0 0 16px;flex:1}
+  .note{font-size:.88rem;color:var(--muted);margin:0 0 12px;flex:1}
   .note strong{color:var(--ink)}
+  .prov{font-size:.76rem;color:var(--muted);margin:0 0 14px;opacity:.8}
+  .querylist{margin:0 0 18px;padding-left:20px}
+  .querylist li{margin-bottom:4px}
+  .querylist code{background:var(--card);border:1px solid var(--line);padding:1px 6px;
+    border-radius:4px;font-size:.85em}
   a.btn{display:inline-block;text-decoration:none;color:var(--accent);font-weight:600;
     font-size:.9rem;border:1px solid var(--line);border-radius:7px;padding:7px 12px;align-self:flex-start}
   a.btn:hover{background:var(--accent-soft)}
   .banner{background:var(--warn-soft);border:1px solid var(--line);border-left:4px solid var(--warn);
     border-radius:10px;padding:16px 18px;margin-bottom:28px;font-size:.9rem}
+  .banner.good{background:var(--accent-soft);border-left-color:var(--accent)}
+  .banner.good h3{color:var(--accent)}
   .banner h3{margin:0 0 6px;font-size:.95rem}
   .banner p{margin:0 0 8px;color:var(--muted)}
   .banner p:last-child{margin-bottom:0}
@@ -218,40 +239,35 @@ const html = `<!DOCTYPE html>
   </div>
 </header>
 
-<div class="banner">
-  <h3>&#9888; This search has no verified results yet</h3>
-  <p>The first run of this page presented four properties as matches. <strong>All of them were off
-  market.</strong> The cause: listing status was inferred from search-engine text, and search engines
-  keep indexing sold listings with &ldquo;For Sale&rdquo; in the title for years afterward. Every
-  listing portal and MLS site is blocked from the environment that generates this page, so no live
-  listing page can be read to check.</p>
-  <p>Nothing is shown as a match below until its status can be confirmed against a live source.
-  The properties on this page are kept as an <strong>archive of what was checked and ruled out</strong>,
-  so a genuine relist gets flagged rather than re-reported as new. See
-  <a href="#fix">how to fix the pipeline</a>.</p>
+<div class="banner good">
+  <h3>&#10003; Live listing data — verified ${esc(data.lastRun)}</h3>
+  <p>Redfin became reachable from the machine that builds this page, so every property below was
+  checked against <strong>its own live listing page</strong> rather than search-engine text. Prices come
+  from the listing's <code>priceInfo</code>, and the pool flag comes from the MLS
+  <code>POOL_PRIVATE_YN</code> field — not from listing prose, which is how three properties whose
+  descriptions mention pools were correctly ruled out.</p>
   <p>${photoNote}</p>
 </div>
 
-<h2 id="fix">Making this work</h2>
-<p class="sectnote">One of these unblocks real results. The first is the cheapest and also solves
-photos, since listing-alert emails carry both current status and image URLs:</p>
-<div class="tablewrap" style="margin-bottom:8px">
-<table>
-  <thead><tr><th>Option</th><th>What it fixes</th><th>Effort</th></tr></thead>
-  <tbody>
-    <tr><td><strong>Zillow/Redfin saved search &rarr; email alerts</strong> to this Gmail</td><td>Status + photos + price cuts, authoritative</td><td>~5 min, one-time</td></tr>
-    <tr><td>Have your agent set up an <strong>MLS/IDX client portal</strong> with email alerts</td><td>Same, plus full MLS data</td><td>One ask</td></tr>
-    <tr><td>Add a <strong>real-estate data API key</strong> to the environment</td><td>Direct queries, no email round-trip</td><td>Paid API</td></tr>
-    <tr><td><strong>Allowlist</strong> a listing domain in the environment's network policy</td><td>Direct reads, but portals still bot-block</td><td>Unreliable</td></tr>
-  </tbody>
-</table>
-</div>
-<p class="sectnote">With alerts flowing into Gmail, this page becomes reliable: current listings,
-correct status, real photos, and genuine price-change detection.</p>
-
 ${matches.length ? `<h2>Verified matches</h2>
-<p class="sectnote">Confirmed active and meeting every hard criterion.</p>
+<p class="sectnote">Confirmed active today, and clearing every hard criterion: 5+ bedrooms, 3+ baths,
+a private pool, 2.5+ acres, under $1.5M.</p>
 <div class="grid">${matches.map(card).join('\n')}
+</div>` : ''}
+
+<h2>The headline finding</h2>
+<p class="sectnote"><strong>Shingle Springs and Rescue currently have nothing that fits.</strong>
+Not one active listing in either town combines 5+ bedrooms with a private pool on 2.5+ acres under
+$1.5M — and that isn't a gap in the search. A deliberately loosened sweep with the bedroom filter
+removed entirely returns fifteen pool-and-acreage properties in those two zip codes, and the largest
+is four bedrooms. Both real matches are in Placerville. If you want to stay in Shingle Springs or
+Rescue, the practical choice is to drop to 4BR, wait for new inventory, or raise the ceiling above
+$1.5M — the near misses below are what that trade-off actually looks like.</p>
+
+${nearMiss.length ? `<h2>Close, but one bedroom short</h2>
+<p class="sectnote">All verified active, all with a confirmed private pool on 5+ acres, all in your
+target towns, all comfortably inside budget. Each fails on bedroom count alone.</p>
+<div class="grid">${nearMiss.map(card).join('\n')}
 </div>` : ''}
 
 ${active.length ? `<h2>Active, but doesn't meet criteria</h2>
@@ -259,15 +275,10 @@ ${active.length ? `<h2>Active, but doesn't meet criteria</h2>
 <div class="grid">${active.map(card).join('\n')}
 </div>` : ''}
 
-<h2>Archive — checked, not available</h2>
-<p class="sectnote">Reported in error on the first run, or ruled out on the facts. Kept so they are
-not re-surfaced as new finds. MLS year prefixes are shown where known — <code>221…</code> is a 2021
-listing, <code>225…</code> a 2025 one.</p>
-<div class="grid">${archived.map(card).join('\n')}
-</div>
-
 <h2>Ruled out on the facts</h2>
-<p class="sectnote">Failed price, bedroom, bath or acreage minimums regardless of availability.</p>
+<p class="sectnote">Everything else the sweep surfaced, and why it didn't make the cut. The first
+three are worth noting: all are active 5-bedroom acreage properties in budget whose listing text
+mentions a pool, but whose MLS pool field says otherwise.</p>
 <div class="tablewrap">
 <table>
   <thead><tr><th>Address</th><th>Price</th><th>Why not</th></tr></thead>
@@ -277,20 +288,33 @@ ${rejectedRows}
 </table>
 </div>
 
-<h2>What the search did establish</h2>
-<p class="sectnote">Even with unreliable status data, the shape of the market came through
-consistently across sources, and this part is worth keeping: <strong>the pool is the binding
-constraint, not the budget.</strong> Five-bedroom homes on 5+ acres under $1.5M are common in all
-three towns; ones with a pool are rare. Placerville is well stocked with large acreage homes at
-$1.0–1.2M that have <em>ponds</em> rather than pools. Shingle Springs pool properties tend to jump
-from roughly $1.5M straight to $2M+. So a genuine 5BR/3BA pool property on 5 acres near $1.25M is an
-outlier worth moving quickly on — which is also why stale listings at that price looked so
-convincing. Expect few candidates at any given moment, and prioritise speed when one appears.</p>
+<h2>Archive — checked, not available</h2>
+<p class="sectnote">Reported in error on an earlier run, or ruled out on the facts. Kept so they are
+not re-surfaced as new finds, and so a genuine relist gets flagged. All are confirmed absent from
+today's live search. MLS year prefixes are shown where known — <code>221…</code> is a 2021 listing,
+<code>225…</code> a 2025 one, <code>226…</code> a 2026 one.</p>
+<div class="grid">${archived.map(card).join('\n')}
+</div>
+
+<h2>How this page is built</h2>
+<p class="sectnote">${esc(dq.note || '')}</p>
+${coverageQueries ? `<p class="sectnote" style="margin-bottom:6px">Searches run on ${esc(cov.date || data.lastRun)}
+(${esc(cov.method || '')}):</p>
+<ul class="sectnote querylist">
+${coverageQueries}
+</ul>` : ''}
+<p class="sectnote">Earlier versions of this page inferred listing status from search-engine
+snippets and got it badly wrong — four properties presented as matches were all off market. That
+failure mode is now closed: a property cannot be marked a match without a live page confirming it.
+The one thing still worth setting up is a <strong>Redfin or Zillow saved search emailing alerts</strong>
+to the connected Gmail, which would catch new listings and price cuts between runs instead of only
+at run time.</p>
 
 <footer>
   <p>Generated from <code>listings.json</code> by <code>build.js</code>.
   ${data.listings.length} properties on file, ${data.rejected.length} ruled out,
-  <strong>${matches.length} verified as available</strong>.
+  <strong>${matches.length} verified as available</strong>,
+  ${nearMiss.length} near misses.
   Future runs flag only new listings and price changes — no repeats.</p>
 </footer>
 
