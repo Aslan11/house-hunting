@@ -132,6 +132,11 @@ presented as a match.
 ## Files
 
 - **`listings.json`** — canonical data. Single source of truth.
+- **`redfin.py`** — scripted version of the sweep above, from a parallel 2026-07-26 run.
+  `python3 redfin.py search` runs the standard sweep and prints candidates;
+  `python3 redfin.py detail <url>` returns one property. No dependencies. It already encodes the
+  city-filtering and `POOL_PRIVATE_YN` rules, and treats a short response as throttling rather than
+  as thin inventory — prefer it over hand-rolling the fetch next time.
 - **`ingest.js`** — merge pasted portal listings into `listings.json`.
 - **`build.js`** — renders `index.html` from `listings.json`. No dependencies: `node build.js`.
 - **`index.html`** — generated. Don't hand-edit; edit the JSON and rebuild.
