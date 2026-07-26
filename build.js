@@ -3,10 +3,11 @@
  * Builds index.html from listings.json.
  *
  * Future runs should edit listings.json ONLY, then run `node build.js`.
- * Photos: add URLs to a listing's `photos` array and they render automatically.
- * If `photos` is empty, the card falls back to a "View photos" tile pointing at
- * `gallery` (or `url`). If a hotlinked photo fails to load in the browser, the
- * same tile is swapped in client-side, so a dead image URL never leaves a hole.
+ * Photos: add URLs to a listing's `photos` array and they render as a swipeable
+ * gallery. If `photos` is empty, the card falls back to a "View photos" tile
+ * pointing at `gallery` (or `url`). If a hotlinked photo fails to load in the
+ * browser, the same tile is swapped in client-side, so a dead image URL never
+ * leaves a hole in the layout.
  */
 const fs = require('fs');
 const path = require('path');
@@ -29,7 +30,7 @@ function galleryHost(u) {
   catch { return 'listing'; }
 }
 
-/** Media area: real photo when we have one, graceful tile when we don't. */
+/** Media area: swipeable gallery when we have photos, graceful tile when we don't. */
 function media(l) {
   const gallery = l.gallery || l.url;
   const host = galleryHost(gallery);
@@ -39,13 +40,23 @@ function media(l) {
       `<span class="tile-txt">View photos on ${esc(host)} &rarr;</span>` +
     `</a>`;
 
-  const photo = (l.photos && l.photos.length) ? l.photos[0] : null;
-  if (!photo) return `<div class="media nophoto">${tile}</div>`;
+  const photos = l.photos || [];
+  if (!photos.length) return `<div class="media nophoto">${tile}</div>`;
+
+  const slides = photos.map((p, i) =>
+    `<img src="${esc(p)}" alt="${esc(l.address)}, ${esc(l.city)} — photo ${i + 1}" ` +
+    `loading="${i === 0 ? 'eager' : 'lazy'}" referrerpolicy="no-referrer" ` +
+    `onerror="this.remove()">`
+  ).join('');
+
+  const dots = photos.length > 1
+    ? `<span class="count">1 / ${photos.length}</span>`
+    : '';
 
   return `<div class="media">` +
-    `<img src="${esc(photo)}" alt="${esc(l.address)}, ${esc(l.city)}" loading="lazy" ` +
-      `referrerpolicy="no-referrer" ` +
-      `onerror="this.closest('.media').classList.add('failed')">` +
+    `<div class="strip">${slides}</div>` +
+    dots +
+    `<a class="more" href="${esc(gallery)}" rel="noopener">All photos &rarr;</a>` +
     tile +
   `</div>`;
 }
@@ -55,7 +66,8 @@ function facts(l) {
   if (l.beds != null)  f.push(`<span class="fact">${esc(l.beds)} bd</span>`);
   if (l.baths != null) f.push(`<span class="fact">${esc(l.baths)} ba</span>`);
   if (l.sqft)  f.push(`<span class="fact">${l.sqft.toLocaleString('en-US')} sqft</span>`);
-  if (l.acres) f.push(`<span class="fact">${esc(l.acres)} acres</span>`);
+  if (l.acres) f.push(`<span class="fact${l.acres >= 5 ? ' good' : ''}">${esc(l.acres)} acres</span>`);
+  if (l.yearBuilt) f.push(`<span class="fact">built ${esc(l.yearBuilt)}</span>`);
   f.push(l.pool
     ? `<span class="fact pool">${esc(l.poolDetail || 'Pool')}</span>`
     : `<span class="fact nopool">${esc(l.poolDetail || 'No pool')}</span>`);
@@ -64,6 +76,8 @@ function facts(l) {
 
 function priceBlock(l) {
   const hist = l.priceHistory || [];
+  const extra = l.daysOnMarket != null
+    ? `<span class="dom">${l.daysOnMarket} day${l.daysOnMarket === 1 ? '' : 's'} on market</span>` : '';
   if (hist.length > 1) {
     const prev = hist[hist.length - 2].price;
     const now  = l.currentPrice;
@@ -71,15 +85,19 @@ function priceBlock(l) {
     const delta = Math.abs(now - prev);
     return `<p class="price">${money(now)}` +
       `<span class="pricechg ${down ? 'down' : 'up'}">` +
-      `${down ? '&darr;' : '&uarr;'} ${money(delta)} from ${money(prev)}</span></p>`;
+      `${down ? '&darr;' : '&uarr;'} ${money(delta)} from ${money(prev)}</span></p>${extra}`;
   }
-  return `<p class="price">${money(l.currentPrice)}</p>`;
+  return `<p class="price">${money(l.currentPrice)}</p>${extra}`;
 }
 
 function card(l) {
   const meta = TAGS[l.status] || { cls: 'match', tag: 'ok', label: 'Match' };
   const label = l.badge || meta.label;
   const mls = l.mls ? ` &middot; MLS ${esc(l.mls)}` : '';
+  const listedBy = l.listedBy ? `<p class="broker">Listed by ${esc(l.listedBy)}</p>` : '';
+  const verif = l.verification
+    ? `<details class="verif"><summary>How this was verified</summary><p>${esc(l.verification)}</p></details>`
+    : '';
   return `
   <div class="card ${meta.cls}">
     ${media(l)}
@@ -90,6 +108,8 @@ function card(l) {
       <p class="city">${esc(l.city)}, CA ${esc(l.zip)}${mls}</p>
       <div class="facts">${facts(l)}</div>
       <p class="note">${l.blurb || esc(l.notes)}</p>
+      ${listedBy}
+      ${verif}
       <a class="btn" href="${esc(l.url)}" rel="noopener">View listing &rarr;</a>
     </div>
   </div>`;
@@ -104,14 +124,15 @@ const rejectedRows = data.rejected
   .map((r) => `    <tr><td>${esc(r.address)}</td><td>${money(r.price)}</td><td>${esc(r.reason)}</td></tr>`)
   .join('\n');
 
-const photoCount = data.listings.filter((l) => l.photos && l.photos.length).length;
-const photoNote = photoCount === 0
-  ? `Photos aren't embedded yet — every listing portal and image CDN is blocked from the
-     environment that generates this page, so photo URLs can't be discovered automatically. Each
-     card links straight to its gallery instead. Drop any image URL into a listing's
-     <code>photos</code> array in <code>listings.json</code> and it will render here on the next build.`
-  : `${photoCount} of ${data.listings.length} listings have photos embedded. Cards without one link
-     straight to the listing gallery.`;
+const noPool = data.noPoolActive || [];
+const noPoolRows = noPool
+  .map((r) => `    <tr><td><a href="${esc(r.url)}" rel="noopener">${esc(r.address)}</a></td>` +
+              `<td>${money(r.price)}</td><td>${esc(r.beds)} bd / ${esc(r.baths)} ba</td>` +
+              `<td>${esc(r.acres)}</td></tr>`)
+  .join('\n');
+
+const cheapest = matches.length ? matches.reduce((a, b) => (a.currentPrice <= b.currentPrice ? a : b)) : null;
+const mostLand = matches.length ? matches.reduce((a, b) => (a.acres >= b.acres ? a : b)) : null;
 
 const html = `<!DOCTYPE html>
 <html lang="en">
@@ -144,6 +165,7 @@ const html = `<!DOCTYPE html>
   .criteria{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
   .chip{background:var(--card);border:1px solid var(--line);border-radius:999px;
     padding:5px 12px;font-size:.82rem;color:var(--muted)}
+  .chip.new{background:var(--accent-soft);color:var(--accent);border-color:transparent;font-weight:600}
   h2{font-size:1.15rem;margin:40px 0 6px;letter-spacing:-.01em}
   .sectnote{color:var(--muted);font-size:.88rem;margin:0 0 18px}
   .grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fill,minmax(330px,1fr))}
@@ -157,10 +179,21 @@ const html = `<!DOCTYPE html>
   /* --- media --- */
   .media{position:relative;aspect-ratio:3/2;background:var(--tile);
     border-bottom:1px solid var(--line);overflow:hidden}
-  .media img{width:100%;height:100%;object-fit:cover;display:block}
+  .strip{display:flex;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;
+    scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .strip::-webkit-scrollbar{display:none}
+  .strip img{flex:0 0 100%;width:100%;height:100%;object-fit:cover;display:block;scroll-snap-align:center}
+  .strip:empty{display:none}
+  .count,.more{position:absolute;bottom:10px;font-size:.72rem;font-weight:600;
+    background:rgba(0,0,0,.62);color:#fff;padding:3px 9px;border-radius:999px;
+    backdrop-filter:blur(3px)}
+  .count{left:10px}
+  .more{right:10px;text-decoration:none}
+  .more:hover{background:rgba(0,0,0,.82)}
   .media .tile{display:none}
   .media.nophoto .tile,.media.failed .tile{display:flex}
-  .media.failed img{display:none}
+  .media.nophoto .count,.media.nophoto .more,
+  .media.failed .count,.media.failed .more{display:none}
   .tile{position:absolute;inset:0;flex-direction:column;align-items:center;justify-content:center;
     gap:8px;text-decoration:none;color:var(--muted);background:
       repeating-linear-gradient(45deg,transparent,transparent 12px,rgba(128,128,128,.05) 12px,rgba(128,128,128,.05) 24px);}
@@ -171,11 +204,13 @@ const html = `<!DOCTYPE html>
   .price{font-size:1.45rem;font-weight:650;letter-spacing:-.02em;margin:0}
   .pricechg{display:block;font-size:.8rem;font-weight:700;margin-top:3px}
   .pricechg.down{color:var(--accent)} .pricechg.up{color:var(--miss)}
-  .addr{font-weight:600;margin:6px 0 2px}
+  .dom{display:block;font-size:.78rem;color:var(--muted);margin-top:2px}
+  .addr{font-weight:600;margin:8px 0 2px}
   .city{color:var(--muted);font-size:.9rem;margin:0 0 14px}
   .facts{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
   .fact{background:var(--bg);border:1px solid var(--line);border-radius:6px;
     padding:3px 9px;font-size:.8rem}
+  .fact.good{border-color:var(--accent);color:var(--accent);font-weight:600}
   .pool{background:var(--accent-soft);border-color:transparent;color:var(--accent);font-weight:600}
   .nopool{background:var(--miss-soft);border-color:transparent;color:var(--miss);font-weight:600}
   .tag{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.06em;
@@ -183,12 +218,16 @@ const html = `<!DOCTYPE html>
   .tag.ok{background:var(--accent-soft);color:var(--accent)}
   .tag.warn{background:var(--warn-soft);color:var(--warn)}
   .tag.bad{background:var(--miss-soft);color:var(--miss)}
-  .note{font-size:.88rem;color:var(--muted);margin:0 0 16px;flex:1}
+  .note{font-size:.88rem;color:var(--muted);margin:0 0 12px;flex:1}
   .note strong{color:var(--ink)}
+  .broker{font-size:.78rem;color:var(--muted);margin:0 0 10px}
+  .verif{font-size:.78rem;color:var(--muted);margin:0 0 14px}
+  .verif summary{cursor:pointer;color:var(--accent);font-weight:600}
+  .verif p{margin:8px 0 0;line-height:1.5}
   a.btn{display:inline-block;text-decoration:none;color:var(--accent);font-weight:600;
     font-size:.9rem;border:1px solid var(--line);border-radius:7px;padding:7px 12px;align-self:flex-start}
   a.btn:hover{background:var(--accent-soft)}
-  .banner{background:var(--warn-soft);border:1px solid var(--line);border-left:4px solid var(--warn);
+  .banner{background:var(--accent-soft);border:1px solid var(--line);border-left:4px solid var(--accent);
     border-radius:10px;padding:16px 18px;margin-bottom:28px;font-size:.9rem}
   .banner h3{margin:0 0 6px;font-size:.95rem}
   .banner p{margin:0 0 8px;color:var(--muted)}
@@ -198,6 +237,7 @@ const html = `<!DOCTYPE html>
   table{width:100%;border-collapse:collapse;font-size:.88rem}
   th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
   th{font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  td a{color:var(--accent)}
   tr:last-child td{border-bottom:none}
   footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);
     color:var(--muted);font-size:.84rem}
@@ -210,7 +250,7 @@ const html = `<!DOCTYPE html>
   <h1>House Hunt: El Dorado County</h1>
   <p class="sub">Shingle Springs · Rescue · Placerville — updated <strong>${esc(data.lastRun)}</strong></p>
   <div class="criteria">
-    <span class="chip">5+ bedrooms</span>
+    <span class="chip new">4+ bedrooms</span>
     <span class="chip">3+ bathrooms</span>
     <span class="chip">Pool required</span>
     <span class="chip">2.5+ acres (5+ preferred)</span>
@@ -219,39 +259,35 @@ const html = `<!DOCTYPE html>
 </header>
 
 <div class="banner">
-  <h3>&#9888; This search has no verified results yet</h3>
-  <p>The first run of this page presented four properties as matches. <strong>All of them were off
-  market.</strong> The cause: listing status was inferred from search-engine text, and search engines
-  keep indexing sold listings with &ldquo;For Sale&rdquo; in the title for years afterward. Every
-  listing portal and MLS site is blocked from the environment that generates this page, so no live
-  listing page can be read to check.</p>
-  <p>Nothing is shown as a match below until its status can be confirmed against a live source.
-  The properties on this page are kept as an <strong>archive of what was checked and ruled out</strong>,
-  so a genuine relist gets flagged rather than re-reported as new. See
-  <a href="#fix">how to fix the pipeline</a>.</p>
-  <p>${photoNote}</p>
+  <h3>&#10003; ${matches.length} verified matches this run</h3>
+  <p>This run could read Redfin listing pages directly, so status and pool are taken from the
+  <strong>live listing</strong> rather than inferred from search-engine text — the failure that
+  produced four bogus matches on the previous run. ${data.dataQuality.candidatesScreened} active
+  listings cleared the bed/bath/acreage/price filters; each one's own listing page was then opened
+  and its <code>POOL_PRIVATE_YN</code> field read, which is what narrowed it to ${matches.length}.</p>
+  <p>Every match below is confirmed <strong>Active</strong> with a <strong>confirmed private pool</strong>,
+  cross-checked against two independent fields on the same page. Cheapest is
+  <strong>${money(cheapest && cheapest.currentPrice)}</strong>; most land is
+  <strong>${esc(mostLand && mostLand.acres)} acres</strong>. Bedroom minimum was relaxed to 4+ for this run.</p>
 </div>
-
-<h2 id="fix">Making this work</h2>
-<p class="sectnote">One of these unblocks real results. The first is the cheapest and also solves
-photos, since listing-alert emails carry both current status and image URLs:</p>
-<div class="tablewrap" style="margin-bottom:8px">
-<table>
-  <thead><tr><th>Option</th><th>What it fixes</th><th>Effort</th></tr></thead>
-  <tbody>
-    <tr><td><strong>Zillow/Redfin saved search &rarr; email alerts</strong> to this Gmail</td><td>Status + photos + price cuts, authoritative</td><td>~5 min, one-time</td></tr>
-    <tr><td>Have your agent set up an <strong>MLS/IDX client portal</strong> with email alerts</td><td>Same, plus full MLS data</td><td>One ask</td></tr>
-    <tr><td>Add a <strong>real-estate data API key</strong> to the environment</td><td>Direct queries, no email round-trip</td><td>Paid API</td></tr>
-    <tr><td><strong>Allowlist</strong> a listing domain in the environment's network policy</td><td>Direct reads, but portals still bot-block</td><td>Unreliable</td></tr>
-  </tbody>
-</table>
-</div>
-<p class="sectnote">With alerts flowing into Gmail, this page becomes reliable: current listings,
-correct status, real photos, and genuine price-change detection.</p>
 
 ${matches.length ? `<h2>Verified matches</h2>
-<p class="sectnote">Confirmed active and meeting every hard criterion.</p>
+<p class="sectnote">Confirmed active and meeting every hard criterion, cheapest first. Swipe the photos.</p>
 <div class="grid">${matches.map(card).join('\n')}
+</div>` : ''}
+
+${noPool.length ? `<h2>Active, but no pool</h2>
+<p class="sectnote">These ${noPool.length} listings are on the market right now and clear your bedroom,
+bathroom, acreage and price filters — the pool is the only thing missing. Recorded so future runs
+don't re-surface them, and so one adding a pool shows up as a change. This is the clearest evidence
+that <strong>the pool, not the budget, is the binding constraint</strong>.</p>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Address</th><th>Price</th><th>Beds / baths</th><th>Acres</th></tr></thead>
+  <tbody>
+${noPoolRows}
+  </tbody>
+</table>
 </div>` : ''}
 
 ${active.length ? `<h2>Active, but doesn't meet criteria</h2>
@@ -261,8 +297,8 @@ ${active.length ? `<h2>Active, but doesn't meet criteria</h2>
 
 <h2>Archive — checked, not available</h2>
 <p class="sectnote">Reported in error on the first run, or ruled out on the facts. Kept so they are
-not re-surfaced as new finds. MLS year prefixes are shown where known — <code>221…</code> is a 2021
-listing, <code>225…</code> a 2025 one.</p>
+not re-surfaced as new finds. None reappeared in this run's live results. MLS year prefixes are shown
+where known — <code>221…</code> is a 2021 listing, <code>225…</code> a 2025 one, <code>226…</code> a 2026 one.</p>
 <div class="grid">${archived.map(card).join('\n')}
 </div>
 
@@ -277,28 +313,49 @@ ${rejectedRows}
 </table>
 </div>
 
-<h2>What the search did establish</h2>
-<p class="sectnote">Even with unreliable status data, the shape of the market came through
-consistently across sources, and this part is worth keeping: <strong>the pool is the binding
-constraint, not the budget.</strong> Five-bedroom homes on 5+ acres under $1.5M are common in all
-three towns; ones with a pool are rare. Placerville is well stocked with large acreage homes at
-$1.0–1.2M that have <em>ponds</em> rather than pools. Shingle Springs pool properties tend to jump
-from roughly $1.5M straight to $2M+. So a genuine 5BR/3BA pool property on 5 acres near $1.25M is an
-outlier worth moving quickly on — which is also why stale listings at that price looked so
-convincing. Expect few candidates at any given moment, and prioritise speed when one appears.</p>
+<h2>Reading the market</h2>
+<p class="sectnote">Relaxing the bedroom minimum from 5 to 4 is what opened this search up — seven of
+the ${matches.length} matches are 4-bedroom, and only one (Stagecoach Rd) would have qualified under the
+old 5-bedroom rule. The earlier read still holds otherwise: <strong>the pool is the binding
+constraint, not the budget.</strong> ${noPool.length} homes are actively listed that meet everything
+except the pool, several of them well under $1M on 5–20 acres. Placerville in particular is thick with
+large-acreage homes at $600K–$1.05M that have ponds and streams rather than pools. If you are willing
+to <em>add</em> a pool, your options roughly triple and your entry price drops by around $200–300K.</p>
 
 <footer>
   <p>Generated from <code>listings.json</code> by <code>build.js</code>.
-  ${data.listings.length} properties on file, ${data.rejected.length} ruled out,
-  <strong>${matches.length} verified as available</strong>.
-  Future runs flag only new listings and price changes — no repeats.</p>
+  <strong>${matches.length} verified matches</strong>, ${noPool.length} active without a pool,
+  ${archived.length} archived, ${data.rejected.length} ruled out.
+  Sources read live on ${esc(data.lastRun)}. Photos are hotlinked from the listing brokerages and
+  remain their copyright. Future runs flag only new listings and price changes — no repeats.</p>
 </footer>
 
 </div>
+<script>
+  // Live "n / total" counter as the photo strip is swiped.
+  for (const strip of document.querySelectorAll('.strip')) {
+    const media = strip.closest('.media');
+    const count = media.querySelector('.count');
+    if (!count) continue;
+    strip.addEventListener('scroll', () => {
+      const n = Math.round(strip.scrollLeft / strip.clientWidth) + 1;
+      count.textContent = n + ' / ' + strip.children.length;
+    }, { passive: true });
+  }
+  // If every image in a card failed to load, fall back to the "view photos" tile.
+  addEventListener('load', () => {
+    for (const media of document.querySelectorAll('.media')) {
+      const strip = media.querySelector('.strip');
+      if (strip && strip.children.length === 0) media.classList.add('failed');
+    }
+  });
+</script>
 </body>
 </html>
 `;
 
 fs.writeFileSync(path.join(__dirname, 'index.html'), html);
-console.log(`Built index.html — ${matches.length} verified matches, ${active.length} active/off-criteria, ` +
-            `${archived.length} archived, ${photoCount}/${data.listings.length} with photos.`);
+const photoCount = data.listings.filter((l) => l.photos && l.photos.length).length;
+console.log(`Built index.html — ${matches.length} verified matches, ${noPool.length} active-no-pool, ` +
+            `${active.length} active/off-criteria, ${archived.length} archived, ` +
+            `${photoCount}/${data.listings.length} with photos.`);
