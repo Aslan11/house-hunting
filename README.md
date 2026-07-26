@@ -69,9 +69,29 @@ Photo support is built and waiting on a source.
 Note that MLS photos are the copyright of the listing brokerage. Fine for a private hunting page;
 don't republish them more broadly.
 
+## Fastest path: paste from Zillow
+
+`ingest.js` takes listings copied straight off a Zillow or Redfin results page and merges them in,
+applying the dedupe rules below automatically.
+
+```bash
+node ingest.js paste.txt     # or:  pbpaste | node ingest.js
+node build.js
+```
+
+It reports what was new, what changed price, and what was already tracked. Anything outside the
+three target cities is skipped; anything failing a hard criterion is added but flagged rather than
+presented as a match. Image URLs in the paste become the card photo.
+
+Note the coverage problem this solves: web search returns only a small, stale, non-random slice of
+inventory, because it reads *summaries of* portal pages rather than querying the live MLS. A portal's
+own filtered search is the real result set. Do not treat a thin search-derived result list as
+evidence that inventory is thin.
+
 ## Files
 
 - **`listings.json`** — canonical data. Single source of truth.
+- **`ingest.js`** — merge pasted portal listings into `listings.json`.
 - **`build.js`** — renders `index.html` from `listings.json`. No dependencies: `node build.js`.
 - **`index.html`** — generated. Don't hand-edit; edit the JSON and rebuild.
 
