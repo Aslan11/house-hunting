@@ -1,4 +1,119 @@
-<!DOCTYPE html>
+#!/usr/bin/env node
+/**
+ * Builds index.html from listings.json.
+ *
+ * Future runs should edit listings.json ONLY, then run `node build.js`.
+ * Photos: add URLs to a listing's `photos` array and they render automatically.
+ * If `photos` is empty, the card falls back to a "View photos" tile pointing at
+ * `gallery` (or `url`). If a hotlinked photo fails to load in the browser, the
+ * same tile is swapped in client-side, so a dead image URL never leaves a hole.
+ */
+const fs = require('fs');
+const path = require('path');
+
+const data = JSON.parse(fs.readFileSync(path.join(__dirname, 'listings.json'), 'utf8'));
+
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+const money = (n) => (n == null ? '—' : '$' + n.toLocaleString('en-US'));
+
+const TAGS = {
+  match:                  { cls: 'match',   tag: 'ok',   label: 'Verified match' },
+  'active-fails-criteria':{ cls: 'caution', tag: 'warn', label: 'Active — fails criteria' },
+  'off-market':           { cls: 'miss',    tag: 'bad',  label: 'Off market' },
+};
+
+function galleryHost(u) {
+  try { return new URL(u).hostname.replace(/^www\./, '').split('.')[0]; }
+  catch { return 'listing'; }
+}
+
+/** Media area: real photo when we have one, graceful tile when we don't. */
+function media(l) {
+  const gallery = l.gallery || l.url;
+  const host = galleryHost(gallery);
+  const tile =
+    `<a class="tile" href="${esc(gallery)}" rel="noopener">` +
+      `<span class="tile-ico" aria-hidden="true">&#9968;</span>` +
+      `<span class="tile-txt">View photos on ${esc(host)} &rarr;</span>` +
+    `</a>`;
+
+  const photo = (l.photos && l.photos.length) ? l.photos[0] : null;
+  if (!photo) return `<div class="media nophoto">${tile}</div>`;
+
+  return `<div class="media">` +
+    `<img src="${esc(photo)}" alt="${esc(l.address)}, ${esc(l.city)}" loading="lazy" ` +
+      `referrerpolicy="no-referrer" ` +
+      `onerror="this.closest('.media').classList.add('failed')">` +
+    tile +
+  `</div>`;
+}
+
+function facts(l) {
+  const f = [];
+  if (l.beds != null)  f.push(`<span class="fact">${esc(l.beds)} bd</span>`);
+  if (l.baths != null) f.push(`<span class="fact">${esc(l.baths)} ba</span>`);
+  if (l.sqft)  f.push(`<span class="fact">${l.sqft.toLocaleString('en-US')} sqft</span>`);
+  if (l.acres) f.push(`<span class="fact">${esc(l.acres)} acres</span>`);
+  f.push(l.pool
+    ? `<span class="fact pool">${esc(l.poolDetail || 'Pool')}</span>`
+    : `<span class="fact nopool">${esc(l.poolDetail || 'No pool')}</span>`);
+  return f.join('');
+}
+
+function priceBlock(l) {
+  const hist = l.priceHistory || [];
+  if (hist.length > 1) {
+    const prev = hist[hist.length - 2].price;
+    const now  = l.currentPrice;
+    const down = now < prev;
+    const delta = Math.abs(now - prev);
+    return `<p class="price">${money(now)}` +
+      `<span class="pricechg ${down ? 'down' : 'up'}">` +
+      `${down ? '&darr;' : '&uarr;'} ${money(delta)} from ${money(prev)}</span></p>`;
+  }
+  return `<p class="price">${money(l.currentPrice)}</p>`;
+}
+
+function card(l) {
+  const meta = TAGS[l.status] || { cls: 'match', tag: 'ok', label: 'Match' };
+  const label = l.badge || meta.label;
+  const mls = l.mls ? ` &middot; MLS ${esc(l.mls)}` : '';
+  return `
+  <div class="card ${meta.cls}">
+    ${media(l)}
+    <div class="body">
+      <span class="tag ${meta.tag}">${esc(label)}</span>
+      ${priceBlock(l)}
+      <p class="addr">${esc(l.address)}</p>
+      <p class="city">${esc(l.city)}, CA ${esc(l.zip)}${mls}</p>
+      <div class="facts">${facts(l)}</div>
+      <p class="note">${l.blurb || esc(l.notes)}</p>
+      <a class="btn" href="${esc(l.url)}" rel="noopener">View listing &rarr;</a>
+    </div>
+  </div>`;
+}
+
+const byStatus = (s) => data.listings.filter((l) => l.status === s);
+const matches  = byStatus('match');
+const active   = byStatus('active-fails-criteria');
+const archived = byStatus('off-market');
+
+const rejectedRows = data.rejected
+  .map((r) => `    <tr><td>${esc(r.address)}</td><td>${money(r.price)}</td><td>${esc(r.reason)}</td></tr>`)
+  .join('\n');
+
+const photoCount = data.listings.filter((l) => l.photos && l.photos.length).length;
+const photoNote = photoCount === 0
+  ? `Photos aren't embedded yet — every listing portal and image CDN is blocked from the
+     environment that generates this page, so photo URLs can't be discovered automatically. Each
+     card links straight to its gallery instead. Drop any image URL into a listing's
+     <code>photos</code> array in <code>listings.json</code> and it will render here on the next build.`
+  : `${photoCount} of ${data.listings.length} listings have photos embedded. Cards without one link
+     straight to the listing gallery.`;
+
+const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -93,7 +208,7 @@
 
 <header>
   <h1>House Hunt: El Dorado County</h1>
-  <p class="sub">Shingle Springs · Rescue · Placerville — updated <strong>2026-07-26</strong></p>
+  <p class="sub">Shingle Springs · Rescue · Placerville — updated <strong>${esc(data.lastRun)}</strong></p>
   <div class="criteria">
     <span class="chip">5+ bedrooms</span>
     <span class="chip">3+ bathrooms</span>
@@ -114,10 +229,7 @@
   The properties on this page are kept as an <strong>archive of what was checked and ruled out</strong>,
   so a genuine relist gets flagged rather than re-reported as new. See
   <a href="#fix">how to fix the pipeline</a>.</p>
-  <p>Photos aren't embedded yet — every listing portal and image CDN is blocked from the
-     environment that generates this page, so photo URLs can't be discovered automatically. Each
-     card links straight to its gallery instead. Drop any image URL into a listing's
-     <code>photos</code> array in <code>listings.json</code> and it will render here on the next build.</p>
+  <p>${photoNote}</p>
 </div>
 
 <h2 id="fix">Making this work</h2>
@@ -137,94 +249,21 @@ photos, since listing-alert emails carry both current status and image URLs:</p>
 <p class="sectnote">With alerts flowing into Gmail, this page becomes reliable: current listings,
 correct status, real photos, and genuine price-change detection.</p>
 
+${matches.length ? `<h2>Verified matches</h2>
+<p class="sectnote">Confirmed active and meeting every hard criterion.</p>
+<div class="grid">${matches.map(card).join('\n')}
+</div>` : ''}
 
-
-<h2>Active, but doesn't meet criteria</h2>
+${active.length ? `<h2>Active, but doesn't meet criteria</h2>
 <p class="sectnote">Confirmed on the market — listed here for transparency, not as a recommendation.</p>
-<div class="grid">
-  <div class="card caution">
-    <div class="media nophoto"><a class="tile" href="https://www.zillow.com/homedetails/1601-Velvet-Horn-Ln-Rescue-CA-95672/18612559_zpid/" rel="noopener"><span class="tile-ico" aria-hidden="true">&#9968;</span><span class="tile-txt">View photos on zillow &rarr;</span></a></div>
-    <div class="body">
-      <span class="tag warn">Active — but 3BR</span>
-      <p class="price">$1,100,000</p>
-      <p class="addr">1601 Velvet Horn Ln</p>
-      <p class="city">Rescue, CA 95672 &middot; MLS 226060031</p>
-      <div class="facts"><span class="fact">3 bd</span><span class="fact">3 ba</span><span class="fact">2,672 sqft</span><span class="fact">5 acres</span><span class="fact pool">Sports pool with water slide</span></div>
-      <p class="note">The only property this run that a source described as Active in 2026 (listed by eXp Realty, MLS 226060031). But it is 3bd/3ba, 2,672 sqft - fails the 5BR/3BA minimum. Last sold Aug 2023 for $1,050,000. CORRECTION: the earlier run listed this address as 5bd/5ba at $1,250,000 under MLS 226032589; that was a conflation of two different properties and was wrong.</p>
-      <a class="btn" href="https://www.zillow.com/homedetails/1601-Velvet-Horn-Ln-Rescue-CA-95672/18612559_zpid/" rel="noopener">View listing &rarr;</a>
-    </div>
-  </div>
-</div>
+<div class="grid">${active.map(card).join('\n')}
+</div>` : ''}
 
 <h2>Archive — checked, not available</h2>
 <p class="sectnote">Reported in error on the first run, or ruled out on the facts. Kept so they are
 not re-surfaced as new finds. MLS year prefixes are shown where known — <code>221…</code> is a 2021
 listing, <code>225…</code> a 2025 one.</p>
-<div class="grid">
-  <div class="card miss">
-    <div class="media nophoto"><a class="tile" href="https://www.redfin.com/CA/Shingle-Springs/4100-Black-Oak-Dr-95682/home/167321227" rel="noopener"><span class="tile-ico" aria-hidden="true">&#9968;</span><span class="tile-txt">View photos on redfin &rarr;</span></a></div>
-    <div class="body">
-      <span class="tag bad">Off market</span>
-      <p class="price">$1,250,000</p>
-      <p class="addr">4100 Black Oak Dr</p>
-      <p class="city">Shingle Springs, CA 95682 &middot; MLS 225006994</p>
-      <div class="facts"><span class="fact">5 bd</span><span class="fact">6 ba</span><span class="fact">5,188 sqft</span><span class="fact">5 acres</span><span class="fact pool">Hand-carved rock saltwater pool</span></div>
-      <p class="note">MLS 225006994 is a 2025 listing number; user confirms off market. Gated North Buckeye Rancheros, owned 10.8kW solar, roof 2023. Kept on file only so a genuine relist gets flagged.</p>
-      <a class="btn" href="https://www.redfin.com/CA/Shingle-Springs/4100-Black-Oak-Dr-95682/home/167321227" rel="noopener">View listing &rarr;</a>
-    </div>
-  </div>
-
-  <div class="card miss">
-    <div class="media nophoto"><a class="tile" href="https://www.remax.com/ca/shingle-springs/home-details/5856-fernwood-dr-shingle-springs-ca-95682/13419556434900242713" rel="noopener"><span class="tile-ico" aria-hidden="true">&#9968;</span><span class="tile-txt">View photos on remax &rarr;</span></a></div>
-    <div class="body">
-      <span class="tag bad">Off market</span>
-      <p class="price">$1,490,000</p>
-      <p class="addr">5856 Fernwood Dr</p>
-      <p class="city">Shingle Springs, CA 95682 &middot; MLS 225000829</p>
-      <div class="facts"><span class="fact">5 bd</span><span class="fact">4 ba</span><span class="fact">4,596 sqft</span><span class="fact">10 acres</span><span class="fact pool">Pool and spa</span></div>
-      <p class="note">MLS 225000829 is a 2025 listing number; a source showed it sold for $1,400,000 in June 2025. User confirms off market.</p>
-      <a class="btn" href="https://www.remax.com/ca/shingle-springs/home-details/5856-fernwood-dr-shingle-springs-ca-95682/13419556434900242713" rel="noopener">View listing &rarr;</a>
-    </div>
-  </div>
-
-  <div class="card miss">
-    <div class="media nophoto"><a class="tile" href="https://www.tophap.com/homes/details/1527-VELVET-HORN-LN-RESCUE-CA-95672/157323206" rel="noopener"><span class="tile-ico" aria-hidden="true">&#9968;</span><span class="tile-txt">View photos on tophap &rarr;</span></a></div>
-    <div class="body">
-      <span class="tag bad">Off market</span>
-      <p class="price">—</p>
-      <p class="addr">1527 Velvet Horn Ln</p>
-      <p class="city">Rescue, CA 95672</p>
-      <div class="facts"><span class="fact">6 bd</span><span class="fact">4.5 ba</span><span class="fact">3,892 sqft</span><span class="fact">5 acres</span><span class="fact pool">Pool and spa</span></div>
-      <p class="note">The ~$942K figure reported earlier was an automated valuation estimate, never a list price. No MLS number and no evidence it was ever listed. English Tudor, stables, riding arena.</p>
-      <a class="btn" href="https://www.tophap.com/homes/details/1527-VELVET-HORN-LN-RESCUE-CA-95672/157323206" rel="noopener">View listing &rarr;</a>
-    </div>
-  </div>
-
-  <div class="card miss">
-    <div class="media nophoto"><a class="tile" href="https://www.redfin.com/CA/Placerville/5400-Horizon-Ct-95667/home/167312343" rel="noopener"><span class="tile-ico" aria-hidden="true">&#9968;</span><span class="tile-txt">View photos on redfin &rarr;</span></a></div>
-    <div class="body">
-      <span class="tag bad">Off market</span>
-      <p class="price">$998,999</p>
-      <p class="addr">5400 Horizon Ct</p>
-      <p class="city">Placerville, CA 95667 &middot; MLS 221136905</p>
-      <div class="facts"><span class="fact">5 bd</span><span class="fact">3.5 ba</span><span class="fact">4,576 sqft</span><span class="fact">10 acres</span><span class="fact nopool">No pool — koi pond</span></div>
-      <p class="note">MLS 221136905 is a 2021 listing number, and a source shows it sold for $942,000 in March 2022. The $998,999 &#39;current&#39; price was a stale cached listing. Also had no pool.</p>
-      <a class="btn" href="https://www.redfin.com/CA/Placerville/5400-Horizon-Ct-95667/home/167312343" rel="noopener">View listing &rarr;</a>
-    </div>
-  </div>
-
-  <div class="card miss">
-    <div class="media nophoto"><a class="tile" href="https://www.redfin.com/CA/Placerville/4280-Leisure-Ln-95667/home/167327580" rel="noopener"><span class="tile-ico" aria-hidden="true">&#9968;</span><span class="tile-txt">View photos on redfin &rarr;</span></a></div>
-    <div class="body">
-      <span class="tag bad">Off market</span>
-      <p class="price">$1,173,000</p>
-      <p class="addr">4280 Leisure Ln</p>
-      <p class="city">Placerville, CA 95667 &middot; MLS 225153794</p>
-      <div class="facts"><span class="fact">5 bd</span><span class="fact">3 ba</span><span class="fact">3,672 sqft</span><span class="fact">5.6 acres</span><span class="fact nopool">No pool — pond</span></div>
-      <p class="note">2025 listing number; Trulia also carries a 2023 MLS (223062885) for the same address. No pool regardless.</p>
-      <a class="btn" href="https://www.redfin.com/CA/Placerville/4280-Leisure-Ln-95667/home/167327580" rel="noopener">View listing &rarr;</a>
-    </div>
-  </div>
+<div class="grid">${archived.map(card).join('\n')}
 </div>
 
 <h2>Ruled out on the facts</h2>
@@ -233,18 +272,7 @@ listing, <code>225…</code> a 2025 one.</p>
 <table>
   <thead><tr><th>Address</th><th>Price</th><th>Why not</th></tr></thead>
   <tbody>
-    <tr><td>5135 Bryant Rd, Shingle Springs</td><td>$1,690,000</td><td>Over budget; status unverified</td></tr>
-    <tr><td>1900 Deer Valley Rd, Rescue</td><td>$1,200,000</td><td>3bd/2ba, no pool</td></tr>
-    <tr><td>Howard Dr, Rescue (5.94 acres)</td><td>$2,275,000</td><td>Over budget</td></tr>
-    <tr><td>3359 Saint Ives Ct, Shingle Springs</td><td>$2,199,500</td><td>Over budget, only 4bd</td></tr>
-    <tr><td>765 Sierra View Ct, Shingle Springs</td><td>$3,499,999</td><td>Far over budget</td></tr>
-    <tr><td>5037 Milton Ranch Rd, Shingle Springs</td><td>$4,388,888</td><td>Far over budget</td></tr>
-    <tr><td>5040 Milton Ranch Rd, Shingle Springs</td><td>—</td><td>Not for sale — sold 2019 for $1.4M</td></tr>
-    <tr><td>5457 Bryant Rd, Shingle Springs</td><td>—</td><td>Not for sale — sold 2020 for $1,405,000</td></tr>
-    <tr><td>4661 Holm Rd, Placerville</td><td>$1,200,000</td><td>3bd/3ba — under bedroom minimum</td></tr>
-    <tr><td>2800 La Paz Rd, Placerville</td><td>$995,000</td><td>4bd/2ba — under both minimums</td></tr>
-    <tr><td>2931 Texas Hill Rd, Placerville</td><td>—</td><td>4bd/2.5ba — under both minimums</td></tr>
-    <tr><td>4370 Hillwood Dr, Shingle Springs</td><td>$699,000</td><td>0.25 acres</td></tr>
+${rejectedRows}
   </tbody>
 </table>
 </div>
@@ -261,11 +289,16 @@ convincing. Expect few candidates at any given moment, and prioritise speed when
 
 <footer>
   <p>Generated from <code>listings.json</code> by <code>build.js</code>.
-  6 properties on file, 12 ruled out,
-  <strong>0 verified as available</strong>.
+  ${data.listings.length} properties on file, ${data.rejected.length} ruled out,
+  <strong>${matches.length} verified as available</strong>.
   Future runs flag only new listings and price changes — no repeats.</p>
 </footer>
 
 </div>
 </body>
 </html>
+`;
+
+fs.writeFileSync(path.join(__dirname, 'index.html'), html);
+console.log(`Built index.html — ${matches.length} verified matches, ${active.length} active/off-criteria, ` +
+            `${archived.length} archived, ${photoCount}/${data.listings.length} with photos.`);

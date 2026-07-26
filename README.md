@@ -12,32 +12,81 @@ Automated house-hunt tracker for **Shingle Springs**, **Rescue**, and **Placervi
 | Lot size | 2.5 acres minimum, 5+ preferred |
 | Max price | $1,500,000 |
 
+## ⚠️ Verification gate — read before reporting anything
+
+The first run of this tracker reported four properties as matches. **All four were off market.**
+
+Root cause: listing status was inferred from search-engine result text. Search engines index
+listing pages that keep "For Sale" in the `<title>` for years after the sale closes, so stale
+listings read as active. A second failure compounded it — search snippets conflated two different
+properties on the same street, producing a listing with the wrong MLS number, bed count and price.
+
+**Rules that follow from this:**
+
+1. A property may only be given `status: "match"` when its active status is confirmed against a
+   live listing page or an authoritative feed. Search-result text is **not** sufficient.
+2. MetroList MLS numbers encode the listing year: `221…` = 2021, `223…` = 2023, `225…` = 2025,
+   `226…` = 2026. A prefix older than the current year is strong evidence the listing is stale.
+   Treat it as off market unless proven otherwise.
+3. Cross-check bed/bath/price against at least two independent sources before reporting. If they
+   disagree, report the disagreement rather than picking one.
+4. Prefer *under*-reporting. An empty result is correct and useful; a fabricated match is not.
+
+## Why the environment can't verify
+
+The network policy allows GitHub, package registries, and a keyed `maps.googleapis.com`. Everything
+else is blocked at the proxy — Zillow, Redfin, Realtor.com, Homes.com, Movoto, small brokerage
+sites, plus OpenStreetMap, Wikimedia and Esri tile servers. `WebFetch` is blocked outright
+(`example.com` returns 403). `WebSearch` is the only channel, and it returns summarised text, never
+live status and never image URLs.
+
+## Fixing the pipeline
+
+Ranked cheapest-first. The first option solves listing status **and** photos at once:
+
+1. **Zillow/Redfin saved search with email alerts** to `kvn.p.mrtn@gmail.com`. This repo's runner
+   has Gmail access, so alert emails become an authoritative feed: current listings, correct
+   status, price cuts, and image URLs. ~5 minutes to set up, one time.
+2. **An agent-run MLS/IDX client portal** with email alerts — same benefits, fuller MLS data.
+3. **A real-estate data API key** in the environment (SimplyRETS, Bridge Interactive, a RapidAPI
+   provider) for direct queries.
+4. **Allowlisting a listing domain** in the network policy. Least reliable — the portals bot-block
+   independently of the proxy.
+
+## Photos
+
+Photo support is built and waiting on a source.
+
+- Each listing has a `photos` array in `listings.json`. Put any image URL in it and the card
+  renders it on the next build.
+- Hotlinking works even though this environment can't load images: the **viewer's browser** fetches
+  them, and it isn't behind this proxy. Images carry `referrerpolicy="no-referrer"`, which also
+  gets past most CDN referrer blocks.
+- If a photo URL 404s or is blocked, an `onerror` handler swaps in the fallback tile client-side,
+  so a dead URL never leaves a hole in the layout.
+- With no photo, the card shows a "View photos on <site>" tile linking to `gallery` (or `url`).
+
+Note that MLS photos are the copyright of the listing brokerage. Fine for a private hunting page;
+don't republish them more broadly.
+
 ## Files
 
-- **`index.html`** — the published listing page (GitHub Pages).
-- **`listings.json`** — canonical data store. Every tracked property, its price history,
-  and the rejected list.
+- **`listings.json`** — canonical data. Single source of truth.
+- **`build.js`** — renders `index.html` from `listings.json`. No dependencies: `node build.js`.
+- **`index.html`** — generated. Don't hand-edit; edit the JSON and rebuild.
 
 ## Dedupe rules for future runs
 
 Read `listings.json` **before** reporting anything.
 
 1. A property already in `listings` is a **duplicate** — do not re-surface it.
-2. Exception: if the newly found price differs from `currentPrice`, it *is* worth
-   reporting. Append the new price to `priceHistory`, update `currentPrice`, and
-   call the change out on the page.
+2. Exception: if the price differs from `currentPrice`, that *is* worth reporting. Append to
+   `priceHistory`, update `currentPrice`, and the card will render the delta automatically.
 3. Anything in `rejected` stays rejected unless a price change brings it into range.
-4. Update `lastSeen` on every property confirmed still active; update `lastRun`.
+4. An `off-market` property returning to market is newsworthy — but only once verified per the gate.
+5. Update `lastSeen` on confirmed-active properties and `lastRun` on every run.
 
 ## Publishing
 
-The page is served from the `gh-pages` branch at the repository root. Enable it under
-**Settings → Pages → Source: `gh-pages` / `(root)`** if it isn't already on.
-
-## Data caveat
-
-Listing portals (Zillow, Redfin, Realtor.com, Homes.com) block automated access from the
-environment this runs in, so listing details are reconstructed from search-result data
-rather than read off live listing pages. Figures are directionally accurate but should be
-confirmed with an agent before acting. Conflicts between sources are flagged per-property
-in both `index.html` and the `notes` field of `listings.json`.
+Served from the `gh-pages` branch at repo root. Enable under
+**Settings → Pages → Source: `gh-pages` / `(root)`**.
