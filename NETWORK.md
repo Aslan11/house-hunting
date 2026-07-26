@@ -1,8 +1,21 @@
-# Network config needed for this tracker
+# Network config for this tracker
 
-The container that runs this tracker denies outbound HTTPS to every listing site. The denial is
-at the egress gateway, not at the destination — a `CONNECT www.zillow.com:443` gets `403 Forbidden`
-from the local proxy, so no packet ever reaches Zillow.
+> **Status as of 2026-07-26: egress is open and no change is needed.**
+> `recentRelayFailures` is empty and `selective` is `false`, so the gateway is not filtering by
+> host. Redfin search and detail pages return `200` and the 2026-07-26 run read them live. The rest
+> of this file is kept for the day the policy tightens again.
+>
+> What still doesn't work, and won't be fixed by a policy change:
+> - **Zillow** returns `403` and **realtor.com** `429` — those are the *sites* blocking datacenter
+>   IPs, not the proxy. Redfin is the one that serves.
+> - Redfin's `/stingray/api/*` JSON endpoints are CloudFront-blocked the same way. The HTML search
+>   pages are not, and they embed the same payload — parse it out of the page.
+> - `WebFetch` returns `405` (it issues a plain-HTTP request the proxy rejects). Use `curl`.
+> - Image CDN hotlinks fail *from this container* but load fine in the reader's browser.
+
+Historically the container denied outbound HTTPS to every listing site. The denial was at the egress
+gateway, not the destination — a `CONNECT www.zillow.com:443` got `403 Forbidden` from the local
+proxy, so no packet ever reached Zillow.
 
 Verify at any time with:
 
