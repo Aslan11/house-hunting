@@ -1,6 +1,7 @@
 # House Hunting — El Dorado County
 
 Automated house-hunt tracker for **Shingle Springs**, **Rescue**, and **Placerville, CA**.
+Published from the `gh-pages` branch.
 
 ## Criteria
 
@@ -12,161 +13,121 @@ Automated house-hunt tracker for **Shingle Springs**, **Rescue**, and **Placervi
 | Lot size | 2.5 acres minimum, 5+ preferred |
 | Max price | $1,500,000 |
 
-## Status: the pipeline works
-
-As of the 2026-07-26 run the environment can reach Redfin directly, so listing status and pool are
-read from the **live listing page**. That run produced **8 verified matches**.
-
-Earlier runs had no live source and inferred status from search-engine result text. That failed
-badly — four properties were reported as matches and all four were off market — because search
-engines index sold listings with "For Sale" in the `<title>` for years after closing. That archive is
-kept on the page so a genuine relist gets flagged rather than re-reported as new.
-
-## Verification gate — still binding
-
-A property may be given `status: "match"` only when **both** of these are read off its own live
-listing page:
-
-1. `mlsStatus` is `Active`.
-2. The `POOL_PRIVATE_YN` amenity in the subject property's own amenity block is `Yes`.
-
-Supporting rules:
-
-- **Never grep the detail page for the word "pool".** Redfin detail pages embed a *nearby homes*
-  carousel containing other properties' listing remarks and photo captions. A page-wide text search
-  returns pool language belonging to neighbouring homes. This produced false positives during the
-  2026-07-26 run — three properties looked like pool homes on a text search and are not — until the
-  check was scoped to the subject's own `amenityEntries` array. `build`-time code for this is in
-  `pool.js`-style scoped extraction; see `dataQuality.method` in `listings.json`.
-- Corroborate with a second, independent, subject-scoped field. `homeInsuranceData.hasPrivatePool`
-  works and is keyed to the subject's ZIP and year built. If the two disagree, report the
-  disagreement rather than picking one.
-- MetroList MLS numbers encode the listing year: `221…` = 2021, `223…` = 2023, `225…` = 2025,
-  `226…` = 2026. A prefix older than the current year on a supposedly-active listing is a red flag.
-- Confirm the fetched detail page really is the subject before trusting it — the MLS number must
-  appear in the page. Redfin property IDs cannot be guessed from the address; take the URL from the
-  search payload.
-- Prefer *under*-reporting. An empty result is correct and useful; a fabricated match is not.
-
-## How a run works
-
-1. **Fetch** Redfin filtered search pages for each ZIP (and city, as a cross-check):
-
-   ```
-   https://www.redfin.com/zipcode/95682/filter/min-beds=4,min-baths=3,max-price=1.6M,min-lot-size=2.5-acre
-   https://www.redfin.com/zipcode/95672/filter/...   # Rescue
-   https://www.redfin.com/zipcode/95667/filter/...   # Placerville
-   https://www.redfin.com/city/25976/CA/Shingle-Springs/filter/...
-   https://www.redfin.com/city/14760/CA/Placerville/filter/...
-   https://www.redfin.com/city/16218/CA/Rescue/filter/...
-   ```
-
-   **Two filter rules, both learned the hard way on 2026-07-26:**
-
-   - **Do not add `property-type=house`.** It silently dropped two qualifying listings, including
-     1781 Springvale Rd — a 5BR/6BA pool property on 10.27 acres. Multi-structure and
-     mixed-classification properties get excluded. Filter property type yourself, afterwards, if
-     you want to.
-   - **Query above the price ceiling and filter locally.** Use `max-price=1.6M` for a $1.5M budget.
-     A listing priced at exactly the ceiling is in budget and must not be lost to an off-by-one in
-     someone else's filter.
-
-   Same principle generally: let Redfin narrow coarsely, and apply every hard criterion yourself
-   against the parsed records.
-
-   Use a desktop browser User-Agent. Redfin's `/stingray/api/*` JSON endpoints are CloudFront-blocked
-   from datacenter IPs, but the **HTML search pages are not** — and they embed the same
-   `stingray/api/gis` payload, so parse it out of the page rather than calling the API.
-
-   Expect intermittent `202` responses with an empty body; that is a soft bot-block. Retry with a
-   short backoff and it succeeds. ZIP pages cover far more ground than city pages — Placerville's
-   city limits are tiny, and most acreage inventory is in unincorporated 95667.
-
-2. **Parse** every `{"mlsId":{…}` object out of the (once-unescaped) payload and dedupe by
-   `propertyId`. Useful fields: `mlsStatus`, `price`, `beds`, `baths`, `sqFt`, `lotSize` (sq ft —
-   divide by 43,560 for acres), `city`, `listingRemarks`, `listingTags`, `listingBroker.name`, `url`.
-
-   Note `include_nearby_homes=true` is in the query, so results spill past the target city — filter
-   on `city` yourself. This is also what gives Rescue coverage from the Shingle Springs page.
-
-3. **Verify** each candidate that clears the numeric filters by fetching its own detail page and
-   reading the scoped `POOL_PRIVATE_YN`. Do not trust the search payload's `skPoolType` — its
-   encoding is undocumented and `0` means "unspecified", not "no pool".
-
-4. **Merge** into `listings.json` under the dedupe rules below, then `node build.js`.
-
-## Photos
-
-Photo URLs are on the detail page and look like:
-
-```
-https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/<last-3-of-mls>/genMid.<mls>_<n>[_<v>].jpg
-```
-
-Because they are **keyed by MLS number**, filtering on the subject's MLS excludes the nearby-homes
-carousel photos automatically. Up to six per listing go into the `photos` array and render as a
-swipeable gallery.
-
-Hotlinking works for the reader even when this container can't load the images itself — the
-**viewer's browser** fetches them. Images carry `referrerpolicy="no-referrer"`, which also gets past
-most CDN referrer blocks. If an image 404s, it is removed client-side; if a card loses all of them,
-the "View photos on redfin" tile is swapped in, so a dead URL never leaves a hole in the layout.
-
-MLS photos are the copyright of the listing brokerage. Fine for a private hunting page; don't
-republish them more broadly.
-
-## Fastest manual path: paste from Zillow
-
-`ingest.js` takes listings copied straight off a Zillow or Redfin results page and merges them in,
-applying the dedupe rules automatically.
+## Running a refresh
 
 ```bash
-node ingest.js paste.txt     # or:  pbpaste | node ingest.js
-node build.js
+python3 refresh.py      # rebuild listings.json from live MLS data
+node build.js           # render index.html
 ```
 
-It reports what was new, what changed price, and what was already tracked. Anything outside the
-three target cities is skipped; anything failing a hard criterion is added but flagged rather than
-presented as a match.
+`refresh.py --no-cache` bypasses the on-disk HTTP cache in `.cache/` (gitignored).
+It prints the change list — new listings, price moves, drops — which is what a run
+should report. A run with nothing new is a normal, useful outcome.
+
+## Sources
+
+Two independent sources, one for discovery and one for verification. Both are read
+directly; **search engines are never used for listing status.**
+
+1. **Coldwell Banker IDX** (`coldwellbankerhomes.com`) — republishes MetroList, the
+   El Dorado County MLS, and does not bot-block this environment. `refresh.py`
+   sweeps the **full active inventory** of each city (~320 listings) rather than a
+   filtered subset, so nothing is lost to a filter-URL quirk. Cards carry price,
+   beds, baths, status and photos; acreage and pool are only on the detail page.
+2. **MetroListPRO** (`metrolistpro.com`) — the official MetroList public search.
+   Every candidate is re-confirmed here before publication.
+
+**Redfin also works** and is implemented in `redfin.py` from a parallel run — its
+`/stingray/api/*` endpoints are CloudFront-blocked, but the HTML search pages embed
+the same payload under `root.__reactServerState`. Keep it as a cross-check or a
+fallback if Coldwell Banker ever blocks.
+
+## ⚠️ Verification gate — read before reporting anything
+
+An early run reported four properties as matches. **All four were off market.**
+Status had been inferred from search-engine result text, and search engines index
+sold listings with "For Sale" in the `<title>` for years. Snippets also conflated two
+properties on the same street, producing a listing with the wrong MLS number, bed
+count and price.
+
+Rules in force:
+
+1. `status: "match"` requires active status confirmed against a **live listing page
+   or authoritative feed**. `refresh.py` enforces this — a candidate the MLS does not
+   report Active is dropped, not published.
+2. MetroList MLS numbers encode the listing year: `221…` = 2021, `225…` = 2025,
+   `226…` = 2026. A prefix older than the current year on a supposedly-active listing
+   is a red flag.
+3. Cross-check bed/bath/price against two independent sources; report disagreement
+   rather than picking one. *(2026-07-27: Redfin showed 5551 Saddlehorn as 3bd/2.5ba —
+   a stale 2022 record. The live 2026 listing is 4bd/3ba.)*
+4. Watch half-baths. MLS "total baths" folds them in, so a "3 bath" home may be
+   2 full + 1 half. `refresh.py` sets a `caveat` and the card displays it.
+5. Prefer *under*-reporting. An empty result is correct and useful; a fabricated
+   match is not.
+
+## Parsing traps — each of these has cost a run
+
+- **Never regex the rendered detail page for acreage or the word "pool".** Both
+  Coldwell Banker and Redfin detail pages end with a *nearby/similar homes* carousel
+  containing **other properties'** acreage, remarks and photo captions. A page-wide
+  match returns a neighbour's data. On CB, parse the **JSON-LD** block, which carries
+  the subject's own MLS field set (`Lot Size (Acres)`, `Pool`, `Pool Description`,
+  `Total Bedrooms`). On Redfin, scope to the subject's own `amenityEntries` and read
+  `POOL_PRIVATE_YN`. A naive `([\d.]+) Acres` match once reported six different homes
+  as 1.67 acres.
+- **Card field names vary by property type and by count.** Single Family uses
+  `class="beds"` / `"total-baths"`; **Multi-Family uses `"total-beds"`**; a count of 1
+  uses the singular `"bed"` / `"total-bath"`. Handling only `"beds"` silently dropped
+  1781 Springvale Rd — a 5BR/6BA pool property on 10.27 acres. Redfin has the same
+  hazard from the other direction: **do not add `property-type=house`** to a filter
+  URL, which excluded the same property.
+- **Fail open on the cheap filter.** The card-level filter is only an optimisation;
+  when a card omits beds or baths, fetch the detail page anyway rather than assuming
+  failure. The detail page is authoritative.
+- **Query above the ceiling, filter locally.** A listing at exactly $1,500,000 is in
+  budget and must not be lost to someone else's off-by-one.
+- **Dedupe on the MLS number, never the address slug.** Sources abbreviate street
+  suffixes inconsistently (`3784-cattle-dr` one run, `3784-cattle-drive` the next),
+  which would republish the entire list as new.
+- A short response body is **throttling, not thin inventory**. Retry with backoff;
+  never conclude the market is empty from a truncated fetch.
+
+## Dedupe rules
+
+Handled by `refresh.py`, but worth knowing:
+
+1. A property already tracked is **not** re-surfaced — `isNew` is set only when its
+   MLS number is absent from the previous store.
+2. A changed price **is** newsworthy: it appends to `priceHistory` and the card
+   renders the delta.
+3. `firstSeen` carries forward across runs; `lastSeen` is stamped every run.
+4. Anything previously tracked that is no longer confirmed active moves to `dropped`,
+   with a reason distinguishing "gone from the MLS" from "still listed but now fails
+   a criterion".
 
 ## Files
 
-- **`listings.json`** — canonical data. Single source of truth.
-- **`redfin.py`** — scripted version of the sweep above, from a parallel 2026-07-26 run.
-  `python3 redfin.py search` runs the standard sweep and prints candidates;
-  `python3 redfin.py detail <url>` returns one property. No dependencies. It already encodes the
-  city-filtering and `POOL_PRIVATE_YN` rules, and treats a short response as throttling rather than
-  as thin inventory — prefer it over hand-rolling the fetch next time.
-- **`ingest.js`** — merge pasted portal listings into `listings.json`.
-- **`build.js`** — renders `index.html` from `listings.json`. No dependencies: `node build.js`.
-- **`index.html`** — generated. Don't hand-edit; edit the JSON and rebuild.
-- **`NETWORK.md`** — egress notes, kept for the day the policy tightens again.
+- **`listings.json`** — canonical data. Generated; single source of truth for the page.
+- **`refresh.py`** — sweeps live inventory, verifies against the MLS, merges. Primary path.
+- **`redfin.py`** — independent Redfin sweep from a parallel run. `python3 redfin.py search`
+  prints candidates; `python3 redfin.py detail <url>` returns one property. Cross-check/fallback.
+- **`build.js`** — renders `index.html`. No dependencies.
+- **`index.html`** — generated. Don't hand-edit.
+- **`ingest.js`** — manual fallback: merge listings pasted off a Zillow/Redfin results page.
+- **`NETWORK.md`** — what is and isn't reachable from this environment.
 
-## Dedupe rules for future runs
+## Photos
 
-Read `listings.json` **before** reporting anything.
+Hotlinked from the listing brokerage CDN and rendered in the viewer's browser, which
+is not behind this environment's proxy. Cards carry `referrerpolicy="no-referrer"` to
+get past CDN referrer checks, and an `onerror` handler swaps in a fallback tile so a
+dead URL never leaves a hole in the layout.
 
-1. A property already in `listings` is a **duplicate** — do not re-surface it.
-2. Exception: if the price differs from `currentPrice`, that *is* worth reporting. Append to
-   `priceHistory`, update `currentPrice`, and the card renders the delta automatically.
-3. Anything in `rejected` stays rejected unless a change brings it into range.
-4. `noPoolActive` holds listings that meet every criterion except the pool. Don't present them as
-   finds; do flag one that gains a pool.
-5. An `off-market` property returning to market is newsworthy — but only once verified per the gate.
-6. Update `lastSeen` on confirmed-active properties and `lastRun` on every run.
-7. A listing that disappears from the live Active results has gone pending or sold — move it to
-   `off-market` rather than silently dropping it.
+MLS photos are the copyright of the listing brokerage. Fine for a private hunting
+page; don't republish more broadly.
 
 ## Publishing
 
 Served from the `gh-pages` branch at repo root. Enable under
 **Settings → Pages → Source: `gh-pages` / `(root)`**.
-
-```bash
-node build.js
-git add -A && git commit -m "Update listings"
-git push -u origin <working-branch>
-# publish:
-git checkout gh-pages && git checkout <working-branch> -- index.html
-git commit -am "Publish $(date +%F) run" && git push -u origin gh-pages
-```

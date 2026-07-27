@@ -1,123 +1,57 @@
-# Network config for this tracker
+# Network reachability from this environment
 
-> **Status as of 2026-07-26: egress is open and no change is needed.**
-> `recentRelayFailures` is empty and `selective` is `false`, so the gateway is not filtering by
-> host. Redfin search and detail pages return `200` and the 2026-07-26 run read them live. The rest
-> of this file is kept for the day the policy tightens again.
->
-> What still doesn't work, and won't be fixed by a policy change:
-> - **Zillow** returns `403` and **realtor.com** `429` — those are the *sites* blocking datacenter
->   IPs, not the proxy. Redfin is the one that serves.
-> - Redfin's `/stingray/api/*` JSON endpoints are CloudFront-blocked the same way. The HTML search
->   pages are not, and they embed the same payload — parse it out of the page.
-> - `WebFetch` returns `405` (it issues a plain-HTTP request the proxy rejects). Use `curl`.
-> - Image CDN hotlinks fail *from this container* but load fine in the reader's browser.
+**Status as of 2026-07-27: outbound egress is open and no policy change is needed.**
+`recentRelayFailures` is empty and `selective` is `false`, so the gateway is not
+filtering by host. The historical gateway-level block described in earlier versions
+of this file is gone.
 
-Historically the container denied outbound HTTPS to every listing site. The denial was at the egress
-gateway, not the destination — a `CONNECT www.zillow.com:443` got `403 Forbidden` from the local
-proxy, so no packet ever reached Zillow.
-
-Verify at any time with:
+Verify at any time:
 
 ```bash
 curl -sS "$HTTPS_PROXY/__agentproxy/status" | python3 -m json.tool
 ```
 
-`recentRelayFailures` records each denial as
-`"gateway answered 403 to CONNECT (policy denial or upstream failure)"`.
+A gateway denial appears in `recentRelayFailures`; a *site* blocking datacenter IPs
+does not, and returns an HTML body. That distinction is how to tell the two apart.
 
-## Where to change it
+## What actually serves
 
-**claude.ai → profile icon (bottom left) → Settings → Capabilities →
-"Code execution and file creation" → Domain allowlist**
+| Host | Result | Use |
+|---|---|---|
+| `coldwellbankerhomes.com` | **200** | Primary source — full MLS-backed inventory + photos |
+| `metrolistpro.com` | **200** | Verification — official MetroList MLS public search |
+| `m.cbhomes.com`, `m1.cbhomes.com` | **200** | Listing photo CDN, hotlinks fine |
+| `redfin.com` (HTML search pages) | **200** | Works — see `redfin.py` |
+| `redfin.com/stingray/api/*` | 403 | CloudFront-blocked; payload is embedded in the HTML page instead |
+| `century21.com`, `compass.com` | 200 root, empty search | Not usable |
+| `zillow.com` | 403 | Site bot-blocks datacenter IPs |
+| `realtor.com` | 429 | Rate-limited |
+| `homes.com`, `movoto.com` | 403 | Site bot-blocks |
 
-Either set it to **All domains**, or keep it restricted and add the hosts below under
-**Additional allowed domains**.
+## Known quirks
 
-If the environment was created through Claude Code on the web with its own network policy, that
-policy governs instead, and it's edited on the environment itself. See
-<https://code.claude.com/docs/en/claude-code-on-the-web> and
-<https://code.claude.com/docs/en/network-config>.
+- **Requests need a desktop browser `User-Agent`.** Without one, Coldwell Banker
+  returns a short error body rather than listing HTML — hence the `> 5000 bytes`
+  sanity check in `refresh.py`'s fetch helper. Treat a short body as throttling and
+  retry with backoff, never as thin inventory.
+- **`WebFetch` is refused for the blocked portals**, and returns `405` in some
+  configurations because of how it issues the request. Use `curl`.
+- **Headless Chromium cannot egress at all**, even with `proxy:` set and
+  `--ignore-certificate-errors` — every request returns `ERR_CONNECTION_RESET` while
+  `curl` to the same URL succeeds. This only affects local screenshot checks of
+  `index.html`; photos are fine in a real browser. Verify a photo URL with
+  `curl -o /dev/null -w '%{http_code} %{content_type}'` instead, and read a
+  screenshot full of fallback tiles as a sandbox artifact, not a broken page.
+- Expect intermittent `202` responses with an empty body from Redfin; that is a soft
+  bot-block that clears on retry.
 
-## Minimal set — test viability first
+## If the sources go dark
 
-Start with Redfin alone. It's the most likely to actually work: it serves a structured CSV of
-search results, and it bot-blocks less aggressively than Zillow.
-
-```
-www.redfin.com
-ssl.cdn-redfin.com
-```
-
-If that works, a filtered search can be pulled directly as CSV — the cleanest possible input for
-`ingest.js`, with no HTML parsing.
-
-## Full set — listing data plus photos
-
-The CDN hosts matter: without them, pages load but every photo is broken.
-
-```
-# Zillow (+ Trulia, same company)
-www.zillow.com
-zillow.com
-photos.zillowstatic.com
-www.trulia.com
-
-# Redfin
-www.redfin.com
-ssl.cdn-redfin.com
-
-# Realtor.com
-www.realtor.com
-api.realtor.com
-ap.rdcpix.com
-
-# Others carrying El Dorado County inventory
-www.homes.com
-images.homes.com
-www.movoto.com
-www.compass.com
-
-# MetroList — the actual MLS for El Dorado County
-www.metrolistpro.com
-www.metrolist.com
-```
-
-If the field accepts wildcards, this is equivalent and more robust:
-
-```
-*.zillow.com  *.zillowstatic.com  *.redfin.com  *.cdn-redfin.com
-*.realtor.com  *.rdcpix.com  *.homes.com  *.movoto.com
-*.compass.com  *.trulia.com  *.metrolistpro.com  *.metrolist.com
-```
-
-## Known issues to expect
-
-1. **The setting may not take effect.** Several open bugs report that "Additional allowed domains"
-   is not propagated to container egress — anthropics/claude-code
-   [#19087](https://github.com/anthropics/claude-code/issues/19087),
-   [#30112](https://github.com/anthropics/claude-code/issues/30112),
-   [#52982](https://github.com/anthropics/claude-code/issues/52982). If the hosts are still denied
-   after the change, "All domains" is the reliable fallback.
-2. **Allowlisting is necessary but may not be sufficient.** Zillow and Redfin block datacenter IP
-   ranges, which is what this container runs on. A second 403 may appear — that one genuinely from
-   the site. Distinguish them by source: a gateway denial shows up in `recentRelayFailures`, a site
-   block does not and returns an HTML body.
-3. **`WebFetch` is blocked too**, independently of `curl` (`example.com` returns 403). It's likely
-   governed by the same allowlist, so it may start working after the change — worth retesting.
-
-## Verifying after the change
-
-```bash
-curl -sS -o /dev/null -w "%{http_code}\n" https://www.redfin.com/
-```
-
-- `200` → egress open and the site is serving. Working.
-- `403` **with** a new entry in `recentRelayFailures` → still an egress policy denial.
-- `403` **without** a new relay-failure entry → egress is open; the site is bot-blocking.
-
-## If the sites block anyway
-
-Fall back to the paths that don't fight bot defenses: Zillow/Redfin saved-search **email alerts**
-into the connected Gmail (works today, needs no network change, and carries photo URLs), or a
-licensed data API key (SimplyRETS, Bridge Interactive, RapidAPI).
+1. Retest the portals — bot-blocking is not permanent.
+2. Another MetroList IDX republisher: most local brokerage sites carry the same feed
+   and the smaller ones rarely bot-block. Look for a `pid_`-style detail URL with a
+   JSON-LD block; `refresh.py`'s parser will port over with small changes.
+3. Zillow/Redfin saved-search **email alerts** into the connected Gmail — needs no
+   network access at all and carries status, price cuts and photo URLs. `ingest.js`
+   accepts pasted results.
+4. A licensed data API key (SimplyRETS, Bridge Interactive, RapidAPI).
