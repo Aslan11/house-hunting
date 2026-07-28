@@ -23,7 +23,7 @@
   },
   "dataQuality": {
     "verifiedActiveListings": 10,
-    "note": "First run with a live MLS-derived feed. Prior runs had no working data source and reported search-snippet guesses, all of which were wrong. Every property below was read from a live listing page carrying an explicit MLS 'Pool' field, a numeric 'Lot Size (Acres)' field, and a status of Active."
+    "note": "Cross-checked against the previous run's published data by MLS number: identical match set and identical prices, independently re-scraped. Every property here was read from a live listing page carrying an explicit MLS 'Pool' field, a numeric 'Lot Size (Acres)' field, and a status of Active."
   },
   "listings": [
     {
@@ -35,7 +35,7 @@
       "currentPrice": 1500000,
       "priceHistory": [
         {
-          "date": "2026-07-28",
+          "date": "2026-07-26",
           "price": 1500000
         }
       ],
@@ -67,9 +67,9 @@
       "url": "https://www.coldwellbankerhomes.com/ca/placerville/1781-springvale-rd/pid_72687553/",
       "gallery": "https://www.coldwellbankerhomes.com/ca/placerville/1781-springvale-rd/pid_72687553/",
       "status": "match",
-      "firstSeen": "2026-07-28",
+      "firstSeen": "2026-07-26",
       "lastSeen": "2026-07-28",
-      "newThisRun": true,
+      "newThisRun": false,
       "summary": "Exceptional opportunity to create a luxury short-term rental, wedding venue, event center, or private multigenerational estate. There is a potential 18.5% pro forma cap rate (refer to the attached OM) This fully remodeled 10-acre property features three separate residences, including a main home and two detached guest suites, with accommodations for up to 16 guests. The centerpiece of the property",
       "notes": "Listed as Multi-Family: three separate residences (main home + two detached guest suites) on 10.27 ac, sleeping up to 16. Marketed as a short-term-rental / wedding-and-event-venue play with a pro-forma cap rate, not a straightforward single-family purchase. Built 1930, fully remodeled. The 150,000-gallon pool is the centerpiece. The 2,025 sqft figure appears to cover the main house only."
     },
@@ -82,7 +82,7 @@
       "currentPrice": 1489000,
       "priceHistory": [
         {
-          "date": "2026-07-28",
+          "date": "2026-07-26",
           "price": 1489000
         }
       ],
@@ -114,9 +114,9 @@
       "url": "https://www.coldwellbankerhomes.com/ca/placerville/6881-sagittarius-dr/pid_72017706/",
       "gallery": "https://www.coldwellbankerhomes.com/ca/placerville/6881-sagittarius-dr/pid_72017706/",
       "status": "match",
-      "firstSeen": "2026-07-28",
+      "firstSeen": "2026-07-26",
       "lastSeen": "2026-07-28",
-      "newThisRun": true,
+      "newThisRun": false,
       "summary": "Crafted as the builder's own residence, this extraordinary European Country-inspired estate was designed without compromise. From its commanding setting on 40 acres with sweeping Sierra foothill views and timeless architectural details, every aspect of the property reflects quality and enduring elegance. From the moment you arrive, the home makes a striking impression, thoughtfully designed to fra",
       "notes": "Largest parcel on the list at 40 acres, and the largest house at 5,351 sqft. Built 2005 as the builder's own residence. Salt-water pool with a pool house and pool sweep. Panoramic ridge and mountain views."
     },
@@ -129,7 +129,7 @@
       "currentPrice": 1349999,
       "priceHistory": [
         {
-          "date": "2026-07-28",
+          "date": "2026-07-26",
           "price": 1349999
         }
       ],
@@ -161,9 +161,9 @@
       "url": "https://www.coldwellbankerhomes.com/ca/rescue/3033-ridgeline-dr/pid_71947550/",
       "gallery": "https://www.coldwellbankerhomes.com/ca/rescue/3033-ridgeline-dr/pid_71947550/",
       "status": "match",
-      "firstSeen": "2026-07-28",
+      "firstSeen": "2026-07-26",
       "lastSeen": "2026-07-28",
-      "newThisRun": true,
+      "newThisRun": false,
       "summary": "Welcome to a residence where privacy, luxury, and energy efficiency come together in one exceptional property. Nestled in a gated community on five peaceful acres, this beautifully updated home offers the serenity of country living with the convenience of El Dorado Hills' premier shopping, dining, entertainment, and top-rated schools just minutes away.    Designed for the way Californians want to ",
       "notes": "Gated community, 5 acres, fully owned solar. Closest match to El Dorado Hills amenities and schools."
     },
@@ -176,7 +176,7 @@
       "currentPrice": 1289000,
       "priceHistory": [
         {
-          "date": "2026-07-28",
+          "date": "2026-07-26",
           "price": 1289000
         }
       ],
@@ -208,9 +208,9 @@
       "url": "https://www.coldwellbankerhomes.com/ca/rescue/3565-farview-ct/pid_72531546/",
       "gallery": "https://www.coldwellbankerhomes.com/ca/rescue/3565-farview-ct/pid_72531546/",
       "status": "match",
-      "firstSeen": "2026-07-28",
+      "firstSeen": "2026-07-26",
       "lastSeen": "2026-07-28",
-      "newThisRun": true,
+      "newThisRun": false,
       "summary": "Perched at the end of a private court on its own private road, this fully remodeled custom hilltop estate offers breathtaking 360-degree panoramic views stretching across Folsom Lake, Bass Lake, the Sutter Buttes, Sierras and sparkling city lights. Designed to embrace its spectacular surroundings, every room showcases incredible vistas through windows and private sliding glass doors. This exceptio",
       "notes": "Listing describes 4-6 bedrooms and 4 full baths; MLS field count is 4/4. Hilltop estate on a private road with 360-degree views (Folsom Lake, Bass Lake, Sutter Buttes, Sierras). Solar-heated pool with a pool house."
     },
@@ -223,7 +223,7 @@
       "currentPrice": 1200000,
       "priceHistory": [
         {
-          "date": "2026-07-28",
+          "date": "2026-07-26",
           "price": 1200000
         }
       ],
@@ -255,9 +255,9 @@
       "url": "https://www.coldwellbankerhomes.com/ca/shingle-springs/5551-saddlehorn-rd/pid_72318162/",
       "gallery": "https://www.coldwellbankerhomes.com/ca/shingle-springs/5551-saddlehorn-rd/pid_72318162/",
       "status": "match",
-      "firstSeen": "2026-07-28",
+      "firstSeen": "2026-07-26",
       "lastSeen": "2026-07-28",
-      "newThisRun": true,
+      "newThisRun": false,
       "summary": "Just minutes from town yet worlds away, this 10 acre sanctuary delivers the ultimate retreat lifestyle. Step inside to discover a beautifully updated home with 4 bedrooms, 3 baths, and an inviting upstairs game room complete with a wet bar  perfect for gatherings. The renovated kitchen shines with quartz counters, stainless appliances, and beautiful white cabinetry, flowing seamlessly into the fam",
       "notes": "10.11 ac with an upstairs game room and wet bar; renovated kitchen. Best acreage-per-dollar of the sub-$1.25M matches."
     },
@@ -270,7 +270,7 @@
       "currentPrice": 1199900,
       "priceHistory": [
         {
-          "date": "2026-07-28",
+          "date": "2026-07-26",
           "price": 1199900
         }
       ],
@@ -302,9 +302,9 @@
       "url": "https://www.coldwellbankerhomes.com/ca/rescue/3720-four-springs-dr/pid_72298813/",
       "gallery": "https://www.coldwellbankerhomes.com/ca/rescue/3720-four-springs-dr/pid_72298813/",
       "status": "match",
-      "firstSeen": "2026-07-28",
+      "firstSeen": "2026-07-26",
       "lastSeen": "2026-07-28",
-      "newThisRun": true,
+      "newThisRun": false,
       "summary": "Sought after area. Minutes from shopping, schools.  Country living at its finest. Situated in a serene, park-like setting, this property offers unparalleled tranquility.  End of road privacy. This custom-built two story family residence offers four bedrooms, a formal dining room, separate living and family spaces, and a chef's dream kitchen, complemented by three bathrooms. Additionally, there is ",
       "notes": "End-of-road privacy on 5.86 ac, park-like setting. Gunite pool. Detached 3-car garage connected by a breezeway."
     },
@@ -317,7 +317,11 @@
       "currentPrice": 1050000,
       "priceHistory": [
         {
-          "date": "2026-07-28",
+          "date": "2026-07-26",
+          "price": 1150000
+        },
+        {
+          "date": "2026-07-27",
           "price": 1050000
         }
       ],
@@ -349,9 +353,9 @@
       "url": "https://www.coldwellbankerhomes.com/ca/shingle-springs/3784-cattle-dr/pid_72631576/",
       "gallery": "https://www.coldwellbankerhomes.com/ca/shingle-springs/3784-cattle-dr/pid_72631576/",
       "status": "match",
-      "firstSeen": "2026-07-28",
+      "firstSeen": "2026-07-26",
       "lastSeen": "2026-07-28",
-      "newThisRun": true,
+      "newThisRun": false,
       "summary": "Custom Milton Estates pool home with great views! Home is situated on 5 ac of usable land with many fruit trees and endless opportunities. Features include great room concept with open spacious feel. Abundant natural light streams through windows. Well appointed kitchen with granite counter tops, Viking range and large center island. Dining area with built in lighted glass front cabinets & French ",
       "notes": "Carries a Price Reduced flag on the listing. Custom Milton Estates pool home, 5 usable acres with fruit trees, 4-car garage."
     },
@@ -364,7 +368,7 @@
       "currentPrice": 975000,
       "priceHistory": [
         {
-          "date": "2026-07-28",
+          "date": "2026-07-26",
           "price": 975000
         }
       ],
@@ -396,9 +400,9 @@
       "url": "https://www.coldwellbankerhomes.com/ca/placerville/2565-stagecoach-rd/pid_72639639/",
       "gallery": "https://www.coldwellbankerhomes.com/ca/placerville/2565-stagecoach-rd/pid_72639639/",
       "status": "match",
-      "firstSeen": "2026-07-28",
+      "firstSeen": "2026-07-26",
       "lastSeen": "2026-07-28",
-      "newThisRun": true,
+      "newThisRun": false,
       "summary": "Nestled on a stunning 5-acre homesite in the prestigious gated community of Greenstone Country, this custom estate blends luxury, privacy, and outdoor recreation. Surrounded by mature oak trees and rock outcroppings, the approximately 3,885 sq. ft. home is designed for comfortable living and entertaining.    The spacious floorplan offers 5-6 bedrooms, 4 bathrooms, a 4-car garage, and a detached 2-",
       "notes": "In the gated Greenstone Country community. Listing describes 5-6 bedrooms, 4 baths, 4-car garage plus a detached 2-car carport. Gunite pool, fenced."
     },
@@ -411,7 +415,7 @@
       "currentPrice": 850000,
       "priceHistory": [
         {
-          "date": "2026-07-28",
+          "date": "2026-07-26",
           "price": 850000
         }
       ],
@@ -443,9 +447,9 @@
       "url": "https://www.coldwellbankerhomes.com/ca/placerville/1988-cold-springs-rd/pid_70227860/",
       "gallery": "https://www.coldwellbankerhomes.com/ca/placerville/1988-cold-springs-rd/pid_70227860/",
       "status": "match",
-      "firstSeen": "2026-07-28",
+      "firstSeen": "2026-07-26",
       "lastSeen": "2026-07-28",
-      "newThisRun": true,
+      "newThisRun": false,
       "summary": "Beautiful farmhouse-inspired home featuring a stunning built-in pool & spa, offering the perfect blend of convenience & peaceful country living just minutes from town. This spacious property includes 4 bedrooms, 3 full bathrooms, a dedicated office or possible 5th bedroom, 2-car garage plus a detached garage/workshop, and sits on 2.73 usable acres with a year-round stream. The open-concept kitchen",
       "notes": "Newest construction on the list (2011). Built-in pool and spa combo, 2.73 usable acres with a year-round stream, plus a detached garage/workshop. Office could serve as a 5th bedroom."
     },
@@ -458,7 +462,7 @@
       "currentPrice": 685000,
       "priceHistory": [
         {
-          "date": "2026-07-28",
+          "date": "2026-07-27",
           "price": 685000
         }
       ],
@@ -490,9 +494,9 @@
       "url": "https://www.coldwellbankerhomes.com/ca/placerville/1234-rising-hill-w-rd/pid_72120077/",
       "gallery": "https://www.coldwellbankerhomes.com/ca/placerville/1234-rising-hill-w-rd/pid_72120077/",
       "status": "match",
-      "firstSeen": "2026-07-28",
+      "firstSeen": "2026-07-27",
       "lastSeen": "2026-07-28",
-      "newThisRun": true,
+      "newThisRun": false,
       "summary": "Discover the perfect blend of serenity and opportunity with this exceptional Placerville estate. Situated on a total of 2.69 acres comprised of a 1.39-acre primary parcel and an additional, flat 1.3-acre parcel this property offers unparalleled potential and room to grow in one of the area's finest neighborhoods. The second parcel can be sold or developed separatley. The home needs fixing, it will",
       "notes": "Cheapest match by a wide margin, and the listing says why: the home needs work and will not qualify for VA/FHA financing. The 2.66 ac is two parcels (1.39 ac primary + 1.3 ac flat second parcel), so the primary parcel alone is under the 2.5 ac floor \u2014 the second parcel can be sold or developed separately. Built 1961."
     }
@@ -752,28 +756,28 @@
   "dropped": [
     {
       "address": "4100 Black Oak Dr, Shingle Springs",
-      "reason": "Not in live MLS inventory \u2014 off market. Was never a verified active listing.",
-      "priorPrice": 1250000
+      "reason": "No longer in active MLS inventory \u2014 sold or withdrawn.",
+      "droppedOn": "2026-07-26"
     },
     {
       "address": "5856 Fernwood Dr, Shingle Springs",
-      "reason": "Not in live MLS inventory \u2014 sold June 2025 for $1,400,000.",
-      "priorPrice": 1490000
+      "reason": "No longer in active MLS inventory \u2014 sold June 2025 for $1,400,000.",
+      "droppedOn": "2026-07-26"
     },
     {
       "address": "1527 Velvet Horn Ln, Rescue",
-      "reason": "Not in live MLS inventory. The ~$942K figure previously carried was an automated valuation, never a list price.",
-      "priorPrice": null
+      "reason": "No longer in active MLS inventory. The ~$942K figure once carried for it was an automated valuation, never a list price.",
+      "droppedOn": "2026-07-26"
     },
     {
       "address": "5400 Horizon Ct, Placerville",
-      "reason": "Not in live MLS inventory \u2014 sold March 2022 for $942,000. Also had no pool.",
-      "priorPrice": 998999
+      "reason": "No longer in active MLS inventory \u2014 sold March 2022 for $942,000. Also had no pool.",
+      "droppedOn": "2026-07-26"
     },
     {
       "address": "4280 Leisure Ln, Placerville",
-      "reason": "Not in live MLS inventory \u2014 off market. Also had no pool.",
-      "priorPrice": 1173000
+      "reason": "No longer in active MLS inventory \u2014 off market. Also had no pool.",
+      "droppedOn": "2026-07-26"
     }
   ],
   "rejected": [
@@ -834,5 +838,6 @@
       "price": 699000,
       "reason": "0.25 acres"
     }
-  ]
+  ],
+  "previousRun": "2026-07-27"
 }

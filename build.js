@@ -113,10 +113,30 @@ function card(l, opts = {}) {
 
 /* ---------- page ---------- */
 
-const L = data.listings || [];
+/* Two refresh implementations exist (scrape.js in Node, refresh.py in Python from an
+   earlier run). They agree on the fields that carry history — mls, firstSeen,
+   priceHistory — but differ on presentation field names. Normalise so either can
+   drive this renderer, and a run that swaps implementations still renders correctly. */
+const normalize = (l) => ({
+  ...l,
+  id: l.id || l.mls,
+  newThisRun: l.newThisRun ?? l.isNew ?? false,
+  summary: l.summary || l.desc || '',
+  notes: l.notes || l.caveat || '',
+  garageSpaces: l.garageSpaces ?? l.garage ?? null,
+  lng: l.lng ?? l.lon ?? null,
+});
+
+const L = (data.listings || []).map(normalize);
 const fresh = L.filter((l) => l.newThisRun);
-const changed = L.filter((l) => !l.newThisRun && (l.priceHistory || []).length > 1 &&
-  l.priceHistory[l.priceHistory.length - 1].price !== l.priceHistory[l.priceHistory.length - 2].price);
+/* Only a price that moved *this* run counts as news. A cut reported last run still shows
+   its delta on the card, but must not be re-surfaced in the highlights strip. */
+const changed = L.filter((l) => {
+  const h = l.priceHistory || [];
+  return !l.newThisRun && h.length > 1 &&
+    h[h.length - 1].price !== h[h.length - 2].price &&
+    h[h.length - 1].date === data.lastRun;
+});
 const rest = L.filter((l) => !l.newThisRun && !changed.includes(l));
 const c = data.criteria;
 
@@ -125,8 +145,14 @@ const acres = L.map((l) => l.acres).filter(Boolean);
 
 const stat = (v, k) => `<div class="stat"><span class="v">${v}</span><span class="k">${k}</span></div>`;
 
+const lastChange = L
+  .map((l) => (l.priceHistory || []).slice(-1)[0])
+  .filter((h) => h && h.date).map((h) => h.date).sort().pop();
+
 const highlights = !fresh.length && !changed.length
-  ? `<div class="strip-empty">No new listings and no price changes since the last run. The ${L.length} matches below are unchanged.</div>`
+  ? `<div class="strip-empty"><strong>Nothing new this run.</strong> No listings entered the market,
+     none changed price, and none dropped off. All ${L.length} matches below were verified again
+     today${lastChange && lastChange !== data.lastRun ? `; the most recent movement was on ${esc(lastChange)}` : ''}.</div>`
   : [
       fresh.length ? `<h2 class="h-new">&#10022; ${fresh.length} new ${fresh.length === 1 ? 'listing' : 'listings'} this run</h2>
        <div class="grid">${fresh.map((l) => card(l)).join('')}</div>` : '',
@@ -134,7 +160,14 @@ const highlights = !fresh.length && !changed.length
        <div class="grid">${changed.map((l) => card(l)).join('')}</div>` : '',
     ].join('\n');
 
-const nearRows = (data.nearMisses || []).map((n) => `<tr>
+/* Flat array (scrape.js) or {acreageOkNoPool, poolOkLotTooSmall} buckets (refresh.py). */
+const nearList = Array.isArray(data.nearMisses)
+  ? data.nearMisses
+  : Object.entries(data.nearMisses || {}).flatMap(([bucket, arr]) =>
+      (arr || []).map((n) => ({ ...n,
+        missing: n.missing || (bucket === 'acreageOkNoPool' ? 'no pool' : `only ${n.acres} acres`) })));
+
+const nearRows = nearList.slice(0, 24).map((n) => `<tr>
   <td><a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.address)}</a></td>
   <td>${esc(n.city)}</td><td class="num">${money(n.price)}</td>
   <td class="num">${esc(n.beds)}/${esc(n.baths)}</td>
@@ -280,12 +313,12 @@ footer code{background:var(--panel);border:1px solid var(--line);border-radius:4
 
 ${highlights}
 
-${rest.length ? `<h2>Also still on the market</h2>
+${rest.length ? `<h2>${fresh.length || changed.length ? 'Also still on the market' : `All ${rest.length} matches`}</h2>
 <div class="grid">${rest.map((l) => card(l)).join('')}</div>` : ''}
 
 ${(data.pending || []).length ? `<h2>Under contract</h2>
 <p class="lede">These tick every box but are already in escrow. Kept visible only because pending deals do fall through.</p>
-<div class="grid">${data.pending.map((l) => card(l, { dim: true })).join('')}</div>` : ''}
+<div class="grid">${data.pending.map((l) => card(normalize(l), { dim: true })).join('')}</div>` : ''}
 
 ${nearRows ? `<h2>Near misses</h2>
 <p class="lede">Active, in the right towns, and clearing ${esc(c.beds)} bed / ${esc(c.baths)} bath / ${short(c.maxPrice)} — but each fails exactly one of the two hard filters. Listed in case one of them is negotiable.</p>
@@ -293,9 +326,19 @@ ${nearRows ? `<h2>Near misses</h2>
 <thead><tr><th>Address</th><th>City</th><th>Price</th><th>Bd/Ba</th><th>Acres</th><th>Fails on</th></tr></thead>
 <tbody>${nearRows}</tbody></table></div>` : ''}
 
-${(data.dropped || []).length ? `<h2>Dropped this run</h2>
-<p class="lede">Previously tracked, now confirmed gone from live MLS inventory.</p>
-<ul class="list">${data.dropped.map((d) => `<li><b>${esc(d.address)}</b><span>${esc(d.reason)}</span></li>`).join('')}</ul>` : ''}
+${(() => {
+  const dr = data.dropped || [];
+  if (!dr.length) return '';
+  const today = dr.filter((d) => d.droppedOn === data.lastRun);
+  const head = today.length ? `Dropped this run (${today.length})` : 'Dropped previously';
+  const lede = today.length
+    ? 'Confirmed gone from live MLS inventory since the last check.'
+    : 'Tracked at some point, then confirmed gone from live MLS inventory. Nothing dropped off this run.';
+  return `<h2>${head}</h2>
+<p class="lede">${lede}</p>
+<ul class="list">${dr.map((d) => `<li><b>${esc(d.address)}</b><span>${esc(d.reason)}` +
+    `${d.droppedOn ? ` <em>(dropped ${esc(d.droppedOn)})</em>` : ''}</span></li>`).join('')}</ul>`;
+})()}
 
 ${(data.rejected || []).length ? `<details><summary>Checked and ruled out (${data.rejected.length})</summary>
 <ul class="list" style="margin-top:12px">${data.rejected.map((r) => `<li><b>${esc(r.address)}${r.price ? ' — ' + money(r.price) : ''}</b><span>${esc(r.reason)}</span></li>`).join('')}</ul></details>` : ''}
@@ -321,5 +364,5 @@ ${(data.rejected || []).length ? `<details><summary>Checked and ruled out (${dat
 
 fs.writeFileSync(path.join(__dirname, 'index.html'), html);
 console.log(`Built index.html — ${L.length} matches (${fresh.length} new, ${changed.length} price changes), ` +
-  `${(data.pending || []).length} pending, ${(data.nearMisses || []).length} near misses, ` +
+  `${(data.pending || []).length} pending, ${nearList.length} near misses, ` +
   `${(data.dropped || []).length} dropped.`);
