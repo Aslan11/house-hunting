@@ -1,57 +1,75 @@
-# Network reachability from this environment
+# Network reality for this tracker
 
-**Status as of 2026-07-27: outbound egress is open and no policy change is needed.**
-`recentRelayFailures` is empty and `selective` is `false`, so the gateway is not
-filtering by host. The historical gateway-level block described in earlier versions
-of this file is gone.
+**Status as of 2026-07-28: the tracker works. No network configuration change is needed.**
 
-Verify at any time:
+Earlier revisions of this file described every listing site as blocked at the egress proxy.
+That is no longer true — general outbound HTTPS is open, and
+`curl -sS "$HTTPS_PROXY/__agentproxy/status"` reports an empty `recentRelayFailures`.
+What remains is *site-side* bot blocking, which varies by host.
+
+## What actually happens per host
+
+Measured with a normal browser user-agent from this container:
+
+| Host | Result | Usable? |
+|---|---|---|
+| `coldwellbankerhomes.com` | 200, full JSON-LD listing data | **Yes — this is the data source** |
+| `m.cbhomes.com` / `m1.cbhomes.com` | 200 `image/webp` | **Yes — listing photos** |
+| `metrolistpro.com` | 200, but a JS shell with no listings in the HTML | No |
+| `compass.com` | 202 (challenge interstitial) | No |
+| `estately.com` | 200, but listings are client-rendered | No |
+| `redfin.com` homepage | 200 | — |
+| `redfin.com/stingray/*` API | 403 from CloudFront | No |
+| `zillow.com`, `homes.com`, `movoto.com`, `trulia.com` | 403 | No |
+| `realtor.com` | 429 | No |
+| `point2homes.com`, `landwatch.com`, `rocket.com` | 403 | No |
+
+The 403s are returned by the sites' own CDNs, not by the proxy: they carry an HTML body and
+leave no entry in `recentRelayFailures`. That distinction is how to tell a policy denial from
+a bot block, and it matters because allowlisting a domain cannot fix a bot block.
+
+## `WebFetch` does not work here
+
+`WebFetch` returns **405 Method Not Allowed** from the proxy for every URL. Per
+`/root/.ccr/README.md`, a 405 means the client sent a plain-HTTP request instead of a
+`CONNECT` tunnel — the proxy only supports `HTTPS_PROXY`-style tunnelling. This is a
+limitation of the tool, not a policy denial, and it is not something this repo can fix.
+
+**Use `curl` instead.** It is already configured to trust the proxy CA bundle at
+`/root/.ccr/ca-bundle.crt`, and it is what `scrape.js` shells out to.
+
+## Re-testing
 
 ```bash
+# Is the egress policy denying anything?
 curl -sS "$HTTPS_PROXY/__agentproxy/status" | python3 -m json.tool
+
+# Is the data source still serving?
+curl -sS -o /dev/null -w "%{http_code}\n" \
+  -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36" \
+  https://www.coldwellbankerhomes.com/ca/placerville/
 ```
 
-A gateway denial appears in `recentRelayFailures`; a *site* blocking datacenter IPs
-does not, and returns an HTML body. That distinction is how to tell the two apart.
+- `200` → working; `node scrape.js` should run clean.
+- `403` **without** a new `recentRelayFailures` entry → the site started bot-blocking.
+- `403` **with** a new entry → an egress policy denial; report the host rather than routing around it.
 
-## What actually serves
+A browser user-agent header is required. Without one the site's CDN responds differently.
 
-| Host | Result | Use |
-|---|---|---|
-| `coldwellbankerhomes.com` | **200** | Primary source — full MLS-backed inventory + photos |
-| `metrolistpro.com` | **200** | Verification — official MetroList MLS public search |
-| `m.cbhomes.com`, `m1.cbhomes.com` | **200** | Listing photo CDN, hotlinks fine |
-| `redfin.com` (HTML search pages) | **200** | Works — see `redfin.py` |
-| `redfin.com/stingray/api/*` | 403 | CloudFront-blocked; payload is embedded in the HTML page instead |
-| `century21.com`, `compass.com` | 200 root, empty search | Not usable |
-| `zillow.com` | 403 | Site bot-blocks datacenter IPs |
-| `realtor.com` | 429 | Rate-limited |
-| `homes.com`, `movoto.com` | 403 | Site bot-blocks |
+## If the data source ever goes dark
 
-## Known quirks
+In rough order of effort:
 
-- **Requests need a desktop browser `User-Agent`.** Without one, Coldwell Banker
-  returns a short error body rather than listing HTML — hence the `> 5000 bytes`
-  sanity check in `refresh.py`'s fetch helper. Treat a short body as throttling and
-  retry with backoff, never as thin inventory.
-- **`WebFetch` is refused for the blocked portals**, and returns `405` in some
-  configurations because of how it issues the request. Use `curl`.
-- **Headless Chromium cannot egress at all**, even with `proxy:` set and
-  `--ignore-certificate-errors` — every request returns `ERR_CONNECTION_RESET` while
-  `curl` to the same URL succeeds. This only affects local screenshot checks of
-  `index.html`; photos are fine in a real browser. Verify a photo URL with
-  `curl -o /dev/null -w '%{http_code} %{content_type}'` instead, and read a
-  screenshot full of fallback tiles as a sandbox artifact, not a broken page.
-- Expect intermittent `202` responses with an empty body from Redfin; that is a soft
-  bot-block that clears on retry.
+1. **Try another IDX brokerage site.** Coldwell Banker is not special — any brokerage
+   republishing the MetroList feed with server-rendered JSON-LD would work, and `scrape.js`
+   only needs its city-page URL pattern changed. Century 21, Windermere and BHHS all
+   responded to a request from here and are worth probing first.
+2. **Zillow/Redfin saved search with email alerts** to the account's Gmail. This runner has
+   Gmail access, so alert emails become an authoritative feed carrying status, price cuts and
+   image URLs. No network change required, and immune to bot blocking.
+3. **A real-estate data API key** (SimplyRETS, Bridge Interactive, a RapidAPI provider).
+4. **`ingest.js`** — paste a Zillow/Redfin results page in by hand. The manual fallback.
 
-## If the sources go dark
-
-1. Retest the portals — bot-blocking is not permanent.
-2. Another MetroList IDX republisher: most local brokerage sites carry the same feed
-   and the smaller ones rarely bot-block. Look for a `pid_`-style detail URL with a
-   JSON-LD block; `refresh.py`'s parser will port over with small changes.
-3. Zillow/Redfin saved-search **email alerts** into the connected Gmail — needs no
-   network access at all and carries status, price cuts and photo URLs. `ingest.js`
-   accepts pasted results.
-4. A licensed data API key (SimplyRETS, Bridge Interactive, RapidAPI).
+Note the coverage trap behind all of this: web search returns a small, stale, non-random
+slice of inventory, because it reads *summaries of* portal pages rather than querying the
+live MLS. A thin search-derived result list is never evidence that inventory is thin.
