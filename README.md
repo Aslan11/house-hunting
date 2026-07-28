@@ -100,6 +100,19 @@ don't republish them more broadly.
 - **`ingest.js`** — manual fallback: merges listings pasted from a Zillow/Redfin results page.
   Only needed if the primary feed ever goes dark.
 - **`NETWORK.md`** — what this environment can and cannot reach, and how to re-test.
+- **`refresh.py` / `redfin.py`** — an earlier run's Python implementation of the same
+  refresh. It converged independently on the same feed and the same three-stage approach,
+  and it adds a per-listing MetroListPRO cross-check that `scrape.js` does not have.
+  Either can drive the page.
+
+### Two refresh implementations
+
+`scrape.js` and `refresh.py` do the same job and agree on the fields that carry history —
+`mls`, `firstSeen`, `priceHistory` — which is what makes them interchangeable across runs.
+They differ on presentation field names (`newThisRun` vs `isNew`, `summary` vs `desc`) and
+on whether `nearMisses` is a flat array or two buckets. `build.js` normalises both, so a
+run may use either without breaking the page. **Pick one per run — don't run both**, or the
+second will overwrite the first's `lastRun` bookkeeping.
 
 ## Publishing
 
