@@ -388,6 +388,17 @@ out.update({
                  f"read for acreage and pool; {len(matches)} met every criterion; "
                  f"{len(listings)} of those were confirmed Active by the MLS itself."),
     },
+    # `out` starts as a copy of the previous run, so every counter the page renders has
+    # to be rewritten here — otherwise the header stats silently keep last run's numbers.
+    "source": {
+        "name": "Coldwell Banker Homes (MetroList MLS IDX feed)",
+        "method": ("Enumerated every active listing in Placerville, Shingle Springs and Rescue "
+                   "from the brokerage's JSON-LD search pages, then pulled each candidate's "
+                   "detail page for lot size, pool fields and true MLS status."),
+        "inventoryScanned": scanned,
+        "passedBedsBathsPrice": len(shortlist),
+        "verifiedActiveMatches": len(listings),
+    },
     "listings": listings,
     "nearMisses": {"acreageOkNoPool": near_no_pool, "poolOkLotTooSmall": near_small_lot},
     "dropped": dropped,
