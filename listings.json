@@ -13,21 +13,20 @@
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-07-29",
+  "lastRun": "2026-07-30",
   "source": {
     "name": "Coldwell Banker Homes (MetroList MLS IDX feed)",
     "method": "Enumerated every active listing in Placerville, Shingle Springs and Rescue from the brokerage's JSON-LD search pages, then pulled each candidate's detail page for lot size, pool fields and true MLS status.",
     "inventoryScanned": 315,
-    "passedBedsBathsPrice": 74,
-    "verifiedActiveMatches": 10
+    "passedBedsBathsPrice": 73,
+    "verifiedActiveMatches": 9
   },
   "dataQuality": {
-    "verifiedActiveListings": 10,
+    "verifiedActiveListings": 9,
     "primarySource": "Coldwell Banker IDX feed (MetroList MLS data), full city inventory sweep",
     "verificationSource": "MetroListPRO \u2014 official MetroList MLS public search",
     "inventoryScanned": 315,
-    "note": "Swept 315 active listings across the target cities; 74 passed the bed/bath/price filter and had their detail pages read for acreage and pool; 10 met every criterion; 10 of those were confirmed Active by the MLS itself.",
-    "crossCheck": "Independently re-derived this run from a second, unrelated source: Redfin's search export for ZIPs 95682/95672/95667, filtered to 4BR+/3BA+/2.5ac+/<=$1.5M, then each candidate's own Redfin page read for the MLS POOL_PRIVATE_YN amenity and mlsStatusDisplay. That pass produced the same match set and the same prices. It differed on one property: Redfin records 1234 Rising Hill W Road as 2.5 baths (2 full + 1 half), where the IDX feed's 'Total Bathrooms: 3' counts the half bath as full \u2014 see that listing's caveat."
+    "note": "Swept 315 active listings across the target cities; 73 passed the bed/bath/price filter and had their detail pages read for acreage and pool; 10 met every criterion; 9 of those were confirmed Active by the MLS itself."
   },
   "listings": [
     {
@@ -76,7 +75,7 @@
       "propertyType": "Single Family",
       "status": "match",
       "firstSeen": "2026-07-27",
-      "lastSeen": "2026-07-29",
+      "lastSeen": "2026-07-30",
       "url": "https://www.coldwellbankerhomes.com/ca/placerville/1234-rising-hill-w-rd/pid_72120077/",
       "mlsUrl": "https://www.metrolistpro.com/homes/2/6/1234-RISING-HILL-W-ROAD-PLACERVILLE-CA-95667/226079329",
       "verified": {
@@ -86,69 +85,9 @@
         "bedsAgree": true,
         "acresAgree": true,
         "poolAgrees": true,
-        "checkedOn": "2026-07-29"
+        "checkedOn": "2026-07-30"
       },
       "caveat": "MLS counts 3 total baths as 2 full + 1 half \u2014 only 2 full baths."
-    },
-    {
-      "id": "1988-cold-springs-road-placerville",
-      "address": "1988 Cold Springs Road",
-      "city": "Placerville",
-      "zip": "95667",
-      "mls": "226033527",
-      "currentPrice": 850000,
-      "priceHistory": [
-        {
-          "date": "2026-07-26",
-          "price": 850000
-        }
-      ],
-      "isNew": false,
-      "beds": 4,
-      "baths": 3.0,
-      "fullBaths": 3.0,
-      "sqft": 2909,
-      "acres": 2.73,
-      "pool": true,
-      "poolDetail": "Built-In, Pool Cover, Pool/Spa Combo",
-      "yearBuilt": "2011",
-      "lotDesc": "Private, Stream Year Round",
-      "zoning": "RES",
-      "schoolDistrict": "El Dorado",
-      "garage": "2",
-      "horse": "Yes",
-      "lat": 38.7386589050293,
-      "lon": -120.85718536376953,
-      "photos": [
-        "https://m1.cbhomes.com/p/371/226033527/67D4c74cf6314cC/full.webp",
-        "https://m1.cbhomes.com/p/371/226033527/4049C87686094d6/full.webp",
-        "https://m.cbhomes.com/p/371/226033527/41c104a8B1034E8/full.webp",
-        "https://m1.cbhomes.com/p/371/226033527/Fa9cc4d98cD6489/full.webp",
-        "https://m.cbhomes.com/p/371/226033527/bB59eEbBBd1542A/full.webp",
-        "https://m1.cbhomes.com/p/371/226033527/a5CB0cEf9eFF434/full.webp",
-        "https://m.cbhomes.com/p/371/226033527/cb6631BA8a87486/full.webp",
-        "https://m1.cbhomes.com/p/371/226033527/FC555721c5f3443/full.webp"
-      ],
-      "desc": "Discover the property 1988 Cold Springs Road, Placerville, CA 95667 for sale. Beautiful farmhouse-inspired home featuring a stunning built-in pool & spa, offering the perfect blend of convenience & peaceful country living just minutes from town. This spacious property includes 4 bedrooms, 3 full bathrooms, a dedicated office or possible 5th bedroom, 2-car garage plus a detached garage/workshop, and sits on 2.73 usable acres with a year-round stream. The open-concept kitchen and dining area is ideal for hosting, highlighted by an oversized island, marble countertops, custom cabinetry, a large picture window with a cozy window seat, and abundant natural light. The main-level primary suite offers dual closets and direct access to the deck through a sliding glass door. The en-suite bathroom is designed to impress. Upstairs, you'll find two additional bedrooms, a full bathroom, a loft space perfect for relaxing, and a convenient wet bar. Work from home in comfort with an office that overlooks the pool. There's plenty of space for RV parking, recreational vehicles, animals, and more with no HOA restrictions. This property is private, versatile, and full of potential.",
-      "listedOn": "2026-03-20",
-      "flag": null,
-      "priceReduction": null,
-      "propertyType": "Single Family",
-      "status": "match",
-      "firstSeen": "2026-07-26",
-      "lastSeen": "2026-07-29",
-      "url": "https://www.coldwellbankerhomes.com/ca/placerville/1988-cold-springs-rd/pid_70227860/",
-      "mlsUrl": "https://www.metrolistpro.com/homes/2/6/1988-COLD-SPRINGS-ROAD-PLACERVILLE-CA-95667/226033527",
-      "verified": {
-        "source": "MetroListPRO (official MetroList MLS public site)",
-        "status": "Active",
-        "priceAgrees": true,
-        "bedsAgree": true,
-        "acresAgree": true,
-        "poolAgrees": true,
-        "checkedOn": "2026-07-29"
-      },
-      "caveat": null
     },
     {
       "id": "2565-stagecoach-road-placerville",
@@ -196,7 +135,7 @@
       "propertyType": "Single Family",
       "status": "match",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-07-29",
+      "lastSeen": "2026-07-30",
       "url": "https://www.coldwellbankerhomes.com/ca/placerville/2565-stagecoach-rd/pid_72639639/",
       "mlsUrl": "https://www.metrolistpro.com/homes/2/6/2565-STAGECOACH-ROAD-PLACERVILLE-CA-95667/226059973",
       "verified": {
@@ -206,7 +145,7 @@
         "bedsAgree": true,
         "acresAgree": true,
         "poolAgrees": true,
-        "checkedOn": "2026-07-29"
+        "checkedOn": "2026-07-30"
       },
       "caveat": null
     },
@@ -260,7 +199,7 @@
       "propertyType": "Single Family",
       "status": "match",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-07-29",
+      "lastSeen": "2026-07-30",
       "url": "https://www.coldwellbankerhomes.com/ca/shingle-springs/3784-cattle-dr/pid_72631576/",
       "mlsUrl": "https://www.metrolistpro.com/homes/2/6/3784-CATTLE-DRIVE-SHINGLE-SPRINGS-CA-95682/226092223",
       "verified": {
@@ -270,7 +209,7 @@
         "bedsAgree": true,
         "acresAgree": true,
         "poolAgrees": true,
-        "checkedOn": "2026-07-29"
+        "checkedOn": "2026-07-30"
       },
       "caveat": null
     },
@@ -304,7 +243,7 @@
       "lat": 38.71759796142578,
       "lon": -121.01573181152344,
       "photos": [
-        "https://m1.cbhomes.com/p/371/226083791/2Ebcf7d0713D413/full.webp",
+        "https://m.cbhomes.com/p/371/226083791/2Ebcf7d0713D413/full.webp",
         "https://m1.cbhomes.com/p/371/226083791/6d882eA9dba347D/full.webp",
         "https://m.cbhomes.com/p/371/226083791/26b1693C05Ad41d/full.webp",
         "https://m1.cbhomes.com/p/371/226083791/B26472A278f54cA/full.webp",
@@ -320,7 +259,7 @@
       "propertyType": "Single Family",
       "status": "match",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-07-29",
+      "lastSeen": "2026-07-30",
       "url": "https://www.coldwellbankerhomes.com/ca/rescue/3720-four-springs-dr/pid_72298813/",
       "mlsUrl": "https://www.metrolistpro.com/homes/2/6/3720-FOUR-SPRINGS-DRIVE-RESCUE-CA-95672/226083791",
       "verified": {
@@ -330,7 +269,7 @@
         "bedsAgree": true,
         "acresAgree": true,
         "poolAgrees": true,
-        "checkedOn": "2026-07-29"
+        "checkedOn": "2026-07-30"
       },
       "caveat": null
     },
@@ -380,7 +319,7 @@
       "propertyType": "Single Family",
       "status": "match",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-07-29",
+      "lastSeen": "2026-07-30",
       "url": "https://www.coldwellbankerhomes.com/ca/shingle-springs/5551-saddlehorn-rd/pid_72318162/",
       "mlsUrl": "https://www.metrolistpro.com/homes/2/6/5551-SADDLEHORN-ROAD-SHINGLE-SPRINGS-CA-95682/226083864",
       "verified": {
@@ -390,7 +329,7 @@
         "bedsAgree": true,
         "acresAgree": true,
         "poolAgrees": true,
-        "checkedOn": "2026-07-29"
+        "checkedOn": "2026-07-30"
       },
       "caveat": null
     },
@@ -440,7 +379,7 @@
       "propertyType": "Single Family",
       "status": "match",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-07-29",
+      "lastSeen": "2026-07-30",
       "url": "https://www.coldwellbankerhomes.com/ca/rescue/3565-farview-ct/pid_72531546/",
       "mlsUrl": "https://www.metrolistpro.com/homes/2/6/3565-FARVIEW-COURT-RESCUE-CA-95672/226087456",
       "verified": {
@@ -450,7 +389,7 @@
         "bedsAgree": true,
         "acresAgree": true,
         "poolAgrees": true,
-        "checkedOn": "2026-07-29"
+        "checkedOn": "2026-07-30"
       },
       "caveat": null
     },
@@ -500,7 +439,7 @@
       "propertyType": "Single Family",
       "status": "match",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-07-29",
+      "lastSeen": "2026-07-30",
       "url": "https://www.coldwellbankerhomes.com/ca/rescue/3033-ridgeline-dr/pid_71947550/",
       "mlsUrl": "https://www.metrolistpro.com/homes/2/6/3033-RIDGELINE-DRIVE-RESCUE-CA-95672/226074530",
       "verified": {
@@ -510,7 +449,7 @@
         "bedsAgree": true,
         "acresAgree": true,
         "poolAgrees": true,
-        "checkedOn": "2026-07-29"
+        "checkedOn": "2026-07-30"
       },
       "caveat": null
     },
@@ -544,7 +483,7 @@
       "lat": 38.62742614746094,
       "lon": -120.8028564453125,
       "photos": [
-        "https://m1.cbhomes.com/p/371/226064449/d1EFFADd18624f4/full.webp",
+        "https://m.cbhomes.com/p/371/226064449/d1EFFADd18624f4/full.webp",
         "https://m1.cbhomes.com/p/371/226064449/A4DAD1CE3D25422/full.webp",
         "https://m.cbhomes.com/p/371/226064449/A89aB686728049c/full.webp",
         "https://m1.cbhomes.com/p/371/226064449/baC1d4b8Cd63425/full.webp",
@@ -560,7 +499,7 @@
       "propertyType": "Single Family",
       "status": "match",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-07-29",
+      "lastSeen": "2026-07-30",
       "url": "https://www.coldwellbankerhomes.com/ca/placerville/6881-sagittarius-dr/pid_72017706/",
       "mlsUrl": "https://www.metrolistpro.com/homes/2/6/6881-SAGITTARIUS-DRIVE-PLACERVILLE-CA-95667/226064449",
       "verified": {
@@ -570,7 +509,7 @@
         "bedsAgree": true,
         "acresAgree": true,
         "poolAgrees": true,
-        "checkedOn": "2026-07-29"
+        "checkedOn": "2026-07-30"
       },
       "caveat": null
     },
@@ -604,7 +543,7 @@
       "lat": 38.75221252441406,
       "lon": -120.9349136352539,
       "photos": [
-        "https://m.cbhomes.com/p/371/226093241/D391c910B23B48a/full.webp",
+        "https://m1.cbhomes.com/p/371/226093241/D391c910B23B48a/full.webp",
         "https://m1.cbhomes.com/p/371/226093241/945cC4344A22432/full.webp",
         "https://m.cbhomes.com/p/371/226093241/6e2De5a825f9449/full.webp",
         "https://m1.cbhomes.com/p/371/226093241/ec6A1Effc8D04A6/full.webp",
@@ -620,7 +559,7 @@
       "propertyType": "Multi-Family",
       "status": "match",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-07-29",
+      "lastSeen": "2026-07-30",
       "url": "https://www.coldwellbankerhomes.com/ca/placerville/1781-springvale-rd/pid_72687553/",
       "mlsUrl": "https://www.metrolistpro.com/homes/2/6/1781-SPRINGVALE-ROAD-PLACERVILLE-CA-95667/226093241",
       "verified": {
@@ -630,7 +569,7 @@
         "bedsAgree": true,
         "acresAgree": true,
         "poolAgrees": true,
-        "checkedOn": "2026-07-29"
+        "checkedOn": "2026-07-30"
       },
       "caveat": null
     }
@@ -930,17 +869,6 @@
         "sqft": 2572,
         "mls": "226082194",
         "url": "https://www.coldwellbankerhomes.com/ca/placerville/7220-horseshoe-ln/pid_72340751/"
-      },
-      {
-        "address": "3900 Loma Drive",
-        "city": "Shingle Springs",
-        "price": 1400000,
-        "beds": 4,
-        "baths": 3.0,
-        "acres": 5.0,
-        "sqft": 2790,
-        "mls": "225132562",
-        "url": "https://www.coldwellbankerhomes.com/ca/shingle-springs/3900-loma-dr/pid_68133164/"
       }
     ],
     "poolOkLotTooSmall": [
@@ -1034,7 +962,13 @@
       }
     ]
   },
-  "dropped": [],
+  "dropped": [
+    {
+      "address": "1988 Cold Springs Road, Placerville",
+      "reason": "MLS reports Pending \u2014 not shown.",
+      "droppedOn": "2026-07-30"
+    }
+  ],
   "rejected": [
     {
       "address": "1601 Velvet Horn Ln, Rescue",
@@ -1094,5 +1028,5 @@
       "reason": "0.25 acres"
     }
   ],
-  "previousRun": "2026-07-28"
+  "previousRun": "2026-07-29"
 }

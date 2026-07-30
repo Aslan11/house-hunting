@@ -330,9 +330,16 @@ for c in cards:
     if c["status"] == "Active":
         still_listed[key_of(c)] = c
         still_listed.setdefault(sid(c["address"], c["city"]), c)
+# Properties pulled because the MLS itself reports them Pending/Sold are reported below,
+# with the MLS status as the reason. Skip them here: the IDX card can still read "Active"
+# for a listing already in escrow, which would otherwise emit a second, wrong entry
+# blaming pool or acreage for a drop that was really a status change.
+unverified_keys = {key_of(r) for r in dropped_unverified}
+unverified_keys |= {sid(r.get("address", ""), r.get("city", "")) for r in dropped_unverified}
+
 dropped = []
 for i, o in old_by_key.items():
-    if i in live_keys:
+    if i in live_keys or i in unverified_keys:
         continue
     c = still_listed.get(i) or still_listed.get(sid(o.get("address",""), o.get("city","")))
     if c:
@@ -347,9 +354,11 @@ for i, o in old_by_key.items():
                   + (f" — {', '.join(why)}." if why else " on pool or acreage."))
     else:
         reason = "No longer in active MLS inventory — sold or withdrawn."
-    dropped.append({"address": f"{o['address']}, {o['city']}", "reason": reason})
+    dropped.append({"address": f"{o['address']}, {o['city']}", "reason": reason,
+                    "droppedOn": RUN})
 dropped += [{"address": f"{r['address']}, {r['city']}",
-             "reason": f"MLS reports {verified[r['mls']].get('status') or 'not active'} — not shown."}
+             "reason": f"MLS reports {verified[r['mls']].get('status') or 'not active'} — not shown.",
+             "droppedOn": RUN}
             for r in dropped_unverified]
 for d in dropped:
     changes.append(f"DROPPED {d['address']}")

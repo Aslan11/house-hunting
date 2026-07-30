@@ -149,7 +149,19 @@ const lastChange = L
   .map((l) => (l.priceHistory || []).slice(-1)[0])
   .filter((h) => h && h.date).map((h) => h.date).sort().pop();
 
-const highlights = !fresh.length && !changed.length
+/* A listing leaving the list is news too — it is often the only thing that moved. Surface it in
+   the highlights strip rather than only in the section far down the page, and never let the
+   empty-state claim nothing dropped when something did. */
+const goneToday = (data.dropped || []).filter((d) => d.droppedOn === data.lastRun);
+
+const dropStrip = goneToday.length
+  ? `<div class="strip-drop"><strong>&#8595; ${goneToday.length} ${goneToday.length === 1 ? 'listing' : 'listings'} left the list.</strong>
+     <ul>${goneToday.map((d) => `<li><b>${esc(d.address)}</b> — ${esc(d.reason)}</li>`).join('')}</ul></div>`
+  : '';
+
+const nothingMoved = !fresh.length && !changed.length && !goneToday.length;
+
+const highlights = nothingMoved
   ? `<div class="strip-empty"><strong>Nothing new this run.</strong> No listings entered the market,
      none changed price, and none dropped off. All ${L.length} matches below were verified again
      today${lastChange && lastChange !== data.lastRun ? `; the most recent movement was on ${esc(lastChange)}` : ''}.</div>`
@@ -158,6 +170,11 @@ const highlights = !fresh.length && !changed.length
        <div class="grid">${fresh.map((l) => card(l)).join('')}</div>` : '',
       changed.length ? `<h2 class="h-chg">&#8645; ${changed.length} price ${changed.length === 1 ? 'change' : 'changes'}</h2>
        <div class="grid">${changed.map((l) => card(l)).join('')}</div>` : '',
+      dropStrip,
+      (!fresh.length && !changed.length)
+        ? `<div class="strip-empty"><strong>No new listings and no price changes.</strong> The
+           ${L.length} matches below were all verified again today.</div>`
+        : '',
     ].join('\n');
 
 /* Flat array (scrape.js) or {acreageOkNoPool, poolOkLotTooSmall} buckets (refresh.py). */
@@ -217,6 +234,12 @@ h2.h-chg{color:var(--warn)}
 .lede{color:var(--dim);font-size:14.5px;margin:-8px 0 18px;max-width:74ch}
 .strip-empty{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--new);
   border-radius:12px;padding:16px 18px;color:var(--dim);font-size:14.5px}
+.strip-drop{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--warn);
+  border-radius:12px;padding:16px 18px;color:var(--dim);font-size:14.5px;margin-top:18px}
+.strip-drop strong{color:var(--ink)}
+.strip-drop ul{margin:8px 0 0;padding-left:20px}
+.strip-drop li{margin:3px 0}
+.strip-drop li b{color:var(--ink);font-weight:600}
 
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:22px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;
