@@ -61,6 +61,18 @@ Corollaries worth keeping:
   A prefix older than the current year is strong evidence a record is stale.
 - Prefer under-reporting. An empty result is correct and useful; a fabricated match is not.
 
+**3. A portal search page is not a complete result set.** A cross-check run on 2026-07-30 scraped
+the *rendered listing cards* out of Redfin's filtered search HTML and found 7 of the 9 matches. The
+two it missed (1234 Rising Hill W Road, 1781 Springvale Road) were not disqualified — Redfin only
+renders the first page of cards, roughly 30–40, and Placerville has more inventory than that. The
+sweep looked complete and was not.
+
+This is why the primary pipeline enumerates `/p_N/` pages until exhausted rather than reading one
+page, and why `redfin.py` parses the embedded `ReactServerAgent.cache.dataCache` payload instead of
+the visible cards. A cross-check that agrees with the primary sweep is only meaningful if it was
+itself complete; a partial sweep that happens to agree proves nothing. If a future run's cross-check
+returns *fewer* matches than the primary, suspect pagination before suspecting the primary.
+
 ## Cross-run behaviour
 
 `scrape.js` merges rather than overwrites, so the schedule can run unattended:
