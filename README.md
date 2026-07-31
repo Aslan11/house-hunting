@@ -1,110 +1,110 @@
 # House Hunting — El Dorado County
 
 Automated house-hunt tracker for **Shingle Springs**, **Rescue**, and **Placerville, CA**.
+Published from the `gh-pages` branch.
 
 ## Criteria
 
 | Requirement | Value |
 |---|---|
-| Bedrooms | 5+ |
+| Bedrooms | 4+ |
 | Bathrooms | 3+ |
-| Pool | Required |
+| Pool | Required (private pool) |
 | Lot size | 2.5 acres minimum, 5+ preferred |
 | Max price | $1,500,000 |
 
-## ⚠️ Verification gate — read before reporting anything
+## Running it
 
-The first run of this tracker reported four properties as matches. **All four were off market.**
+```bash
+python3 hunt.py     # search + verify + merge  -> listings.json
+node build.js       # render                   -> index.html
+```
+
+`hunt.py` needs outbound HTTPS to `www.redfin.com` and `ssl.cdn-redfin.com`. Both are reachable
+from this environment as of 2026-07-31 (see `NETWORK.md` for history and fallbacks).
+
+## How it works
+
+Three stages, in `hunt.py`:
+
+1. **Search** — Redfin search pages for the target ZIPs and cities. Listing stubs come out of the
+   `application/ld+json` blocks these pages embed.
+2. **Verify** — fetch each candidate's own detail page and read the facts from it.
+3. **Merge** — reconcile against the previous `listings.json`: flag new listings, record price
+   changes, drop anything no longer active.
+
+`build.js` renders `index.html` from `listings.json`. Edit the JSON and rebuild; don't hand-edit
+the HTML.
+
+## The verification gate — why this is built the way it is
+
+An early version of this tracker reported four properties as matches. **All four were off market.**
 
 Root cause: listing status was inferred from search-engine result text. Search engines index
-listing pages that keep "For Sale" in the `<title>` for years after the sale closes, so stale
+listing pages that keep "For Sale" in the `<title>` for years after a sale closes, so stale
 listings read as active. A second failure compounded it — search snippets conflated two different
 properties on the same street, producing a listing with the wrong MLS number, bed count and price.
 
-**Rules that follow from this:**
+The rules that follow, all enforced in `hunt.py`:
 
-1. A property may only be given `status: "match"` when its active status is confirmed against a
-   live listing page or an authoritative feed. Search-result text is **not** sufficient.
-2. MetroList MLS numbers encode the listing year: `221…` = 2021, `223…` = 2023, `225…` = 2025,
-   `226…` = 2026. A prefix older than the current year is strong evidence the listing is stale.
-   Treat it as off market unless proven otherwise.
-3. Cross-check bed/bath/price against at least two independent sources before reporting. If they
-   disagree, report the disagreement rather than picking one.
-4. Prefer *under*-reporting. An empty result is correct and useful; a fabricated match is not.
+1. **Status comes from the listing page itself.** Specifically the `xdp-meta` JSON block
+   (`listingStatus`) and the MLS status display. Search-result text is never a status source.
+2. **Only subject-anchored fields are read.** A Redfin detail page also embeds payloads for nearby
+   homes and comparables, so a first-match regex will happily return a neighbour's address, lot
+   size or photos. Every field is taken from a place that belongs to the subject property: the
+   `<title>`, the `<meta name="description">`, the hero key-details panel, or an amenity block
+   that occurs *exactly once* on the page. An amenity that appears zero or multiple times is
+   recorded as a warning rather than guessed at.
+3. **Disagreement is reported, not resolved silently.** Where the page carries lot size in more
+   than one place and the figures differ, the **smallest** is used and the disagreement is shown
+   on the card.
+4. **Photos are matched on the listing's own MLS number**, so a neighbouring property's photos
+   can't land on the wrong card.
+5. **Prefer under-reporting.** An empty result is correct and useful; a fabricated match is not.
 
-## Why the environment can't verify
+### The filter-completeness trap
 
-The network policy allows GitHub, package registries, and a keyed `maps.googleapis.com`. Everything
-else is blocked at the proxy — Zillow, Redfin, Realtor.com, Homes.com, Movoto, small brokerage
-sites, plus OpenStreetMap, Wikimedia and Esri tile servers. `WebFetch` is blocked outright
-(`example.com` returns 403). `WebSearch` is the only channel, and it returns summarised text, never
-live status and never image URLs.
+The portal's own lot-size filter **silently omits listings whose MLS lot field is unpopulated**.
+Filtering on `min-lot-size=2.5-acre` at the portal returned 29 candidates; filtering only on beds
+and price returned 56, and the extra 27 included real acreage properties. So `hunt.py` deliberately
+filters on **bedrooms and price only** at the portal, and applies acreage, bath and pool rules
+locally against verified per-listing data.
 
-## Fixing the pipeline
+The same caution applies to search engines generally: web search returns a small, stale,
+non-random slice of inventory, because it reads *summaries of* portal pages rather than the live
+result set. A thin search-derived list is not evidence that inventory is thin.
 
-Ranked cheapest-first. The first option solves listing status **and** photos at once:
+## Dedupe rules
 
-1. **Zillow/Redfin saved search with email alerts** to `kvn.p.mrtn@gmail.com`. This repo's runner
-   has Gmail access, so alert emails become an authoritative feed: current listings, correct
-   status, price cuts, and image URLs. ~5 minutes to set up, one time.
-2. **An agent-run MLS/IDX client portal** with email alerts — same benefits, fuller MLS data.
-3. **A real-estate data API key** in the environment (SimplyRETS, Bridge Interactive, a RapidAPI
-   provider) for direct queries.
-4. **Allowlisting a listing domain** in the network policy. Least reliable — the portals bot-block
-   independently of the proxy.
+`hunt.py` handles these automatically, keyed on a normalised `address + city` id.
 
-## Photos
-
-Photo support is built and waiting on a source.
-
-- Each listing has a `photos` array in `listings.json`. Put any image URL in it and the card
-  renders it on the next build.
-- Hotlinking works even though this environment can't load images: the **viewer's browser** fetches
-  them, and it isn't behind this proxy. Images carry `referrerpolicy="no-referrer"`, which also
-  gets past most CDN referrer blocks.
-- If a photo URL 404s or is blocked, an `onerror` handler swaps in the fallback tile client-side,
-  so a dead URL never leaves a hole in the layout.
-- With no photo, the card shows a "View photos on <site>" tile linking to `gallery` (or `url`).
-
-Note that MLS photos are the copyright of the listing brokerage. Fine for a private hunting page;
-don't republish them more broadly.
-
-## Fastest path: paste from Zillow
-
-`ingest.js` takes listings copied straight off a Zillow or Redfin results page and merges them in,
-applying the dedupe rules below automatically.
-
-```bash
-node ingest.js paste.txt     # or:  pbpaste | node ingest.js
-node build.js
-```
-
-It reports what was new, what changed price, and what was already tracked. Anything outside the
-three target cities is skipped; anything failing a hard criterion is added but flagged rather than
-presented as a match. Image URLs in the paste become the card photo.
-
-Note the coverage problem this solves: web search returns only a small, stale, non-random slice of
-inventory, because it reads *summaries of* portal pages rather than querying the live MLS. A portal's
-own filtered search is the real result set. Do not treat a thin search-derived result list as
-evidence that inventory is thin.
+1. A property already in `listings.json` is not re-flagged as new — `isNew` is false.
+2. A changed price *is* newsworthy: it appends to `priceHistory`, sets `priceChanged` and
+   `previousPrice`, and the card renders the delta.
+3. Anything previously tracked that is no longer an active listing meeting the criteria moves to
+   `dropped`, with the date and reason. Dropped entries are kept so a later run doesn't
+   re-surface them as new finds.
+4. `firstSeen` is preserved across runs; `lastSeen` and `verifiedOn` update each run.
 
 ## Files
 
 - **`listings.json`** — canonical data. Single source of truth.
-- **`ingest.js`** — merge pasted portal listings into `listings.json`.
-- **`build.js`** — renders `index.html` from `listings.json`. No dependencies: `node build.js`.
-- **`index.html`** — generated. Don't hand-edit; edit the JSON and rebuild.
+- **`hunt.py`** — search, verify, merge. Writes `listings.json`.
+- **`build.js`** — renders `index.html`. No dependencies: `node build.js`.
+- **`index.html`** — generated. Don't hand-edit.
+- **`ingest.js`** — manual fallback: merge listings pasted from a Zillow/Redfin results page.
+  Only needed if the network path to Redfin breaks again.
+- **`.cache/`** — fetched HTML, gitignored. Delete to force a clean re-fetch.
 
-## Dedupe rules for future runs
+## Photos
 
-Read `listings.json` **before** reporting anything.
+Photos are hotlinked from Redfin's CDN. The **viewer's** browser fetches them, so they render even
+when the generating environment can't load images. Each `<img>` carries
+`referrerpolicy="no-referrer"`, which gets past most CDN referrer blocks, and an `onerror` handler
+swaps in a link tile so a dead URL never leaves a hole in the layout.
 
-1. A property already in `listings` is a **duplicate** — do not re-surface it.
-2. Exception: if the price differs from `currentPrice`, that *is* worth reporting. Append to
-   `priceHistory`, update `currentPrice`, and the card will render the delta automatically.
-3. Anything in `rejected` stays rejected unless a price change brings it into range.
-4. An `off-market` property returning to market is newsworthy — but only once verified per the gate.
-5. Update `lastSeen` on confirmed-active properties and `lastRun` on every run.
+MLS photos are the copyright of the listing brokerage. Fine for a private hunting page; don't
+republish them more broadly.
 
 ## Publishing
 

@@ -99,7 +99,9 @@ const slug = (r) =>
 /* ---- merge ---- */
 const store = JSON.parse(fs.readFileSync(STORE, 'utf8'));
 const today = new Date().toISOString().slice(0, 10);
-const byId = new Map(store.listings.map((l) => [l.id, l]));
+store.nearMisses = store.nearMisses || [];
+store.dropped = store.dropped || [];
+const byId = new Map([...store.listings, ...store.nearMisses].map((l) => [l.id, l]));
 
 const added = [], repriced = [], dupes = [], skipped = [];
 
@@ -123,27 +125,29 @@ for (const b of blocks(raw)) {
       sqft: r.sqft ?? null, acres: r.acres ?? null,
       pool: r.pool, poolDetail: r.pool ? 'Pool' : 'No pool',
       photos: r.photos, gallery: r.url || null,
-      status: 'match', firstSeen: today, lastSeen: today,
-      notes: 'Ingested from a pasted search result — status taken from the live portal listing.',
+      status: 'match', firstSeen: today, lastSeen: today, verifiedOn: today,
+      isNew: true, warnings: [], unmet: [],
+      remarks: 'Ingested from a pasted search result — status taken from the live portal listing.',
       url: r.url || null,
     };
+    const c = store.criteria;
     const fails = [];
-    if (rec.beds  != null && rec.beds  < 5)   fails.push(`${rec.beds}BR`);
-    if (rec.baths != null && rec.baths < 3)   fails.push(`${rec.baths}BA`);
-    if (rec.acres != null && rec.acres < 2.5) fails.push(`${rec.acres}ac`);
-    if (rec.currentPrice > store.criteria.maxPrice) fails.push('over budget');
+    if (rec.beds  != null && rec.beds  < c.beds)     fails.push(`${rec.beds} bed`);
+    if (rec.baths != null && rec.baths < c.baths)    fails.push(`${rec.baths} bath`);
+    if (rec.acres != null && rec.acres < c.minAcres) fails.push(`${rec.acres} acres`);
+    if (rec.currentPrice > c.maxPrice)               fails.push('over budget');
     if (!rec.pool) fails.push('no pool');
-    if (fails.length) {
-      rec.status = 'active-fails-criteria';
-      rec.badge = `Active — ${fails.join(', ')}`;
-    }
-    store.listings.push(rec);
+    rec.unmet = fails;
+    if (fails.length) rec.status = 'near-miss';
+    (fails.length ? store.nearMisses : store.listings).push(rec);
     byId.set(id, rec);
     added.push(`${rec.address}, ${rec.city} — $${rec.currentPrice.toLocaleString()}` +
                (fails.length ? `  [${fails.join(', ')}]` : '  [matches criteria]'));
   } else if (existing.currentPrice !== r.currentPrice) {
     const from = existing.currentPrice;
     existing.priceHistory.push({ date: today, price: r.currentPrice });
+    existing.previousPrice = from;
+    existing.priceChanged = true;
     existing.currentPrice = r.currentPrice;
     existing.lastSeen = today;
     if (r.photos.length && !existing.photos?.length) existing.photos = r.photos;
@@ -156,9 +160,11 @@ for (const b of blocks(raw)) {
 }
 
 store.lastRun = today;
-store.dataQuality = {
-  verifiedActiveListings: store.listings.filter((l) => l.status === 'match').length,
-  note: 'Listings ingested from pasted portal results are treated as verified-active as of lastRun.',
+store.counts = {
+  verifiedActive: store.listings.length,
+  nearMisses: (store.nearMisses || []).length,
+  newThisRun: store.listings.filter((l) => l.isNew).length,
+  priceChanges: store.listings.filter((l) => l.priceChanged).length,
 };
 fs.writeFileSync(STORE, JSON.stringify(store, null, 2) + '\n');
 
