@@ -99,9 +99,7 @@ const slug = (r) =>
 /* ---- merge ---- */
 const store = JSON.parse(fs.readFileSync(STORE, 'utf8'));
 const today = new Date().toISOString().slice(0, 10);
-store.nearMisses = store.nearMisses || [];
-store.dropped = store.dropped || [];
-const byId = new Map([...store.listings, ...store.nearMisses].map((l) => [l.id, l]));
+const byId = new Map(store.listings.map((l) => [l.id, l]));
 
 const added = [], repriced = [], dupes = [], skipped = [];
 
@@ -125,29 +123,31 @@ for (const b of blocks(raw)) {
       sqft: r.sqft ?? null, acres: r.acres ?? null,
       pool: r.pool, poolDetail: r.pool ? 'Pool' : 'No pool',
       photos: r.photos, gallery: r.url || null,
-      status: 'match', firstSeen: today, lastSeen: today, verifiedOn: today,
-      isNew: true, warnings: [], unmet: [],
-      remarks: 'Ingested from a pasted search result — status taken from the live portal listing.',
+      status: 'match', firstSeen: today, lastSeen: today,
+      notes: 'Ingested from a pasted search result — status taken from the live portal listing.',
       url: r.url || null,
     };
-    const c = store.criteria;
+    // Minimums come from listings.json so a criteria change doesn't have to be made twice.
+    const minBeds  = parseFloat(store.criteria.beds)  || 4;
+    const minBaths = parseFloat(store.criteria.baths) || 3;
+    const minAcres = store.criteria.minAcres ?? 2.5;
     const fails = [];
-    if (rec.beds  != null && rec.beds  < c.beds)     fails.push(`${rec.beds} bed`);
-    if (rec.baths != null && rec.baths < c.baths)    fails.push(`${rec.baths} bath`);
-    if (rec.acres != null && rec.acres < c.minAcres) fails.push(`${rec.acres} acres`);
-    if (rec.currentPrice > c.maxPrice)               fails.push('over budget');
+    if (rec.beds  != null && rec.beds  < minBeds)  fails.push(`${rec.beds}BR`);
+    if (rec.baths != null && rec.baths < minBaths) fails.push(`${rec.baths}BA`);
+    if (rec.acres != null && rec.acres < minAcres) fails.push(`${rec.acres}ac`);
+    if (rec.currentPrice > store.criteria.maxPrice) fails.push('over budget');
     if (!rec.pool) fails.push('no pool');
-    rec.unmet = fails;
-    if (fails.length) rec.status = 'near-miss';
-    (fails.length ? store.nearMisses : store.listings).push(rec);
+    if (fails.length) {
+      rec.status = 'active-fails-criteria';
+      rec.badge = `Active — ${fails.join(', ')}`;
+    }
+    store.listings.push(rec);
     byId.set(id, rec);
     added.push(`${rec.address}, ${rec.city} — $${rec.currentPrice.toLocaleString()}` +
                (fails.length ? `  [${fails.join(', ')}]` : '  [matches criteria]'));
   } else if (existing.currentPrice !== r.currentPrice) {
     const from = existing.currentPrice;
     existing.priceHistory.push({ date: today, price: r.currentPrice });
-    existing.previousPrice = from;
-    existing.priceChanged = true;
     existing.currentPrice = r.currentPrice;
     existing.lastSeen = today;
     if (r.photos.length && !existing.photos?.length) existing.photos = r.photos;
@@ -160,11 +160,10 @@ for (const b of blocks(raw)) {
 }
 
 store.lastRun = today;
-store.counts = {
-  verifiedActive: store.listings.length,
-  nearMisses: (store.nearMisses || []).length,
-  newThisRun: store.listings.filter((l) => l.isNew).length,
-  priceChanges: store.listings.filter((l) => l.priceChanged).length,
+store.dataQuality = {
+  ...store.dataQuality,
+  verifiedActiveListings: store.listings.filter((l) => l.status === 'match').length,
+  note: 'Listings ingested from pasted portal results are treated as verified-active as of lastRun.',
 };
 fs.writeFileSync(STORE, JSON.stringify(store, null, 2) + '\n');
 

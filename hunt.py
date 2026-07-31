@@ -1,6 +1,18 @@
 #!/usr/bin/env python3
 """
-House-hunt pipeline for Shingle Springs / Rescue / Placerville, CA.
+Redfin CROSS-CHECK for the house hunt — not the primary source.
+
+IMPORTANT: Redfin renders only the first ~40 result cards per area, so this sweep is
+silently incomplete. On 2026-07-31 it found 6 of the 8 active matches and missed
+1781 Springvale Rd and 1988 Cold Springs Rd entirely. `scrape.js` enumerates the full
+MetroList IDX feed and is the source of truth for WHAT EXISTS.
+
+What this is good for: independently verifying FACTS about a property the primary
+pipeline already found. It reads status from each listing page's xdp-meta block and
+bed/bath/acreage from MLS amenity fields, which is a genuinely separate read — it is
+what caught the IDX feed rounding "2 full + 1 half" baths up to 3.
+
+Pipeline for Shingle Springs / Rescue / Placerville, CA.
 
 Three stages:
 
@@ -12,10 +24,10 @@ Three stages:
                fields: <title>, <meta description>, the xdp-meta JSON block, the
                hero key-details panel, and amenity blocks that occur exactly once.
                Anything ambiguous is recorded as a warning, never guessed.
-  3. MERGE   - reconcile against the previous listings.json: flag new listings,
+  3. MERGE   - reconcile against the previous crosscheck.json: flag new listings,
                record price changes, and drop anything no longer active.
 
-Run:  python3 hunt.py  &&  node build.js
+Run:  python3 hunt.py     # writes crosscheck.json; never touches listings.json
 """
 import html as H
 import json
@@ -291,8 +303,11 @@ def make_id(r):
 
 # ---------------------------------------------------------------- stage 3
 
+OUT_FILE = 'crosscheck.json'   # deliberately NOT listings.json — this sweep is incomplete
+
+
 def merge(rows, today):
-    prev_path = os.path.join(D, 'listings.json')
+    prev_path = os.path.join(D, OUT_FILE)
     prev = {}
     prev_doc = {}
     if os.path.exists(prev_path):
@@ -397,9 +412,9 @@ def main():
     rows = verify_all(stubs)
     print('stage 3: merge', file=sys.stderr)
     doc = merge(rows, today)
-    json.dump(doc, open(os.path.join(D, 'listings.json'), 'w'), indent=2)
+    json.dump(doc, open(os.path.join(D, OUT_FILE), 'w'), indent=2)
     c = doc['counts']
-    print(f"\nwrote listings.json - {c['verifiedActive']} matches "
+    print(f"\nwrote {OUT_FILE} - {c['verifiedActive']} matches "
           f"({c['newThisRun']} new, {c['priceChanges']} price changes), "
           f"{c['nearMisses']} near misses, {len(doc['dropped'])} dropped", file=sys.stderr)
     unresolved = [r for r in rows if not r.get('address')]

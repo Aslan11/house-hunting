@@ -9,104 +9,152 @@ Published from the `gh-pages` branch.
 |---|---|
 | Bedrooms | 4+ |
 | Bathrooms | 3+ |
-| Pool | Required (private pool) |
+| Pool | Required |
 | Lot size | 2.5 acres minimum, 5+ preferred |
 | Max price | $1,500,000 |
 
 ## Running it
 
 ```bash
-python3 hunt.py     # search + verify + merge  -> listings.json
-node build.js       # render                   -> index.html
+node scrape.js      # refresh listings.json from the live MLS feed
+node build.js       # render index.html
 ```
 
-`hunt.py` needs outbound HTTPS to `www.redfin.com` and `ssl.cdn-redfin.com`. Both are reachable
-from this environment as of 2026-07-31 (see `NETWORK.md` for history and fallbacks).
+`node scrape.js --dry` scrapes and reports without writing, which is the safe way to
+check what a run *would* change.
 
-## How it works
+Takes roughly 5–8 minutes, almost all of it waiting on the ~70 detail-page fetches.
 
-Three stages, in `hunt.py`:
+## Where the data comes from
 
-1. **Search** — Redfin search pages for the target ZIPs and cities. Listing stubs come out of the
-   `application/ld+json` blocks these pages embed.
-2. **Verify** — fetch each candidate's own detail page and read the facts from it.
-3. **Merge** — reconcile against the previous `listings.json`: flag new listings, record price
-   changes, drop anything no longer active.
+The **Coldwell Banker Homes** site (`coldwellbankerhomes.com`) republishes the MetroList
+MLS IDX feed — MetroList is the MLS that actually covers El Dorado County — and serves it
+as clean JSON-LD. It does not bot-block this environment, which nearly everything else does.
 
-`build.js` renders `index.html` from `listings.json`. Edit the JSON and rebuild; don't hand-edit
-the HTML.
+The pipeline is three stages:
 
-## The verification gate — why this is built the way it is
+1. **Enumerate.** Walk `/ca/<city>/p_N/` for each of the three cities. Each page carries a
+   JSON-LD `CollectionPage` with 24 `RealEstateListing` records: address, price, beds,
+   baths, sqft, geo, photo. This is the *complete* active inventory, not a search-engine
+   sample — roughly 300 listings across the three towns.
+2. **Filter.** Keep the ones clearing beds, baths and price. Typically ~67 of ~307.
+3. **Verify.** Fetch each survivor's detail page for the fields the search page lacks:
+   `Lot Size (Acres)`, the `Pool` / `Pool Description` fields, and the true listing status.
 
-An early version of this tracker reported four properties as matches. **All four were off market.**
+## ⚠️ Traps that have already burned this tracker
 
-Root cause: listing status was inferred from search-engine result text. Search engines index
-listing pages that keep "For Sale" in the `<title>` for years after a sale closes, so stale
-listings read as active. A second failure compounded it — search snippets conflated two different
-properties on the same street, producing a listing with the wrong MLS number, bed count and price.
+**1. Search-engine snippets are not listing status.** The first run reported four matches;
+all four were off market. Search engines index listing pages that keep "For Sale" in the
+`<title>` for years after closing, and snippets conflated two properties on the same street
+into one listing with the wrong MLS number, bed count and price. Only a live listing page
+or an authoritative feed counts.
 
-The rules that follow, all enforced in `hunt.py`:
+**2. `IsActive` is true on pending listings.** The IDX feed exposes an `IsActive` boolean
+and a schema.org `availability: InStock`. Both stay set on listings that are already in
+escrow. Two of the twelve otherwise-qualifying properties found on 2026-07-28 were
+**Sale Pending** despite `IsActive: true`. Status is therefore read from the listing's own
+visible `Status:` field, which `scrape.js` stores as `mlsStatus` — never from `IsActive`.
 
-1. **Status comes from the listing page itself.** Specifically the `xdp-meta` JSON block
-   (`listingStatus`) and the MLS status display. Search-result text is never a status source.
-2. **Only subject-anchored fields are read.** A Redfin detail page also embeds payloads for nearby
-   homes and comparables, so a first-match regex will happily return a neighbour's address, lot
-   size or photos. Every field is taken from a place that belongs to the subject property: the
-   `<title>`, the `<meta name="description">`, the hero key-details panel, or an amenity block
-   that occurs *exactly once* on the page. An amenity that appears zero or multiple times is
-   recorded as a warning rather than guessed at.
-3. **Disagreement is reported, not resolved silently.** Where the page carries lot size in more
-   than one place and the figures differ, the **smallest** is used and the disagreement is shown
-   on the card.
-4. **Photos are matched on the listing's own MLS number**, so a neighbouring property's photos
-   can't land on the wrong card.
-5. **Prefer under-reporting.** An empty result is correct and useful; a fabricated match is not.
+**3. A portal search page is not a complete result set.** A cross-check run on 2026-07-30 scraped
+the *rendered listing cards* out of Redfin's filtered search HTML and found 7 of the 9 matches. The
+two it missed (1234 Rising Hill W Road, 1781 Springvale Road) were not disqualified — Redfin only
+renders the first page of cards, roughly 30–40, and Placerville has more inventory than that. The
+sweep looked complete and was not.
 
-### The filter-completeness trap
+This is why the primary pipeline enumerates `/p_N/` pages until exhausted rather than reading one
+page, and why `redfin.py` parses the embedded `ReactServerAgent.cache.dataCache` payload instead of
+the visible cards. A cross-check that agrees with the primary sweep is only meaningful if it was
+itself complete; a partial sweep that happens to agree proves nothing. If a future run's cross-check
+returns *fewer* matches than the primary, suspect pagination before suspecting the primary.
 
-The portal's own lot-size filter **silently omits listings whose MLS lot field is unpopulated**.
-Filtering on `min-lot-size=2.5-acre` at the portal returned 29 candidates; filtering only on beds
-and price returned 56, and the extra 27 included real acreage properties. So `hunt.py` deliberately
-filters on **bedrooms and price only** at the portal, and applies acreage, bath and pool rules
-locally against verified per-listing data.
+**4. The feed's bath count rounds half baths up.** The search feed's
+`numberOfBathroomsTotal` reports "2 full + 1 half" as **3**. MetroList and every portal call
+that **2.5**, and a 2.5-bath home does not clear a 3-bath minimum. On 2026-07-31 this had
+1234 Rising Hill W Rd sitting in the match list on a bath count it does not have. The detail
+page carries `numberOfFullBathrooms` and `numberOfPartialBathrooms`, so `scrape.js` now computes
+`full + 0.5 * partial` and filters on that. Two properties were affected; only one changed
+category.
 
-The same caution applies to search engines generally: web search returns a small, stale,
-non-random slice of inventory, because it reads *summaries of* portal pages rather than the live
-result set. A thin search-derived list is not evidence that inventory is thin.
+**5. An id scheme is part of the data contract.** The feed switched from spelling street types
+in full ("Rising Hill W **Road**") to abbreviating them ("Rising Hill W **Rd**"). Ids were a
+plain slug of the address, so every tracked property got a new id: the 2026-07-31 dry run
+reported **9 new and 9 dropped** against inventory that had barely moved. `slug()` now
+canonicalises street suffixes and directionals, and `merge()` re-slugs prior ids through the
+current normaliser before comparing. If a run ever reports that *everything* is new, suspect
+the id scheme before believing it.
 
-## Dedupe rules
+Corollaries worth keeping:
 
-`hunt.py` handles these automatically, keyed on a normalised `address + city` id.
+- MetroList MLS numbers encode the listing year: `221…` = 2021, `225…` = 2025, `226…` = 2026.
+  A prefix older than the current year is strong evidence a record is stale.
+- Prefer under-reporting. An empty result is correct and useful; a fabricated match is not.
 
-1. A property already in `listings.json` is not re-flagged as new — `isNew` is false.
-2. A changed price *is* newsworthy: it appends to `priceHistory`, sets `priceChanged` and
-   `previousPrice`, and the card renders the delta.
-3. Anything previously tracked that is no longer an active listing meeting the criteria moves to
-   `dropped`, with the date and reason. Dropped entries are kept so a later run doesn't
-   re-surface them as new finds.
-4. `firstSeen` is preserved across runs; `lastSeen` and `verifiedOn` update each run.
+## Redfin cross-check
+
+`hunt.py` is an independent verifier built on Redfin listing pages. It reads status from each
+page's `xdp-meta` block and takes bed/bath/acreage from MLS amenity fields, so it is a genuinely
+separate read of the same MLS data — it is what caught the bath-rounding problem above.
+
+**It is a cross-check, not a source.** Redfin's search pages render only the first ~40 cards per
+area, so a sweep built on them is silently incomplete: on 2026-07-31 it found 6 of the 8 matches
+and missed 1781 Springvale Rd and 1988 Cold Springs Rd entirely. Use it to confirm facts about
+properties the primary pipeline already found; never to decide what exists.
+
+## Cross-run behaviour
+
+`scrape.js` merges rather than overwrites, so the schedule can run unattended:
+
+| Situation | What happens |
+|---|---|
+| Property already tracked, same price | Kept, `newThisRun: false`, not re-surfaced |
+| Property already tracked, price moved | `priceHistory` gains an entry; the card renders the delta and it appears under "Price changes" |
+| Property not seen before | `newThisRun: true`, appears in the "New this run" strip at the top |
+| Tracked property no longer active | Moved to `dropped` with the date and reason |
+| Qualifies but is in escrow | Moved to `pending`, rendered dimmed under "Under contract" |
+| Fails exactly one of pool / acreage | Recorded in `nearMisses` and shown as a table |
+
+A second run against unchanged inventory reports `0 new, 0 price changes` — that is the
+intended behaviour, and the quickest way to confirm dedupe still works.
+
+## Photos
+
+Each listing carries up to six photo URLs in `photos`, hotlinked from the brokerage CDN and
+rendered as a horizontally scrollable strip. They are served with
+`referrerpolicy="no-referrer"`, which gets past most CDN referrer checks.
+
+The "View on coldwellbankerhomes.com" tile sits permanently *behind* the photo strip rather
+than being swapped in on error. Loaded images cover it; an image that 404s **or one that
+simply never resolves** both leave the listing link reachable. (Relying on the `onerror`
+handler alone left a blank tile whenever a request hung instead of failing.)
+
+MLS photos are the copyright of the listing brokerage. Fine for a private hunting page;
+don't republish them more broadly.
 
 ## Files
 
 - **`listings.json`** — canonical data. Single source of truth.
-- **`hunt.py`** — search, verify, merge. Writes `listings.json`.
-- **`build.js`** — renders `index.html`. No dependencies: `node build.js`.
-- **`index.html`** — generated. Don't hand-edit.
-- **`ingest.js`** — manual fallback: merge listings pasted from a Zillow/Redfin results page.
-  Only needed if the network path to Redfin breaks again.
-- **`.cache/`** — fetched HTML, gitignored. Delete to force a clean re-fetch.
+- **`scrape.js`** — refreshes `listings.json` from the live feed. Handles dedupe and history.
+- **`build.js`** — renders `index.html` from `listings.json`. No dependencies.
+- **`index.html`** — generated. Don't hand-edit; edit the JSON and rebuild.
+- **`ingest.js`** — manual fallback: merges listings pasted from a Zillow/Redfin results page.
+  Only needed if the primary feed ever goes dark.
+- **`NETWORK.md`** — what this environment can and cannot reach, and how to re-test.
+- **`hunt.py`** — independent Redfin verifier, for cross-checking facts. Not a complete sweep.
+- **`refresh.py` / `redfin.py`** — an earlier run's Python implementation of the same
+  refresh. It converged independently on the same feed and the same three-stage approach,
+  and it adds a per-listing MetroListPRO cross-check that `scrape.js` does not have.
+  Either can drive the page.
 
-## Photos
+### Two refresh implementations
 
-Photos are hotlinked from Redfin's CDN. The **viewer's** browser fetches them, so they render even
-when the generating environment can't load images. Each `<img>` carries
-`referrerpolicy="no-referrer"`, which gets past most CDN referrer blocks, and an `onerror` handler
-swaps in a link tile so a dead URL never leaves a hole in the layout.
-
-MLS photos are the copyright of the listing brokerage. Fine for a private hunting page; don't
-republish them more broadly.
+`scrape.js` and `refresh.py` do the same job and agree on the fields that carry history —
+`mls`, `firstSeen`, `priceHistory` — which is what makes them interchangeable across runs.
+They differ on presentation field names (`newThisRun` vs `isNew`, `summary` vs `desc`) and
+on whether `nearMisses` is a flat array or two buckets. `build.js` normalises both, so a
+run may use either without breaking the page. **Pick one per run — don't run both**, or the
+second will overwrite the first's `lastRun` bookkeeping.
 
 ## Publishing
 
-Served from the `gh-pages` branch at repo root. Enable under
+`index.html` is copied to the `gh-pages` branch at repo root. Enable under
 **Settings → Pages → Source: `gh-pages` / `(root)`**.
