@@ -131,6 +131,18 @@ function detail(url) {
   const mls = html.match(/&quot;MLSNumber&quot;:&quot;([^&]+)&quot;/) || html.match(/"MLSNumber"\s*:\s*"([^"]+)"/);
   out.mls = mls ? mls[1] : null;
 
+  // Bath precision. The search feed reports numberOfBathroomsTotal, which rounds
+  // "2 full + 1 half" up to 3. MetroList and every portal call that 2.5, and a
+  // 2.5-bath home does not clear a 3-bath minimum. The detail page carries the
+  // full/partial split, so compute the real figure from it.
+  const fb = html.match(/"numberOfFullBathrooms"\s*:\s*(\d+)/);
+  const pb = html.match(/"numberOfPartialBathrooms"\s*:\s*(\d+)/);
+  out.fullBaths = fb ? +fb[1] : null;
+  out.partialBaths = pb ? +pb[1] : null;
+  out.baths = out.fullBaths != null
+    ? out.fullBaths + 0.5 * (out.partialBaths || 0)
+    : null;
+
   const am = out.amenities;
   out.acres = (() => {
     for (const k of ['Lot Size (Acres)', 'Lot Size Acres', 'Acres']) {
@@ -164,13 +176,36 @@ function detail(url) {
 
 /* ---------- stage 3: merge across runs ---------- */
 
+/**
+ * Street-type abbreviations, so a listing keeps the same id when the feed
+ * switches between "Road" and "Rd". The 2026-07-30 run stored full words and
+ * this feed now returns abbreviations; without this every tracked property
+ * would look new and every prior one would look dropped.
+ */
+const SUFFIX = {
+  road: 'rd', drive: 'dr', court: 'ct', trail: 'trl', lane: 'ln', street: 'st',
+  avenue: 'ave', circle: 'cir', place: 'pl', boulevard: 'blvd', terrace: 'ter',
+  parkway: 'pkwy', highway: 'hwy', way: 'way', loop: 'loop', creek: 'crk',
+  ranch: 'ranch', north: 'n', south: 's', east: 'e', west: 'w',
+};
+
 function slug(name) {
   return name.replace(/,\s*CA\s*\d{5}$/, '')
-    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .split('-')
+    .map((w) => SUFFIX[w] || w)
+    .join('-');
 }
 
-function merge(found) {
-  const priorById = new Map((prior.listings || []).map((l) => [l.id, l]));
+function merge(found, stillListed = new Map()) {
+  // Re-slug prior ids through the current normaliser so an id-scheme change
+  // doesn't read as "everything is new, everything old was dropped".
+  const priorById = new Map((prior.listings || []).map((l) => {
+    const canon = l.address && l.city ? slug(`${l.address}, ${l.city}`) : l.id;
+    return [canon, { ...l, id: canon }];
+  }));
   const listings = [];
 
   for (const f of found) {
@@ -191,12 +226,19 @@ function merge(found) {
 
   // Anything tracked last run and absent from live active inventory has gone away.
   const liveIds = new Set(found.map((f) => f.id));
-  const dropped = (prior.listings || []).filter((l) => !liveIds.has(l.id)).map((l) => ({
-    address: `${l.address}, ${l.city}`,
-    priorPrice: l.currentPrice,
-    reason: 'No longer an active listing in the MLS feed — sold, expired, or withdrawn.',
-    droppedOn: TODAY,
-  }));
+  const dropped = [...priorById.values()].filter((l) => !liveIds.has(l.id)).map((l) => {
+    // A property can leave the match list two different ways, and saying "sold"
+    // about one that is still on the market would be plainly wrong.
+    const why = stillListed.get(l.id);
+    return {
+      address: `${l.address}, ${l.city}`,
+      priorPrice: l.currentPrice,
+      reason: why
+        ? `Still listed, but no longer meets the criteria: ${why}.`
+        : 'No longer an active listing in the MLS feed — sold, expired, or withdrawn.',
+      droppedOn: TODAY,
+    };
+  });
   return { listings, dropped };
 }
 
@@ -218,6 +260,8 @@ const candidates = all.filter((r) => {
 process.stderr.write(`\n${all.length} active in target cities, ${candidates.length} clear beds/baths/price\n`);
 
 const matches = [], pending = [], near = [];
+/** id -> why it fell out of the match list, for properties still on the market. */
+const stillListed = new Map();
 candidates.forEach((r, i) => {
   const d = detail(r.url);
   if (!d) { process.stderr.write(`  ! fetch failed ${r.name}\n`); return; }
@@ -225,7 +269,8 @@ candidates.forEach((r, i) => {
   const rec = {
     id: slug(r.name), address: r.street, city: r.city, zip: r.zip,
     mls: d.mls, currentPrice: Math.round(+r.price),
-    beds: r.beds, baths: r.baths,
+    beds: r.beds, baths: d.baths != null ? d.baths : r.baths,
+    fullBaths: d.fullBaths, partialBaths: d.partialBaths,
     sqft: /^\d+$/.test(String(r.sqft)) ? +r.sqft : null,
     acres: d.acres, pool: true, poolDetail: am['Pool Description'] || 'Pool',
     yearBuilt: am['Year Built'] || null, garageSpaces: am['Garage Spaces'] || null,
@@ -239,15 +284,24 @@ candidates.forEach((r, i) => {
     notes: '',
   };
   const bigEnough = d.acres != null && d.acres >= C.minAcres;
-  if (bigEnough && d.pool && d.realStatus === 'Active') matches.push(rec);
-  else if (bigEnough && d.pool && d.realStatus === 'Pending') {
+  const bathsOk = rec.baths == null || rec.baths >= MIN_BATHS;
+  const ok = bigEnough && d.pool && bathsOk;
+  if (ok && d.realStatus === 'Active') matches.push(rec);
+  else if (ok && d.realStatus === 'Pending') {
     pending.push({ ...rec, status: 'pending', newThisRun: false,
       priceHistory: [{ date: TODAY, price: rec.currentPrice }],
       notes: 'Meets every criterion but is under contract (Sale Pending). Kept on file in case the deal falls through.' });
-  } else if (d.realStatus === 'Active' && bigEnough !== d.pool) {
-    near.push({ address: r.street, city: r.city, price: Math.round(+r.price),
-      beds: r.beds, baths: r.baths, acres: d.acres, pool: !!d.pool, url: r.url,
-      missing: d.pool ? `only ${d.acres} acres` : 'no pool' });
+  } else if (d.realStatus === 'Active') {
+    const missing = [];
+    if (!d.pool) missing.push('no pool');
+    if (!bigEnough) missing.push(d.acres != null ? `only ${d.acres} acres` : 'lot size unknown');
+    if (!bathsOk) missing.push(`only ${rec.baths} baths`);
+    stillListed.set(rec.id, missing.join(', '));
+    if (missing.length === 1) {
+      near.push({ address: r.street, city: r.city, price: Math.round(+r.price),
+        beds: r.beds, baths: rec.baths, acres: d.acres, pool: !!d.pool, url: r.url,
+        missing: missing[0] });
+    }
   }
   process.stderr.write(`  ${i + 1}/${candidates.length} ${r.name.slice(0, 42).padEnd(42)} ` +
     `acres=${d.acres} pool=${d.pool} status=${d.realStatus}\n`);
@@ -258,7 +312,7 @@ matches.sort((a, b) => b.currentPrice - a.currentPrice);
 pending.sort((a, b) => b.currentPrice - a.currentPrice);
 near.sort((a, b) => (a.missing === 'no pool') - (b.missing === 'no pool') || b.price - a.price);
 
-const { listings, dropped } = merge(matches);
+const { listings, dropped } = merge(matches, stillListed);
 const out = {
   ...prior,
   lastRun: TODAY,
@@ -273,8 +327,11 @@ const out = {
 };
 
 const nNew = listings.filter((l) => l.newThisRun).length;
+// Only a price that moved *this* run is news; an older cut still renders its
+// delta on the card but must not be counted again here.
 const nChg = listings.filter((l) => (l.priceHistory || []).length > 1 &&
-  l.priceHistory.at(-1).price !== l.priceHistory.at(-2).price).length;
+  l.priceHistory.at(-1).price !== l.priceHistory.at(-2).price &&
+  l.priceHistory.at(-1).date === TODAY).length;
 
 if (DRY) {
   process.stderr.write(`\n[dry run] ${listings.length} matches (${nNew} new, ${nChg} price changes), ` +

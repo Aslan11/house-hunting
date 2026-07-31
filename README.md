@@ -41,7 +41,7 @@ The pipeline is three stages:
 3. **Verify.** Fetch each survivor's detail page for the fields the search page lacks:
    `Lot Size (Acres)`, the `Pool` / `Pool Description` fields, and the true listing status.
 
-## ⚠️ Two traps that have already burned this tracker
+## ⚠️ Traps that have already burned this tracker
 
 **1. Search-engine snippets are not listing status.** The first run reported four matches;
 all four were off market. Search engines index listing pages that keep "For Sale" in the
@@ -55,12 +55,6 @@ escrow. Two of the twelve otherwise-qualifying properties found on 2026-07-28 we
 **Sale Pending** despite `IsActive: true`. Status is therefore read from the listing's own
 visible `Status:` field, which `scrape.js` stores as `mlsStatus` — never from `IsActive`.
 
-Corollaries worth keeping:
-
-- MetroList MLS numbers encode the listing year: `221…` = 2021, `225…` = 2025, `226…` = 2026.
-  A prefix older than the current year is strong evidence a record is stale.
-- Prefer under-reporting. An empty result is correct and useful; a fabricated match is not.
-
 **3. A portal search page is not a complete result set.** A cross-check run on 2026-07-30 scraped
 the *rendered listing cards* out of Redfin's filtered search HTML and found 7 of the 9 matches. The
 two it missed (1234 Rising Hill W Road, 1781 Springvale Road) were not disqualified — Redfin only
@@ -72,6 +66,39 @@ page, and why `redfin.py` parses the embedded `ReactServerAgent.cache.dataCache`
 the visible cards. A cross-check that agrees with the primary sweep is only meaningful if it was
 itself complete; a partial sweep that happens to agree proves nothing. If a future run's cross-check
 returns *fewer* matches than the primary, suspect pagination before suspecting the primary.
+
+**4. The feed's bath count rounds half baths up.** The search feed's
+`numberOfBathroomsTotal` reports "2 full + 1 half" as **3**. MetroList and every portal call
+that **2.5**, and a 2.5-bath home does not clear a 3-bath minimum. On 2026-07-31 this had
+1234 Rising Hill W Rd sitting in the match list on a bath count it does not have. The detail
+page carries `numberOfFullBathrooms` and `numberOfPartialBathrooms`, so `scrape.js` now computes
+`full + 0.5 * partial` and filters on that. Two properties were affected; only one changed
+category.
+
+**5. An id scheme is part of the data contract.** The feed switched from spelling street types
+in full ("Rising Hill W **Road**") to abbreviating them ("Rising Hill W **Rd**"). Ids were a
+plain slug of the address, so every tracked property got a new id: the 2026-07-31 dry run
+reported **9 new and 9 dropped** against inventory that had barely moved. `slug()` now
+canonicalises street suffixes and directionals, and `merge()` re-slugs prior ids through the
+current normaliser before comparing. If a run ever reports that *everything* is new, suspect
+the id scheme before believing it.
+
+Corollaries worth keeping:
+
+- MetroList MLS numbers encode the listing year: `221…` = 2021, `225…` = 2025, `226…` = 2026.
+  A prefix older than the current year is strong evidence a record is stale.
+- Prefer under-reporting. An empty result is correct and useful; a fabricated match is not.
+
+## Redfin cross-check
+
+`hunt.py` is an independent verifier built on Redfin listing pages. It reads status from each
+page's `xdp-meta` block and takes bed/bath/acreage from MLS amenity fields, so it is a genuinely
+separate read of the same MLS data — it is what caught the bath-rounding problem above.
+
+**It is a cross-check, not a source.** Redfin's search pages render only the first ~40 cards per
+area, so a sweep built on them is silently incomplete: on 2026-07-31 it found 6 of the 8 matches
+and missed 1781 Springvale Rd and 1988 Cold Springs Rd entirely. Use it to confirm facts about
+properties the primary pipeline already found; never to decide what exists.
 
 ## Cross-run behaviour
 
@@ -112,6 +139,7 @@ don't republish them more broadly.
 - **`ingest.js`** — manual fallback: merges listings pasted from a Zillow/Redfin results page.
   Only needed if the primary feed ever goes dark.
 - **`NETWORK.md`** — what this environment can and cannot reach, and how to re-test.
+- **`hunt.py`** — independent Redfin verifier, for cross-checking facts. Not a complete sweep.
 - **`refresh.py` / `redfin.py`** — an earlier run's Python implementation of the same
   refresh. It converged independently on the same feed and the same three-stage approach,
   and it adds a per-listing MetroListPRO cross-check that `scrape.js` does not have.
