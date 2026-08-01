@@ -73,3 +73,40 @@ In rough order of effort:
 Note the coverage trap behind all of this: web search returns a small, stale, non-random
 slice of inventory, because it reads *summaries of* portal pages rather than querying the
 live MLS. A thin search-derived result list is never evidence that inventory is thin.
+
+## Two ways a request fails that look like bot-blocking but aren't
+
+Both of these cost a run on 2026-08-01 before being identified. Worth checking before
+concluding a source has started blocking.
+
+**1. `curl --compressed` trips Redfin's bot filter.** Asking for a compressed response makes
+`www.redfin.com` answer `202` with an empty body. The identical request without
+`--compressed` returns a full `200`. Verified back-to-back on the same URL:
+
+```bash
+U=https://www.redfin.com/CA/Rescue/3033-Ridgeline-Dr-95672/home/167348617
+curl -sS -m 45 -A "$UA" -L "$U"              -o /dev/null -w "%{http_code} %{size_download}\n"  # 200 1085765
+curl -sS -m 45 -A "$UA" -L --compressed "$U" -o /dev/null -w "%{http_code} %{size_download}\n"  # 202 0
+```
+
+An empty `202` is Redfin's generic "slow down" response, so this reads exactly like
+throttling. It isn't — it reproduces immediately and indefinitely while `--compressed` is set.
+
+**2. Node's built-in `fetch` cannot reach anything through this proxy.** Egress is a
+CONNECT-only proxy on `$HTTPS_PROXY`; undici sends a plain-HTTP request to it and gets back a
+**405 "Human Verification"** page *from the proxy itself*. The title makes it look like a
+CAPTCHA wall at the destination. `curl` tunnels correctly, which is why every scraper here
+shells out to it rather than using `fetch`. Confirm the source with
+`curl -sS "$HTTPS_PROXY/__agentproxy/status"` — a genuine policy denial appears in
+`recentRelayFailures`, and this one does not.
+
+## Redfin coverage, measured
+
+A full Redfin sweep on 2026-08-01 read 416 active listings across ZIPs 95682/95672/95667 —
+316 of them in the three target cities, against the primary feed's 305. Comparable totals, but
+**not the same set**: Redfin had no record of 1988 Cold Springs Rd (MLS 226033527) in its ZIP
+search at all, despite the listing being active. Requesting `/page-2` and `/page-3` returned
+the identical result set, so this is not simple pagination and cannot be paged around.
+
+Redfin and the primary feed agreed on pool status for every property both of them saw, which is
+what makes Redfin useful as a verifier. It remains unusable as a source of *what exists*.
