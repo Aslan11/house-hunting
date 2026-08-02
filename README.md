@@ -83,6 +83,25 @@ canonicalises street suffixes and directionals, and `merge()` re-slugs prior ids
 current normaliser before comparing. If a run ever reports that *everything* is new, suspect
 the id scheme before believing it.
 
+**6. A detail page's status can be wrong in *both* sources at once.** Trap 2 says to read
+status from the listing's own `Status:` field rather than `IsActive`. On 2026-08-02 that was not
+enough: **3033 Ridgeline Dr** and **1988 Cold Springs Rd** were carried as Active matches, and the
+IDX detail pages backed that up. MetroList had both as **Pending**. The only thing that caught it
+was a second feed disagreeing — `crosscheck.js` returned 6 matches where `listings.json` claimed 8,
+and the two missing ones were exactly the two in escrow.
+
+The rule that follows: a listing the primary pipeline calls Active, but the cross-check does not
+return, is *presumed pending* until a detail page proves otherwise. Do not resolve the disagreement
+by re-reading the source that is already wrong.
+
+**7. Listing pages embed neighbouring properties.** Detail pages carry data for nearby and
+comparable homes alongside the subject. Matching "pool" against the page as a whole therefore finds
+pools that belong to a different house down the road. On 2026-08-02 a naive page-text match would
+have produced four false matches — including one whose page describes a "150,000-gallon swimming
+pool" that belongs to a property a few miles away. `crosscheck.js` reads the subject's own
+`Pool Information` amenity group, its `hasPrivatePool` flag and its own marketing remarks, and
+reports a pool only when all three agree.
+
 Corollaries worth keeping:
 
 - MetroList MLS numbers encode the listing year: `221…` = 2021, `225…` = 2025, `226…` = 2026.
@@ -91,14 +110,33 @@ Corollaries worth keeping:
 
 ## Redfin cross-check
 
-`hunt.py` is an independent verifier built on Redfin listing pages. It reads status from each
-page's `xdp-meta` block and takes bed/bath/acreage from MLS amenity fields, so it is a genuinely
-separate read of the same MLS data — it is what caught the bath-rounding problem above.
+Two independent verifiers exist, and the difference between them matters.
 
-**It is a cross-check, not a source.** Redfin's search pages render only the first ~40 cards per
-area, so a sweep built on them is silently incomplete: on 2026-07-31 it found 6 of the 8 matches
-and missed 1781 Springvale Rd and 1988 Cold Springs Rd entirely. Use it to confirm facts about
-properties the primary pipeline already found; never to decide what exists.
+`crosscheck.js` (**use this one**) reads Redfin's `gis-csv` endpoint — the same data that backs the
+map view, returned as CSV. It is what caught the two escrow listings in trap 6. Run it with:
+
+```bash
+node crosscheck.js              # active listings
+STATUS=130 node crosscheck.js   # pending / contingent set instead
+```
+
+Three things make it a *complete* sweep rather than a sample, which is what `hunt.py` was not:
+
+- **It queries by map polygon, not region id.** Redfin's region ids are not guessable —
+  `region_id=17151` returns San Francisco, and county `331` returns Nevada County. The
+  autocomplete endpoint that resolves ids properly is bot-blocked; the CSV endpoint is not.
+- **It tiles the area and asserts no tile was truncated.** The endpoint silently caps results at
+  `num_homes` and returns a short set with no error — a single county-wide polygon came back with
+  exactly 350 rows, which looked like an answer and was a truncation. The script throws if any
+  tile comes back at the cap, rather than reporting a partial market as the whole one.
+- **It ignores the server-side filters that don't work.** `num_beds` and `num_baths` are honoured;
+  `max_price` and `min_lot_size` are silently ignored — passing them changes nothing. Price and
+  acreage are filtered locally from the CSV columns. `LOT SIZE` is in square feet.
+
+`hunt.py` is the older verifier, built on Redfin's rendered *search cards*. Those render only the
+first ~40 per area, so a sweep built on them is silently incomplete — on 2026-07-31 it found 6 of 8
+matches and missed two entirely. It is still useful for confirming facts about a property already
+found, but do not use it to decide what exists.
 
 ## Cross-run behaviour
 
@@ -139,7 +177,10 @@ don't republish them more broadly.
 - **`ingest.js`** — manual fallback: merges listings pasted from a Zillow/Redfin results page.
   Only needed if the primary feed ever goes dark.
 - **`NETWORK.md`** — what this environment can and cannot reach, and how to re-test.
-- **`hunt.py`** — independent Redfin verifier, for cross-checking facts. Not a complete sweep.
+- **`crosscheck.js`** — independent Redfin verifier over the `gis-csv` feed. Tiled and
+  truncation-checked, so it is a complete sweep. Run it every time; a match the primary
+  pipeline reports and this does not is presumed to be in escrow.
+- **`hunt.py`** — older Redfin verifier built on rendered search cards. Not a complete sweep.
 - **`refresh.py` / `redfin.py`** — an earlier run's Python implementation of the same
   refresh. It converged independently on the same feed and the same three-stage approach,
   and it adds a per-listing MetroListPRO cross-check that `scrape.js` does not have.
