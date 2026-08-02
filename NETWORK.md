@@ -1,118 +1,129 @@
-# Network config needed for this tracker
+# Network reality for this tracker
 
-> **Resolved as of 2026-08-02.** Egress is now open — `recentRelayFailures` is empty and
-> `https://example.com/` returns 200. Redfin's search pages, its `gis-csv` feed and its listing
-> detail pages all load, and `ssl.cdn-redfin.com` serves photos, so the tracker runs end to end
-> with no manual input. Zillow (403), Realtor.com (429), homes.com, movoto and point2homes still
-> bot-block independently of the proxy — that is a site-side block, not a policy denial, and it
-> doesn't matter while the Redfin feed works. The rest of this file is kept for reference in case
-> egress is ever restricted again.
+**Status as of 2026-07-28: the tracker works. No network configuration change is needed.**
 
-The container that runs this tracker denies outbound HTTPS to every listing site. The denial is
-at the egress gateway, not at the destination — a `CONNECT www.zillow.com:443` gets `403 Forbidden`
-from the local proxy, so no packet ever reaches Zillow.
+Earlier revisions of this file described every listing site as blocked at the egress proxy.
+That is no longer true — general outbound HTTPS is open, and
+`curl -sS "$HTTPS_PROXY/__agentproxy/status"` reports an empty `recentRelayFailures`.
+What remains is *site-side* bot blocking, which varies by host.
 
-Verify at any time with:
+## What actually happens per host
+
+Measured with a normal browser user-agent from this container:
+
+| Host | Result | Usable? |
+|---|---|---|
+| `coldwellbankerhomes.com` | 200, full JSON-LD listing data | **Yes — this is the data source** |
+| `m.cbhomes.com` / `m1.cbhomes.com` | 200 `image/webp` | **Yes — listing photos** |
+| `metrolistpro.com` | 200, but a JS shell with no listings in the HTML | No |
+| `compass.com` | 202 (challenge interstitial) | No |
+| `estately.com` | 200, but listings are client-rendered | No |
+| `redfin.com` homepage | 200 | — |
+| `redfin.com/stingray/api/gis-csv` | 200, CSV of the active-listing set | **Yes — the cross-check feed** |
+| `redfin.com/stingray/do/location-autocomplete` | 403 from CloudFront | No |
+| `redfin.com` listing detail pages | 200, full MLS amenity data | **Yes — status and pool fields** |
+| `ssl.cdn-redfin.com` | 200 `image/jpeg` | Yes — photos |
+| `zillow.com`, `homes.com`, `movoto.com`, `trulia.com` | 403 | No |
+| `realtor.com` | 429 | No |
+| `point2homes.com`, `landwatch.com`, `rocket.com` | 403 | No |
+
+The 403s are returned by the sites' own CDNs, not by the proxy: they carry an HTML body and
+leave no entry in `recentRelayFailures`. That distinction is how to tell a policy denial from
+a bot block, and it matters because allowlisting a domain cannot fix a bot block.
+
+## `WebFetch` does not work here
+
+`WebFetch` returns **405 Method Not Allowed** from the proxy for every URL. Per
+`/root/.ccr/README.md`, a 405 means the client sent a plain-HTTP request instead of a
+`CONNECT` tunnel — the proxy only supports `HTTPS_PROXY`-style tunnelling. This is a
+limitation of the tool, not a policy denial, and it is not something this repo can fix.
+
+**Use `curl` instead.** It is already configured to trust the proxy CA bundle at
+`/root/.ccr/ca-bundle.crt`, and it is what `scrape.js` shells out to.
+
+## Re-testing
 
 ```bash
+# Is the egress policy denying anything?
 curl -sS "$HTTPS_PROXY/__agentproxy/status" | python3 -m json.tool
+
+# Is the data source still serving?
+curl -sS -o /dev/null -w "%{http_code}\n" \
+  -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36" \
+  https://www.coldwellbankerhomes.com/ca/placerville/
 ```
 
-`recentRelayFailures` records each denial as
-`"gateway answered 403 to CONNECT (policy denial or upstream failure)"`.
+- `200` → working; `node scrape.js` should run clean.
+- `403` **without** a new `recentRelayFailures` entry → the site started bot-blocking.
+- `403` **with** a new entry → an egress policy denial; report the host rather than routing around it.
 
-## Where to change it
+A browser user-agent header is required. Without one the site's CDN responds differently.
 
-**claude.ai → profile icon (bottom left) → Settings → Capabilities →
-"Code execution and file creation" → Domain allowlist**
+## If the data source ever goes dark
 
-Either set it to **All domains**, or keep it restricted and add the hosts below under
-**Additional allowed domains**.
+In rough order of effort:
 
-If the environment was created through Claude Code on the web with its own network policy, that
-policy governs instead, and it's edited on the environment itself. See
-<https://code.claude.com/docs/en/claude-code-on-the-web> and
-<https://code.claude.com/docs/en/network-config>.
+1. **Try another IDX brokerage site.** Coldwell Banker is not special — any brokerage
+   republishing the MetroList feed with server-rendered JSON-LD would work, and `scrape.js`
+   only needs its city-page URL pattern changed. Century 21, Windermere and BHHS all
+   responded to a request from here and are worth probing first.
+2. **Zillow/Redfin saved search with email alerts** to the account's Gmail. This runner has
+   Gmail access, so alert emails become an authoritative feed carrying status, price cuts and
+   image URLs. No network change required, and immune to bot blocking.
+3. **A real-estate data API key** (SimplyRETS, Bridge Interactive, a RapidAPI provider).
+4. **`ingest.js`** — paste a Zillow/Redfin results page in by hand. The manual fallback.
 
-## Minimal set — test viability first
+Note the coverage trap behind all of this: web search returns a small, stale, non-random
+slice of inventory, because it reads *summaries of* portal pages rather than querying the
+live MLS. A thin search-derived result list is never evidence that inventory is thin.
 
-Start with Redfin alone. It's the most likely to actually work: it serves a structured CSV of
-search results, and it bot-blocks less aggressively than Zillow.
+## Two ways a request fails that look like bot-blocking but aren't
 
-```
-www.redfin.com
-ssl.cdn-redfin.com
-```
+Both of these cost a run on 2026-08-01 before being identified. Worth checking before
+concluding a source has started blocking.
 
-If that works, a filtered search can be pulled directly as CSV — the cleanest possible input for
-`ingest.js`, with no HTML parsing.
-
-## Full set — listing data plus photos
-
-The CDN hosts matter: without them, pages load but every photo is broken.
-
-```
-# Zillow (+ Trulia, same company)
-www.zillow.com
-zillow.com
-photos.zillowstatic.com
-www.trulia.com
-
-# Redfin
-www.redfin.com
-ssl.cdn-redfin.com
-
-# Realtor.com
-www.realtor.com
-api.realtor.com
-ap.rdcpix.com
-
-# Others carrying El Dorado County inventory
-www.homes.com
-images.homes.com
-www.movoto.com
-www.compass.com
-
-# MetroList — the actual MLS for El Dorado County
-www.metrolistpro.com
-www.metrolist.com
-```
-
-If the field accepts wildcards, this is equivalent and more robust:
-
-```
-*.zillow.com  *.zillowstatic.com  *.redfin.com  *.cdn-redfin.com
-*.realtor.com  *.rdcpix.com  *.homes.com  *.movoto.com
-*.compass.com  *.trulia.com  *.metrolistpro.com  *.metrolist.com
-```
-
-## Known issues to expect
-
-1. **The setting may not take effect.** Several open bugs report that "Additional allowed domains"
-   is not propagated to container egress — anthropics/claude-code
-   [#19087](https://github.com/anthropics/claude-code/issues/19087),
-   [#30112](https://github.com/anthropics/claude-code/issues/30112),
-   [#52982](https://github.com/anthropics/claude-code/issues/52982). If the hosts are still denied
-   after the change, "All domains" is the reliable fallback.
-2. **Allowlisting is necessary but may not be sufficient.** Zillow and Redfin block datacenter IP
-   ranges, which is what this container runs on. A second 403 may appear — that one genuinely from
-   the site. Distinguish them by source: a gateway denial shows up in `recentRelayFailures`, a site
-   block does not and returns an HTML body.
-3. **`WebFetch` is blocked too**, independently of `curl` (`example.com` returns 403). It's likely
-   governed by the same allowlist, so it may start working after the change — worth retesting.
-
-## Verifying after the change
+**1. `curl --compressed` trips Redfin's bot filter.** Asking for a compressed response makes
+`www.redfin.com` answer `202` with an empty body. The identical request without
+`--compressed` returns a full `200`. Verified back-to-back on the same URL:
 
 ```bash
-curl -sS -o /dev/null -w "%{http_code}\n" https://www.redfin.com/
+U=https://www.redfin.com/CA/Rescue/3033-Ridgeline-Dr-95672/home/167348617
+curl -sS -m 45 -A "$UA" -L "$U"              -o /dev/null -w "%{http_code} %{size_download}\n"  # 200 1085765
+curl -sS -m 45 -A "$UA" -L --compressed "$U" -o /dev/null -w "%{http_code} %{size_download}\n"  # 202 0
 ```
 
-- `200` → egress open and the site is serving. Working.
-- `403` **with** a new entry in `recentRelayFailures` → still an egress policy denial.
-- `403` **without** a new relay-failure entry → egress is open; the site is bot-blocking.
+An empty `202` is Redfin's generic "slow down" response, so this reads exactly like
+throttling. It isn't — it reproduces immediately and indefinitely while `--compressed` is set.
 
-## If the sites block anyway
+**2. Node's built-in `fetch` cannot reach anything through this proxy.** Egress is a
+CONNECT-only proxy on `$HTTPS_PROXY`; undici sends a plain-HTTP request to it and gets back a
+**405 "Human Verification"** page *from the proxy itself*. The title makes it look like a
+CAPTCHA wall at the destination. `curl` tunnels correctly, which is why every scraper here
+shells out to it rather than using `fetch`. Confirm the source with
+`curl -sS "$HTTPS_PROXY/__agentproxy/status"` — a genuine policy denial appears in
+`recentRelayFailures`, and this one does not.
 
-Fall back to the paths that don't fight bot defenses: Zillow/Redfin saved-search **email alerts**
-into the connected Gmail (works today, needs no network change, and carries photo URLs), or a
-licensed data API key (SimplyRETS, Bridge Interactive, RapidAPI).
+## Redfin coverage, measured
+
+**Superseded on 2026-08-02.** The measurement below was taken against Redfin's *ZIP search
+pages*, which are paginated and capped. Querying `stingray/api/gis-csv` directly instead returns
+the underlying set as CSV and removes the coverage problem — a tiled sweep of El Dorado County
+returned 549 active listings with no tile hitting the row cap. `crosscheck.js` does this.
+
+The claim that Redfin had no record of 1988 Cold Springs Rd (MLS 226033527) was an artefact of
+that capping. The CSV feed has the property, and on 2026-08-02 it reported it as **Pending** —
+which the listing's own detail page confirms with a `Pending` banner and `searchStatus: 128`.
+That is the listing the primary feed was still carrying as an Active match.
+
+Two caveats on the CSV endpoint, both of which cost a run to find:
+
+- **Region ids are not guessable and fail silently.** `region_id=17151` returns San Francisco,
+  not Placerville; county `331` returns Nevada County. Neither errors — they return a perfectly
+  well-formed CSV for the wrong place. Query by `poly=` instead, which needs no id lookup.
+- **`num_homes` truncates without saying so.** A single polygon over the county returned exactly
+  350 rows, which reads as a result and is a cap. Tile the area and assert every tile came back
+  under the limit.
+
+Original measurement, kept for the record: a Redfin sweep on 2026-08-01 read 416 active listings
+across ZIPs 95682/95672/95667, 316 in the three target cities, against the primary feed's 305.
+Redfin and the primary feed agreed on pool status for every property both saw.

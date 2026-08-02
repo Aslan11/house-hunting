@@ -2,8 +2,17 @@
 /**
  * scan.js — pull the live active-listings feed, filter to criteria, verify pools.
  *
- *   node scan.js            # writes scan-results.json and prints a summary
- *   node scan.js --merge    # also merges into listings.json (new + price changes)
+ *   node crosscheck.js      # writes scan-results.json and prints a summary
+ *
+ * This is a SECOND, INDEPENDENT source, not the main pipeline. scrape.js /
+ * refresh.py build listings.json from the Coldwell Banker IDX feed; this reads
+ * Redfin's feed and exists to catch what a single source gets wrong.
+ *
+ * It earned its place on 2026-08-02: the IDX feed reported 3033 Ridgeline Dr and
+ * 1988 Cold Springs Rd as Active, and both were actually in escrow. The IDX
+ * `IsActive` flag stays true on pending listings, and on those two the detail
+ * page status agreed with it. Only a second feed disagreed. Any listing this
+ * script does not return, but listings.json calls Active, needs a look by hand.
  *
  * How it works, and why it works this way:
  *
@@ -50,6 +59,9 @@ const CRITERIA = {
 };
 
 const NUM_HOMES = 350;            // server cap per request
+// status=9 is active-only. status=130 returns the pending/contingent set —
+// useful for checking where a listing went when it drops out of the active feed.
+const STATUS = process.env.STATUS || '9';
 const SQFT_PER_ACRE = 43560;
 
 // Bounding box covering Placerville / Shingle Springs / Rescue and surrounds.
@@ -100,7 +112,7 @@ function tileUrl(w, e, s, n) {
   return 'https://www.redfin.com/stingray/api/gis-csv?al=1&market=sacramento' +
     `&num_homes=${NUM_HOMES}&ord=redfin-recommended-asc&page_number=1` +
     `&poly=${encodeURIComponent(poly)}` +
-    '&sf=1,2,3,5,6,7&status=9&uipt=1,2,3,4,5,6&v=8';
+    `&sf=1,2,3,5,6,7&status=${STATUS}&uipt=1,2,3,4,5,6&v=8`;
 }
 
 function fetchActive() {
@@ -205,7 +217,6 @@ function photosFor(html, mls) {
 }
 
 function main() {
-  const merge = process.argv.includes('--merge');
   process.stderr.write('Fetching active listings…\n');
   const all = fetchActive();
   const inCities = all.filter((r) => CRITERIA.cities.has(r.CITY)).length;
@@ -250,10 +261,8 @@ function main() {
   if (disputed.length) {
     console.log(`\n${disputed.length} had disagreeing pool signals — check by hand before trusting.`);
   }
-  console.log(`\nWrote scan-results.json.` +
-    (merge ? '' : ' Re-run with --merge to fold into listings.json.'));
-
-  if (merge) require('./merge.js').merge(out);
+  console.log('\nWrote scan-results.json. Compare `matches` against listings.json:');
+  console.log('anything listings.json calls Active that is missing here is likely in escrow.');
 }
 
 if (require.main === module) main();
