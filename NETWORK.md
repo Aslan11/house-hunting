@@ -19,7 +19,10 @@ Measured with a normal browser user-agent from this container:
 | `compass.com` | 202 (challenge interstitial) | No |
 | `estately.com` | 200, but listings are client-rendered | No |
 | `redfin.com` homepage | 200 | — |
-| `redfin.com/stingray/*` API | 403 from CloudFront | No |
+| `redfin.com/stingray/api/gis-csv` | 200, CSV of the active-listing set | **Yes — the cross-check feed** |
+| `redfin.com/stingray/do/location-autocomplete` | 403 from CloudFront | No |
+| `redfin.com` listing detail pages | 200, full MLS amenity data | **Yes — status and pool fields** |
+| `ssl.cdn-redfin.com` | 200 `image/jpeg` | Yes — photos |
 | `zillow.com`, `homes.com`, `movoto.com`, `trulia.com` | 403 | No |
 | `realtor.com` | 429 | No |
 | `point2homes.com`, `landwatch.com`, `rocket.com` | 403 | No |
@@ -102,11 +105,25 @@ shells out to it rather than using `fetch`. Confirm the source with
 
 ## Redfin coverage, measured
 
-A full Redfin sweep on 2026-08-01 read 416 active listings across ZIPs 95682/95672/95667 —
-316 of them in the three target cities, against the primary feed's 305. Comparable totals, but
-**not the same set**: Redfin had no record of 1988 Cold Springs Rd (MLS 226033527) in its ZIP
-search at all, despite the listing being active. Requesting `/page-2` and `/page-3` returned
-the identical result set, so this is not simple pagination and cannot be paged around.
+**Superseded on 2026-08-02.** The measurement below was taken against Redfin's *ZIP search
+pages*, which are paginated and capped. Querying `stingray/api/gis-csv` directly instead returns
+the underlying set as CSV and removes the coverage problem — a tiled sweep of El Dorado County
+returned 549 active listings with no tile hitting the row cap. `crosscheck.js` does this.
 
-Redfin and the primary feed agreed on pool status for every property both of them saw, which is
-what makes Redfin useful as a verifier. It remains unusable as a source of *what exists*.
+The claim that Redfin had no record of 1988 Cold Springs Rd (MLS 226033527) was an artefact of
+that capping. The CSV feed has the property, and on 2026-08-02 it reported it as **Pending** —
+which the listing's own detail page confirms with a `Pending` banner and `searchStatus: 128`.
+That is the listing the primary feed was still carrying as an Active match.
+
+Two caveats on the CSV endpoint, both of which cost a run to find:
+
+- **Region ids are not guessable and fail silently.** `region_id=17151` returns San Francisco,
+  not Placerville; county `331` returns Nevada County. Neither errors — they return a perfectly
+  well-formed CSV for the wrong place. Query by `poly=` instead, which needs no id lookup.
+- **`num_homes` truncates without saying so.** A single polygon over the county returned exactly
+  350 rows, which reads as a result and is a cap. Tile the area and assert every tile came back
+  under the limit.
+
+Original measurement, kept for the record: a Redfin sweep on 2026-08-01 read 416 active listings
+across ZIPs 95682/95672/95667, 316 in the three target cities, against the primary feed's 305.
+Redfin and the primary feed agreed on pool status for every property both saw.
