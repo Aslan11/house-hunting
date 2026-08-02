@@ -1,5 +1,13 @@
 # Network config needed for this tracker
 
+> **Resolved as of 2026-08-02.** Egress is now open — `recentRelayFailures` is empty and
+> `https://example.com/` returns 200. Redfin's search pages, its `gis-csv` feed and its listing
+> detail pages all load, and `ssl.cdn-redfin.com` serves photos, so the tracker runs end to end
+> with no manual input. Zillow (403), Realtor.com (429), homes.com, movoto and point2homes still
+> bot-block independently of the proxy — that is a site-side block, not a policy denial, and it
+> doesn't matter while the Redfin feed works. The rest of this file is kept for reference in case
+> egress is ever restricted again.
+
 The container that runs this tracker denies outbound HTTPS to every listing site. The denial is
 at the egress gateway, not at the destination — a `CONNECT www.zillow.com:443` gets `403 Forbidden`
 from the local proxy, so no packet ever reaches Zillow.
