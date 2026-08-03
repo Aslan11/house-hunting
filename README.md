@@ -94,6 +94,26 @@ The rule that follows: a listing the primary pipeline calls Active, but the cros
 return, is *presumed pending* until a detail page proves otherwise. Do not resolve the disagreement
 by re-reading the source that is already wrong.
 
+**This is now enforced in the pipeline, because leaving it to the operator failed twice.** On
+2026-08-03 the IDX feed reported **1988 Cold Springs Rd** as Active *again* — the same property as
+the day before — and because it had been dropped on 08-02, it came back through `merge()` as a
+**new** match. A run that trusted the primary feed would have announced a new listing that was
+actually in escrow.
+
+`mls-status.js` closes this. It pulls Redfin's pending/contingent set (`status=130`) over the same
+tiled box `crosscheck.js` uses and indexes it by normalised address; `scrape.js` demotes any
+IDX-Active match that appears there, and prints every demotion. Two details matter:
+
+- It keys on a **positive** assertion of Pending from a live feed, not on absence from the active
+  feed. Redfin detail fetches fail often enough under throttling that treating "missing" as proof
+  of escrow would demote healthy listings on a network hiccup.
+- Address normalisation is shared with the id scheme (trap 5). The feeds disagree on street-suffix
+  spelling — "Cold Springs **Road**" vs "Cold Springs **Rd**" — so a naive string compare silently
+  matches nothing and the guard passes everything through.
+
+If the pending sweep can't complete, `scrape.js` says so and falls back to IDX status rather than
+silently behaving as though nothing is pending.
+
 **7. Listing pages embed neighbouring properties.** Detail pages carry data for nearby and
 comparable homes alongside the subject. Matching "pool" against the page as a whole therefore finds
 pools that belong to a different house down the road. On 2026-08-02 a naive page-text match would
@@ -172,6 +192,8 @@ don't republish them more broadly.
 
 - **`listings.json`** — canonical data. Single source of truth.
 - **`scrape.js`** — refreshes `listings.json` from the live feed. Handles dedupe and history.
+- **`mls-status.js`** — second-opinion listing status from Redfin's `status=130` feed. `scrape.js`
+  uses it to demote escrowed listings the IDX feed still calls Active (trap 6).
 - **`build.js`** — renders `index.html` from `listings.json`. No dependencies.
 - **`index.html`** — generated. Don't hand-edit; edit the JSON and rebuild.
 - **`ingest.js`** — manual fallback: merges listings pasted from a Zillow/Redfin results page.

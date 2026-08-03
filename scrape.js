@@ -22,6 +22,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
+const { statusIndex, normAddr } = require('./mls-status.js');
 
 const BASE = 'https://www.coldwellbankerhomes.com';
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 ' +
@@ -259,6 +260,25 @@ const candidates = all.filter((r) => {
 });
 process.stderr.write(`\n${all.length} active in target cities, ${candidates.length} clear beds/baths/price\n`);
 
+/* Second-opinion status. The IDX feed keeps reporting escrowed listings as Active —
+   see mls-status.js for the two runs that cost. A match this feed calls Active is
+   demoted to pending when Redfin's live pending set asserts otherwise.
+
+   A failure here must not silently pass every listing: if the sweep can't be trusted,
+   say so and fall back to IDX status rather than pretending nothing is pending. */
+let pendingIdx = new Map(), pendingIdxOk = false;
+try {
+  process.stderr.write('\ncross-checking status against Redfin pending set…\n');
+  pendingIdx = statusIndex('130');
+  pendingIdxOk = true;
+  process.stderr.write(`  ${pendingIdx.size} pending/contingent listings indexed\n\n`);
+} catch (e) {
+  process.stderr.write(`  ! pending cross-check unavailable: ${e.message}\n` +
+                       '  ! falling back to IDX status alone — escrowed listings may show as Active\n\n');
+}
+
+const demoted = [];
+
 const matches = [], pending = [], near = [];
 /** id -> why it fell out of the match list, for properties still on the market. */
 const stillListed = new Map();
@@ -286,8 +306,20 @@ candidates.forEach((r, i) => {
   const bigEnough = d.acres != null && d.acres >= C.minAcres;
   const bathsOk = rec.baths == null || rec.baths >= MIN_BATHS;
   const ok = bigEnough && d.pool && bathsOk;
-  if (ok && d.realStatus === 'Active') matches.push(rec);
-  else if (ok && d.realStatus === 'Pending') {
+
+  /* Reconcile status across feeds before classifying. */
+  let realStatus = d.realStatus;
+  if (realStatus === 'Active') {
+    const hit = pendingIdx.get(normAddr(rec.address, rec.city));
+    if (hit) {
+      realStatus = 'Pending';
+      rec.mlsStatus = 'Pending';
+      demoted.push(`${rec.address}, ${rec.city} (Redfin: ${hit.status}, MLS ${hit.mls})`);
+    }
+  }
+
+  if (ok && realStatus === 'Active') matches.push(rec);
+  else if (ok && realStatus === 'Pending') {
     pending.push({ ...rec, status: 'pending', newThisRun: false,
       priceHistory: [{ date: TODAY, price: rec.currentPrice }],
       notes: 'Meets every criterion but is under contract (Sale Pending). Kept on file in case the deal falls through.' });
@@ -316,6 +348,11 @@ const { listings, dropped } = merge(matches, stillListed);
 const out = {
   ...prior,
   lastRun: TODAY,
+  // Spreading `prior` carries this forward unchanged, so it silently went stale —
+  // it claimed 2026-08-01 through the 08-02 and 08-03 runs. refresh.py maintained it;
+  // scrape.js never did. Only advance it when this is genuinely a later run, so
+  // re-running on the same day doesn't overwrite it with today's date.
+  previousRun: prior.lastRun && prior.lastRun !== TODAY ? prior.lastRun : prior.previousRun,
   source: { ...prior.source, inventoryScanned: all.length,
     passedBedsBathsPrice: candidates.length, verifiedActiveMatches: listings.length },
   dataQuality: { ...prior.dataQuality, verifiedActiveListings: listings.length },
@@ -332,6 +369,16 @@ const nNew = listings.filter((l) => l.newThisRun).length;
 const nChg = listings.filter((l) => (l.priceHistory || []).length > 1 &&
   l.priceHistory.at(-1).price !== l.priceHistory.at(-2).price &&
   l.priceHistory.at(-1).date === TODAY).length;
+
+/* Never let a demotion be silent — it is the difference between reporting 7 matches
+   and 6, and on 2026-08-03 it was the difference between reporting a new match and
+   correctly reporting that nothing moved. */
+if (demoted.length) {
+  process.stderr.write(`\n${demoted.length} listing(s) the IDX feed called Active are Pending ` +
+    `on Redfin — demoted:\n${demoted.map((d) => `  - ${d}\n`).join('')}`);
+} else if (pendingIdxOk) {
+  process.stderr.write('\nStatus cross-check: no disagreement between feeds.\n');
+}
 
 if (DRY) {
   process.stderr.write(`\n[dry run] ${listings.length} matches (${nNew} new, ${nChg} price changes), ` +
