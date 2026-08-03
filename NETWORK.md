@@ -1,8 +1,22 @@
-# Network config needed for this tracker
+# Network config for this tracker
 
-The container that runs this tracker denies outbound HTTPS to every listing site. The denial is
-at the egress gateway, not at the destination — a `CONNECT www.zillow.com:443` gets `403 Forbidden`
-from the local proxy, so no packet ever reaches Zillow.
+> **Status as of 2026-08-03: egress works and no config change is needed.** General HTTPS is open
+> (`example.com` → 200) and `www.redfin.com` is reachable, which is all the tracker needs — see the
+> data-source section in `README.md`. Measured this run:
+>
+> | Host | Result |
+> |---|---|
+> | `www.redfin.com/stingray/api/gis-csv` | **200** — the live feed the tracker runs on |
+> | `www.redfin.com` listing detail pages | **200**, but throttles to `202` + empty body after ~6 rapid fetches; ~12s spacing works |
+> | `ssl.cdn-redfin.com` photos | **200** |
+> | `www.redfin.com/stingray/do/location-autocomplete` | 403 (CloudFront) — use map polygons instead of region IDs |
+> | `www.zillow.com` | 403 · `www.realtor.com` 429 · `www.homes.com` 403 |
+>
+> Redfin alone covers the need. The rest of this file is kept for the day it stops working.
+
+The notes below describe the earlier state, when the container denied outbound HTTPS to every
+listing site. The denial was at the egress gateway, not the destination — a
+`CONNECT www.zillow.com:443` got `403 Forbidden` from the local proxy, so no packet reached Zillow.
 
 Verify at any time with:
 
