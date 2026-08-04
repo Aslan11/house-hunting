@@ -114,6 +114,15 @@ IDX-Active match that appears there, and prints every demotion. Two details matt
 If the pending sweep can't complete, `scrape.js` says so and falls back to IDX status rather than
 silently behaving as though nothing is pending.
 
+**The "presumed pending" rule needs one qualifier**, found on 2026-08-04. `crosscheck.js` returned 5
+matches against the primary's 6, and the missing one was **3784 Cattle Dr** — which looks exactly
+like an escrow case and was not one. Read the cross-check log, not just its final count: Cattle Dr
+appeared in Redfin's *active* CSV and reached the pool-verification stage, where its detail fetch
+failed under throttling (`! could not load 3784 Cattle Dr`). Absent-from-the-active-feed and
+fetch-failed-during-verification are different facts that produce the same shortfall in the total.
+Only the first is evidence of escrow. Confirmed by re-reading the IDX detail page: Active,
+$1,050,000, updated 8/1/2026.
+
 **7. Listing pages embed neighbouring properties.** Detail pages carry data for nearby and
 comparable homes alongside the subject. Matching "pool" against the page as a whole therefore finds
 pools that belong to a different house down the road. On 2026-08-02 a naive page-text match would
@@ -168,7 +177,7 @@ found, but do not use it to decide what exists.
 | Property already tracked, price moved | `priceHistory` gains an entry; the card renders the delta and it appears under "Price changes" |
 | Property not seen before | `newThisRun: true`, appears in the "New this run" strip at the top |
 | Tracked property no longer active | Moved to `dropped` with the date and reason |
-| Qualifies but is in escrow | Moved to `pending`, rendered dimmed under "Under contract" |
+| Qualifies but is in escrow | Moved to `pending`, rendered dimmed under "Under contract", with `pendingSince` and its price history carried across runs |
 | Fails exactly one of pool / acreage | Recorded in `nearMisses` and shown as a table |
 
 A second run against unchanged inventory reports `0 new, 0 price changes` — that is the

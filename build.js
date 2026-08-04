@@ -91,6 +91,9 @@ function card(l, opts = {}) {
   const meta = [];
   if (l.mls) meta.push(`MLS ${esc(l.mls)}`);
   if (l.listedOn) meta.push(`listed ${esc(l.listedOn)}`);
+  // How long a deal has been sitting in escrow is the only signal on this page about
+  // how likely it is to fall through and come back.
+  if (l.status === 'pending' && l.pendingSince) meta.push(`pending since ${esc(l.pendingSince)}`);
   if (l.garageSpaces) meta.push(`${esc(l.garageSpaces)}-car garage`);
   if (l.water) meta.push(esc(l.water));
 
@@ -145,9 +148,17 @@ const acres = L.map((l) => l.acres).filter(Boolean);
 
 const stat = (v, k) => `<div class="stat"><span class="v">${v}</span><span class="k">${k}</span></div>`;
 
-const lastChange = L
-  .map((l) => (l.priceHistory || []).slice(-1)[0])
-  .filter((h) => h && h.date).map((h) => h.date).sort().pop();
+/* "Nothing moved" is only meaningful next to when something last did. This read price
+   history alone, so it answered a narrower question than the sentence it fed — on
+   2026-08-04 it reported the last movement as 2026-07-27 when two listings had gone
+   into escrow on 08-02. Count every way the list can change: a price, a property going
+   under contract, a property leaving. */
+const lastChange = [
+  ...L.map((l) => (l.priceHistory || []).slice(-1)[0]).filter((h) => h && h.date).map((h) => h.date),
+  ...L.filter((l) => l.firstSeen).map((l) => l.firstSeen),
+  ...(data.pending || []).map((p) => p.pendingSince).filter(Boolean),
+  ...(data.dropped || []).map((d) => d.droppedOn).filter(Boolean),
+].sort().pop();
 
 /* A listing leaving the list is news too — it is often the only thing that moved. Surface it in
    the highlights strip rather than only in the section far down the page, and never let the

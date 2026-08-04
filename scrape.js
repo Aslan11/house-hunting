@@ -200,6 +200,25 @@ function slug(name) {
     .join('-');
 }
 
+/* Pending listings were rebuilt from scratch every run, which stamped `priceHistory`
+   with today's date and today's price each time. A price cut on a property in escrow
+   was therefore invisible — and so was the date it went under contract, which is the
+   one fact that makes "nothing moved" runs interpretable. Carry both forward. */
+function carryPending(rec) {
+  const was = (prior.pending || []).find((p) => {
+    const canon = p.address && p.city ? slug(`${p.address}, ${p.city}`) : p.id;
+    return canon === rec.id;
+  });
+  const hist = was && was.priceHistory ? was.priceHistory.slice() : [];
+  const last = hist.length ? hist[hist.length - 1].price : null;
+  if (last !== rec.currentPrice) hist.push({ date: TODAY, price: rec.currentPrice });
+  return {
+    firstSeen: (was && was.firstSeen) || TODAY,
+    pendingSince: (was && was.pendingSince) || TODAY,
+    priceHistory: hist,
+  };
+}
+
 function merge(found, stillListed = new Map()) {
   // Re-slug prior ids through the current normaliser so an id-scheme change
   // doesn't read as "everything is new, everything old was dropped".
@@ -321,7 +340,7 @@ candidates.forEach((r, i) => {
   if (ok && realStatus === 'Active') matches.push(rec);
   else if (ok && realStatus === 'Pending') {
     pending.push({ ...rec, status: 'pending', newThisRun: false,
-      priceHistory: [{ date: TODAY, price: rec.currentPrice }],
+      ...carryPending(rec), lastSeen: TODAY,
       notes: 'Meets every criterion but is under contract (Sale Pending). Kept on file in case the deal falls through.' });
   } else if (d.realStatus === 'Active') {
     const missing = [];
