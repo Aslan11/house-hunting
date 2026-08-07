@@ -1,112 +1,115 @@
 # House Hunting — El Dorado County
 
 Automated house-hunt tracker for **Shingle Springs**, **Rescue**, and **Placerville, CA**.
+Published from `gh-pages` at repo root.
 
 ## Criteria
 
 | Requirement | Value |
 |---|---|
-| Bedrooms | 5+ |
+| Bedrooms | 4+ |
 | Bathrooms | 3+ |
 | Pool | Required |
 | Lot size | 2.5 acres minimum, 5+ preferred |
 | Max price | $1,500,000 |
 
-## ⚠️ Verification gate — read before reporting anything
+## Data pipeline
 
-The first run of this tracker reported four properties as matches. **All four were off market.**
+The tracker pulls live MetroList MLS data through Redfin's GIS/CSV export — the same file the
+"Download All" button on a Redfin search produces. It is structured MLS data with a real `STATUS`
+column, not a search-engine summary, which is what makes listing status trustworthy.
 
-Root cause: listing status was inferred from search-engine result text. Search engines index
-listing pages that keep "For Sale" in the `<title>` for years after the sale closes, so stale
-listings read as active. A second failure compounded it — search snippets conflated two different
-properties on the same street, producing a listing with the wrong MLS number, bed count and price.
+```bash
+# 1. Region IDs (stable; re-derive by grepping regionId= out of https://www.redfin.com/zipcode/<zip>)
+#      95667 Placerville     -> 39791
+#      95672 Rescue          -> 39796
+#      95682 Shingle Springs -> 39806
+#
+# 2. Pull active listings per ZIP
+curl -sSL -A "$UA" -H "Referer: https://www.redfin.com/zipcode/95667" \
+  "https://www.redfin.com/stingray/api/gis-csv?al=1&market=sacramento&num_homes=350\
+&ord=redfin-recommended-asc&page_number=1&region_id=39791&region_type=2\
+&sf=1,2,3,5,6,7&status=9&uipt=1,2,3,4,7,8&v=8" -o csv_95667.csv
+```
 
-**Rules that follow from this:**
+`status=9` is the active filter; `region_type=2` means ZIP. A plain browser User-Agent is required
+or the endpoint returns an empty body.
 
-1. A property may only be given `status: "match"` when its active status is confirmed against a
-   live listing page or an authoritative feed. Search-result text is **not** sufficient.
-2. MetroList MLS numbers encode the listing year: `221…` = 2021, `223…` = 2023, `225…` = 2025,
-   `226…` = 2026. A prefix older than the current year is strong evidence the listing is stale.
-   Treat it as off market unless proven otherwise.
-3. Cross-check bed/bath/price against at least two independent sources before reporting. If they
-   disagree, report the disagreement rather than picking one.
-4. Prefer *under*-reporting. An empty result is correct and useful; a fabricated match is not.
+### Verifying the pool
 
-## Why the environment can't verify
+The CSV has no pool column, so every property that clears beds/baths/price/acreage gets its own
+listing page fetched. Two independent signals are parsed out of the embedded JSON — note it is
+**backslash-escaped** inside the HTML, so normalise `\"` to `"` before matching:
 
-The network policy allows GitHub, package registries, and a keyed `maps.googleapis.com`. Everything
-else is blocked at the proxy — Zillow, Redfin, Realtor.com, Homes.com, Movoto, small brokerage
-sites, plus OpenStreetMap, Wikimedia and Esri tile servers. `WebFetch` is blocked outright
-(`example.com` returns 403). `WebSearch` is the only channel, and it returns summarised text, never
-live status and never image URLs.
+- `"hasPrivatePool":true|false` — the authoritative structured flag.
+- The `"groupTitle":"Pool Information"` amenity block — `Has Private Pool`, `Pool Features`, `Has Spa`.
 
-## Fixing the pipeline
+Never infer a pool from marketing copy alone. "Pool table" and "carpool" both appear in remarks, and
+plenty of listings mention a neighbourhood pool the property does not have.
 
-Ranked cheapest-first. The first option solves listing status **and** photos at once:
+### Then merge and build
 
-1. **Zillow/Redfin saved search with email alerts** to `kvn.p.mrtn@gmail.com`. This repo's runner
-   has Gmail access, so alert emails become an authoritative feed: current listings, correct
-   status, price cuts, and image URLs. ~5 minutes to set up, one time.
-2. **An agent-run MLS/IDX client portal** with email alerts — same benefits, fuller MLS data.
-3. **A real-estate data API key** in the environment (SimplyRETS, Bridge Interactive, a RapidAPI
-   provider) for direct queries.
-4. **Allowlisting a listing domain** in the network policy. Least reliable — the portals bot-block
-   independently of the proxy.
+```bash
+node merge.js run.json 2026-08-07   # dedupe + price history -> listings.json
+node build.js                       # listings.json -> index.html
+```
+
+## Verification gate — read before reporting anything
+
+The 2026-07-26 run reported four properties as matches. **All four were off market.** Status had
+been inferred from search-engine result text, which indexes sold listings with "For Sale" still in
+the `<title>` for years.
+
+Rules that follow:
+
+1. A property may only be given `status: "match"` when its active status comes from the MLS feed
+   (`STATUS,Active` in the CSV) — never from search-result text.
+2. MetroList MLS numbers encode the listing year: `221…` = 2021, `225…` = 2025, `226…` = 2026. A
+   prefix older than the current year on a supposedly-active listing means something is wrong.
+3. Prefer *under*-reporting. An empty result is correct and useful; a fabricated match is not.
+
+## Dedupe rules
+
+`merge.js` enforces these; they are documented here so a manual run behaves the same way.
+
+1. Already tracked, price unchanged → keep, refresh `lastSeen`, **not** flagged new.
+2. Already tracked, price changed → append to `priceHistory`, set `priceChange`, render the delta.
+3. Not previously tracked → add, flag `isNew`, surface at the top of the page.
+4. Previously tracked but absent from the active feed → moved to `dropped` (sold / withdrawn /
+   expired) and removed from the board. Kept in the file so a relist is recognised as a relist.
+5. Anything in `rejected` stays rejected unless a price change brings it into range.
+
+## Network notes
+
+Egress from this container reaches Redfin (`www.redfin.com`, `ssl.cdn-redfin.com`) and its CSV API.
+Zillow, Realtor.com, Homes.com, Trulia and Movoto all refuse requests from this IP range — that is
+the sites' own bot defence, not the proxy, so allowlisting will not fix it. `WebFetch` is separately
+blocked against Redfin (405). Plain `curl` with a browser User-Agent is the working path.
+
+Consequence: cross-checking a listing against a second portal is not currently possible. The
+`caveats` field in `listings.json` says so on the page rather than implying two-source confirmation.
+
+Redfin's export also carries a disclaimer that some MLS listings are withheld from download under
+local MLS rules, so treat the result as a strong sample rather than a guaranteed-complete one.
 
 ## Photos
 
-Photo support is built and waiting on a source.
-
-- Each listing has a `photos` array in `listings.json`. Put any image URL in it and the card
-  renders it on the next build.
-- Hotlinking works even though this environment can't load images: the **viewer's browser** fetches
-  them, and it isn't behind this proxy. Images carry `referrerpolicy="no-referrer"`, which also
-  gets past most CDN referrer blocks.
-- If a photo URL 404s or is blocked, an `onerror` handler swaps in the fallback tile client-side,
-  so a dead URL never leaves a hole in the layout.
-- With no photo, the card shows a "View photos on <site>" tile linking to `gallery` (or `url`).
-
-Note that MLS photos are the copyright of the listing brokerage. Fine for a private hunting page;
-don't republish them more broadly.
-
-## Fastest path: paste from Zillow
-
-`ingest.js` takes listings copied straight off a Zillow or Redfin results page and merges them in,
-applying the dedupe rules below automatically.
-
-```bash
-node ingest.js paste.txt     # or:  pbpaste | node ingest.js
-node build.js
-```
-
-It reports what was new, what changed price, and what was already tracked. Anything outside the
-three target cities is skipped; anything failing a hard criterion is added but flagged rather than
-presented as a match. Image URLs in the paste become the card photo.
-
-Note the coverage problem this solves: web search returns only a small, stale, non-random slice of
-inventory, because it reads *summaries of* portal pages rather than querying the live MLS. A portal's
-own filtered search is the real result set. Do not treat a thin search-derived result list as
-evidence that inventory is thin.
+Photos are hotlinked from `ssl.cdn-redfin.com` and render in the viewer's browser (which is not
+behind this proxy). `referrerpolicy="no-referrer"` gets past the CDN's referrer check. If a URL
+dies, an `onerror` handler swaps in a "View photos on redfin" tile, so a dead image never leaves a
+hole in the layout. Cards prefer pool photos in the thumbnail strip, since the pool is the hard
+requirement. MLS photos are the listing brokerage's copyright — fine for a private hunting page,
+don't republish more broadly.
 
 ## Files
 
 - **`listings.json`** — canonical data. Single source of truth.
-- **`ingest.js`** — merge pasted portal listings into `listings.json`.
-- **`build.js`** — renders `index.html` from `listings.json`. No dependencies: `node build.js`.
+- **`merge.js`** — merges a run into `listings.json`, applying the dedupe rules.
+- **`build.js`** — renders `index.html` from `listings.json`. No dependencies.
 - **`index.html`** — generated. Don't hand-edit; edit the JSON and rebuild.
-
-## Dedupe rules for future runs
-
-Read `listings.json` **before** reporting anything.
-
-1. A property already in `listings` is a **duplicate** — do not re-surface it.
-2. Exception: if the price differs from `currentPrice`, that *is* worth reporting. Append to
-   `priceHistory`, update `currentPrice`, and the card will render the delta automatically.
-3. Anything in `rejected` stays rejected unless a price change brings it into range.
-4. An `off-market` property returning to market is newsworthy — but only once verified per the gate.
-5. Update `lastSeen` on confirmed-active properties and `lastRun` on every run.
+- **`ingest.js`** — older path: merge listings pasted from a Zillow/Redfin results page.
 
 ## Publishing
 
-Served from the `gh-pages` branch at repo root. Enable under
+Served from the `gh-pages` branch at repo root:
 **Settings → Pages → Source: `gh-pages` / `(root)`**.
