@@ -131,6 +131,27 @@ pool" that belongs to a property a few miles away. `crosscheck.js` reads the sub
 `Pool Information` amenity group, its `hasPrivatePool` flag and its own marketing remarks, and
 reports a pool only when all three agree.
 
+**8. "Looks too small" is not the same as "failed".** `mls-status.js` judged a gis-csv response
+by byte length — anything under 2000 bytes was treated as a failed fetch and retried. The active
+set is dense, so its tiles always cleared that bar and the heuristic looked fine. The **pending**
+set is roughly a tenth the size, so a perfectly good tile carrying three or four listings comes
+back at ~1.3KB and was read as a failure. After four retries `curl()` returned `''`, `parseCsv('')`
+produced zero rows, and the tile contributed nothing to the index — with no error raised and
+`pendingIdxOk` still true.
+
+That is the worst shape this failure can take. A sweep that silently loses whole tiles still
+reports itself complete, and absence from the pending index reads downstream as "not in escrow" —
+so the guard from trap 6 passes the listing straight through. On 2026-08-07 the sweep stalled
+outright and, had it fallen through to IDX status, **1988 Cold Springs Rd** would have been
+reported as a new match for the third time; the IDX feed was again calling it Active while
+MetroList had it Pending.
+
+Two changes: responses are validated by *shape* (does the CSV header row start the body?) rather
+than size, so a valid tile with few rows is accepted and a block page or empty stub is not; and a
+tile that genuinely cannot be fetched now throws, which degrades the run to the documented
+`pendingIdxOk: false` fallback instead of a confident wrong answer. The general rule — an empty
+result and a failed request must never be represented the same way.
+
 Corollaries worth keeping:
 
 - MetroList MLS numbers encode the listing year: `221…` = 2021, `225…` = 2025, `226…` = 2026.

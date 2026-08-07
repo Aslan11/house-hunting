@@ -37,6 +37,23 @@ const NUM_HOMES = 350;                                              // server ca
 const BOX = { west: -121.05, east: -120.70, south: 38.55, north: 38.85 };
 const COLS = 4, ROWS = 3;
 
+/**
+ * A gis-csv response is judged by its *shape*, not its size.
+ *
+ * This used to accept a body only when it exceeded 2000 bytes, which silently broke the
+ * pending sweep. The active set is dense, so its tiles always cleared that bar; the
+ * pending set is perhaps a tenth the size, so a legitimate tile carrying three or four
+ * listings comes back at ~1.3KB and was read as a failed fetch. After four retries
+ * `curl()` returned '' and the tile contributed nothing — no error, no warning, and
+ * `pendingIdxOk` still true. A sweep that reports itself complete while missing whole
+ * tiles is the worst available outcome here: it is exactly the guard from trap 6, and it
+ * would pass a property that is actually in escrow straight through to the match list.
+ *
+ * The header row is the real signal of a good response. An empty body, an HTML block
+ * page or a 202 stub has no header; a valid tile with zero listings does.
+ */
+const CSV_HEADER = 'SALE TYPE,SOLD DATE,PROPERTY TYPE,ADDRESS';
+
 function curl(url, tries = 4) {
   for (let i = 0; i < tries; i++) {
     try {
@@ -46,7 +63,7 @@ function curl(url, tries = 4) {
         '-H', 'Accept-Language: en-US,en;q=0.9',
         url,
       ], { maxBuffer: 1 << 28 }).toString('utf8');
-      if (out.length > 2000) return out;
+      if (out.startsWith(CSV_HEADER)) return out;
     } catch (e) { /* retry */ }
     const wait = 4 * 2 ** i;
     process.stderr.write(`  retry in ${wait}s…\n`);
@@ -117,13 +134,19 @@ function normAddr(street, city) {
 function statusIndex(status = '130') {
   const seen = new Map();
   const truncated = [];
+  const unfetched = [];
   const dw = (BOX.east - BOX.west) / COLS;
   const dh = (BOX.north - BOX.south) / ROWS;
   for (let i = 0; i < COLS; i++) {
     for (let j = 0; j < ROWS; j++) {
       const w = BOX.west + i * dw, e = w + dw;
       const s = BOX.south + j * dh, n = s + dh;
-      const rows = parseCsv(curl(tileUrl(w, e, s, n, status)));
+      const body = curl(tileUrl(w, e, s, n, status));
+      // A tile that never came back is not the same fact as a tile with no listings,
+      // and must not be allowed to look like one. Absence here reads downstream as
+      // "not pending", so an unfetched tile has to fail the whole sweep.
+      if (!body) { unfetched.push(`${w.toFixed(3)},${s.toFixed(2)}`); continue; }
+      const rows = parseCsv(body);
       if (rows.length >= NUM_HOMES) truncated.push(`${w.toFixed(3)},${s.toFixed(2)}`);
       for (const r of rows) {
         if (!r.ADDRESS) continue;
@@ -138,6 +161,11 @@ function statusIndex(status = '130') {
     throw new Error(
       `Redfin status=${status} tiles hit the ${NUM_HOMES}-row cap: ${truncated.join('; ')}. ` +
       `Raise COLS/ROWS in mls-status.js — the sweep would otherwise be silently incomplete.`);
+  }
+  if (unfetched.length) {
+    throw new Error(
+      `Redfin status=${status} tiles could not be fetched: ${unfetched.join('; ')}. ` +
+      `Treating the sweep as unavailable rather than as evidence nothing is pending.`);
   }
   return seen;
 }
