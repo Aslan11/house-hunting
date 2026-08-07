@@ -2,8 +2,11 @@
 /**
  * Builds index.html from listings.json.
  *
- * Edit listings.json (or run merge.js against a fresh pull), then `node build.js`.
- * Never hand-edit index.html.
+ * Future runs should edit listings.json ONLY, then run `node build.js`.
+ * Anything flagged `newThisRun` floats into the "New this run" strip at the top;
+ * anything whose priceHistory has more than one entry renders a price delta.
+ * Photos hotlink to the listing CDN with referrerpolicy="no-referrer"; a dead URL
+ * is swapped client-side for the fallback tile so it never leaves a hole.
  */
 const fs = require('fs');
 const path = require('path');
@@ -14,334 +17,378 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 const money = (n) => (n == null ? '—' : '$' + Number(n).toLocaleString('en-US'));
-const short = (n) => (n == null ? '—' : '$' + (n / 1000).toFixed(0) + 'K');
+const short = (n) => (n == null ? '—' : n >= 1e6
+  ? '$' + (n / 1e6).toFixed(2).replace(/0$/, '') + 'M'
+  : '$' + Math.round(n / 1000) + 'K');
 
-function galleryHost(u) {
-  try { return new URL(u).hostname.replace(/^www\./, '').split('.')[0]; }
-  catch { return 'listing'; }
-}
+/** Lot sizes arrive with junk precision (0.2052); two decimals is plenty. */
+const acreStr = (a) => (a == null ? '—' : String(Math.round(a * 100) / 100));
 
-/** Media strip: hero photo plus up to three thumbs, with graceful fallback. */
+const host = (u) => {
+  try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return 'listing'; }
+};
+
+/* ---------- pieces ---------- */
+
 function media(l) {
-  const gallery = l.gallery || l.url;
-  const host = galleryHost(gallery);
   const tile =
-    `<a class="tile" href="${esc(gallery)}" rel="noopener noreferrer" target="_blank">` +
+    `<a class="tile" href="${esc(l.gallery || l.url)}" target="_blank" rel="noopener">` +
       `<span class="tile-ico" aria-hidden="true">&#9968;</span>` +
-      `<span class="tile-txt">View photos on ${esc(host)} &rarr;</span>` +
+      `<span class="tile-txt">View on ${esc(host(l.url))} &rarr;</span>` +
     `</a>`;
 
-  const photos = l.photos && l.photos.length ? l.photos : [];
+  const photos = l.photos || [];
   if (!photos.length) return `<div class="media nophoto">${tile}</div>`;
 
-  const hero =
-    `<a class="hero" href="${esc(gallery)}" rel="noopener noreferrer" target="_blank">` +
-      `<img src="${esc(photos[0])}" alt="${esc(l.address)}, ${esc(l.city)}" loading="lazy" ` +
-      `referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')">` +
-    `</a>`;
+  const imgs = photos.map((p, i) =>
+    `<img src="${esc(p)}" alt="${esc(l.address)}, ${esc(l.city)} — photo ${i + 1}"` +
+    ` loading="lazy" referrerpolicy="no-referrer"` +
+    ` onerror="this.closest('.media').classList.add('failed')">`).join('');
 
-  // Prefer pool photos in the thumb strip — the pool is the hard requirement.
-  const rest = [...(l.poolPhotos || []), ...photos.slice(1)]
-    .filter((p, i, a) => p !== photos[0] && a.indexOf(p) === i)
-    .slice(0, 3);
+  return `<div class="media">` +
+      `<div class="strip">${imgs}</div>` +
+      (photos.length > 1 ? `<span class="count">${photos.length} photos &middot; scroll &rarr;</span>` : '') +
+      tile +
+    `</div>`;
+}
 
-  const thumbs = rest.length
-    ? `<div class="thumbs">` + rest.map((p) =>
-        `<a href="${esc(gallery)}" rel="noopener noreferrer" target="_blank">` +
-        `<img src="${esc(p)}" alt="" loading="lazy" referrerpolicy="no-referrer" ` +
-        `onerror="this.parentNode.remove()"></a>`).join('') + `</div>`
-    : '';
-
-  return `<div class="media">${hero}${thumbs}${tile}</div>`;
+function priceBlock(l) {
+  const hist = l.priceHistory || [];
+  let delta = '';
+  if (hist.length > 1) {
+    const a = hist[hist.length - 2].price, b = hist[hist.length - 1].price;
+    if (a !== b) {
+      const down = b < a;
+      const pct = Math.abs((b - a) / a * 100).toFixed(1);
+      delta = `<span class="delta ${down ? 'down' : 'up'}">` +
+        `${down ? '&darr;' : '&uarr;'} ${money(Math.abs(b - a))} (${pct}%) from ${money(a)}</span>`;
+    }
+  }
+  const ppa = l.acres ? `<span class="ppa">${short(Math.round(l.currentPrice / l.acres))}/acre</span>` : '';
+  return `<div class="price">${money(l.currentPrice)}${ppa}${delta}</div>`;
 }
 
 function facts(l) {
   const f = [];
-  if (l.beds != null)  f.push(`<span class="fact"><b>${esc(l.beds)}</b> bd</span>`);
-  if (l.baths != null) f.push(`<span class="fact"><b>${esc(l.baths)}</b> ba</span>`);
-  if (l.sqft)  f.push(`<span class="fact"><b>${Number(l.sqft).toLocaleString('en-US')}</b> sqft</span>`);
-  if (l.acres) f.push(`<span class="fact acres"><b>${esc(l.acres)}</b> acres</span>`);
-  if (l.yearBuilt) f.push(`<span class="fact">built ${esc(l.yearBuilt)}</span>`);
-  f.push(l.pool
-    ? `<span class="fact pool">&#127946; ${esc(l.poolDetail || 'Pool')}</span>`
-    : `<span class="fact nopool">No pool</span>`);
-  if (l.hasSpa) f.push(`<span class="fact pool">+ spa</span>`);
-  return f.join('');
+  if (l.beds != null) f.push(`<b>${esc(l.beds)}</b> bd`);
+  if (l.baths != null) f.push(`<b>${esc(l.baths)}</b> ba`);
+  if (l.sqft) f.push(`<b>${l.sqft.toLocaleString('en-US')}</b> sqft`);
+  if (l.acres) f.push(`<b>${esc(acreStr(l.acres))}</b> acres`);
+  if (l.yearBuilt) f.push(`built <b>${esc(l.yearBuilt)}</b>`);
+  return `<div class="facts">${f.map((x) => `<span>${x}</span>`).join('')}</div>`;
 }
 
-function priceBlock(l) {
-  const pc = l.priceChange;
-  if (pc) {
-    const down = pc.to < pc.from;
-    const delta = Math.abs(pc.to - pc.from);
-    return `<p class="price">${money(l.currentPrice)}` +
-      `<span class="pricechg ${down ? 'down' : 'up'}">` +
-      `${down ? '&darr;' : '&uarr;'} ${money(delta)} from ${money(pc.from)}</span></p>`;
+function card(l, opts = {}) {
+  const badges = [];
+  if (l.newThisRun) badges.push('<span class="b new">NEW</span>');
+  if (l.flag) badges.push(`<span class="b flag">${esc(l.flag)}</span>`);
+  if (l.status === 'pending') badges.push('<span class="b pend">Sale pending</span>');
+  if (l.acres >= (data.criteria.preferredAcres || 5)) badges.push('<span class="b acre">5+ acres</span>');
+  if (l.propertyType && l.propertyType !== 'Single Family') {
+    badges.push(`<span class="b type">${esc(l.propertyType)}</span>`);
   }
-  return `<p class="price">${money(l.currentPrice)}</p>`;
+
+  const meta = [];
+  if (l.mls) meta.push(`MLS ${esc(l.mls)}`);
+  if (l.listedOn) meta.push(`listed ${esc(l.listedOn)}`);
+  // How long a deal has been sitting in escrow is the only signal on this page about
+  // how likely it is to fall through and come back.
+  if (l.status === 'pending' && l.pendingSince) meta.push(`pending since ${esc(l.pendingSince)}`);
+  if (l.garageSpaces) meta.push(`${esc(l.garageSpaces)}-car garage`);
+  if (l.water) meta.push(esc(l.water));
+
+  return `<article class="card ${opts.dim ? 'dim' : ''}" id="${esc(l.id)}">
+  ${media(l)}
+  <div class="body">
+    <div class="badges">${badges.join('')}</div>
+    <h3><a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.address)}</a></h3>
+    <div class="place">${esc(l.city)}, CA ${esc(l.zip || '')}</div>
+    ${priceBlock(l)}
+    ${facts(l)}
+    <div class="pool"><span aria-hidden="true">&#127946;</span> ${esc(l.poolDetail || 'Pool')}</div>
+    ${l.view ? `<div class="view">Views: ${esc(l.view)}</div>` : ''}
+    ${l.summary ? `<p class="sum">${esc(l.summary)}&hellip;</p>` : ''}
+    ${l.notes ? `<p class="note"><b>Worth knowing:</b> ${esc(l.notes)}</p>` : ''}
+    <div class="meta">${meta.join(' &middot; ')}</div>
+  </div>
+</article>`;
 }
 
-/** Per-acre context helps compare a 40-acre parcel against a 5-acre one. */
-function subline(l) {
-  const bits = [];
-  if (l.mls) bits.push(`MLS ${esc(l.mls)}`);
-  if (l.daysOnMarket != null) {
-    bits.push(l.daysOnMarket <= 3
-      ? `<b class="fresh">${l.daysOnMarket} day${l.daysOnMarket === 1 ? '' : 's'} on market</b>`
-      : `${l.daysOnMarket} days on market`);
-  }
-  return bits.join(' &middot; ');
-}
+/* ---------- page ---------- */
 
-function card(l) {
-  const flags = [];
-  if (l.isNew) flags.push(`<span class="tag new">New this run</span>`);
-  if (l.priceChange) {
-    flags.push(`<span class="tag chg">${l.priceChange.to < l.priceChange.from ? 'Price cut' : 'Price up'}</span>`);
-  }
-  if (!flags.length) flags.push(`<span class="tag ok">Tracked</span>`);
-  if (l.acres >= 5) flags.push(`<span class="tag land">${l.acres}+ acres</span>`);
+/* Two refresh implementations exist (scrape.js in Node, refresh.py in Python from an
+   earlier run). They agree on the fields that carry history — mls, firstSeen,
+   priceHistory — but differ on presentation field names. Normalise so either can
+   drive this renderer, and a run that swaps implementations still renders correctly. */
+const normalize = (l) => ({
+  ...l,
+  id: l.id || l.mls,
+  newThisRun: l.newThisRun ?? l.isNew ?? false,
+  summary: l.summary || l.desc || '',
+  notes: l.notes || l.caveat || '',
+  garageSpaces: l.garageSpaces ?? l.garage ?? null,
+  lng: l.lng ?? l.lon ?? null,
+});
 
-  const remarks = l.remarks
-    ? `<p class="note">${esc(l.remarks)}</p>`
-    : '';
-  const who = [l.agent, l.broker].filter(Boolean).map(esc).join(' &middot; ');
-
-  return `
-  <article class="card${l.isNew ? ' isnew' : ''}">
-    ${media(l)}
-    <div class="body">
-      <div class="tags">${flags.join('')}</div>
-      ${priceBlock(l)}
-      <h3 class="addr">${esc(l.address)}</h3>
-      <p class="city">${esc(l.city)}, CA ${esc(l.zip)}</p>
-      <div class="facts">${facts(l)}</div>
-      ${remarks}
-      <p class="sub">${subline(l)}</p>
-      ${who ? `<p class="sub agent">${who}</p>` : ''}
-      <a class="btn" href="${esc(l.url)}" rel="noopener noreferrer" target="_blank">View listing &rarr;</a>
-    </div>
-  </article>`;
-}
-
-const listings = data.listings || [];
-const fresh = listings.filter((l) => l.isNew);
-const changed = listings.filter((l) => !l.isNew && l.priceChange);
-const steady = listings.filter((l) => !l.isNew && !l.priceChange);
-
-const droppedThisRun = (data.dropped || []).filter((d) => d.droppedOn === data.lastRun);
-
+const L = (data.listings || []).map(normalize);
+const fresh = L.filter((l) => l.newThisRun);
+/* Only a price that moved *this* run counts as news. A cut reported last run still shows
+   its delta on the card, but must not be re-surfaced in the highlights strip. */
+const changed = L.filter((l) => {
+  const h = l.priceHistory || [];
+  return !l.newThisRun && h.length > 1 &&
+    h[h.length - 1].price !== h[h.length - 2].price &&
+    h[h.length - 1].date === data.lastRun;
+});
+const rest = L.filter((l) => !l.newThisRun && !changed.includes(l));
 const c = data.criteria;
-const summary = data.runSummary || {};
 
-const section = (id, title, blurb, items) => items.length ? `
-  <section id="${id}">
-    <h2>${title} <span class="count">${items.length}</span></h2>
-    ${blurb ? `<p class="lede">${blurb}</p>` : ''}
-    <div class="grid">${items.map(card).join('')}</div>
-  </section>` : '';
+const prices = L.map((l) => l.currentPrice).filter(Boolean);
+const acres = L.map((l) => l.acres).filter(Boolean);
 
-const droppedRows = droppedThisRun.map((d) => `
-      <tr>
-        <td>${esc(d.address)}, ${esc(d.city)}</td>
-        <td>${d.lastPrice ? money(d.lastPrice) : '—'}</td>
-        <td>${esc(d.reason)}</td>
-      </tr>`).join('');
+const stat = (v, k) => `<div class="stat"><span class="v">${v}</span><span class="k">${k}</span></div>`;
 
-const nearRows = (data.nearMisses || []).map((n) => `
-      <tr>
-        <td><a href="${esc(n.url)}" rel="noopener noreferrer" target="_blank">${esc(n.address)}, ${esc(n.city)}</a></td>
-        <td>${money(n.price)}</td>
-        <td>${esc(n.beds)}bd / ${esc(n.baths)}ba</td>
-        <td>${esc(n.acres)} ac</td>
-        <td>${esc(n.reason)}</td>
-      </tr>`).join('');
+/* "Nothing moved" is only meaningful next to when something last did. This read price
+   history alone, so it answered a narrower question than the sentence it fed — on
+   2026-08-04 it reported the last movement as 2026-07-27 when two listings had gone
+   into escrow on 08-02. Count every way the list can change: a price, a property going
+   under contract, a property leaving. */
+const lastChange = [
+  ...L.map((l) => (l.priceHistory || []).slice(-1)[0]).filter((h) => h && h.date).map((h) => h.date),
+  ...L.filter((l) => l.firstSeen).map((l) => l.firstSeen),
+  ...(data.pending || []).map((p) => p.pendingSince).filter(Boolean),
+  ...(data.dropped || []).map((d) => d.droppedOn).filter(Boolean),
+].sort().pop();
 
-const rejectedRows = (data.rejected || []).map((r) => `
-      <tr><td>${esc(r.address)}</td><td>${r.price ? money(r.price) : '—'}</td><td>${esc(r.reason)}</td></tr>`).join('');
+/* A listing leaving the list is news too — it is often the only thing that moved. Surface it in
+   the highlights strip rather than only in the section far down the page, and never let the
+   empty-state claim nothing dropped when something did. */
+const goneToday = (data.dropped || []).filter((d) => d.droppedOn === data.lastRun);
 
-const html = `<!DOCTYPE html>
+const dropStrip = goneToday.length
+  ? `<div class="strip-drop"><strong>&#8595; ${goneToday.length} ${goneToday.length === 1 ? 'listing' : 'listings'} left the list.</strong>
+     <ul>${goneToday.map((d) => `<li><b>${esc(d.address)}</b> — ${esc(d.reason)}</li>`).join('')}</ul></div>`
+  : '';
+
+const nothingMoved = !fresh.length && !changed.length && !goneToday.length;
+
+const highlights = nothingMoved
+  ? `<div class="strip-empty"><strong>Nothing new this run.</strong> No listings entered the market,
+     none changed price, and none dropped off. All ${L.length} matches below were verified again
+     today${lastChange && lastChange !== data.lastRun ? `; the most recent movement was on ${esc(lastChange)}` : ''}.</div>`
+  : [
+      fresh.length ? `<h2 class="h-new">&#10022; ${fresh.length} new ${fresh.length === 1 ? 'listing' : 'listings'} this run</h2>
+       <div class="grid">${fresh.map((l) => card(l)).join('')}</div>` : '',
+      changed.length ? `<h2 class="h-chg">&#8645; ${changed.length} price ${changed.length === 1 ? 'change' : 'changes'}</h2>
+       <div class="grid">${changed.map((l) => card(l)).join('')}</div>` : '',
+      dropStrip,
+      (!fresh.length && !changed.length)
+        ? `<div class="strip-empty"><strong>No new listings and no price changes.</strong> The
+           ${L.length} matches below were all verified again today.</div>`
+        : '',
+    ].join('\n');
+
+/* Flat array (scrape.js) or {acreageOkNoPool, poolOkLotTooSmall} buckets (refresh.py). */
+const nearList = Array.isArray(data.nearMisses)
+  ? data.nearMisses
+  : Object.entries(data.nearMisses || {}).flatMap(([bucket, arr]) =>
+      (arr || []).map((n) => ({ ...n,
+        missing: n.missing || (bucket === 'acreageOkNoPool' ? 'no pool' : `only ${n.acres} acres`) })));
+
+const nearRows = nearList.slice(0, 24).map((n) => `<tr>
+  <td><a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.address)}</a></td>
+  <td>${esc(n.city)}</td><td class="num">${money(n.price)}</td>
+  <td class="num">${esc(n.beds)}/${esc(n.baths)}</td>
+  <td class="num">${n.acres == null ? '—' : esc(acreStr(n.acres))}</td>
+  <td class="miss">${esc(n.missing.replace(/only ([\d.]+) acres/, (_, a) => `only ${acreStr(+a)} acres`))}</td></tr>`).join('');
+
+const html = `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>House Hunt — Shingle Springs · Rescue · Placerville</title>
-<meta name="description" content="Tracked 4BR+/3BA+ homes with a pool on 2.5+ acres in Shingle Springs, Rescue and Placerville, CA under $1.5M.">
+<title>House Hunt — Shingle Springs / Rescue / Placerville</title>
+<meta name="description" content="Verified active listings: ${c.beds} bed, ${c.baths} bath, pool, ${c.minAcres}+ acres, under ${short(c.maxPrice)}.">
 <style>
-  :root{
-    --bg:#f6f4f0; --card:#fff; --ink:#1c1a17; --muted:#6b665e;
-    --line:#e2ddd4; --accent:#2f6b4f; --accent-soft:#e6f0ea;
-    --new:#1f5f8b; --new-soft:#e2eef7;
-    --warn:#8a6d1f; --warn-soft:#f8f0d8; --miss:#8a4b3a; --miss-soft:#f7e7e2;
-    --tile:#ece7de; --shadow:0 1px 2px rgba(0,0,0,.05),0 8px 24px rgba(0,0,0,.05);
-  }
-  @media (prefers-color-scheme: dark){
-    :root{
-      --bg:#16181a; --card:#1f2225; --ink:#eceae6; --muted:#a09a91;
-      --line:#31363a; --accent:#7fc4a1; --accent-soft:#1e2f27;
-      --new:#8fc4e8; --new-soft:#1b2a35;
-      --warn:#d9bd6a; --warn-soft:#2e2819; --miss:#e0a08c; --miss-soft:#2e211d;
-      --tile:#282c30; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
-    }
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);
-    font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    -webkit-text-size-adjust:100%;}
-  .wrap{max-width:1180px;margin:0 auto;padding:32px 20px 80px}
-  header{border-bottom:1px solid var(--line);padding-bottom:22px;margin-bottom:8px}
-  h1{font-size:clamp(24px,4vw,34px);margin:0 0 6px;letter-spacing:-.02em}
-  .sub-h{color:var(--muted);margin:0}
-  .crit{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0;padding:0;list-style:none}
-  .crit li{background:var(--card);border:1px solid var(--line);border-radius:999px;
-    padding:5px 13px;font-size:13.5px;color:var(--muted)}
-  .crit li b{color:var(--ink)}
+*{box-sizing:border-box}
+:root{
+  --bg:#faf8f5; --panel:#fff; --ink:#1c1a17; --dim:#6b6560; --line:#e6e0d8;
+  --accent:#8a5a2b; --new:#0f7b52; --newbg:#e6f4ee; --warn:#9a6b00; --warnbg:#fdf3dd;
+  --pend:#8a4a4a; --pendbg:#fbeaea; --shadow:0 1px 2px rgba(0,0,0,.05),0 8px 24px -12px rgba(0,0,0,.14);
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#15130f; --panel:#1e1b17; --ink:#f0ece6; --dim:#a39c93; --line:#332e28;
+  --accent:#d4a373; --new:#5ad3a0; --newbg:#0f2b21; --warn:#e0b555; --warnbg:#2e2513;
+  --pend:#e59a9a; --pendbg:#2e1b1b; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px -12px rgba(0,0,0,.6);
+}}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px 72px}
+a{color:inherit}
 
-  .banner{margin:26px 0 8px;padding:18px 20px;border-radius:14px;
-    background:var(--new-soft);border:1px solid color-mix(in srgb,var(--new) 30%,transparent)}
-  .banner h2{margin:0 0 6px;font-size:18px;color:var(--new)}
-  .banner p{margin:0;color:var(--ink);font-size:15px}
-  .banner ul{margin:10px 0 0;padding-left:20px}
-  .banner li{font-size:15px;margin:3px 0}
+header{padding:44px 0 26px;border-bottom:1px solid var(--line);margin-bottom:30px}
+h1{font-size:clamp(26px,4.4vw,40px);line-height:1.15;margin:0 0 8px;letter-spacing:-.02em}
+h1 span{color:var(--accent)}
+.sub{color:var(--dim);margin:0 0 22px;font-size:15px}
+.crit{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+.crit span{background:var(--panel);border:1px solid var(--line);border-radius:999px;
+  padding:5px 13px;font-size:13.5px;box-shadow:var(--shadow)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:10px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 15px;box-shadow:var(--shadow)}
+.stat .v{display:block;font-size:22px;font-weight:650;letter-spacing:-.02em}
+.stat .k{display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--dim);margin-top:2px}
 
-  section{margin:44px 0 0}
-  h2{font-size:20px;margin:0 0 4px;letter-spacing:-.01em}
-  h2 .count{display:inline-block;background:var(--accent-soft);color:var(--accent);
-    border-radius:999px;font-size:13px;padding:2px 10px;vertical-align:middle;margin-left:6px}
-  .lede{color:var(--muted);margin:0 0 18px;max-width:70ch}
+h2{font-size:19px;margin:40px 0 16px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+h2.h-new{color:var(--new)}
+h2.h-chg{color:var(--warn)}
+.lede{color:var(--dim);font-size:14.5px;margin:-8px 0 18px;max-width:74ch}
+.strip-empty{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--new);
+  border-radius:12px;padding:16px 18px;color:var(--dim);font-size:14.5px}
+.strip-drop{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--warn);
+  border-radius:12px;padding:16px 18px;color:var(--dim);font-size:14.5px;margin-top:18px}
+.strip-drop strong{color:var(--ink)}
+.strip-drop ul{margin:8px 0 0;padding-left:20px}
+.strip-drop li{margin:3px 0}
+.strip-drop li b{color:var(--ink);font-weight:600}
 
-  .grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fill,minmax(330px,1fr))}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;
-    overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow)}
-  .card.isnew{border-color:color-mix(in srgb,var(--new) 45%,var(--line))}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:22px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;
+  box-shadow:var(--shadow);display:flex;flex-direction:column}
+.card.dim{opacity:.72}
 
-  .media{position:relative;background:var(--tile)}
-  .media .hero{display:block;aspect-ratio:16/10;overflow:hidden}
-  .media .hero img{width:100%;height:100%;object-fit:cover;display:block}
-  .thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--tile)}
-  .thumbs img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
-  .tile{display:none;align-items:center;justify-content:center;gap:8px;
-    aspect-ratio:16/10;color:var(--muted);text-decoration:none;font-size:14.5px;text-align:center;padding:12px}
-  .tile-ico{font-size:24px}
-  .media.nophoto .tile,.media.failed .tile{display:flex}
-  .media.failed .hero,.media.failed .thumbs{display:none}
+.media{position:relative;background:#d9d2c8;aspect-ratio:16/10}
+@media (prefers-color-scheme:dark){.media{background:#26221d}}
+.strip{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;height:100%;
+  scrollbar-width:thin;-webkit-overflow-scrolling:touch;position:relative;z-index:1}
+.strip img{flex:0 0 100%;width:100%;height:100%;object-fit:cover;scroll-snap-align:start;display:block;
+  color:transparent;font-size:0}
+.media .count{position:absolute;right:9px;bottom:9px;background:rgba(0,0,0,.66);color:#fff;
+  font-size:11.5px;padding:3px 9px;border-radius:999px;pointer-events:none;z-index:2}
+/* The tile sits permanently behind the photos: loaded images hide it, while an image
+   that 404s OR one that simply never resolves both leave the listing link reachable. */
+.media .tile{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  gap:9px;text-decoration:none;color:var(--dim);font-size:14px;flex-direction:column;z-index:0}
+.media .tile-ico{font-size:26px;opacity:.5}
+.media.failed .strip,.media.failed .count{display:none}
 
-  .body{padding:16px 18px 18px;display:flex;flex-direction:column;flex:1}
-  .tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
-  .tag{font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
-    padding:3px 9px;border-radius:999px}
-  .tag.new{background:var(--new);color:var(--card)}
-  .tag.ok{background:var(--accent-soft);color:var(--accent)}
-  .tag.chg{background:var(--warn-soft);color:var(--warn)}
-  .tag.land{background:var(--accent-soft);color:var(--accent)}
-  .price{font-size:24px;font-weight:700;margin:0 0 2px;letter-spacing:-.02em}
-  .pricechg{font-size:13px;font-weight:600;margin-left:8px;vertical-align:middle}
-  .pricechg.down{color:var(--accent)} .pricechg.up{color:var(--miss)}
-  .addr{font-size:17px;margin:2px 0 1px;font-weight:600}
-  .city{color:var(--muted);margin:0 0 12px;font-size:14.5px}
-  .facts{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
-  .fact{background:var(--bg);border:1px solid var(--line);border-radius:7px;
-    padding:3px 9px;font-size:13px;color:var(--muted)}
-  .fact b{color:var(--ink)}
-  .fact.acres{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
-  .fact.pool{background:var(--accent-soft);border-color:transparent;color:var(--accent);font-weight:600}
-  .fact.nopool{background:var(--miss-soft);border-color:transparent;color:var(--miss)}
-  .note{font-size:14px;color:var(--muted);margin:0 0 12px;
-    display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
-  .sub{font-size:12.5px;color:var(--muted);margin:0 0 4px}
-  .sub .fresh{color:var(--new)}
-  .sub.agent{margin-bottom:12px}
-  .btn{margin-top:auto;display:inline-block;text-align:center;background:var(--accent);
-    color:#fff;text-decoration:none;padding:10px 14px;border-radius:9px;font-weight:600;font-size:14.5px}
-  @media (prefers-color-scheme: dark){ .btn{color:#10221a} }
+.body{padding:17px 18px 18px;display:flex;flex-direction:column;flex:1}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:9px}
+.badges:empty{display:none}
+.b{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  padding:3px 8px;border-radius:5px;border:1px solid transparent}
+.b.new{background:var(--newbg);color:var(--new);border-color:currentColor}
+.b.flag{background:var(--warnbg);color:var(--warn);border-color:currentColor}
+.b.pend{background:var(--pendbg);color:var(--pend);border-color:currentColor}
+.b.acre,.b.type{background:transparent;color:var(--dim);border-color:var(--line)}
+h3{margin:0;font-size:18px;letter-spacing:-.01em;line-height:1.3}
+h3 a{text-decoration:none}
+h3 a:hover{color:var(--accent)}
+.place{color:var(--dim);font-size:13.5px;margin-top:1px}
+.price{font-size:23px;font-weight:660;margin:11px 0 3px;letter-spacing:-.02em;
+  display:flex;align-items:baseline;flex-wrap:wrap;gap:9px}
+.ppa{font-size:12.5px;font-weight:500;color:var(--dim);letter-spacing:0}
+.delta{font-size:12.5px;font-weight:600;letter-spacing:0}
+.delta.down{color:var(--new)} .delta.up{color:var(--pend)}
+.facts{display:flex;flex-wrap:wrap;gap:5px 14px;font-size:13.5px;color:var(--dim);margin:8px 0 10px}
+.facts b{color:var(--ink);font-weight:620}
+.pool{font-size:13px;background:var(--newbg);border-radius:7px;
+  padding:6px 10px;margin-bottom:8px;line-height:1.45}
+@media (prefers-color-scheme:dark){.pool{color:var(--new)}}
+.view{font-size:12.5px;color:var(--dim);margin-bottom:8px}
+.sum{font-size:13.5px;color:var(--dim);margin:2px 0 10px;line-height:1.55}
+.note{font-size:13px;line-height:1.55;background:var(--warnbg);border-radius:8px;
+  padding:9px 11px;margin:0 0 10px}
+.note b{color:var(--warn)}
+.meta{margin-top:auto;padding-top:11px;border-top:1px solid var(--line);
+  font-size:11.5px;color:var(--dim);letter-spacing:.02em}
 
-  .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}
-  table{border-collapse:collapse;width:100%;font-size:14px;min-width:520px}
-  th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line)}
-  th{color:var(--muted);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.04em}
-  tr:last-child td{border-bottom:none}
-  td a{color:var(--accent)}
+.tblwrap{overflow-x:auto;background:var(--panel);border:1px solid var(--line);
+  border-radius:12px;box-shadow:var(--shadow)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:560px}
+th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--dim);font-weight:600}
+tr:last-child td{border-bottom:0}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+td.miss{color:var(--warn);font-size:12.5px}
 
-  .empty{background:var(--card);border:1px dashed var(--line);border-radius:12px;
-    padding:24px;color:var(--muted);text-align:center}
-  footer{margin-top:56px;padding-top:22px;border-top:1px solid var(--line);
-    color:var(--muted);font-size:13.5px}
-  footer h3{font-size:14px;color:var(--ink);margin:0 0 6px}
-  footer p{margin:0 0 12px;max-width:80ch}
-  code{background:var(--tile);padding:1px 5px;border-radius:4px;font-size:12.5px}
+.list{list-style:none;padding:0;margin:0;display:grid;gap:9px}
+.list li{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  padding:12px 15px;font-size:13.5px;box-shadow:var(--shadow)}
+.list b{display:block;margin-bottom:2px}
+.list span{color:var(--dim)}
+
+details{margin-top:12px}
+summary{cursor:pointer;font-size:14px;color:var(--accent);padding:6px 0}
+footer{margin-top:56px;padding-top:22px;border-top:1px solid var(--line);
+  color:var(--dim);font-size:12.5px;line-height:1.7}
+footer code{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:12px}
 </style>
 </head>
 <body>
 <div class="wrap">
 
 <header>
-  <h1>House Hunt &mdash; El Dorado County</h1>
-  <p class="sub-h">Shingle Springs &middot; Rescue &middot; Placerville &nbsp;|&nbsp; last run ${esc(data.lastRun)}</p>
-  <ul class="crit">
-    <li><b>${esc(c.beds)}</b> beds</li>
-    <li><b>${esc(c.baths)}</b> baths</li>
-    <li><b>Pool</b> required</li>
-    <li><b>${esc(c.minAcres)}+</b> acres (${esc(c.preferredAcres)}+ preferred)</li>
-    <li>under <b>${money(c.maxPrice)}</b></li>
-  </ul>
+  <h1>Homes with a pool on acreage<br><span>Shingle Springs &middot; Rescue &middot; Placerville</span></h1>
+  <p class="sub">Last checked <strong>${esc(data.lastRun)}</strong> against the live MetroList MLS feed.</p>
+  <div class="crit">
+    <span>${esc(c.beds)} beds</span><span>${esc(c.baths)} baths</span><span>Pool required</span>
+    <span>${esc(c.minAcres)}+ acres (${esc(c.preferredAcres)}+ preferred)</span>
+    <span>Under ${short(c.maxPrice)}</span>
+  </div>
+  <div class="stats">
+    ${stat(L.length, 'active matches')}
+    ${stat(fresh.length, 'new this run')}
+    ${stat(prices.length ? short(Math.min(...prices)) + '–' + short(Math.max(...prices)) : '—', 'price range')}
+    ${stat(acres.length ? acreStr(Math.min(...acres)) + '–' + acreStr(Math.max(...acres)) : '—', 'acres')}
+    ${stat((data.source && data.source.inventoryScanned) || '—', 'listings scanned')}
+  </div>
 </header>
 
-<div class="banner">
-  <h2>${summary.newCount ? `${summary.newCount} new listing${summary.newCount === 1 ? '' : 's'} this run` : 'No new listings this run'}</h2>
-  ${summary.newCount ? `<p>Everything below meets all five criteria and is <b>Active</b> in the live MetroList MLS feed as of ${esc(data.lastRun)}.</p>
-  <ul>${fresh.map((l) => `<li><b>${esc(l.address)}</b>, ${esc(l.city)} &mdash; ${money(l.currentPrice)} &middot; ${esc(l.beds)}bd/${esc(l.baths)}ba &middot; ${esc(l.acres)} ac</li>`).join('')}</ul>`
-  : `<p>Nothing new since the previous run. ${summary.priceChangeCount || 0} price change${summary.priceChangeCount === 1 ? '' : 's'}, ${summary.droppedThisRun || 0} dropped.</p>`}
-</div>
+${highlights}
 
-${section('new', 'New this run', 'First time these have appeared on the board.', fresh)}
-${section('changed', 'Price changes', 'Already tracked, but the asking price moved since the last run.', changed)}
-${section('tracked', 'Still on the market', 'Tracked previously, still active and unchanged in price.', steady)}
+${rest.length ? `<h2>${fresh.length || changed.length ? 'Also still on the market' : `All ${rest.length} matches`}</h2>
+<div class="grid">${rest.map((l) => card(l)).join('')}</div>` : ''}
 
-${!listings.length ? `<section><h2>Matches</h2><div class="empty">No listing currently meets all five criteria.</div></section>` : ''}
+${(data.pending || []).length ? `<h2>Under contract</h2>
+<p class="lede">These tick every box but are already in escrow. Kept visible only because pending deals do fall through.</p>
+<div class="grid">${data.pending.map((l) => card(normalize(l), { dim: true })).join('')}</div>` : ''}
 
-${droppedThisRun.length ? `
-<section id="dropped">
-  <h2>Dropped this run <span class="count">${droppedThisRun.length}</span></h2>
-  <p class="lede">Gone from the active MLS feed &mdash; sold, withdrawn or expired. Kept here only so a
-  relist is recognised rather than reported as a brand-new find.</p>
-  <div class="tablewrap"><table>
-    <thead><tr><th>Property</th><th>Last price</th><th>Why it left</th></tr></thead>
-    <tbody>${droppedRows}
-    </tbody>
-  </table></div>
-</section>` : ''}
+${nearRows ? `<h2>Near misses</h2>
+<p class="lede">Active, in the right towns, and clearing ${esc(c.beds)} bed / ${esc(c.baths)} bath / ${short(c.maxPrice)} — but each fails exactly one of the two hard filters. Listed in case one of them is negotiable.</p>
+<div class="tblwrap"><table>
+<thead><tr><th>Address</th><th>City</th><th>Price</th><th>Bd/Ba</th><th>Acres</th><th>Fails on</th></tr></thead>
+<tbody>${nearRows}</tbody></table></div>` : ''}
 
-${nearRows ? `
-<section id="near">
-  <h2>Near misses <span class="count">${(data.nearMisses || []).length}</span></h2>
-  <p class="lede">Active listings that clear price, bedrooms and acreage but fail one requirement &mdash;
-  almost always the pool. Listed in case a criterion is negotiable.</p>
-  <div class="tablewrap"><table>
-    <thead><tr><th>Property</th><th>Price</th><th>Beds/baths</th><th>Lot</th><th>Fails on</th></tr></thead>
-    <tbody>${nearRows}
-    </tbody>
-  </table></div>
-</section>` : ''}
+${(() => {
+  const dr = data.dropped || [];
+  if (!dr.length) return '';
+  const today = dr.filter((d) => d.droppedOn === data.lastRun);
+  const head = today.length ? `Dropped this run (${today.length})` : 'Dropped previously';
+  const lede = today.length
+    ? 'Confirmed gone from live MLS inventory since the last check.'
+    : 'Tracked at some point, then confirmed gone from live MLS inventory. Nothing dropped off this run.';
+  return `<h2>${head}</h2>
+<p class="lede">${lede}</p>
+<ul class="list">${dr.map((d) => `<li><b>${esc(d.address)}</b><span>${esc(d.reason)}` +
+    `${d.droppedOn ? ` <em>(dropped ${esc(d.droppedOn)})</em>` : ''}</span></li>`).join('')}</ul>`;
+})()}
 
-${rejectedRows ? `
-<section id="rejected">
-  <h2>Ruled out</h2>
-  <p class="lede">Seen in a previous run and set aside. Re-checked each run &mdash; a price cut can bring
-  one of these back into range.</p>
-  <div class="tablewrap"><table>
-    <thead><tr><th>Property</th><th>Price</th><th>Reason</th></tr></thead>
-    <tbody>${rejectedRows}
-    </tbody>
-  </table></div>
-</section>` : ''}
+${(data.rejected || []).length ? `<details><summary>Checked and ruled out (${data.rejected.length})</summary>
+<ul class="list" style="margin-top:12px">${data.rejected.map((r) => `<li><b>${esc(r.address)}${r.price ? ' — ' + money(r.price) : ''}</b><span>${esc(r.reason)}</span></li>`).join('')}</ul></details>` : ''}
 
 <footer>
-  <h3>How this list is built</h3>
-  <p>${esc(data.provenance || '')}</p>
-  <h3>Caveats</h3>
-  <p>${esc(data.caveats || '')}</p>
-  <p>Generated from <code>listings.json</code> by <code>build.js</code> on ${esc(data.lastRun)}.
-  Listing photos are &copy; the listing brokerage and are hotlinked, not republished.</p>
+  <p><strong>How this list is built.</strong> ${esc((data.source && data.source.method) || '')}
+  Source: ${esc((data.source && data.source.name) || 'MLS IDX feed')}.
+  ${esc((data.source && data.source.inventoryScanned) || 0)} active listings across the three towns were scanned;
+  ${esc((data.source && data.source.passedBedsBathsPrice) || 0)} cleared beds, baths and price;
+  ${L.length} of those have both a pool and ${esc(c.minAcres)}+ acres and are still Active.</p>
+  <p>A property is only shown as a match when its detail page carries an explicit MLS
+  <code>Pool</code> field, a numeric <code>Lot Size (Acres)</code> field, and a status of <code>Active</code>.
+  Note that the feed's <code>IsActive</code> flag stays true on Sale Pending listings, so status is read
+  from the listing's own status field instead.</p>
+  <p>Photos are hotlinked from the listing brokerage and remain their copyright.
+  Generated from <code>listings.json</code> by <code>build.js</code> &middot; ${esc(data.lastRun)}.</p>
 </footer>
 
 </div>
@@ -350,7 +397,6 @@ ${rejectedRows ? `
 `;
 
 fs.writeFileSync(path.join(__dirname, 'index.html'), html);
-console.log(
-  `built index.html — ${listings.length} matches (${fresh.length} new, ${changed.length} price changes), ` +
-  `${droppedThisRun.length} dropped, ${(data.nearMisses || []).length} near misses`
-);
+console.log(`Built index.html — ${L.length} matches (${fresh.length} new, ${changed.length} price changes), ` +
+  `${(data.pending || []).length} pending, ${nearList.length} near misses, ` +
+  `${(data.dropped || []).length} dropped.`);
