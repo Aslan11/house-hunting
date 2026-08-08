@@ -152,11 +152,37 @@ tile that genuinely cannot be fetched now throws, which degrades the run to the 
 `pendingIdxOk: false` fallback instead of a confident wrong answer. The general rule — an empty
 result and a failed request must never be represented the same way.
 
+**9. A relist looks exactly like a sale.** Traps 2, 6 and 8 are all about a listing that is *less*
+available than the primary feed says. On 2026-08-08 the failure ran the other way. **1781 Springvale
+Rd** vanished from the IDX sweep entirely and was reported as dropped — "sold, expired, or
+withdrawn". It had done none of those things. It was **relisted under a new MLS number**
+(226093241 → 226100125) at **$1,250,000, down from $1,500,000**, and the IDX feed had not yet
+republished it under the new record. A $250,000 cut on a tracked property was about to be reported
+as the property going away.
+
+Absence from the primary feed is not evidence of a sale, for the same reason absence from the
+active feed is not evidence of escrow (trap 6). `scrape.js` now pulls Redfin's **active** set
+(`statusIndex('9')`) and checks every would-be drop against it. Three properties of the guard matter:
+
+- **It keys on a positive assertion of Active**, never on absence. A property missing from both
+  feeds still drops; only one Redfin positively reports as for sale is rescued.
+- **A rescued listing does not go back in the match list.** It lands in a separate `relisted`
+  bucket, rendered in its own strip with the price delta and a re-verify warning. A relist can
+  change the facts the match was verified on — this one went from 5 bd / 6 ba to 4 bd / 4 ba, and
+  the new record does not carry a pool flag where the old one did. Carrying it forward as a
+  verified match would assert something no detail page has confirmed.
+- **The figures on a relisted card come from the cross-check CSV, not a detail page**, and the card
+  says so. They are enough to tell you something moved and worth a look; they are not verification.
+
 Corollaries worth keeping:
 
 - MetroList MLS numbers encode the listing year: `221…` = 2021, `225…` = 2025, `226…` = 2026.
   A prefix older than the current year is strong evidence a record is stale.
 - Prefer under-reporting. An empty result is correct and useful; a fabricated match is not.
+- **Never run `scrape.js` twice in one day.** The second run merges against the file the first one
+  wrote, so `newThisRun` and `dropped` both come back empty and the run's actual news disappears.
+  Use `--dry` to look before writing. (Piping the run into `head` has the same effect by a different
+  route: `head` closing the pipe kills the scrape midway, after it has written.)
 
 ## Redfin cross-check
 
@@ -197,7 +223,8 @@ found, but do not use it to decide what exists.
 | Property already tracked, same price | Kept, `newThisRun: false`, not re-surfaced |
 | Property already tracked, price moved | `priceHistory` gains an entry; the card renders the delta and it appears under "Price changes" |
 | Property not seen before | `newThisRun: true`, appears in the "New this run" strip at the top |
-| Tracked property no longer active | Moved to `dropped` with the date and reason |
+| Tracked property gone from the primary feed, but Redfin still has it Active | Moved to `relisted` with the old and new MLS numbers and the price delta, shown in its own strip and flagged for re-verification (trap 9) |
+| Tracked property gone from both feeds | Moved to `dropped` with the date and reason |
 | Qualifies but is in escrow | Moved to `pending`, rendered dimmed under "Under contract", with `pendingSince` and its price history carried across runs |
 | Fails exactly one of pool / acreage | Recorded in `nearMisses` and shown as a table |
 
@@ -222,8 +249,9 @@ don't republish them more broadly.
 
 - **`listings.json`** — canonical data. Single source of truth.
 - **`scrape.js`** — refreshes `listings.json` from the live feed. Handles dedupe and history.
-- **`mls-status.js`** — second-opinion listing status from Redfin's `status=130` feed. `scrape.js`
-  uses it to demote escrowed listings the IDX feed still calls Active (trap 6).
+- **`mls-status.js`** — second-opinion listing status from Redfin's live feed. `scrape.js` uses the
+  `status=130` (pending) index to demote escrowed listings the IDX feed still calls Active (trap 6),
+  and the `status=9` (active) index to rescue relisted properties the IDX feed has lost (trap 9).
 - **`build.js`** — renders `index.html` from `listings.json`. No dependencies.
 - **`index.html`** — generated. Don't hand-edit; edit the JSON and rebuild.
 - **`ingest.js`** — manual fallback: merges listings pasted from a Zillow/Redfin results page.

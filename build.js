@@ -158,6 +158,7 @@ const lastChange = [
   ...L.filter((l) => l.firstSeen).map((l) => l.firstSeen),
   ...(data.pending || []).map((p) => p.pendingSince).filter(Boolean),
   ...(data.dropped || []).map((d) => d.droppedOn).filter(Boolean),
+  ...(data.relisted || []).map((r) => r.relistedOn).filter(Boolean),
 ].sort().pop();
 
 /* A listing leaving the list is news too — it is often the only thing that moved. Surface it in
@@ -170,7 +171,29 @@ const dropStrip = goneToday.length
      <ul>${goneToday.map((d) => `<li><b>${esc(d.address)}</b> — ${esc(d.reason)}</li>`).join('')}</ul></div>`
   : '';
 
-const nothingMoved = !fresh.length && !changed.length && !goneToday.length;
+/* A relist is a property the primary feed lost and the cross-check found still for sale,
+   usually under a new MLS number and a new price. It is news twice over — the price moved,
+   and the facts the original match was verified on may have moved with it — so it gets its
+   own strip rather than being folded into "price changes", where it would imply the listing
+   is otherwise unchanged and still verified. */
+const relisted = (data.relisted || []).filter((r) => r.relistedOn === data.lastRun);
+
+const relistStrip = relisted.length
+  ? `<div class="strip-relist"><strong>&#8635; ${relisted.length} ${relisted.length === 1 ? 'listing was' : 'listings were'} relisted, not sold.</strong>
+     <ul>${relisted.map((r) => {
+       const cut = r.priorPrice != null && r.currentPrice != null && r.currentPrice !== r.priorPrice;
+       const dir = cut && r.currentPrice < r.priorPrice;
+       const pct = cut ? Math.abs((r.currentPrice - r.priorPrice) / r.priorPrice * 100).toFixed(1) : null;
+       return `<li><b>${esc(r.address)}, ${esc(r.city)}</b><span>` +
+         (cut ? `<b class="${dir ? 'cut' : 'rise'}">${dir ? '&darr;' : '&uarr;'} ${money(Math.abs(r.currentPrice - r.priorPrice))} (${pct}%)</b> — now ${money(r.currentPrice)}, was ${money(r.priorPrice)}. `
+              : `Still listed at ${money(r.currentPrice)}. `) +
+         `Relisted under MLS ${esc(r.mls || '—')}${r.priorMls ? ` (was ${esc(r.priorMls)})` : ''}, so it dropped out of the primary feed. ` +
+         `<b>Re-verify before acting</b> — a relist can change beds, baths or amenities, and these figures come from the cross-check feed, not a verified detail page. ` +
+         `<a href="${esc(r.url)}" target="_blank" rel="noopener">View listing &rarr;</a></span></li>`;
+     }).join('')}</ul></div>`
+  : '';
+
+const nothingMoved = !fresh.length && !changed.length && !goneToday.length && !relisted.length;
 
 const highlights = nothingMoved
   ? `<div class="strip-empty"><strong>Nothing new this run.</strong> No listings entered the market,
@@ -181,8 +204,9 @@ const highlights = nothingMoved
        <div class="grid">${fresh.map((l) => card(l)).join('')}</div>` : '',
       changed.length ? `<h2 class="h-chg">&#8645; ${changed.length} price ${changed.length === 1 ? 'change' : 'changes'}</h2>
        <div class="grid">${changed.map((l) => card(l)).join('')}</div>` : '',
+      relistStrip,
       dropStrip,
-      (!fresh.length && !changed.length)
+      (!fresh.length && !changed.length && !relisted.length)
         ? `<div class="strip-empty"><strong>No new listings and no price changes.</strong> The
            ${L.length} matches below were all verified again today.</div>`
         : '',
@@ -251,6 +275,17 @@ h2.h-chg{color:var(--warn)}
 .strip-drop ul{margin:8px 0 0;padding-left:20px}
 .strip-drop li{margin:3px 0}
 .strip-drop li b{color:var(--ink);font-weight:600}
+.strip-relist{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);
+  border-radius:12px;padding:16px 18px;color:var(--dim);font-size:14.5px}
+.strip-relist strong{color:var(--ink)}
+.strip-relist ul{margin:8px 0 0;padding-left:20px}
+.strip-relist li{margin:8px 0}
+.strip-relist li>b{color:var(--ink);font-weight:600}
+.strip-relist li span{display:block;margin-top:2px;line-height:1.55}
+.strip-relist .cut{color:var(--new)}
+.strip-relist .rise{color:var(--pend)}
+.strip-relist a{color:var(--accent);font-weight:600;text-decoration:none;white-space:nowrap}
+.strip-relist a:hover{text-decoration:underline}
 
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:22px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;
@@ -399,4 +434,4 @@ ${(data.rejected || []).length ? `<details><summary>Checked and ruled out (${dat
 fs.writeFileSync(path.join(__dirname, 'index.html'), html);
 console.log(`Built index.html — ${L.length} matches (${fresh.length} new, ${changed.length} price changes), ` +
   `${(data.pending || []).length} pending, ${nearList.length} near misses, ` +
-  `${(data.dropped || []).length} dropped.`);
+  `${(data.dropped || []).length} dropped, ${relisted.length} relisted.`);

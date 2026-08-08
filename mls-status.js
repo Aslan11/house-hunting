@@ -150,9 +150,16 @@ function statusIndex(status = '130') {
       if (rows.length >= NUM_HOMES) truncated.push(`${w.toFixed(3)},${s.toFixed(2)}`);
       for (const r of rows) {
         if (!r.ADDRESS) continue;
+        const urlKey = Object.keys(r).find((k) => k.startsWith('URL'));
         seen.set(normAddr(r.ADDRESS, r.CITY), {
           status: r.STATUS, mls: r['MLS#'], price: r.PRICE,
           address: r.ADDRESS, city: r.CITY,
+          // Carried for the relist guard in scrape.js: when the IDX feed loses a
+          // property that Redfin still has Active, these are the only live figures
+          // available for it until the feed catches up.
+          beds: r.BEDS, baths: r.BATHS, sqft: r['SQUARE FEET'],
+          lot: r['LOT SIZE'], daysOnMarket: r['DAYS ON MARKET'],
+          url: urlKey ? r[urlKey] : null,
         });
       }
     }

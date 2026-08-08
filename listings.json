@@ -13,69 +13,20 @@
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-08-07",
+  "lastRun": "2026-08-08",
   "source": {
     "name": "Coldwell Banker Homes (MetroList MLS IDX feed), cross-checked against Redfin's live active-listing feed",
     "method": "Enumerated every active listing in Placerville, Shingle Springs and Rescue, then pulled each candidate's detail page for lot size, pool fields and true MLS status. Every run is then cross-checked against a second live feed, queried by map polygon in tiles so nothing is silently truncated. That cross-check exists because the IDX feed has twice carried listings as Active that were already in escrow.",
-    "inventoryScanned": 296,
+    "inventoryScanned": 297,
     "passedBedsBathsPrice": 61,
     "verifiedActiveMatches": 7,
     "crossCheck": "Pool confirmed from the subject property's own MLS 'Pool Information' amenity group, its hasPrivatePool flag, and its own marketing remarks - all three must agree. Detail pages embed nearby listings, so page-level text matching attributes a neighbour's pool to the subject."
   },
   "dataQuality": {
     "verifiedActiveListings": 7,
-    "note": "All 6 re-verified Active on 2026-08-06 against two independent feeds, which agreed exactly — the IDX sweep and the Redfin cross-check both returned the same 6. Three further pool properties remain in escrow and are tracked under `pending`."
+    "note": "All 7 verified Active on 2026-08-08 against two independent live feeds. The IDX sweep found 1988 Cold Springs Rd still marked Active while Redfin had it Pending; it was demoted. The departure cross-check rescued 1781 Springvale Rd, which had vanished from the IDX feed but is still for sale on Redfin, relisted under MLS 226100125 at $1,250,000 — down $250,000. It is held in `relisted`, not in the match list, because a relist can change the facts the match was verified on. Three further pool properties remain in escrow and are tracked under `pending`."
   },
   "listings": [
-    {
-      "id": "1781-springvale-rd-placerville",
-      "address": "1781 Springvale Rd",
-      "city": "Placerville",
-      "zip": "95667",
-      "mls": "226093241",
-      "currentPrice": 1500000,
-      "beds": 5,
-      "baths": 6,
-      "fullBaths": 6,
-      "partialBaths": null,
-      "sqft": 2025,
-      "acres": 10.27,
-      "pool": true,
-      "poolDetail": "Built-In",
-      "yearBuilt": "1930",
-      "garageSpaces": null,
-      "view": null,
-      "water": "Well",
-      "sewer": "Septic System",
-      "propertyType": "Multi-Family",
-      "mlsStatus": "Active",
-      "flag": null,
-      "listedOn": "2026-07-24",
-      "lat": 38.7522,
-      "lng": -120.9349,
-      "photos": [
-        "https://m.cbhomes.com/p/371/226093241/D391c910B23B48a/full.webp",
-        "https://m1.cbhomes.com/p/371/226093241/945cC4344A22432/full.webp",
-        "https://m.cbhomes.com/p/371/226093241/6e2De5a825f9449/full.webp",
-        "https://m1.cbhomes.com/p/371/226093241/ec6A1Effc8D04A6/full.webp",
-        "https://m.cbhomes.com/p/371/226093241/BCd556cDdf2544d/full.webp",
-        "https://m1.cbhomes.com/p/371/226093241/d6b6dd92A7Df44c/full.webp"
-      ],
-      "url": "https://www.coldwellbankerhomes.com/ca/placerville/1781-springvale-rd/pid_72687553/",
-      "gallery": "https://www.coldwellbankerhomes.com/ca/placerville/1781-springvale-rd/pid_72687553/",
-      "status": "match",
-      "summary": "Exceptional opportunity to create a luxury short-term rental, wedding venue, event center, or private multigenerational estate. There is a potential 18.5% pro forma cap rate (refer to the attached OM) This fully remodeled 10-acre property features three separate residences, including a main home and two detached guest suites, with accommodations for up to 16 guests. The centerpiece of the property",
-      "notes": "",
-      "firstSeen": "2026-07-26",
-      "lastSeen": "2026-08-07",
-      "newThisRun": false,
-      "priceHistory": [
-        {
-          "date": "2026-07-26",
-          "price": 1500000
-        }
-      ]
-    },
     {
       "id": "6881-sagittarius-dr-placerville",
       "address": "6881 Sagittarius Dr",
@@ -116,12 +67,61 @@
       "summary": "Crafted as the builder's own residence, this extraordinary European Country-inspired estate was designed without compromise. From its commanding setting on 40 acres with sweeping Sierra foothill views and timeless architectural details, every aspect of the property reflects quality and enduring elegance. From the moment you arrive, the home makes a striking impression, thoughtfully designed to fra",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-08-07",
+      "lastSeen": "2026-08-08",
       "newThisRun": false,
       "priceHistory": [
         {
           "date": "2026-07-26",
           "price": 1489000
+        }
+      ]
+    },
+    {
+      "id": "3565-farview-ct-rescue",
+      "address": "3565 Farview Ct",
+      "city": "Rescue",
+      "zip": "95672",
+      "mls": "226087456",
+      "currentPrice": 1289000,
+      "beds": 4,
+      "baths": 4,
+      "fullBaths": 4,
+      "partialBaths": null,
+      "sqft": 3227,
+      "acres": 9.64,
+      "pool": true,
+      "poolDetail": "Built-In, On Lot, Pool House, Solar Heat",
+      "yearBuilt": "1993",
+      "garageSpaces": "3",
+      "view": "Panoramic, City Lights, Valley, Hills, Water, Lake, Woods, Mountains",
+      "water": "Well",
+      "sewer": "Septic System, Private Sewer",
+      "propertyType": "Single Family",
+      "mlsStatus": "Active",
+      "flag": null,
+      "listedOn": "2026-07-16",
+      "lat": 38.7314,
+      "lng": -120.99,
+      "photos": [
+        "https://m1.cbhomes.com/p/371/226087456/9E02f6e2aE934D6/full.webp",
+        "https://m1.cbhomes.com/p/371/226087456/aAEE71820A394FA/full.webp",
+        "https://m.cbhomes.com/p/371/226087456/44c37c7f4cb24b0/full.webp",
+        "https://m1.cbhomes.com/p/371/226087456/dB966bbCDcd546c/full.webp",
+        "https://m.cbhomes.com/p/371/226087456/82A28bdb4473408/full.webp",
+        "https://m1.cbhomes.com/p/371/226087456/209417eB6a81453/full.webp"
+      ],
+      "url": "https://www.coldwellbankerhomes.com/ca/rescue/3565-farview-ct/pid_72531546/",
+      "gallery": "https://www.coldwellbankerhomes.com/ca/rescue/3565-farview-ct/pid_72531546/",
+      "status": "match",
+      "summary": "Perched at the end of a private court on its own private road, this fully remodeled custom hilltop estate offers breathtaking 360-degree panoramic views stretching across Folsom Lake, Bass Lake, the Sutter Buttes, Sierras and sparkling city lights. Designed to embrace its spectacular surroundings, every room showcases incredible vistas through windows and private sliding glass doors. This exceptio",
+      "notes": "",
+      "firstSeen": "2026-08-08",
+      "lastSeen": "2026-08-08",
+      "newThisRun": true,
+      "priceHistory": [
+        {
+          "date": "2026-08-08",
+          "price": 1289000
         }
       ]
     },
@@ -165,7 +165,7 @@
       "summary": "Just minutes from town yet worlds away, this 10 acre sanctuary delivers the ultimate retreat lifestyle. Step inside to discover a beautifully updated home with 4 bedrooms, 3 baths, and an inviting upstairs game room complete with a wet bar  perfect for gatherings. The renovated kitchen shines with quartz counters, stainless appliances, and beautiful white cabinetry, flowing seamlessly into the fam",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-08-07",
+      "lastSeen": "2026-08-08",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -214,7 +214,7 @@
       "summary": "Sought after area. Minutes from shopping, schools.  Country living at its finest. Situated in a serene, park-like setting, this property offers unparalleled tranquility.  End of road privacy. This custom-built two story family residence offers four bedrooms, a formal dining room, separate living and family spaces, and a chef's dream kitchen, complemented by three bathrooms. Additionally, there is ",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-08-07",
+      "lastSeen": "2026-08-08",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -250,7 +250,7 @@
       "lat": 38.619,
       "lng": -120.9527,
       "photos": [
-        "https://m1.cbhomes.com/p/371/226092223/CD31ec5b6eb1413/full.webp",
+        "https://m.cbhomes.com/p/371/226092223/CD31ec5b6eb1413/full.webp",
         "https://m1.cbhomes.com/p/371/226092223/Ae0EEf0c3A794FE/full.webp",
         "https://m.cbhomes.com/p/371/226092223/71f2D5d81f42482/full.webp",
         "https://m1.cbhomes.com/p/371/226092223/51421823567B44a/full.webp",
@@ -263,7 +263,7 @@
       "summary": "Custom Milton Estates pool home with great views! Home is situated on 5 ac of usable land with many fruit trees and endless opportunities. Features include great room concept with open spacious feel. Abundant natural light streams through windows. Well appointed kitchen with granite counter tops, Viking range and large center island. Dining area with built in lighted glass front cabinets & French ",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-08-07",
+      "lastSeen": "2026-08-08",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -316,7 +316,7 @@
       "summary": "Nestled on a stunning 5-acre homesite in the prestigious gated community of Greenstone Country, this custom estate blends luxury, privacy, and outdoor recreation. Surrounded by mature oak trees and rock outcroppings, the approximately 3,885 sq. ft. home is designed for comfortable living and entertaining.    The spacious floorplan offers 5-6 bedrooms, 4 bathrooms, a 4-car garage, and a detached 2-",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-08-07",
+      "lastSeen": "2026-08-08",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -352,7 +352,7 @@
       "lat": 38.785,
       "lng": -120.9315,
       "photos": [
-        "https://m1.cbhomes.com/p/371/226085035/0A1b20073C4D4FD/full.webp",
+        "https://m.cbhomes.com/p/371/226085035/0A1b20073C4D4FD/full.webp",
         "https://m1.cbhomes.com/p/371/226085035/5Dc482F1fC9A4c0/full.webp",
         "https://m.cbhomes.com/p/371/226085035/A096416DC394486/full.webp",
         "https://m1.cbhomes.com/p/371/226085035/43bD407F2161411/full.webp",
@@ -365,8 +365,8 @@
       "summary": "Welcome to this charming mini ranch with an ADU, tucked behind a gated entrance at the end of a paved driveway, offering privacy, versatility, and lovely views in a peaceful country setting. The single-story ranch home design welcomes you into a light-filled living room where vaulted ceilings and expansive picture windows showcase the scenery beyond. The updated kitchen features granite countertop",
       "notes": "",
       "firstSeen": "2026-08-07",
-      "lastSeen": "2026-08-07",
-      "newThisRun": true,
+      "lastSeen": "2026-08-08",
+      "newThisRun": false,
       "priceHistory": [
         {
           "date": "2026-08-07",
@@ -403,7 +403,7 @@
       "lat": 38.6901,
       "lng": -120.8916,
       "photos": [
-        "https://m.cbhomes.com/p/371/226045319/32A10658753b40A/full.webp",
+        "https://m1.cbhomes.com/p/371/226045319/32A10658753b40A/full.webp",
         "https://m1.cbhomes.com/p/371/226045319/25794E86D927432/full.webp",
         "https://m.cbhomes.com/p/371/226045319/9bC09C04e5A549D/full.webp",
         "https://m1.cbhomes.com/p/371/226045319/C5B3F7a6E3A4443/full.webp",
@@ -424,7 +424,7 @@
           "price": 1395000
         }
       ],
-      "lastSeen": "2026-08-07"
+      "lastSeen": "2026-08-08"
     },
     {
       "id": "3033-ridgeline-dr-rescue",
@@ -453,7 +453,7 @@
       "lat": 38.7124,
       "lng": -121.0111,
       "photos": [
-        "https://m.cbhomes.com/p/371/226074530/1758ca1E24164B0/full.webp",
+        "https://m1.cbhomes.com/p/371/226074530/1758ca1E24164B0/full.webp",
         "https://m1.cbhomes.com/p/371/226074530/005e799D04C541D/full.webp",
         "https://m.cbhomes.com/p/371/226074530/6185a51521d6488/full.webp",
         "https://m1.cbhomes.com/p/371/226074530/b60287E69E9a4bc/full.webp",
@@ -474,7 +474,7 @@
           "price": 1349999
         }
       ],
-      "lastSeen": "2026-08-07"
+      "lastSeen": "2026-08-08"
     },
     {
       "id": "1988-cold-springs-rd-placerville",
@@ -524,7 +524,7 @@
           "price": 850000
         }
       ],
-      "lastSeen": "2026-08-07"
+      "lastSeen": "2026-08-08"
     }
   ],
   "nearMisses": [
@@ -538,17 +538,6 @@
       "pool": true,
       "url": "https://www.coldwellbankerhomes.com/ca/placerville/3291-texas-hill-rd/pid_71568712/",
       "missing": "only 1.76 acres"
-    },
-    {
-      "address": "1023 Bridger Dr",
-      "city": "Rescue",
-      "price": 1349000,
-      "beds": 6,
-      "baths": 4.5,
-      "acres": 0.31,
-      "pool": true,
-      "url": "https://www.coldwellbankerhomes.com/ca/rescue/1023-bridger-dr/pid_72701924/",
-      "missing": "only 0.31 acres"
     },
     {
       "address": "2805 Aquamarine Cir",
@@ -681,6 +670,17 @@
       "pool": false,
       "url": "https://www.coldwellbankerhomes.com/ca/placerville/6287-oak-hill-rd/pid_71429392/",
       "missing": "no pool"
+    },
+    {
+      "address": "4351 Rossler Rd",
+      "city": "Placerville",
+      "price": 595000,
+      "beds": 4,
+      "baths": 3,
+      "acres": 10.02,
+      "pool": false,
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/4351-rossler-rd/pid_72839847/",
+      "missing": "no pool"
     }
   ],
   "dropped": [],
@@ -743,5 +743,45 @@
       "reason": "0.25 acres"
     }
   ],
-  "previousRun": "2026-08-06"
+  "previousRun": "2026-08-07",
+  "relisted": [
+    {
+      "id": "1781-springvale-rd-placerville",
+      "address": "1781 Springvale Rd",
+      "city": "Placerville",
+      "zip": "95667",
+      "priorMls": "226093241",
+      "mls": "226100125",
+      "priorPrice": 1500000,
+      "currentPrice": 1250000,
+      "priceHistory": [
+        {
+          "date": "2026-07-26",
+          "price": 1500000
+        },
+        {
+          "date": "2026-08-08",
+          "price": 1250000
+        }
+      ],
+      "beds": 4,
+      "baths": 4,
+      "sqft": 2025,
+      "acres": 10.27,
+      "daysOnMarket": 1,
+      "photos": [
+        "https://m.cbhomes.com/p/371/226093241/D391c910B23B48a/full.webp",
+        "https://m1.cbhomes.com/p/371/226093241/945cC4344A22432/full.webp",
+        "https://m.cbhomes.com/p/371/226093241/6e2De5a825f9449/full.webp",
+        "https://m1.cbhomes.com/p/371/226093241/ec6A1Effc8D04A6/full.webp",
+        "https://m.cbhomes.com/p/371/226093241/BCd556cDdf2544d/full.webp",
+        "https://m1.cbhomes.com/p/371/226093241/d6b6dd92A7Df44c/full.webp"
+      ],
+      "url": "https://www.redfin.com/CA/Placerville/1781-Springvale-Rd-95667/home/167348318",
+      "firstSeen": "2026-07-26",
+      "lastSeen": "2026-08-08",
+      "relistedOn": "2026-08-08",
+      "status": "relisted"
+    }
+  ]
 }
