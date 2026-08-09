@@ -219,13 +219,24 @@ function carryPending(rec) {
   };
 }
 
-function merge(found, stillListed = new Map(), activeIdx = new Map()) {
+function merge(found, stillListed = new Map(), activeIdx = new Map(),
+               pendingIds = new Set(), pendingIdx = new Map()) {
   // Re-slug prior ids through the current normaliser so an id-scheme change
   // doesn't read as "everything is new, everything old was dropped".
-  const priorById = new Map((prior.listings || []).map((l) => {
+  const canonise = (from) => (l) => {
     const canon = l.address && l.city ? slug(`${l.address}, ${l.city}`) : l.id;
-    return [canon, { ...l, id: canon }];
-  }));
+    return [canon, { ...l, id: canon, _from: from }];
+  };
+  /* `relisted` is tracked inventory too, and used not to be carried across runs — it was
+     rebuilt from the drop sweep each time, so a property that stayed relisted for a second
+     run vanished from the file with no drop record and no mention anywhere. On 2026-08-09
+     that silently deleted 1781 Springvale Rd, the $250,000 price cut trap 9 exists to
+     catch, one run after catching it. Absence from the IDX feed is not evidence of a sale
+     (trap 9) — and it is not evidence the property stopped existing either. */
+  const priorById = new Map([
+    ...(prior.relisted || []).map(canonise('relisted')),
+    ...(prior.listings || []).map(canonise('match')),   // last wins on collision
+  ]);
   const listings = [];
 
   for (const f of found) {
@@ -239,9 +250,16 @@ function merge(found, stillListed = new Map(), activeIdx = new Map()) {
     const hist = was.priceHistory ? was.priceHistory.slice() : [];
     const last = hist.length ? hist[hist.length - 1].price : null;
     if (last !== f.currentPrice) hist.push({ date: TODAY, price: f.currentPrice });
+    /* A relist coming back through the IDX feed re-enters the match list on a fresh
+       verification, having been out of it. That is news: surface it rather than letting
+       it reappear silently among properties that never moved. */
+    const returning = was._from === 'relisted';
     listings.push({ ...f, firstSeen: was.firstSeen || TODAY, lastSeen: TODAY,
-      newThisRun: false, priceHistory: hist,
-      notes: f.notes || was.notes || '' });
+      newThisRun: returning, priceHistory: hist,
+      notes: f.notes || (returning
+        ? `Relisted under MLS ${f.mls}${was.priorMls ? ` (was ${was.priorMls})` : ''}; ` +
+          're-verified Active against the IDX detail page this run.'
+        : was.notes || '') });
   }
 
   // Anything tracked last run and absent from live active inventory has gone away.
@@ -249,6 +267,10 @@ function merge(found, stillListed = new Map(), activeIdx = new Map()) {
   const dropped = [], relisted = [];
   for (const l of priorById.values()) {
     if (liveIds.has(l.id)) continue;
+    /* Reclassified into escrow this run, not gone. It is already carried in `pending`
+       with its history; recording it here too put the same property on the page twice,
+       under "Under contract" and under "sold, expired, or withdrawn" at once. */
+    if (pendingIds.has(l.id)) continue;
     // A property can leave the match list two different ways, and saying "sold"
     // about one that is still on the market would be plainly wrong.
     const why = stillListed.get(l.id);
@@ -270,10 +292,17 @@ function merge(found, stillListed = new Map(), activeIdx = new Map()) {
        because a relist can change the facts the match was verified on. */
     const live = activeIdx.get(normAddr(l.address, l.city));
     if (!live) {
+      /* Absent from the IDX sweep *and* from Redfin's active set. Before calling that a
+         sale, check the pending set — a property that went into escrow without the IDX
+         feed noticing is under contract, not sold, and the two are different facts. */
+      const esc = pendingIdx.get(normAddr(l.address, l.city));
       dropped.push({
         address: `${l.address}, ${l.city}`,
         priorPrice: l.currentPrice,
-        reason: 'No longer an active listing in the MLS feed — sold, expired, or withdrawn.',
+        reason: esc
+          ? `Under contract — Redfin reports ${esc.status || 'Pending'} (MLS ${esc.mls}). ` +
+            'Gone from the active feed, but not sold.'
+          : 'No longer an active listing in the MLS feed — sold, expired, or withdrawn.',
         droppedOn: TODAY,
       });
       continue;
@@ -286,8 +315,14 @@ function merge(found, stillListed = new Map(), activeIdx = new Map()) {
     relisted.push({
       id: l.id,
       address: l.address, city: l.city, zip: l.zip,
-      priorMls: l.mls, mls: live.mls || null,
-      priorPrice: l.currentPrice, currentPrice: newPrice ?? l.currentPrice,
+      /* Carried-forward entries already hold the post-relist MLS and the pre-relist price.
+         Re-deriving them from the current record would rewrite `priorMls` to equal `mls`
+         and reset `priorPrice` to the cut price, erasing the delta that is the whole point
+         of the strip on the second and every later run. */
+      priorMls: l._from === 'relisted' ? (l.priorMls || null) : l.mls,
+      mls: live.mls || l.mls || null,
+      priorPrice: l._from === 'relisted' ? l.priorPrice : l.currentPrice,
+      currentPrice: newPrice ?? l.currentPrice,
       priceHistory: hist,
       beds: /^[\d.]+$/.test(String(live.beds)) ? +live.beds : null,
       baths: /^[\d.]+$/.test(String(live.baths)) ? +live.baths : null,
@@ -300,7 +335,9 @@ function merge(found, stillListed = new Map(), activeIdx = new Map()) {
         ? (/^https?:\/\//.test(live.url) ? live.url : `https://www.redfin.com${live.url}`)
         : l.url,
       firstSeen: l.firstSeen, lastSeen: TODAY,
-      relistedOn: TODAY,
+      // The date it was rescued, not the date of the most recent run that re-checked it.
+      relistedOn: l._from === 'relisted' ? (l.relistedOn || TODAY) : TODAY,
+      rescuedThisRun: l._from !== 'relisted',
       status: 'relisted',
     });
   }
@@ -427,7 +464,9 @@ matches.sort((a, b) => b.currentPrice - a.currentPrice);
 pending.sort((a, b) => b.currentPrice - a.currentPrice);
 near.sort((a, b) => (a.missing === 'no pool') - (b.missing === 'no pool') || b.price - a.price);
 
-const { listings, dropped, relisted } = merge(matches, stillListed, activeIdx);
+const pendingIds = new Set(pending.map((p) => p.id));
+const { listings, dropped, relisted } =
+  merge(matches, stillListed, activeIdx, pendingIds, pendingIdx);
 const out = {
   ...prior,
   lastRun: TODAY,
@@ -467,10 +506,13 @@ if (demoted.length) {
 /* A rescued drop is the loudest thing a run can find — it is a property the primary
    feed said was gone, that is in fact still for sale, usually at a new price. */
 if (relisted.length) {
+  const fresh = relisted.filter((r) => r.rescuedThisRun);
   process.stderr.write(`\n${relisted.length} listing(s) missing from the IDX feed are still ` +
-    `Active on Redfin — rescued from the drop list:\n${relisted.map((r) =>
+    `Active on Redfin (${fresh.length} rescued this run, ` +
+    `${relisted.length - fresh.length} carried forward):\n${relisted.map((r) =>
       `  - ${r.address}, ${r.city}: MLS ${r.priorMls} -> ${r.mls}, ` +
-      `${r.priorPrice} -> ${r.currentPrice}\n`).join('')}`);
+      `${r.priorPrice} -> ${r.currentPrice}` +
+      `${r.rescuedThisRun ? '' : ` (relisted ${r.relistedOn})`}\n`).join('')}`);
 } else if (activeIdxOk && dropped.length) {
   process.stderr.write('\nDeparture cross-check: every dropped listing is gone from both feeds.\n');
 }

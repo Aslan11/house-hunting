@@ -174,6 +174,51 @@ active feed is not evidence of escrow (trap 6). `scrape.js` now pulls Redfin's *
 - **The figures on a relisted card come from the cross-check CSV, not a detail page**, and the card
   says so. They are enough to tell you something moved and worth a look; they are not verification.
 
+**10. A bucket that isn't carried forward is a bucket that deletes.** The relist rescue from trap 9
+worked exactly once. On 2026-08-09 **1781 Springvale Rd** — the property that rescue was built to
+save, still Active on Redfin at $1,250,000, MLS 226100125 — vanished from `listings.json` entirely:
+not in `listings`, not in `pending`, not in `relisted`, not even in `dropped`. No record that it had
+ever been tracked.
+
+`merge()` built its "what did we know last run" map from `prior.listings` alone. `relisted` was
+written fresh each run from that sweep and never read back, so a property that stayed relisted for a
+second run simply fell out of the file. Trap 9's lesson — absence from the primary feed is not
+evidence of a sale — had been encoded for *matches* and not for the bucket the rescue writes into.
+The rescue caught the property and then dropped it on the floor one run later.
+
+The same shape appeared a third time in `build.js`, which filtered the strip to
+`relistedOn === data.lastRun`. That was invisible while `scrape.js` re-stamped `relistedOn` every
+run, and became a second silent hole the moment the date was carried honestly: an entry present in
+the JSON, correct in every field, rendering nowhere. **A property the reader cannot see is not
+tracked**, whatever the data file says.
+
+Three rules follow:
+
+- **Every bucket that holds a property must be read back on the next run.** `merge()` now seeds its
+  prior map from `listings` *and* `relisted`, and a relist re-checks against both feeds each run:
+  back in the IDX sweep → returns to the match list flagged as news; still Active on Redfin → stays
+  relisted with its original `relistedOn`; gone from both → drops with a reason.
+- **Carried state must not be re-derived from the current record.** `priorMls`/`priorPrice` describe
+  the *pre-relist* listing. Recomputing them each run set `priorMls === mls` and reset `priorPrice`
+  to the cut price, erasing the $250,000 delta that is the entire point of the strip.
+- **A leaving property gets exactly one classification.** See trap 11.
+
+**11. "Left the match list" and "left the market" are different events.** The same run put **3565
+Farview Ct** in `pending` *and* in `dropped` with the reason "sold, expired, or withdrawn". It was
+neither — Redfin had it Pending at $1,289,000, MLS 226087456. The page would have shown one property
+twice, under "Under contract" and "left the list", asserting two contradictory things.
+
+`merge()` computed departures as "tracked last run, absent from this run's *match* list". A property
+reclassified into escrow is absent from that list by construction, so every match→pending transition
+generated a spurious sale notice. The 2026-08-02 run has the same double entry for 3033 Ridgeline Dr
+and 1988 Cold Springs Rd; it only looked survivable because that run hand-wrote a truthful reason
+over the generated one.
+
+`merge()` now takes the set of ids classified pending this run and skips them in the drop sweep. And
+when a property is absent from the IDX sweep *and* from Redfin's active set, the pending index is
+consulted before the word "sold" is used — gone-from-active and sold are not the same fact, and the
+feed can tell them apart.
+
 Corollaries worth keeping:
 
 - MetroList MLS numbers encode the listing year: `221…` = 2021, `225…` = 2025, `226…` = 2026.

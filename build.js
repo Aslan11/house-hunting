@@ -176,10 +176,17 @@ const dropStrip = goneToday.length
    and the facts the original match was verified on may have moved with it — so it gets its
    own strip rather than being folded into "price changes", where it would imply the listing
    is otherwise unchanged and still verified. */
-const relisted = (data.relisted || []).filter((r) => r.relistedOn === data.lastRun);
+/* Render every tracked relist, not only the ones rescued today. This filter used to be
+   `relistedOn === data.lastRun`, which was invisible while scrape.js re-stamped the date
+   every run — and became a silent hole the moment relists were correctly carried forward
+   with the date they were actually rescued. A property sitting in `relisted.json` but
+   nowhere on the page is the same failure as one deleted outright: the reader can't act on
+   what they can't see. A relist stays visible until it is re-verified or it drops. */
+const relisted = data.relisted || [];
+const relistedNew = relisted.filter((r) => r.relistedOn === data.lastRun);
 
 const relistStrip = relisted.length
-  ? `<div class="strip-relist"><strong>&#8635; ${relisted.length} ${relisted.length === 1 ? 'listing was' : 'listings were'} relisted, not sold.</strong>
+  ? `<div class="strip-relist"><strong>&#8635; ${relisted.length} ${relisted.length === 1 ? 'listing is' : 'listings are'} relisted, not sold.</strong>
      <ul>${relisted.map((r) => {
        const cut = r.priorPrice != null && r.currentPrice != null && r.currentPrice !== r.priorPrice;
        const dir = cut && r.currentPrice < r.priorPrice;
@@ -187,18 +194,22 @@ const relistStrip = relisted.length
        return `<li><b>${esc(r.address)}, ${esc(r.city)}</b><span>` +
          (cut ? `<b class="${dir ? 'cut' : 'rise'}">${dir ? '&darr;' : '&uarr;'} ${money(Math.abs(r.currentPrice - r.priorPrice))} (${pct}%)</b> — now ${money(r.currentPrice)}, was ${money(r.priorPrice)}. `
               : `Still listed at ${money(r.currentPrice)}. `) +
-         `Relisted under MLS ${esc(r.mls || '—')}${r.priorMls ? ` (was ${esc(r.priorMls)})` : ''}, so it dropped out of the primary feed. ` +
+         `Relisted under MLS ${esc(r.mls || '—')}${r.priorMls ? ` (was ${esc(r.priorMls)})` : ''}, so it dropped out of the primary feed` +
+         `${r.relistedOn && r.relistedOn !== data.lastRun ? ` on ${esc(r.relistedOn)} and has not returned to it since` : ''}. ` +
          `<b>Re-verify before acting</b> — a relist can change beds, baths or amenities, and these figures come from the cross-check feed, not a verified detail page. ` +
+         (r.caveat ? `${esc(r.caveat)} ` : '') +
          `<a href="${esc(r.url)}" target="_blank" rel="noopener">View listing &rarr;</a></span></li>`;
      }).join('')}</ul></div>`
   : '';
 
-const nothingMoved = !fresh.length && !changed.length && !goneToday.length && !relisted.length;
+// Keyed on relists rescued *today*: a carried-forward one is an outstanding item, not news.
+const nothingMoved = !fresh.length && !changed.length && !goneToday.length && !relistedNew.length;
 
 const highlights = nothingMoved
   ? `<div class="strip-empty"><strong>Nothing new this run.</strong> No listings entered the market,
      none changed price, and none dropped off. All ${L.length} matches below were verified again
      today${lastChange && lastChange !== data.lastRun ? `; the most recent movement was on ${esc(lastChange)}` : ''}.</div>`
+     + relistStrip
   : [
       fresh.length ? `<h2 class="h-new">&#10022; ${fresh.length} new ${fresh.length === 1 ? 'listing' : 'listings'} this run</h2>
        <div class="grid">${fresh.map((l) => card(l)).join('')}</div>` : '',
