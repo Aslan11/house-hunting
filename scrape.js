@@ -233,7 +233,16 @@ function merge(found, stillListed = new Map(), activeIdx = new Map(),
      that silently deleted 1781 Springvale Rd, the $250,000 price cut trap 9 exists to
      catch, one run after catching it. Absence from the IDX feed is not evidence of a sale
      (trap 9) — and it is not evidence the property stopped existing either. */
+  /* `pending` is a bucket too, and seeding the prior map without it reproduced trap 10
+     exactly one bucket over. A property still in escrow this run is rebuilt by the
+     pending path and looks fine; one that *leaves* escrow was never in this map, so the
+     drop sweep below could not see it and it fell out of the file with no record at all.
+     On 2026-08-11 that deleted 5560 Ralston Way — 4 bd / 3 ba, 5.01 acres, pool,
+     $1,395,000, MLS 226045319, a full-criteria match that had gone under contract. An
+     escrow that closes and an escrow that falls through both leave `pending`, and the
+     difference between them is the single most valuable thing this tracker can report. */
   const priorById = new Map([
+    ...(prior.pending || []).map(canonise('pending')),
     ...(prior.relisted || []).map(canonise('relisted')),
     ...(prior.listings || []).map(canonise('match')),   // last wins on collision
   ]);
@@ -253,13 +262,19 @@ function merge(found, stillListed = new Map(), activeIdx = new Map(),
     /* A relist coming back through the IDX feed re-enters the match list on a fresh
        verification, having been out of it. That is news: surface it rather than letting
        it reappear silently among properties that never moved. */
-    const returning = was._from === 'relisted';
+    /* A deal falling through puts a property back on the market, which is news for the
+       same reason a relist is: it left the match list and came back, and the reader's
+       last view of it said "under contract". */
+    const returning = was._from === 'relisted' || was._from === 'pending';
+    const returnNote = was._from === 'pending'
+      ? `Back on the market — was under contract${
+          was.pendingSince ? ` since ${was.pendingSince}` : ''} and the deal did not close. ` +
+        're-verified Active against the IDX detail page this run.'
+      : `Relisted under MLS ${f.mls}${was.priorMls ? ` (was ${was.priorMls})` : ''}; ` +
+        're-verified Active against the IDX detail page this run.';
     listings.push({ ...f, firstSeen: was.firstSeen || TODAY, lastSeen: TODAY,
       newThisRun: returning, priceHistory: hist,
-      notes: f.notes || (returning
-        ? `Relisted under MLS ${f.mls}${was.priorMls ? ` (was ${was.priorMls})` : ''}; ` +
-          're-verified Active against the IDX detail page this run.'
-        : was.notes || '') });
+      notes: f.notes || (returning ? returnNote : was.notes || '') });
   }
 
   // Anything tracked last run and absent from live active inventory has gone away.
@@ -302,7 +317,13 @@ function merge(found, stillListed = new Map(), activeIdx = new Map(),
         reason: esc
           ? `Under contract — Redfin reports ${esc.status || 'Pending'} (MLS ${esc.mls}). ` +
             'Gone from the active feed, but not sold.'
-          : 'No longer an active listing in the MLS feed — sold, expired, or withdrawn.',
+          : l._from === 'pending'
+            /* It was in escrow when we last looked and is now in none of the three feeds.
+               A closed sale is by far the likeliest reading, but say what was observed
+               rather than asserting a completion no feed has reported. */
+            ? `Was under contract${l.pendingSince ? ` since ${l.pendingSince}` : ''} and has ` +
+              'now left the active, pending and IDX feeds — the sale most likely closed.'
+            : 'No longer an active listing in the MLS feed — sold, expired, or withdrawn.',
         droppedOn: TODAY,
       });
       continue;

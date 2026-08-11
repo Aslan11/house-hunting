@@ -219,6 +219,32 @@ when a property is absent from the IDX sweep *and* from Redfin's active set, the
 consulted before the word "sold" is used — gone-from-active and sold are not the same fact, and the
 feed can tell them apart.
 
+**12. Trap 10 was fixed one bucket short.** The rule from trap 10 is that every bucket holding a
+property must be read back on the next run. `merge()` was duly given `listings` and `relisted` — and
+not `pending`. The gap is invisible while a property *stays* in escrow, because the pending path
+rebuilds it each run from the live sweep and `carryPending()` restores its history. It only bites
+when a property **leaves** escrow: it is absent from `priorById`, so the drop sweep never considers
+it, and it falls out of `listings.json` with no drop record and no mention anywhere.
+
+On 2026-08-11 that deleted **5560 Ralston Way** — 4 bd / 3 ba, 5.01 acres, pool, $1,395,000,
+MLS 226045319 — a full-criteria match that had been under contract since 2026-07-28. The run
+reported "0 dropped" and was wrong; the property was simply gone.
+
+The two ways out of `pending` are the two facts most worth reporting, and this bug erased both:
+
+- **The sale closed.** The property is gone for good, and the page should say so rather than
+  quietly shrinking by one.
+- **The deal fell through.** A verified match at a known price is back on the market — the single
+  most actionable event this tracker can surface. It would have come back through `merge()` as a
+  brand-new listing with `firstSeen` reset, losing its price history and the fact that it had ever
+  been in escrow.
+
+`merge()` now seeds `priorById` from `pending` as well, a property returning from escrow is flagged
+`newThisRun` with a note saying the deal did not close, and a departed pending listing is checked
+against the active and pending feeds before the word "sold" is used. The general rule, restated
+because encoding it once per bucket has now failed twice: **when adding a bucket, add it to
+`merge()`'s prior map in the same commit.**
+
 Corollaries worth keeping:
 
 - MetroList MLS numbers encode the listing year: `221…` = 2021, `225…` = 2025, `226…` = 2026.
