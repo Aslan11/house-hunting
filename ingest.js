@@ -127,10 +127,14 @@ for (const b of blocks(raw)) {
       notes: 'Ingested from a pasted search result — status taken from the live portal listing.',
       url: r.url || null,
     };
+    // Minimums come from listings.json so a criteria change doesn't have to be made twice.
+    const minBeds  = parseFloat(store.criteria.beds)  || 4;
+    const minBaths = parseFloat(store.criteria.baths) || 3;
+    const minAcres = store.criteria.minAcres ?? 2.5;
     const fails = [];
-    if (rec.beds  != null && rec.beds  < 5)   fails.push(`${rec.beds}BR`);
-    if (rec.baths != null && rec.baths < 3)   fails.push(`${rec.baths}BA`);
-    if (rec.acres != null && rec.acres < 2.5) fails.push(`${rec.acres}ac`);
+    if (rec.beds  != null && rec.beds  < minBeds)  fails.push(`${rec.beds}BR`);
+    if (rec.baths != null && rec.baths < minBaths) fails.push(`${rec.baths}BA`);
+    if (rec.acres != null && rec.acres < minAcres) fails.push(`${rec.acres}ac`);
     if (rec.currentPrice > store.criteria.maxPrice) fails.push('over budget');
     if (!rec.pool) fails.push('no pool');
     if (fails.length) {
@@ -157,6 +161,7 @@ for (const b of blocks(raw)) {
 
 store.lastRun = today;
 store.dataQuality = {
+  ...store.dataQuality,
   verifiedActiveListings: store.listings.filter((l) => l.status === 'match').length,
   note: 'Listings ingested from pasted portal results are treated as verified-active as of lastRun.',
 };
