@@ -13,11 +13,11 @@
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-08-11",
+  "lastRun": "2026-08-12",
   "source": {
     "name": "Coldwell Banker Homes (MetroList MLS IDX feed), cross-checked against Redfin's live active-listing feed",
     "method": "Enumerated every active listing in Placerville, Shingle Springs and Rescue, then pulled each candidate's detail page for lot size, pool fields and true MLS status. Every run is then cross-checked against a second live feed, queried by map polygon in tiles so nothing is silently truncated. That cross-check exists because the IDX feed has twice carried listings as Active that were already in escrow.",
-    "inventoryScanned": 294,
+    "inventoryScanned": 290,
     "passedBedsBathsPrice": 59,
     "verifiedActiveMatches": 6,
     "crossCheck": "Pool confirmed from the subject property's own MLS 'Pool Information' amenity group, its hasPrivatePool flag, and its own marketing remarks - all three must agree. Detail pages embed nearby listings, so page-level text matching attributes a neighbour's pool to the subject."
@@ -67,7 +67,7 @@
       "summary": "Crafted as the builder's own residence, this extraordinary European Country-inspired estate was designed without compromise. From its commanding setting on 40 acres with sweeping Sierra foothill views and timeless architectural details, every aspect of the property reflects quality and enduring elegance. From the moment you arrive, the home makes a striking impression, thoughtfully designed to fra",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-08-11",
+      "lastSeen": "2026-08-12",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -116,7 +116,7 @@
       "summary": "Just minutes from town yet worlds away, this 10 acre sanctuary delivers the ultimate retreat lifestyle. Step inside to discover a beautifully updated home with 4 bedrooms, 3 baths, and an inviting upstairs game room complete with a wet bar  perfect for gatherings. The renovated kitchen shines with quartz counters, stainless appliances, and beautiful white cabinetry, flowing seamlessly into the fam",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-08-11",
+      "lastSeen": "2026-08-12",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -152,7 +152,7 @@
       "lat": 38.7176,
       "lng": -121.0157,
       "photos": [
-        "https://m.cbhomes.com/p/371/226083791/2Ebcf7d0713D413/full.webp",
+        "https://m1.cbhomes.com/p/371/226083791/2Ebcf7d0713D413/full.webp",
         "https://m1.cbhomes.com/p/371/226083791/6d882eA9dba347D/full.webp",
         "https://m.cbhomes.com/p/371/226083791/26b1693C05Ad41d/full.webp",
         "https://m1.cbhomes.com/p/371/226083791/B26472A278f54cA/full.webp",
@@ -165,7 +165,7 @@
       "summary": "Sought after area. Minutes from shopping, schools.  Country living at its finest. Situated in a serene, park-like setting, this property offers unparalleled tranquility.  End of road privacy. This custom-built two story family residence offers four bedrooms, a formal dining room, separate living and family spaces, and a chef's dream kitchen, complemented by three bathrooms. Additionally, there is ",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-08-11",
+      "lastSeen": "2026-08-12",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -201,7 +201,7 @@
       "lat": 38.619,
       "lng": -120.9527,
       "photos": [
-        "https://m1.cbhomes.com/p/371/226092223/CD31ec5b6eb1413/full.webp",
+        "https://m.cbhomes.com/p/371/226092223/CD31ec5b6eb1413/full.webp",
         "https://m1.cbhomes.com/p/371/226092223/Ae0EEf0c3A794FE/full.webp",
         "https://m.cbhomes.com/p/371/226092223/71f2D5d81f42482/full.webp",
         "https://m1.cbhomes.com/p/371/226092223/51421823567B44a/full.webp",
@@ -214,7 +214,7 @@
       "summary": "Custom Milton Estates pool home with great views! Home is situated on 5 ac of usable land with many fruit trees and endless opportunities. Features include great room concept with open spacious feel along with seller owned solar. Abundant natural light streams through windows. Well appointed kitchen with granite counter tops, Viking range and large center island. Dining area with built in lighted ",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-08-11",
+      "lastSeen": "2026-08-12",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -254,7 +254,7 @@
       "lat": 38.7323,
       "lng": -120.907,
       "photos": [
-        "https://m1.cbhomes.com/p/371/226059973/6e688FC8324a4f7/full.webp",
+        "https://m.cbhomes.com/p/371/226059973/6e688FC8324a4f7/full.webp",
         "https://m1.cbhomes.com/p/371/226059973/d4C3c39b87F14Fd/full.webp",
         "https://m.cbhomes.com/p/371/226059973/93a16D8E4b14403/full.webp",
         "https://m1.cbhomes.com/p/371/226059973/5E1e2918Ce29427/full.webp",
@@ -267,7 +267,7 @@
       "summary": "Nestled on a stunning 5-acre homesite in the prestigious gated community of Greenstone Country, this custom estate blends luxury, privacy, and outdoor recreation. Surrounded by mature oak trees and rock outcroppings, the approximately 3,885 sq. ft. home is designed for comfortable living and entertaining.    The spacious floorplan offers 5-6 bedrooms, 4 bathrooms, a 4-car garage, and a detached 2-",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-08-11",
+      "lastSeen": "2026-08-12",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -316,7 +316,7 @@
       "summary": "Welcome to this charming mini ranch with an ADU, tucked behind a gated entrance at the end of a paved driveway, offering privacy, versatility, and lovely views in a peaceful country setting. The single-story ranch home design welcomes you into a light-filled living room where vaulted ceilings and expansive picture windows showcase the scenery beyond. The updated kitchen features granite countertop",
       "notes": "",
       "firstSeen": "2026-08-07",
-      "lastSeen": "2026-08-11",
+      "lastSeen": "2026-08-12",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -354,7 +354,7 @@
       "lat": 38.7124,
       "lng": -121.0111,
       "photos": [
-        "https://m.cbhomes.com/p/371/226074530/1758ca1E24164B0/full.webp",
+        "https://m1.cbhomes.com/p/371/226074530/1758ca1E24164B0/full.webp",
         "https://m1.cbhomes.com/p/371/226074530/005e799D04C541D/full.webp",
         "https://m.cbhomes.com/p/371/226074530/6185a51521d6488/full.webp",
         "https://m1.cbhomes.com/p/371/226074530/b60287E69E9a4bc/full.webp",
@@ -375,7 +375,7 @@
           "price": 1349999
         }
       ],
-      "lastSeen": "2026-08-11"
+      "lastSeen": "2026-08-12"
     },
     {
       "id": "3565-farview-ct-rescue",
@@ -404,7 +404,7 @@
       "lat": 38.7314,
       "lng": -120.99,
       "photos": [
-        "https://m.cbhomes.com/p/371/226087456/9E02f6e2aE934D6/full.webp",
+        "https://m1.cbhomes.com/p/371/226087456/9E02f6e2aE934D6/full.webp",
         "https://m1.cbhomes.com/p/371/226087456/aAEE71820A394FA/full.webp",
         "https://m.cbhomes.com/p/371/226087456/44c37c7f4cb24b0/full.webp",
         "https://m1.cbhomes.com/p/371/226087456/dB966bbCDcd546c/full.webp",
@@ -425,7 +425,7 @@
           "price": 1289000
         }
       ],
-      "lastSeen": "2026-08-11"
+      "lastSeen": "2026-08-12"
     },
     {
       "id": "1988-cold-springs-rd-placerville",
@@ -454,7 +454,7 @@
       "lat": 38.7387,
       "lng": -120.8572,
       "photos": [
-        "https://m.cbhomes.com/p/371/226033527/67D4c74cf6314cC/full.webp",
+        "https://m1.cbhomes.com/p/371/226033527/67D4c74cf6314cC/full.webp",
         "https://m1.cbhomes.com/p/371/226033527/4049C87686094d6/full.webp",
         "https://m.cbhomes.com/p/371/226033527/41c104a8B1034E8/full.webp",
         "https://m1.cbhomes.com/p/371/226033527/Fa9cc4d98cD6489/full.webp",
@@ -475,7 +475,7 @@
           "price": 850000
         }
       ],
-      "lastSeen": "2026-08-11"
+      "lastSeen": "2026-08-12"
     }
   ],
   "nearMisses": [
@@ -634,14 +634,7 @@
       "missing": "no pool"
     }
   ],
-  "dropped": [
-    {
-      "address": "5560 Ralston Way, Placerville",
-      "priorPrice": 1395000,
-      "reason": "Was under contract since 2026-07-28 and has now left the active, pending and IDX feeds — the sale most likely closed.",
-      "droppedOn": "2026-08-11"
-    }
-  ],
+  "dropped": [],
   "rejected": [
     {
       "address": "1601 Velvet Horn Ln, Rescue",
@@ -701,7 +694,7 @@
       "reason": "0.25 acres"
     }
   ],
-  "previousRun": "2026-08-10",
+  "previousRun": "2026-08-11",
   "relisted": [
     {
       "id": "1781-springvale-rd-placerville",
@@ -726,7 +719,7 @@
       "baths": 4,
       "sqft": 2025,
       "acres": 10.27,
-      "daysOnMarket": 4,
+      "daysOnMarket": 5,
       "photos": [
         "https://m.cbhomes.com/p/371/226093241/D391c910B23B48a/full.webp",
         "https://m1.cbhomes.com/p/371/226093241/945cC4344A22432/full.webp",
@@ -737,7 +730,7 @@
       ],
       "url": "https://www.redfin.com/CA/Placerville/1781-Springvale-Rd-95667/home/167348318",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-08-11",
+      "lastSeen": "2026-08-12",
       "relistedOn": "2026-08-08",
       "rescuedThisRun": false,
       "status": "relisted"
