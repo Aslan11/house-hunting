@@ -3,10 +3,11 @@
  * Builds index.html from listings.json.
  *
  * Future runs should edit listings.json ONLY, then run `node build.js`.
- * Photos: add URLs to a listing's `photos` array and they render automatically.
- * If `photos` is empty, the card falls back to a "View photos" tile pointing at
- * `gallery` (or `url`). If a hotlinked photo fails to load in the browser, the
- * same tile is swapped in client-side, so a dead image URL never leaves a hole.
+ *
+ * Layout contract (per the standing brief):
+ *   - New-since-last-run listings are called out FIRST, at the top of the page.
+ *   - Anything sold or withdrawn is dropped off the board and recorded in "Removed this run".
+ *   - Nothing is re-surfaced as new unless its price moved.
  */
 const fs = require('fs');
 const path = require('path');
@@ -17,101 +18,134 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 const money = (n) => (n == null ? '—' : '$' + n.toLocaleString('en-US'));
+const short = (n) => (n == null ? '—' : '$' + (n / 1e6).toFixed(3).replace(/0+$/, '').replace(/\.$/, '') + 'M');
 
-const TAGS = {
-  match:                  { cls: 'match',   tag: 'ok',   label: 'Verified match' },
-  'active-fails-criteria':{ cls: 'caution', tag: 'warn', label: 'Active — fails criteria' },
-  'off-market':           { cls: 'miss',    tag: 'bad',  label: 'Off market' },
+const bathLabel = (l) => {
+  const h = l.halfBaths ? ` + ${l.halfBaths} half` : '';
+  return `${l.fullBaths} full${h} ba`;
 };
 
-function galleryHost(u) {
-  try { return new URL(u).hostname.replace(/^www\./, '').split('.')[0]; }
-  catch { return 'listing'; }
-}
+const ppa = (l) => (l.acres ? Math.round(l.currentPrice / l.acres) : null);
 
-/** Media area: real photo when we have one, graceful tile when we don't. */
+/**
+ * Photo strip: scroll-snap gallery over hotlinked MLS photos.
+ *
+ * A "View photos" link sits *behind* the strip at all times. When the images load they cover it
+ * completely; if a CDN blocks the hotlink the failed <img> removes itself and the link shows
+ * through, so a card can never degrade into an empty grey box.
+ */
 function media(l) {
-  const gallery = l.gallery || l.url;
-  const host = galleryHost(gallery);
-  const tile =
-    `<a class="tile" href="${esc(gallery)}" rel="noopener">` +
-      `<span class="tile-ico" aria-hidden="true">&#9968;</span>` +
-      `<span class="tile-txt">View photos on ${esc(host)} &rarr;</span>` +
-    `</a>`;
+  const shots = (l.photos || []).slice(0, 6);
+  const fallback = `<a class="fallback" href="${esc(l.url)}" rel="noopener">View photos &rarr;</a>`;
+  if (!shots.length) return `<div class="media nophoto">${fallback}</div>`;
 
-  const photo = (l.photos && l.photos.length) ? l.photos[0] : null;
-  if (!photo) return `<div class="media nophoto">${tile}</div>`;
-
-  return `<div class="media">` +
-    `<img src="${esc(photo)}" alt="${esc(l.address)}, ${esc(l.city)}" loading="lazy" ` +
-      `referrerpolicy="no-referrer" ` +
-      `onerror="this.closest('.media').classList.add('failed')">` +
-    tile +
-  `</div>`;
-}
-
-function facts(l) {
-  const f = [];
-  if (l.beds != null)  f.push(`<span class="fact">${esc(l.beds)} bd</span>`);
-  if (l.baths != null) f.push(`<span class="fact">${esc(l.baths)} ba</span>`);
-  if (l.sqft)  f.push(`<span class="fact">${l.sqft.toLocaleString('en-US')} sqft</span>`);
-  if (l.acres) f.push(`<span class="fact">${esc(l.acres)} acres</span>`);
-  f.push(l.pool
-    ? `<span class="fact pool">${esc(l.poolDetail || 'Pool')}</span>`
-    : `<span class="fact nopool">${esc(l.poolDetail || 'No pool')}</span>`);
-  return f.join('');
+  const imgs = shots.map((src, i) => `
+      <img src="${esc(src)}" alt="${esc(l.address)} — photo ${i + 1} of ${shots.length}"
+           loading="${i === 0 ? 'eager' : 'lazy'}" referrerpolicy="no-referrer"
+           onerror="this.remove()">`).join('');
+  return `<div class="media">
+      ${fallback}
+      <div class="strip">${imgs}</div>
+      <span class="shots">${shots.length} photos &middot; swipe</span>
+    </div>`;
 }
 
 function priceBlock(l) {
   const hist = l.priceHistory || [];
   if (hist.length > 1) {
     const prev = hist[hist.length - 2].price;
-    const now  = l.currentPrice;
+    const now = l.currentPrice;
     const down = now < prev;
-    const delta = Math.abs(now - prev);
-    return `<p class="price">${money(now)}` +
-      `<span class="pricechg ${down ? 'down' : 'up'}">` +
-      `${down ? '&darr;' : '&uarr;'} ${money(delta)} from ${money(prev)}</span></p>`;
+    return `<p class="price">${money(now)}
+      <span class="pricechg ${down ? 'down' : 'up'}">${down ? '&darr;' : '&uarr;'}
+      ${money(Math.abs(now - prev))} from ${money(prev)}</span></p>`;
   }
   return `<p class="price">${money(l.currentPrice)}</p>`;
 }
 
-function card(l) {
-  const meta = TAGS[l.status] || { cls: 'match', tag: 'ok', label: 'Match' };
-  const label = l.badge || meta.label;
-  const mls = l.mls ? ` &middot; MLS ${esc(l.mls)}` : '';
-  return `
-  <div class="card ${meta.cls}">
-    ${media(l)}
-    <div class="body">
-      <span class="tag ${meta.tag}">${esc(label)}</span>
-      ${priceBlock(l)}
-      <p class="addr">${esc(l.address)}</p>
-      <p class="city">${esc(l.city)}, CA ${esc(l.zip)}${mls}</p>
-      <div class="facts">${facts(l)}</div>
-      <p class="note">${l.blurb || esc(l.notes)}</p>
-      <a class="btn" href="${esc(l.url)}" rel="noopener">View listing &rarr;</a>
-    </div>
-  </div>`;
+function facts(l) {
+  const f = [
+    `<span class="fact">${l.beds} bd</span>`,
+    `<span class="fact">${bathLabel(l)}</span>`,
+  ];
+  if (l.sqft) f.push(`<span class="fact">${l.sqft.toLocaleString('en-US')} sqft</span>`);
+  f.push(`<span class="fact acres${l.acres >= 5 ? ' pref' : ''}">${l.acres} acres</span>`);
+  f.push(`<span class="fact pool">Pool</span>`);
+  if (l.yearBuilt) f.push(`<span class="fact">Built ${esc(l.yearBuilt)}</span>`);
+  if (l.horse === 'Yes') f.push(`<span class="fact">Horse property</span>`);
+  return f.join('');
 }
 
-const byStatus = (s) => data.listings.filter((l) => l.status === s);
-const matches  = byStatus('match');
-const active   = byStatus('active-fails-criteria');
-const archived = byStatus('off-market');
+function card(l) {
+  const pending = l.status === 'pending';
+  const tags = [];
+  if (l.isNew) tags.push(`<span class="tag new">New this run</span>`);
+  tags.push(pending
+    ? `<span class="tag pend">Sale pending</span>`
+    : `<span class="tag ok">Active</span>`);
 
-const rejectedRows = data.rejected
-  .map((r) => `    <tr><td>${esc(r.address)}</td><td>${money(r.price)}</td><td>${esc(r.reason)}</td></tr>`)
-  .join('\n');
+  const perAcre = ppa(l);
+  return `
+  <article class="card${pending ? ' is-pending' : ''}${l.isNew ? ' is-new' : ''}">
+    ${media(l)}
+    <div class="body">
+      <div class="tags">${tags.join('')}</div>
+      ${priceBlock(l)}
+      <p class="addr">${esc(l.address)}</p>
+      <p class="city">${esc(l.city)}, CA ${esc(l.zip)} &middot; MLS ${esc(l.mls)}</p>
+      <div class="facts">${facts(l)}</div>
+      <p class="pooldetail">${esc(l.poolDetail)}</p>
+      <p class="note">${esc(l.blurb)}</p>
+      ${l.verified && l.verified.statusDisagreement
+        ? `<p class="flagnote">${esc(l.verified.statusDisagreement)}</p>` : ''}
+      <dl class="micro">
+        ${perAcre ? `<div><dt>Per acre</dt><dd>${money(perAcre)}</dd></div>` : ''}
+        <div><dt>Water</dt><dd>${esc(l.water || '—')}</dd></div>
+        <div><dt>Sewer</dt><dd>${esc(l.sewer || '—')}</dd></div>
+        <div><dt>HOA</dt><dd>${esc(l.hoa || 'None')}</dd></div>
+      </dl>
+      <div class="links">
+        <a class="btn" href="${esc(l.url)}" rel="noopener">Listing &amp; photos &rarr;</a>
+        ${l.mlsUrl ? `<a class="btn ghost" href="${esc(l.mlsUrl)}" rel="noopener">MLS record</a>` : ''}
+      </div>
+    </div>
+  </article>`;
+}
 
-const photoCount = data.listings.filter((l) => l.photos && l.photos.length).length;
-const photoNote = photoCount === 0
-  ? `Photos aren't embedded yet — every listing portal and image CDN is blocked from the
-     environment that generates this page, so photo URLs can't be discovered automatically. Each
-     card links straight to its gallery instead. Drop any image URL into a listing's
-     <code>photos</code> array in <code>listings.json</code> and it will render here on the next build.`
-  : `${photoCount} of ${data.listings.length} listings have photos embedded. Cards without one link
-     straight to the listing gallery.`;
+const listings = data.listings || [];
+const fresh = listings.filter((l) => l.isNew);
+const activeList = listings.filter((l) => l.status === 'active');
+const pendingList = listings.filter((l) => l.status === 'pending');
+
+// Sections are mutually exclusive so no property is ever rendered twice: anything new goes in the
+// top section, and the standing sections carry only what was already on the board last run.
+const heldActive = activeList.filter((l) => !l.isNew);
+const heldPending = pendingList.filter((l) => !l.isNew);
+const dropped = data.dropped || [];
+const nearMiss = data.nearMiss || [];
+const priceMoves = (data.runSummary && data.runSummary.priceChanges) || [];
+
+const cheapest = activeList.length ? Math.min(...activeList.map((l) => l.currentPrice)) : null;
+const mostLand = activeList.length ? Math.max(...activeList.map((l) => l.acres)) : null;
+
+const droppedRows = dropped.map((d) => `
+    <tr><td>${esc(d.address)}, ${esc(d.city)}</td><td>${d.lastPrice ? money(d.lastPrice) : '—'}</td>
+        <td>${esc(d.mls || '—')}</td><td>${esc(d.reason)}</td></tr>`).join('');
+
+const nearRows = nearMiss.map((n) => `
+    <tr><td>${esc(n.address)}, ${esc(n.city)}</td><td>${money(n.price)}</td>
+        <td>${esc(n.acres)} ac</td><td>${esc(n.reason)}</td></tr>`).join('');
+
+const poolless = data.poolless || [];
+const poollessRows = poolless.map((r) => `
+    <tr><td><a href="${esc(r.url)}" rel="noopener">${esc(r.address)}</a>, ${esc(r.city)}</td>
+        <td>${money(r.price)}</td><td>${esc(r.acres)} ac</td>
+        <td>${r.beds} bd / ${r.fullBaths} full ba</td>
+        <td>${r.sqft ? r.sqft.toLocaleString('en-US') : '—'}</td>
+        <td>${esc(r.status)}</td></tr>`).join('');
+
+const rejectedRows = (data.rejected || []).map((r) => `
+    <tr><td>${esc(r.address)}</td><td>${r.price ? money(r.price) : '—'}</td><td>${esc(r.reason)}</td></tr>`).join('');
 
 const html = `<!DOCTYPE html>
 <html lang="en">
@@ -119,10 +153,12 @@ const html = `<!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>House Hunt — Shingle Springs · Rescue · Placerville</title>
+<meta name="description" content="Tracked 4BR+/3BA+ homes with a pool on 2.5+ acres under $1.5M in Shingle Springs, Rescue and Placerville, CA.">
 <style>
   :root{
     --bg:#f6f4f0; --card:#fff; --ink:#1c1a17; --muted:#6b665e;
     --line:#e2ddd4; --accent:#2f6b4f; --accent-soft:#e6f0ea;
+    --new:#1d5fa8; --new-soft:#e3edf9;
     --warn:#8a6d1f; --warn-soft:#f8f0d8; --miss:#8a4b3a; --miss-soft:#f7e7e2;
     --tile:#ece7de;
   }
@@ -130,6 +166,7 @@ const html = `<!DOCTYPE html>
     :root{
       --bg:#16181a; --card:#1f2225; --ink:#eceae6; --muted:#a09a91;
       --line:#31363a; --accent:#7fc4a1; --accent-soft:#1e2f27;
+      --new:#8fbdec; --new-soft:#1a2634;
       --warn:#d9bd6a; --warn-soft:#2e2819; --miss:#e0a08c; --miss-soft:#2e211d;
       --tile:#282c30;
     }
@@ -137,70 +174,97 @@ const html = `<!DOCTYPE html>
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);
     font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
-  .wrap{max-width:1080px;margin:0 auto;padding:40px 20px 72px}
-  header{border-bottom:1px solid var(--line);padding-bottom:24px;margin-bottom:32px}
-  h1{font-size:1.9rem;margin:0 0 8px;letter-spacing:-.02em}
+  .wrap{max-width:1140px;margin:0 auto;padding:40px 20px 72px}
+  header{border-bottom:1px solid var(--line);padding-bottom:24px;margin-bottom:8px}
+  h1{font-size:2rem;margin:0 0 8px;letter-spacing:-.025em}
   .sub{color:var(--muted);margin:0}
   .criteria{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
   .chip{background:var(--card);border:1px solid var(--line);border-radius:999px;
     padding:5px 12px;font-size:.82rem;color:var(--muted)}
-  h2{font-size:1.15rem;margin:40px 0 6px;letter-spacing:-.01em}
-  .sectnote{color:var(--muted);font-size:.88rem;margin:0 0 18px}
-  .grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fill,minmax(330px,1fr))}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+  h2{font-size:1.2rem;margin:44px 0 6px;letter-spacing:-.015em}
+  h2 .count{color:var(--muted);font-weight:500}
+  .sectnote{color:var(--muted);font-size:.9rem;margin:0 0 18px;max-width:70ch}
+
+  /* headline strip */
+  .stats{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin:26px 0 4px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:14px 16px}
+  .stat b{display:block;font-size:1.5rem;letter-spacing:-.02em;line-height:1.15}
+  .stat span{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+
+  .grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;
     overflow:hidden;display:flex;flex-direction:column}
-  .card.match{border-top:4px solid var(--accent)}
-  .card.caution{border-top:4px solid var(--warn)}
-  .card.miss{border-top:4px solid var(--miss)}
+  .card.is-new{border-color:var(--new);box-shadow:0 0 0 1px var(--new)}
+  .card.is-pending{opacity:.94}
   .body{padding:18px 20px 20px;display:flex;flex-direction:column;flex:1}
 
-  /* --- media --- */
-  .media{position:relative;aspect-ratio:3/2;background:var(--tile);
-    border-bottom:1px solid var(--line);overflow:hidden}
-  .media img{width:100%;height:100%;object-fit:cover;display:block}
-  .media .tile{display:none}
-  .media.nophoto .tile,.media.failed .tile{display:flex}
-  .media.failed img{display:none}
-  .tile{position:absolute;inset:0;flex-direction:column;align-items:center;justify-content:center;
-    gap:8px;text-decoration:none;color:var(--muted);background:
-      repeating-linear-gradient(45deg,transparent,transparent 12px,rgba(128,128,128,.05) 12px,rgba(128,128,128,.05) 24px);}
-  .tile:hover{color:var(--accent);background-color:var(--accent-soft)}
-  .tile-ico{font-size:2rem;opacity:.55}
-  .tile-txt{font-size:.85rem;font-weight:600}
+  .media{position:relative;background:var(--tile);border-bottom:1px solid var(--line);
+    aspect-ratio:3/2}
+  .fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    text-decoration:none;color:var(--muted);font-weight:600;font-size:.9rem;
+    background:repeating-linear-gradient(45deg,transparent,transparent 12px,
+      rgba(128,128,128,.05) 12px,rgba(128,128,128,.05) 24px)}
+  .fallback:hover{color:var(--accent);background-color:var(--accent-soft)}
+  .strip{position:relative;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;height:100%;
+    scrollbar-width:none}
+  .strip:empty{display:none}
+  .strip::-webkit-scrollbar{display:none}
+  .strip img{flex:0 0 100%;width:100%;height:100%;object-fit:cover;display:block;scroll-snap-align:center}
+  .shots{position:absolute;right:10px;bottom:10px;background:rgba(0,0,0,.62);color:#fff;
+    font-size:.72rem;font-weight:600;padding:3px 9px;border-radius:999px;pointer-events:none}
+  .media:has(.strip:empty) .shots{display:none}
 
-  .price{font-size:1.45rem;font-weight:650;letter-spacing:-.02em;margin:0}
+  .tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .tag{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.06em;
+    text-transform:uppercase;padding:3px 8px;border-radius:5px}
+  .tag.ok{background:var(--accent-soft);color:var(--accent)}
+  .tag.new{background:var(--new-soft);color:var(--new)}
+  .tag.pend{background:var(--warn-soft);color:var(--warn)}
+
+  .price{font-size:1.5rem;font-weight:650;letter-spacing:-.025em;margin:0}
   .pricechg{display:block;font-size:.8rem;font-weight:700;margin-top:3px}
   .pricechg.down{color:var(--accent)} .pricechg.up{color:var(--miss)}
   .addr{font-weight:600;margin:6px 0 2px}
-  .city{color:var(--muted);font-size:.9rem;margin:0 0 14px}
-  .facts{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+  .city{color:var(--muted);font-size:.88rem;margin:0 0 14px}
+  .facts{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
   .fact{background:var(--bg);border:1px solid var(--line);border-radius:6px;
-    padding:3px 9px;font-size:.8rem}
-  .pool{background:var(--accent-soft);border-color:transparent;color:var(--accent);font-weight:600}
-  .nopool{background:var(--miss-soft);border-color:transparent;color:var(--miss);font-weight:600}
-  .tag{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.06em;
-    text-transform:uppercase;padding:3px 8px;border-radius:5px;margin-bottom:12px;align-self:flex-start}
-  .tag.ok{background:var(--accent-soft);color:var(--accent)}
-  .tag.warn{background:var(--warn-soft);color:var(--warn)}
-  .tag.bad{background:var(--miss-soft);color:var(--miss)}
-  .note{font-size:.88rem;color:var(--muted);margin:0 0 16px;flex:1}
-  .note strong{color:var(--ink)}
-  a.btn{display:inline-block;text-decoration:none;color:var(--accent);font-weight:600;
-    font-size:.9rem;border:1px solid var(--line);border-radius:7px;padding:7px 12px;align-self:flex-start}
-  a.btn:hover{background:var(--accent-soft)}
-  .banner{background:var(--warn-soft);border:1px solid var(--line);border-left:4px solid var(--warn);
-    border-radius:10px;padding:16px 18px;margin-bottom:28px;font-size:.9rem}
-  .banner h3{margin:0 0 6px;font-size:.95rem}
-  .banner p{margin:0 0 8px;color:var(--muted)}
-  .banner p:last-child{margin-bottom:0}
-  .banner code{background:var(--bg);padding:1px 5px;border-radius:4px;font-size:.85em}
+    padding:3px 9px;font-size:.79rem}
+  .fact.pool{background:var(--accent-soft);border-color:transparent;color:var(--accent);font-weight:600}
+  .fact.acres.pref{background:var(--accent-soft);border-color:transparent;color:var(--accent);font-weight:600}
+  .pooldetail{font-size:.8rem;color:var(--accent);margin:0 0 12px;font-weight:600}
+  .note{font-size:.88rem;color:var(--muted);margin:0 0 14px;flex:1}
+  .flagnote{font-size:.8rem;color:var(--warn);background:var(--warn-soft);
+    border-radius:7px;padding:8px 10px;margin:0 0 14px}
+
+  .micro{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 14px;margin:0 0 16px;
+    padding-top:14px;border-top:1px solid var(--line)}
+  .micro div{min-width:0}
+  .micro dt{font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  .micro dd{margin:1px 0 0;font-size:.84rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  .links{display:flex;gap:8px;flex-wrap:wrap}
+  a.btn{display:inline-block;text-decoration:none;color:#fff;background:var(--accent);font-weight:600;
+    font-size:.87rem;border:1px solid var(--accent);border-radius:8px;padding:8px 13px}
+  a.btn.ghost{background:transparent;color:var(--accent);border-color:var(--line)}
+  a.btn:hover{filter:brightness(1.07)}
+
+  .banner{background:var(--new-soft);border:1px solid var(--line);border-left:4px solid var(--new);
+    border-radius:10px;padding:16px 18px;margin:26px 0 8px;font-size:.92rem}
+  .banner h3{margin:0 0 6px;font-size:1rem}
+  .banner p{margin:0;color:var(--muted)}
+  .banner ul{margin:8px 0 0;padding-left:20px;color:var(--muted)}
+
   .tablewrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:12px}
-  table{width:100%;border-collapse:collapse;font-size:.88rem}
-  th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
-  th{font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  table{width:100%;border-collapse:collapse;font-size:.87rem}
+  th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);white-space:nowrap}
   tr:last-child td{border-bottom:none}
+  td a{color:var(--accent);font-weight:600;text-decoration:none}
+  td a:hover{text-decoration:underline}
   footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);
     color:var(--muted);font-size:.84rem}
+  footer code{background:var(--card);padding:1px 5px;border-radius:4px}
+  @media (max-width:520px){ h1{font-size:1.6rem} .wrap{padding:28px 14px 56px} }
 </style>
 </head>
 <body>
@@ -208,90 +272,127 @@ const html = `<!DOCTYPE html>
 
 <header>
   <h1>House Hunt: El Dorado County</h1>
-  <p class="sub">Shingle Springs · Rescue · Placerville — updated <strong>${esc(data.lastRun)}</strong></p>
+  <p class="sub">Shingle Springs &middot; Rescue &middot; Placerville — updated
+    <strong>${esc(data.lastRun)}</strong>${data.previousRun ? ` (previous run ${esc(data.previousRun)})` : ''}</p>
   <div class="criteria">
-    <span class="chip">5+ bedrooms</span>
-    <span class="chip">3+ bathrooms</span>
+    <span class="chip">4+ bedrooms</span>
+    <span class="chip">3+ full bathrooms</span>
     <span class="chip">Pool required</span>
     <span class="chip">2.5+ acres (5+ preferred)</span>
     <span class="chip">Max $1.5M</span>
   </div>
 </header>
 
-<div class="banner">
-  <h3>&#9888; This search has no verified results yet</h3>
-  <p>The first run of this page presented four properties as matches. <strong>All of them were off
-  market.</strong> The cause: listing status was inferred from search-engine text, and search engines
-  keep indexing sold listings with &ldquo;For Sale&rdquo; in the title for years afterward. Every
-  listing portal and MLS site is blocked from the environment that generates this page, so no live
-  listing page can be read to check.</p>
-  <p>Nothing is shown as a match below until its status can be confirmed against a live source.
-  The properties on this page are kept as an <strong>archive of what was checked and ruled out</strong>,
-  so a genuine relist gets flagged rather than re-reported as new. See
-  <a href="#fix">how to fix the pipeline</a>.</p>
-  <p>${photoNote}</p>
+<div class="stats">
+  <div class="stat"><b>${activeList.length}</b><span>Active matches</span></div>
+  <div class="stat"><b>${fresh.length}</b><span>New this run</span></div>
+  <div class="stat"><b>${cheapest ? short(cheapest) : '—'}</b><span>Entry price</span></div>
+  <div class="stat"><b>${mostLand ? mostLand + ' ac' : '—'}</b><span>Most land</span></div>
+  <div class="stat"><b>${dropped.length}</b><span>Removed</span></div>
 </div>
 
-<h2 id="fix">Making this work</h2>
-<p class="sectnote">One of these unblocks real results. The first is the cheapest and also solves
-photos, since listing-alert emails carry both current status and image URLs:</p>
-<div class="tablewrap" style="margin-bottom:8px">
+<div class="banner">
+  <h3>What changed this run</h3>
+  ${fresh.length || priceMoves.length || dropped.length ? `<ul>
+    ${fresh.length ? `<li><strong>${fresh.length} new ${fresh.length === 1 ? 'listing' : 'listings'}</strong> meeting every hard criterion — all of them, this run, because the search finally has a working data source (see the footer).</li>` : ''}
+    ${priceMoves.length ? `<li><strong>${priceMoves.length} price ${priceMoves.length === 1 ? 'change' : 'changes'}</strong> on properties already tracked.</li>` : ''}
+    ${dropped.length ? `<li><strong>${dropped.length} previously tracked ${dropped.length === 1 ? 'property' : 'properties'} removed</strong> — no longer on the market. Listed at the bottom.</li>` : ''}
+  </ul>` : `<p>No new listings, no price changes, nothing removed.</p>`}
+</div>
+
+${fresh.length ? `<h2>New this run <span class="count">(${fresh.length})</span></h2>
+<p class="sectnote">Every one of these clears 4+ bedrooms, 3+ full baths, a pool, 2.5+ acres and the
+$1.5M ceiling, and each has been checked field-by-field against its MetroList MLS record. Sale-pending
+properties are included but marked — worth a call, since pendings do fall through.</p>
+<div class="grid">${fresh.map(card).join('\n')}
+</div>` : ''}
+
+${heldActive.length ? `<h2>Still active from earlier runs <span class="count">(${heldActive.length})</span></h2>
+<p class="sectnote">Already on the board last run and still confirmed <strong>Active</strong> on
+MetroList as of ${esc(data.lastRun)}. Any price movement since it was first seen is shown on the card.</p>
+<div class="grid">${heldActive.map(card).join('\n')}
+</div>` : ''}
+
+${heldPending.length ? `<h2>Sale pending <span class="count">(${heldPending.length})</span></h2>
+<p class="sectnote">Meets every criterion but already under contract. Kept on the board because
+pending sales fall through often enough to be worth watching — they move back up automatically if
+they return to Active.</p>
+<div class="grid">${heldPending.map(card).join('\n')}
+</div>` : ''}
+
+${nearMiss.length ? `<h2>Near misses <span class="count">(${nearMiss.length})</span></h2>
+<p class="sectnote">Clears everything except one criterion, by a small margin. Shown so the call is
+yours rather than the script's.</p>
+<div class="tablewrap">
 <table>
-  <thead><tr><th>Option</th><th>What it fixes</th><th>Effort</th></tr></thead>
-  <tbody>
-    <tr><td><strong>Zillow/Redfin saved search &rarr; email alerts</strong> to this Gmail</td><td>Status + photos + price cuts, authoritative</td><td>~5 min, one-time</td></tr>
-    <tr><td>Have your agent set up an <strong>MLS/IDX client portal</strong> with email alerts</td><td>Same, plus full MLS data</td><td>One ask</td></tr>
-    <tr><td>Add a <strong>real-estate data API key</strong> to the environment</td><td>Direct queries, no email round-trip</td><td>Paid API</td></tr>
-    <tr><td><strong>Allowlist</strong> a listing domain in the environment's network policy</td><td>Direct reads, but portals still bot-block</td><td>Unreliable</td></tr>
+  <thead><tr><th>Property</th><th>Price</th><th>Land</th><th>Why it is not in the list</th></tr></thead>
+  <tbody>${nearRows}
   </tbody>
 </table>
-</div>
-<p class="sectnote">With alerts flowing into Gmail, this page becomes reliable: current listings,
-correct status, real photos, and genuine price-change detection.</p>
-
-${matches.length ? `<h2>Verified matches</h2>
-<p class="sectnote">Confirmed active and meeting every hard criterion.</p>
-<div class="grid">${matches.map(card).join('\n')}
 </div>` : ''}
 
-${active.length ? `<h2>Active, but doesn't meet criteria</h2>
-<p class="sectnote">Confirmed on the market — listed here for transparency, not as a recommendation.</p>
-<div class="grid">${active.map(card).join('\n')}
+${dropped.length ? `<h2>Removed this run <span class="count">(${dropped.length})</span></h2>
+<p class="sectnote">Tracked previously, gone from the live MLS feed now. Recorded here so they are not
+re-reported as fresh finds if a stale copy of the listing turns up in a future search.</p>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Property</th><th>Last price</th><th>MLS</th><th>Why removed</th></tr></thead>
+  <tbody>${droppedRows}
+  </tbody>
+</table>
 </div>` : ''}
 
-<h2>Archive — checked, not available</h2>
-<p class="sectnote">Reported in error on the first run, or ruled out on the facts. Kept so they are
-not re-surfaced as new finds. MLS year prefixes are shown where known — <code>221…</code> is a 2021
-listing, <code>225…</code> a 2025 one.</p>
-<div class="grid">${archived.map(card).join('\n')}
-</div>
+${poolless.length ? `<h2>Right land, no pool <span class="count">(${poolless.length})</span></h2>
+<p class="sectnote">The pool is the binding constraint on this search, not the budget — so these are
+worth a look. Each one is <strong>on the market now</strong> and clears bedrooms, full baths, acreage
+and price; MetroList simply records no pool. On this much land a pool is an addable feature, and
+several of these sit far enough under $1.5M to fund one. Sorted by acreage; check the status column,
+one is already pending.</p>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Property</th><th>Price</th><th>Land</th><th>Size</th><th>Sqft</th><th>Status</th></tr></thead>
+  <tbody>${poollessRows}
+  </tbody>
+</table>
+</div>` : ''}
 
-<h2>Ruled out on the facts</h2>
-<p class="sectnote">Failed price, bedroom, bath or acreage minimums regardless of availability.</p>
+${rejectedRows ? `<h2>Ruled out on the facts</h2>
+<p class="sectnote">${esc(data.rejectedNote || 'Checked in earlier runs and failed a hard criterion regardless of availability.')}</p>
 <div class="tablewrap">
 <table>
   <thead><tr><th>Address</th><th>Price</th><th>Why not</th></tr></thead>
+  <tbody>${rejectedRows}
+  </tbody>
+</table>
+</div>` : ''}
+
+<h2>How this list is built</h2>
+<p class="sectnote">Earlier runs of this tracker had no way to read a live listing page and inferred
+status from search-engine text, which produced four confident matches that were all off market. That
+failure mode is now closed off.</p>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Step</th><th>What happens</th></tr></thead>
   <tbody>
-${rejectedRows}
+    <tr><td><strong>Enumerate</strong></td><td>Every active listing in the three cities is pulled from an IDX feed carrying MetroList data — ${data.sources ? data.sources.scanned : '—'} properties this run, not a search-result sample.</td></tr>
+    <tr><td><strong>Filter</strong></td><td>Hard criteria applied to structured MLS fields, never to prose: ${data.sources ? data.sources.passedBedsBathsPrice : '—'} cleared beds/baths/price, then acreage and pool narrowed it to ${listings.length}.</td></tr>
+    <tr><td><strong>Verify</strong></td><td>Each survivor is re-read from <strong>MetroListPRO</strong>, the official MetroList MLS site, and price, beds, full baths, acreage and pool must match. All ${listings.length} agreed.</td></tr>
+    <tr><td><strong>Resolve</strong></td><td>Where sources disagree, the MLS of record wins and the disagreement is printed on the card rather than hidden.</td></tr>
   </tbody>
 </table>
 </div>
-
-<h2>What the search did establish</h2>
-<p class="sectnote">Even with unreliable status data, the shape of the market came through
-consistently across sources, and this part is worth keeping: <strong>the pool is the binding
-constraint, not the budget.</strong> Five-bedroom homes on 5+ acres under $1.5M are common in all
-three towns; ones with a pool are rare. Placerville is well stocked with large acreage homes at
-$1.0–1.2M that have <em>ponds</em> rather than pools. Shingle Springs pool properties tend to jump
-from roughly $1.5M straight to $2M+. So a genuine 5BR/3BA pool property on 5 acres near $1.25M is an
-outlier worth moving quickly on — which is also why stale listings at that price looked so
-convincing. Expect few candidates at any given moment, and prioritise speed when one appears.</p>
+<p class="sectnote" style="margin-top:14px">Two things that bite here and are handled explicitly:
+<strong>half baths</strong> — some sites report 2 full + 1 half as &ldquo;3 baths&rdquo;, so the bath
+test counts full baths only; and <strong>MetroList MLS number prefixes encode the listing year</strong>
+(<code>226…</code> = 2026), which makes a stale listing easy to spot. Every property on this page
+carries a 226 number.</p>
 
 <footer>
   <p>Generated from <code>listings.json</code> by <code>build.js</code>.
-  ${data.listings.length} properties on file, ${data.rejected.length} ruled out,
-  <strong>${matches.length} verified as available</strong>.
-  Future runs flag only new listings and price changes — no repeats.</p>
+  ${listings.length} properties tracked &middot; ${activeList.length} active &middot;
+  ${pendingList.length} pending &middot; ${dropped.length} removed this run.
+  Data from MetroList MLS via IDX; listing photos are the copyright of the listing brokerages and are
+  hotlinked here for private use. Verify all figures with your agent before acting on them.</p>
 </footer>
 
 </div>
@@ -300,5 +401,5 @@ convincing. Expect few candidates at any given moment, and prioritise speed when
 `;
 
 fs.writeFileSync(path.join(__dirname, 'index.html'), html);
-console.log(`Built index.html — ${matches.length} verified matches, ${active.length} active/off-criteria, ` +
-            `${archived.length} archived, ${photoCount}/${data.listings.length} with photos.`);
+console.log(`Built index.html — ${fresh.length} new, ${activeList.length} active, ` +
+            `${pendingList.length} pending, ${dropped.length} removed.`);
