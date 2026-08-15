@@ -1,402 +1,794 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>House Hunt — Shingle Springs / Rescue / Placerville</title>
-<meta name="description" content="Verified active listings: 4+ bed, 3+ bath, pool, 2.5+ acres, under $1.5M.">
+<title>House Hunt — Shingle Springs · Rescue · Placerville</title>
+<meta name="description" content="Tracked 4BR+/3BA+ homes with a pool on 2.5+ acres under $1.5M in Shingle Springs, Rescue and Placerville, CA.">
 <style>
-*{box-sizing:border-box}
-:root{
-  --bg:#faf8f5; --panel:#fff; --ink:#1c1a17; --dim:#6b6560; --line:#e6e0d8;
-  --accent:#8a5a2b; --new:#0f7b52; --newbg:#e6f4ee; --warn:#9a6b00; --warnbg:#fdf3dd;
-  --pend:#8a4a4a; --pendbg:#fbeaea; --shadow:0 1px 2px rgba(0,0,0,.05),0 8px 24px -12px rgba(0,0,0,.14);
-}
-@media (prefers-color-scheme:dark){:root{
-  --bg:#15130f; --panel:#1e1b17; --ink:#f0ece6; --dim:#a39c93; --line:#332e28;
-  --accent:#d4a373; --new:#5ad3a0; --newbg:#0f2b21; --warn:#e0b555; --warnbg:#2e2513;
-  --pend:#e59a9a; --pendbg:#2e1b1b; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px -12px rgba(0,0,0,.6);
-}}
-html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--ink);
-  font:16px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-.wrap{max-width:1180px;margin:0 auto;padding:0 20px 72px}
-a{color:inherit}
+  :root{
+    --bg:#f6f4f0; --card:#fff; --ink:#1c1a17; --muted:#6b665e;
+    --line:#e2ddd4; --accent:#2f6b4f; --accent-soft:#e6f0ea;
+    --new:#1d5fa8; --new-soft:#e3edf9;
+    --warn:#8a6d1f; --warn-soft:#f8f0d8; --miss:#8a4b3a; --miss-soft:#f7e7e2;
+    --tile:#ece7de;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#16181a; --card:#1f2225; --ink:#eceae6; --muted:#a09a91;
+      --line:#31363a; --accent:#7fc4a1; --accent-soft:#1e2f27;
+      --new:#8fbdec; --new-soft:#1a2634;
+      --warn:#d9bd6a; --warn-soft:#2e2819; --miss:#e0a08c; --miss-soft:#2e211d;
+      --tile:#282c30;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:1140px;margin:0 auto;padding:40px 20px 72px}
+  header{border-bottom:1px solid var(--line);padding-bottom:24px;margin-bottom:8px}
+  h1{font-size:2rem;margin:0 0 8px;letter-spacing:-.025em}
+  .sub{color:var(--muted);margin:0}
+  .criteria{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .chip{background:var(--card);border:1px solid var(--line);border-radius:999px;
+    padding:5px 12px;font-size:.82rem;color:var(--muted)}
+  h2{font-size:1.2rem;margin:44px 0 6px;letter-spacing:-.015em}
+  h2 .count{color:var(--muted);font-weight:500}
+  .sectnote{color:var(--muted);font-size:.9rem;margin:0 0 18px;max-width:70ch}
 
-header{padding:44px 0 26px;border-bottom:1px solid var(--line);margin-bottom:30px}
-h1{font-size:clamp(26px,4.4vw,40px);line-height:1.15;margin:0 0 8px;letter-spacing:-.02em}
-h1 span{color:var(--accent)}
-.sub{color:var(--dim);margin:0 0 22px;font-size:15px}
-.crit{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
-.crit span{background:var(--panel);border:1px solid var(--line);border-radius:999px;
-  padding:5px 13px;font-size:13.5px;box-shadow:var(--shadow)}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:10px}
-.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 15px;box-shadow:var(--shadow)}
-.stat .v{display:block;font-size:22px;font-weight:650;letter-spacing:-.02em}
-.stat .k{display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--dim);margin-top:2px}
+  /* headline strip */
+  .stats{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin:26px 0 4px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:14px 16px}
+  .stat b{display:block;font-size:1.5rem;letter-spacing:-.02em;line-height:1.15}
+  .stat span{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
 
-h2{font-size:19px;margin:40px 0 16px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
-h2.h-new{color:var(--new)}
-h2.h-chg{color:var(--warn)}
-.lede{color:var(--dim);font-size:14.5px;margin:-8px 0 18px;max-width:74ch}
-.strip-empty{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--new);
-  border-radius:12px;padding:16px 18px;color:var(--dim);font-size:14.5px}
-.strip-drop{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--warn);
-  border-radius:12px;padding:16px 18px;color:var(--dim);font-size:14.5px;margin-top:18px}
-.strip-drop strong{color:var(--ink)}
-.strip-drop ul{margin:8px 0 0;padding-left:20px}
-.strip-drop li{margin:3px 0}
-.strip-drop li b{color:var(--ink);font-weight:600}
-.strip-relist{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);
-  border-radius:12px;padding:16px 18px;color:var(--dim);font-size:14.5px}
-.strip-relist strong{color:var(--ink)}
-.strip-relist ul{margin:8px 0 0;padding-left:20px}
-.strip-relist li{margin:8px 0}
-.strip-relist li>b{color:var(--ink);font-weight:600}
-.strip-relist li span{display:block;margin-top:2px;line-height:1.55}
-.strip-relist .cut{color:var(--new)}
-.strip-relist .rise{color:var(--pend)}
-.strip-relist a{color:var(--accent);font-weight:600;text-decoration:none;white-space:nowrap}
-.strip-relist a:hover{text-decoration:underline}
+  .grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    overflow:hidden;display:flex;flex-direction:column}
+  .card.is-new{border-color:var(--new);box-shadow:0 0 0 1px var(--new)}
+  .card.is-pending{opacity:.94}
+  .body{padding:18px 20px 20px;display:flex;flex-direction:column;flex:1}
 
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:22px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;
-  box-shadow:var(--shadow);display:flex;flex-direction:column}
-.card.dim{opacity:.72}
+  .media{position:relative;background:var(--tile);border-bottom:1px solid var(--line);
+    aspect-ratio:3/2}
+  .fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    text-decoration:none;color:var(--muted);font-weight:600;font-size:.9rem;
+    background:repeating-linear-gradient(45deg,transparent,transparent 12px,
+      rgba(128,128,128,.05) 12px,rgba(128,128,128,.05) 24px)}
+  .fallback:hover{color:var(--accent);background-color:var(--accent-soft)}
+  .strip{position:relative;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;height:100%;
+    scrollbar-width:none}
+  .strip:empty{display:none}
+  .strip::-webkit-scrollbar{display:none}
+  .strip img{flex:0 0 100%;width:100%;height:100%;object-fit:cover;display:block;scroll-snap-align:center}
+  .shots{position:absolute;right:10px;bottom:10px;background:rgba(0,0,0,.62);color:#fff;
+    font-size:.72rem;font-weight:600;padding:3px 9px;border-radius:999px;pointer-events:none}
+  .media:has(.strip:empty) .shots{display:none}
 
-.media{position:relative;background:#d9d2c8;aspect-ratio:16/10}
-@media (prefers-color-scheme:dark){.media{background:#26221d}}
-.strip{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;height:100%;
-  scrollbar-width:thin;-webkit-overflow-scrolling:touch;position:relative;z-index:1}
-.strip img{flex:0 0 100%;width:100%;height:100%;object-fit:cover;scroll-snap-align:start;display:block;
-  color:transparent;font-size:0}
-.media .count{position:absolute;right:9px;bottom:9px;background:rgba(0,0,0,.66);color:#fff;
-  font-size:11.5px;padding:3px 9px;border-radius:999px;pointer-events:none;z-index:2}
-/* The tile sits permanently behind the photos: loaded images hide it, while an image
-   that 404s OR one that simply never resolves both leave the listing link reachable. */
-.media .tile{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-  gap:9px;text-decoration:none;color:var(--dim);font-size:14px;flex-direction:column;z-index:0}
-.media .tile-ico{font-size:26px;opacity:.5}
-.media.failed .strip,.media.failed .count{display:none}
+  .tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .tag{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.06em;
+    text-transform:uppercase;padding:3px 8px;border-radius:5px}
+  .tag.ok{background:var(--accent-soft);color:var(--accent)}
+  .tag.new{background:var(--new-soft);color:var(--new)}
+  .tag.pend{background:var(--warn-soft);color:var(--warn)}
 
-.body{padding:17px 18px 18px;display:flex;flex-direction:column;flex:1}
-.badges{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:9px}
-.badges:empty{display:none}
-.b{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
-  padding:3px 8px;border-radius:5px;border:1px solid transparent}
-.b.new{background:var(--newbg);color:var(--new);border-color:currentColor}
-.b.flag{background:var(--warnbg);color:var(--warn);border-color:currentColor}
-.b.pend{background:var(--pendbg);color:var(--pend);border-color:currentColor}
-.b.acre,.b.type{background:transparent;color:var(--dim);border-color:var(--line)}
-h3{margin:0;font-size:18px;letter-spacing:-.01em;line-height:1.3}
-h3 a{text-decoration:none}
-h3 a:hover{color:var(--accent)}
-.place{color:var(--dim);font-size:13.5px;margin-top:1px}
-.price{font-size:23px;font-weight:660;margin:11px 0 3px;letter-spacing:-.02em;
-  display:flex;align-items:baseline;flex-wrap:wrap;gap:9px}
-.ppa{font-size:12.5px;font-weight:500;color:var(--dim);letter-spacing:0}
-.delta{font-size:12.5px;font-weight:600;letter-spacing:0}
-.delta.down{color:var(--new)} .delta.up{color:var(--pend)}
-.facts{display:flex;flex-wrap:wrap;gap:5px 14px;font-size:13.5px;color:var(--dim);margin:8px 0 10px}
-.facts b{color:var(--ink);font-weight:620}
-.pool{font-size:13px;background:var(--newbg);border-radius:7px;
-  padding:6px 10px;margin-bottom:8px;line-height:1.45}
-@media (prefers-color-scheme:dark){.pool{color:var(--new)}}
-.view{font-size:12.5px;color:var(--dim);margin-bottom:8px}
-.sum{font-size:13.5px;color:var(--dim);margin:2px 0 10px;line-height:1.55}
-.note{font-size:13px;line-height:1.55;background:var(--warnbg);border-radius:8px;
-  padding:9px 11px;margin:0 0 10px}
-.note b{color:var(--warn)}
-.meta{margin-top:auto;padding-top:11px;border-top:1px solid var(--line);
-  font-size:11.5px;color:var(--dim);letter-spacing:.02em}
+  .price{font-size:1.5rem;font-weight:650;letter-spacing:-.025em;margin:0}
+  .pricechg{display:block;font-size:.8rem;font-weight:700;margin-top:3px}
+  .pricechg.down{color:var(--accent)} .pricechg.up{color:var(--miss)}
+  .addr{font-weight:600;margin:6px 0 2px}
+  .city{color:var(--muted);font-size:.88rem;margin:0 0 14px}
+  .facts{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  .fact{background:var(--bg);border:1px solid var(--line);border-radius:6px;
+    padding:3px 9px;font-size:.79rem}
+  .fact.pool{background:var(--accent-soft);border-color:transparent;color:var(--accent);font-weight:600}
+  .fact.acres.pref{background:var(--accent-soft);border-color:transparent;color:var(--accent);font-weight:600}
+  .pooldetail{font-size:.8rem;color:var(--accent);margin:0 0 12px;font-weight:600}
+  .note{font-size:.88rem;color:var(--muted);margin:0 0 14px;flex:1}
+  .flagnote{font-size:.8rem;color:var(--warn);background:var(--warn-soft);
+    border-radius:7px;padding:8px 10px;margin:0 0 14px}
 
-.tblwrap{overflow-x:auto;background:var(--panel);border:1px solid var(--line);
-  border-radius:12px;box-shadow:var(--shadow)}
-table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:560px}
-th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
-th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--dim);font-weight:600}
-tr:last-child td{border-bottom:0}
-td.num{text-align:right;font-variant-numeric:tabular-nums}
-td.miss{color:var(--warn);font-size:12.5px}
+  .micro{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 14px;margin:0 0 16px;
+    padding-top:14px;border-top:1px solid var(--line)}
+  .micro div{min-width:0}
+  .micro dt{font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  .micro dd{margin:1px 0 0;font-size:.84rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-.list{list-style:none;padding:0;margin:0;display:grid;gap:9px}
-.list li{background:var(--panel);border:1px solid var(--line);border-radius:10px;
-  padding:12px 15px;font-size:13.5px;box-shadow:var(--shadow)}
-.list b{display:block;margin-bottom:2px}
-.list span{color:var(--dim)}
+  .links{display:flex;gap:8px;flex-wrap:wrap}
+  a.btn{display:inline-block;text-decoration:none;color:#fff;background:var(--accent);font-weight:600;
+    font-size:.87rem;border:1px solid var(--accent);border-radius:8px;padding:8px 13px}
+  a.btn.ghost{background:transparent;color:var(--accent);border-color:var(--line)}
+  a.btn:hover{filter:brightness(1.07)}
 
-details{margin-top:12px}
-summary{cursor:pointer;font-size:14px;color:var(--accent);padding:6px 0}
-footer{margin-top:56px;padding-top:22px;border-top:1px solid var(--line);
-  color:var(--dim);font-size:12.5px;line-height:1.7}
-footer code{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:12px}
+  .banner{background:var(--new-soft);border:1px solid var(--line);border-left:4px solid var(--new);
+    border-radius:10px;padding:16px 18px;margin:26px 0 8px;font-size:.92rem}
+  .banner h3{margin:0 0 6px;font-size:1rem}
+  .banner p{margin:0;color:var(--muted)}
+  .banner ul{margin:8px 0 0;padding-left:20px;color:var(--muted)}
+
+  .tablewrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:12px}
+  table{width:100%;border-collapse:collapse;font-size:.87rem}
+  th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  td a{color:var(--accent);font-weight:600;text-decoration:none}
+  td a:hover{text-decoration:underline}
+  footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);
+    color:var(--muted);font-size:.84rem}
+  footer code{background:var(--card);padding:1px 5px;border-radius:4px}
+  @media (max-width:520px){ h1{font-size:1.6rem} .wrap{padding:28px 14px 56px} }
 </style>
 </head>
 <body>
 <div class="wrap">
 
 <header>
-  <h1>Homes with a pool on acreage<br><span>Shingle Springs &middot; Rescue &middot; Placerville</span></h1>
-  <p class="sub">Last checked <strong>2026-08-14</strong> against the live MetroList MLS feed.</p>
-  <div class="crit">
-    <span>4+ beds</span><span>3+ baths</span><span>Pool required</span>
-    <span>2.5+ acres (5+ preferred)</span>
-    <span>Under $1.5M</span>
-  </div>
-  <div class="stats">
-    <div class="stat"><span class="v">7</span><span class="k">active matches</span></div>
-    <div class="stat"><span class="v">0</span><span class="k">new this run</span></div>
-    <div class="stat"><span class="v">$969K–$1.49M</span><span class="k">price range</span></div>
-    <div class="stat"><span class="v">5–40</span><span class="k">acres</span></div>
-    <div class="stat"><span class="v">297</span><span class="k">listings scanned</span></div>
+  <h1>House Hunt: El Dorado County</h1>
+  <p class="sub">Shingle Springs &middot; Rescue &middot; Placerville — updated
+    <strong>2026-08-15</strong> (previous run 2026-08-14)</p>
+  <div class="criteria">
+    <span class="chip">4+ bedrooms</span>
+    <span class="chip">3+ full bathrooms</span>
+    <span class="chip">Pool required</span>
+    <span class="chip">2.5+ acres (5+ preferred)</span>
+    <span class="chip">Max $1.5M</span>
   </div>
 </header>
 
-<div class="strip-empty"><strong>Nothing new this run.</strong> No listings entered the market,
-     none changed price, and none dropped off. All 7 matches below were verified again
-     today; the most recent movement was on 2026-08-13.</div><div class="strip-relist"><strong>&#8635; 1 listing is relisted, not sold.</strong>
-     <ul><li><b>1781 Springvale Rd, Placerville</b><span><b class="cut">&darr; $250,000 (16.7%)</b> — now $1,250,000, was $1,500,000. Relisted under MLS 226100125 (was 226093241), so it dropped out of the primary feed on 2026-08-08 and has not returned to it since. <b>Re-verify before acting</b> — a relist can change beds, baths or amenities, and these figures come from the cross-check feed, not a verified detail page. <a href="https://www.redfin.com/CA/Placerville/1781-Springvale-Rd-95667/home/167348318" target="_blank" rel="noopener">View listing &rarr;</a></span></li></ul></div>
+<div class="stats">
+  <div class="stat"><b>7</b><span>Active matches</span></div>
+  <div class="stat"><b>0</b><span>New this run</span></div>
+  <div class="stat"><b>$0.969M</b><span>Entry price</span></div>
+  <div class="stat"><b>40 ac</b><span>Most land</span></div>
+  <div class="stat"><b>0</b><span>Removed</span></div>
+</div>
 
-<h2>All 7 matches</h2>
-<div class="grid"><article class="card " id="6881-sagittarius-dr-placerville">
-  <div class="media"><div class="strip"><img src="https://m1.cbhomes.com/p/371/226064449/d1EFFADd18624f4/full.webp" alt="6881 Sagittarius Dr, Placerville — photo 1" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m1.cbhomes.com/p/371/226064449/A4DAD1CE3D25422/full.webp" alt="6881 Sagittarius Dr, Placerville — photo 2" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m.cbhomes.com/p/371/226064449/A89aB686728049c/full.webp" alt="6881 Sagittarius Dr, Placerville — photo 3" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m1.cbhomes.com/p/371/226064449/baC1d4b8Cd63425/full.webp" alt="6881 Sagittarius Dr, Placerville — photo 4" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m.cbhomes.com/p/371/226064449/d475Cc42E60C4e6/full.webp" alt="6881 Sagittarius Dr, Placerville — photo 5" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m1.cbhomes.com/p/371/226064449/DfCc19f787db472/full.webp" alt="6881 Sagittarius Dr, Placerville — photo 6" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"></div><span class="count">6 photos &middot; scroll &rarr;</span><a class="tile" href="https://www.coldwellbankerhomes.com/ca/placerville/6881-sagittarius-dr/pid_72017706/" target="_blank" rel="noopener"><span class="tile-ico" aria-hidden="true">&#9968;</span><span class="tile-txt">View on coldwellbankerhomes.com &rarr;</span></a></div>
-  <div class="body">
-    <div class="badges"><span class="b acre">5+ acres</span></div>
-    <h3><a href="https://www.coldwellbankerhomes.com/ca/placerville/6881-sagittarius-dr/pid_72017706/" target="_blank" rel="noopener">6881 Sagittarius Dr</a></h3>
-    <div class="place">Placerville, CA 95667</div>
-    <div class="price">$1,489,000<span class="ppa">$37K/acre</span></div>
-    <div class="facts"><span><b>4</b> bd</span><span><b>4</b> ba</span><span><b>5,351</b> sqft</span><span><b>40</b> acres</span><span>built <b>2005</b></span></div>
-    <div class="pool"><span aria-hidden="true">&#127946;</span> Built-In, On Lot, Pool House, Pool Sweep, Salt Water, Other</div>
-    <div class="view">Views: Panoramic, Ridge, Other, Mountains</div>
-    <p class="sum">Crafted as the builder&#39;s own residence, this extraordinary European Country-inspired estate was designed without compromise. From its commanding setting on 40 acres with sweeping Sierra foothill views and timeless architectural details, every aspect of the property reflects quality and enduring elegance. From the moment you arrive, the home makes a striking impression, thoughtfully designed to fra&hellip;</p>
-    
-    <div class="meta">MLS 226064449 &middot; listed 2026-06-16 &middot; 3-car garage &middot; Well</div>
-  </div>
-</article><article class="card " id="4071-voyager-way-shingle-springs">
-  <div class="media"><div class="strip"><img src="https://m.cbhomes.com/p/371/226082753/174d2448488d4C7/full.webp" alt="4071 Voyager Way, Shingle Springs — photo 1" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m1.cbhomes.com/p/371/226082753/50843B5EC3D94bd/full.webp" alt="4071 Voyager Way, Shingle Springs — photo 2" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m.cbhomes.com/p/371/226082753/11e01b187E1144B/full.webp" alt="4071 Voyager Way, Shingle Springs — photo 3" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m1.cbhomes.com/p/371/226082753/9cdf364E011e4f4/full.webp" alt="4071 Voyager Way, Shingle Springs — photo 4" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m.cbhomes.com/p/371/226082753/5EcCf88500cF441/full.webp" alt="4071 Voyager Way, Shingle Springs — photo 5" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m1.cbhomes.com/p/371/226082753/b4Cbc88b251b422/full.webp" alt="4071 Voyager Way, Shingle Springs — photo 6" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"></div><span class="count">6 photos &middot; scroll &rarr;</span><a class="tile" href="https://www.coldwellbankerhomes.com/ca/shingle-springs/4071-voyager-way/pid_73037949/" target="_blank" rel="noopener"><span class="tile-ico" aria-hidden="true">&#9968;</span><span class="tile-txt">View on coldwellbankerhomes.com &rarr;</span></a></div>
-  <div class="body">
-    <div class="badges"><span class="b acre">5+ acres</span></div>
-    <h3><a href="https://www.coldwellbankerhomes.com/ca/shingle-springs/4071-voyager-way/pid_73037949/" target="_blank" rel="noopener">4071 Voyager Way</a></h3>
-    <div class="place">Shingle Springs, CA 95682</div>
-    <div class="price">$1,299,000<span class="ppa">$258K/acre</span></div>
-    <div class="facts"><span><b>4</b> bd</span><span><b>3</b> ba</span><span><b>3,132</b> sqft</span><span><b>5.03</b> acres</span><span>built <b>2003</b></span></div>
-    <div class="pool"><span aria-hidden="true">&#127946;</span> Built-In, Salt Water</div>
-    <div class="view">Views: Panoramic, Forest, Valley, Hills</div>
-    <p class="sum">Escape the hustle and bustle and discover your own private retreat in Shingle Springs. Set on approximately 5 private acres with sweeping hillside views, this single-story custom home offers over 3,000 sq. ft. of thoughtfully designed living space with 4 bedrooms, 3 full baths and an impressive 4-car garage.    The outdoor setting is where this property truly shines. A stunning infinity-edge saltw&hellip;</p>
-    
-    <div class="meta">MLS 226082753 &middot; listed 2026-08-13 &middot; 4-car garage &middot; Well</div>
-  </div>
-</article><article class="card " id="5551-saddlehorn-rd-shingle-springs">
-  <div class="media"><div class="strip"><img src="https://m.cbhomes.com/p/371/226083864/245D9C20c9f74Ec/full.webp" alt="5551 Saddlehorn Rd, Shingle Springs — photo 1" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m1.cbhomes.com/p/371/226083864/881f2d640421423/full.webp" alt="5551 Saddlehorn Rd, Shingle Springs — photo 2" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m.cbhomes.com/p/371/226083864/762EbF4a2F284A1/full.webp" alt="5551 Saddlehorn Rd, Shingle Springs — photo 3" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m1.cbhomes.com/p/371/226083864/BA8E193B566b4d5/full.webp" alt="5551 Saddlehorn Rd, Shingle Springs — photo 4" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m.cbhomes.com/p/371/226083864/5BB5D4722f84410/full.webp" alt="5551 Saddlehorn Rd, Shingle Springs — photo 5" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m1.cbhomes.com/p/371/226083864/A7bb3FBB35924D2/full.webp" alt="5551 Saddlehorn Rd, Shingle Springs — photo 6" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"></div><span class="count">6 photos &middot; scroll &rarr;</span><a class="tile" href="https://www.coldwellbankerhomes.com/ca/shingle-springs/5551-saddlehorn-rd/pid_72318162/" target="_blank" rel="noopener"><span class="tile-ico" aria-hidden="true">&#9968;</span><span class="tile-txt">View on coldwellbankerhomes.com &rarr;</span></a></div>
-  <div class="body">
-    <div class="badges"><span class="b acre">5+ acres</span></div>
-    <h3><a href="https://www.coldwellbankerhomes.com/ca/shingle-springs/5551-saddlehorn-rd/pid_72318162/" target="_blank" rel="noopener">5551 Saddlehorn Rd</a></h3>
-    <div class="place">Shingle Springs, CA 95682</div>
-    <div class="price">$1,200,000<span class="ppa">$119K/acre</span></div>
-    <div class="facts"><span><b>4</b> bd</span><span><b>3</b> ba</span><span><b>3,400</b> sqft</span><span><b>10.11</b> acres</span><span>built <b>1988</b></span></div>
-    <div class="pool"><span aria-hidden="true">&#127946;</span> Built-In</div>
-    
-    <p class="sum">Just minutes from town yet worlds away, this 10 acre sanctuary delivers the ultimate retreat lifestyle. Step inside to discover a beautifully updated home with 4 bedrooms, 3 baths, and an inviting upstairs game room complete with a wet bar  perfect for gatherings. The renovated kitchen shines with quartz counters, stainless appliances, and beautiful white cabinetry, flowing seamlessly into the fam&hellip;</p>
-    
-    <div class="meta">MLS 226083864 &middot; listed 2026-07-03 &middot; 3-car garage &middot; Well</div>
-  </div>
-</article><article class="card " id="3720-four-springs-dr-rescue">
-  <div class="media"><div class="strip"><img src="https://m.cbhomes.com/p/371/226083791/2Ebcf7d0713D413/full.webp" alt="3720 Four Springs Dr, Rescue — photo 1" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m1.cbhomes.com/p/371/226083791/6d882eA9dba347D/full.webp" alt="3720 Four Springs Dr, Rescue — photo 2" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m.cbhomes.com/p/371/226083791/26b1693C05Ad41d/full.webp" alt="3720 Four Springs Dr, Rescue — photo 3" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m1.cbhomes.com/p/371/226083791/B26472A278f54cA/full.webp" alt="3720 Four Springs Dr, Rescue — photo 4" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m.cbhomes.com/p/371/226083791/AAA3F5FD3Da745C/full.webp" alt="3720 Four Springs Dr, Rescue — photo 5" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m1.cbhomes.com/p/371/226083791/c1F68F3987C3486/full.webp" alt="3720 Four Springs Dr, Rescue — photo 6" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"></div><span class="count">6 photos &middot; scroll &rarr;</span><a class="tile" href="https://www.coldwellbankerhomes.com/ca/rescue/3720-four-springs-dr/pid_72298813/" target="_blank" rel="noopener"><span class="tile-ico" aria-hidden="true">&#9968;</span><span class="tile-txt">View on coldwellbankerhomes.com &rarr;</span></a></div>
-  <div class="body">
-    <div class="badges"><span class="b acre">5+ acres</span></div>
-    <h3><a href="https://www.coldwellbankerhomes.com/ca/rescue/3720-four-springs-dr/pid_72298813/" target="_blank" rel="noopener">3720 Four Springs Dr</a></h3>
-    <div class="place">Rescue, CA 95672</div>
-    <div class="price">$1,199,900<span class="ppa">$205K/acre</span></div>
-    <div class="facts"><span><b>4</b> bd</span><span><b>3</b> ba</span><span><b>2,506</b> sqft</span><span><b>5.86</b> acres</span><span>built <b>1989</b></span></div>
-    <div class="pool"><span aria-hidden="true">&#127946;</span> Built-In, On Lot, Pool Sweep, Gunite Construction</div>
-    <div class="view">Views: City Lights, Pasture, Hills, Woods</div>
-    <p class="sum">Sought after area. Minutes from shopping, schools.  Country living at its finest. Situated in a serene, park-like setting, this property offers unparalleled tranquility.  End of road privacy. This custom-built two story family residence offers four bedrooms, a formal dining room, separate living and family spaces, and a chef&#39;s dream kitchen, complemented by three bathrooms. Additionally, there is &hellip;</p>
-    
-    <div class="meta">MLS 226083791 &middot; listed 2026-07-02 &middot; 3-car garage &middot; Well</div>
-  </div>
-</article><article class="card " id="3784-cattle-dr-shingle-springs">
-  <div class="media"><div class="strip"><img src="https://m.cbhomes.com/p/371/226092223/CD31ec5b6eb1413/full.webp" alt="3784 Cattle Dr, Shingle Springs — photo 1" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m1.cbhomes.com/p/371/226092223/Ae0EEf0c3A794FE/full.webp" alt="3784 Cattle Dr, Shingle Springs — photo 2" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m.cbhomes.com/p/371/226092223/71f2D5d81f42482/full.webp" alt="3784 Cattle Dr, Shingle Springs — photo 3" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m1.cbhomes.com/p/371/226092223/51421823567B44a/full.webp" alt="3784 Cattle Dr, Shingle Springs — photo 4" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m.cbhomes.com/p/371/226092223/B1D3416F4b7a4dF/full.webp" alt="3784 Cattle Dr, Shingle Springs — photo 5" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m1.cbhomes.com/p/371/226092223/e415DFc96082445/full.webp" alt="3784 Cattle Dr, Shingle Springs — photo 6" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"></div><span class="count">6 photos &middot; scroll &rarr;</span><a class="tile" href="https://www.coldwellbankerhomes.com/ca/shingle-springs/3784-cattle-dr/pid_72631576/" target="_blank" rel="noopener"><span class="tile-ico" aria-hidden="true">&#9968;</span><span class="tile-txt">View on coldwellbankerhomes.com &rarr;</span></a></div>
-  <div class="body">
-    <div class="badges"><span class="b acre">5+ acres</span></div>
-    <h3><a href="https://www.coldwellbankerhomes.com/ca/shingle-springs/3784-cattle-dr/pid_72631576/" target="_blank" rel="noopener">3784 Cattle Dr</a></h3>
-    <div class="place">Shingle Springs, CA 95682</div>
-    <div class="price">$1,050,000<span class="ppa">$210K/acre</span><span class="delta down">&darr; $100,000 (8.7%) from $1,150,000</span></div>
-    <div class="facts"><span><b>4</b> bd</span><span><b>3.5</b> ba</span><span><b>2,295</b> sqft</span><span><b>5</b> acres</span><span>built <b>1994</b></span></div>
-    <div class="pool"><span aria-hidden="true">&#127946;</span> Built-In</div>
-    
-    <p class="sum">Custom Milton Estates pool home with great views! Home is situated on 5 ac of usable land with many fruit trees and endless opportunities. Features include great room concept with open spacious feel along with seller owned solar. Abundant natural light streams through windows. Well appointed kitchen with granite counter tops, Viking range and large center island. Dining area with built in lighted &hellip;</p>
-    
-    <div class="meta">MLS 226092223 &middot; listed 2026-07-21 &middot; 4-car garage &middot; Well</div>
-  </div>
-</article><article class="card " id="2565-stagecoach-rd-placerville">
-  <div class="media"><div class="strip"><img src="https://m1.cbhomes.com/p/371/226059973/6e688FC8324a4f7/full.webp" alt="2565 Stagecoach Rd, Placerville — photo 1" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m1.cbhomes.com/p/371/226059973/d4C3c39b87F14Fd/full.webp" alt="2565 Stagecoach Rd, Placerville — photo 2" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m.cbhomes.com/p/371/226059973/93a16D8E4b14403/full.webp" alt="2565 Stagecoach Rd, Placerville — photo 3" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m1.cbhomes.com/p/371/226059973/5E1e2918Ce29427/full.webp" alt="2565 Stagecoach Rd, Placerville — photo 4" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m.cbhomes.com/p/371/226059973/c0a0E7833d1d448/full.webp" alt="2565 Stagecoach Rd, Placerville — photo 5" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m1.cbhomes.com/p/371/226059973/aF0750449336415/full.webp" alt="2565 Stagecoach Rd, Placerville — photo 6" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"></div><span class="count">6 photos &middot; scroll &rarr;</span><a class="tile" href="https://www.coldwellbankerhomes.com/ca/placerville/2565-stagecoach-rd/pid_72639639/" target="_blank" rel="noopener"><span class="tile-ico" aria-hidden="true">&#9968;</span><span class="tile-txt">View on coldwellbankerhomes.com &rarr;</span></a></div>
-  <div class="body">
-    <div class="badges"><span class="b acre">5+ acres</span></div>
-    <h3><a href="https://www.coldwellbankerhomes.com/ca/placerville/2565-stagecoach-rd/pid_72639639/" target="_blank" rel="noopener">2565 Stagecoach Rd</a></h3>
-    <div class="place">Placerville, CA 95667</div>
-    <div class="price">$975,000<span class="ppa">$193K/acre</span></div>
-    <div class="facts"><span><b>5</b> bd</span><span><b>4</b> ba</span><span><b>3,885</b> sqft</span><span><b>5.05</b> acres</span><span>built <b>1995</b></span></div>
-    <div class="pool"><span aria-hidden="true">&#127946;</span> Built-In, Pool Sweep, Fenced, Gunite Construction</div>
-    
-    <p class="sum">Nestled on a stunning 5-acre homesite in the prestigious gated community of Greenstone Country, this custom estate blends luxury, privacy, and outdoor recreation. Surrounded by mature oak trees and rock outcroppings, the approximately 3,885 sq. ft. home is designed for comfortable living and entertaining.    The spacious floorplan offers 5-6 bedrooms, 4 bathrooms, a 4-car garage, and a detached 2-&hellip;</p>
-    
-    <div class="meta">MLS 226059973 &middot; listed 2026-07-22 &middot; 4-car garage &middot; Public, Meter on Site, Water District</div>
-  </div>
-</article><article class="card " id="1315-arrowbee-dr-placerville">
-  <div class="media"><div class="strip"><img src="https://m1.cbhomes.com/p/371/226085035/0A1b20073C4D4FD/full.webp" alt="1315 Arrowbee Dr, Placerville — photo 1" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m1.cbhomes.com/p/371/226085035/5Dc482F1fC9A4c0/full.webp" alt="1315 Arrowbee Dr, Placerville — photo 2" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m.cbhomes.com/p/371/226085035/A096416DC394486/full.webp" alt="1315 Arrowbee Dr, Placerville — photo 3" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m1.cbhomes.com/p/371/226085035/43bD407F2161411/full.webp" alt="1315 Arrowbee Dr, Placerville — photo 4" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m.cbhomes.com/p/371/226085035/596e6049253f498/full.webp" alt="1315 Arrowbee Dr, Placerville — photo 5" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m1.cbhomes.com/p/371/226085035/09dD7B42eBd84b8/full.webp" alt="1315 Arrowbee Dr, Placerville — photo 6" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"></div><span class="count">6 photos &middot; scroll &rarr;</span><a class="tile" href="https://www.coldwellbankerhomes.com/ca/placerville/1315-arrowbee-dr/pid_72934505/" target="_blank" rel="noopener"><span class="tile-ico" aria-hidden="true">&#9968;</span><span class="tile-txt">View on coldwellbankerhomes.com &rarr;</span></a></div>
-  <div class="body">
-    <div class="badges"><span class="b acre">5+ acres</span><span class="b type">Multi-Family</span></div>
-    <h3><a href="https://www.coldwellbankerhomes.com/ca/placerville/1315-arrowbee-dr/pid_72934505/" target="_blank" rel="noopener">1315 Arrowbee Dr</a></h3>
-    <div class="place">Placerville, CA 95667</div>
-    <div class="price">$969,000<span class="ppa">$194K/acre</span></div>
-    <div class="facts"><span><b>4</b> bd</span><span><b>3</b> ba</span><span><b>2,780</b> sqft</span><span><b>5</b> acres</span><span>built <b>1971</b></span></div>
-    <div class="pool"><span aria-hidden="true">&#127946;</span> Built-In, Gunite Construction</div>
-    <div class="view">Views: Pasture</div>
-    <p class="sum">Welcome to this charming mini ranch with an ADU, tucked behind a gated entrance at the end of a paved driveway, offering privacy, versatility, and lovely views in a peaceful country setting. The single-story ranch home design welcomes you into a light-filled living room where vaulted ceilings and expansive picture windows showcase the scenery beyond. The updated kitchen features granite countertop&hellip;</p>
-    
-    <div class="meta">MLS 226085035 &middot; listed 2026-08-06 &middot; 2-car garage &middot; Public</div>
-  </div>
-</article></div>
-
-<h2>Under contract</h2>
-<p class="lede">These tick every box but are already in escrow. Kept visible only because pending deals do fall through.</p>
-<div class="grid"><article class="card dim" id="3033-ridgeline-dr-rescue">
-  <div class="media"><div class="strip"><img src="https://m1.cbhomes.com/p/371/226074530/1758ca1E24164B0/full.webp" alt="3033 Ridgeline Dr, Rescue — photo 1" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m1.cbhomes.com/p/371/226074530/005e799D04C541D/full.webp" alt="3033 Ridgeline Dr, Rescue — photo 2" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m.cbhomes.com/p/371/226074530/6185a51521d6488/full.webp" alt="3033 Ridgeline Dr, Rescue — photo 3" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m1.cbhomes.com/p/371/226074530/b60287E69E9a4bc/full.webp" alt="3033 Ridgeline Dr, Rescue — photo 4" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m.cbhomes.com/p/371/226074530/065bc4334AC0490/full.webp" alt="3033 Ridgeline Dr, Rescue — photo 5" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m1.cbhomes.com/p/371/226074530/20D09Ee1dAFA48d/full.webp" alt="3033 Ridgeline Dr, Rescue — photo 6" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"></div><span class="count">6 photos &middot; scroll &rarr;</span><a class="tile" href="https://www.coldwellbankerhomes.com/ca/rescue/3033-ridgeline-dr/pid_71947550/" target="_blank" rel="noopener"><span class="tile-ico" aria-hidden="true">&#9968;</span><span class="tile-txt">View on coldwellbankerhomes.com &rarr;</span></a></div>
-  <div class="body">
-    <div class="badges"><span class="b pend">Sale pending</span><span class="b acre">5+ acres</span></div>
-    <h3><a href="https://www.coldwellbankerhomes.com/ca/rescue/3033-ridgeline-dr/pid_71947550/" target="_blank" rel="noopener">3033 Ridgeline Dr</a></h3>
-    <div class="place">Rescue, CA 95672</div>
-    <div class="price">$1,349,999<span class="ppa">$270K/acre</span></div>
-    <div class="facts"><span><b>4</b> bd</span><span><b>3</b> ba</span><span><b>3,281</b> sqft</span><span><b>5</b> acres</span><span>built <b>1992</b></span></div>
-    <div class="pool"><span aria-hidden="true">&#127946;</span> Built-In</div>
-    
-    <p class="sum">Welcome to a residence where privacy, luxury, and energy efficiency come together in one exceptional property. Nestled in a gated community on five peaceful acres, this beautifully updated home offers the serenity of country living with the convenience of El Dorado Hills&#39; premier shopping, dining, entertainment, and top-rated schools just minutes away.    Designed for the way Californians want to &hellip;</p>
-    <p class="note"><b>Worth knowing:</b> Meets every criterion but is under contract (Sale Pending). Kept on file in case the deal falls through.</p>
-    <div class="meta">MLS 226074530 &middot; listed 2026-06-12 &middot; pending since 2026-08-02 &middot; 3-car garage &middot; Well</div>
-  </div>
-</article><article class="card dim" id="3565-farview-ct-rescue">
-  <div class="media"><div class="strip"><img src="https://m1.cbhomes.com/p/371/226087456/9E02f6e2aE934D6/full.webp" alt="3565 Farview Ct, Rescue — photo 1" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m1.cbhomes.com/p/371/226087456/aAEE71820A394FA/full.webp" alt="3565 Farview Ct, Rescue — photo 2" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m.cbhomes.com/p/371/226087456/44c37c7f4cb24b0/full.webp" alt="3565 Farview Ct, Rescue — photo 3" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m1.cbhomes.com/p/371/226087456/dB966bbCDcd546c/full.webp" alt="3565 Farview Ct, Rescue — photo 4" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m.cbhomes.com/p/371/226087456/82A28bdb4473408/full.webp" alt="3565 Farview Ct, Rescue — photo 5" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m1.cbhomes.com/p/371/226087456/209417eB6a81453/full.webp" alt="3565 Farview Ct, Rescue — photo 6" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"></div><span class="count">6 photos &middot; scroll &rarr;</span><a class="tile" href="https://www.coldwellbankerhomes.com/ca/rescue/3565-farview-ct/pid_72531546/" target="_blank" rel="noopener"><span class="tile-ico" aria-hidden="true">&#9968;</span><span class="tile-txt">View on coldwellbankerhomes.com &rarr;</span></a></div>
-  <div class="body">
-    <div class="badges"><span class="b pend">Sale pending</span><span class="b acre">5+ acres</span></div>
-    <h3><a href="https://www.coldwellbankerhomes.com/ca/rescue/3565-farview-ct/pid_72531546/" target="_blank" rel="noopener">3565 Farview Ct</a></h3>
-    <div class="place">Rescue, CA 95672</div>
-    <div class="price">$1,289,000<span class="ppa">$134K/acre</span></div>
-    <div class="facts"><span><b>4</b> bd</span><span><b>4</b> ba</span><span><b>3,227</b> sqft</span><span><b>9.64</b> acres</span><span>built <b>1993</b></span></div>
-    <div class="pool"><span aria-hidden="true">&#127946;</span> Built-In, On Lot, Pool House, Solar Heat</div>
-    <div class="view">Views: Panoramic, City Lights, Valley, Hills, Water, Lake, Woods, Mountains</div>
-    <p class="sum">Perched at the end of a private court on its own private road, this fully remodeled custom hilltop estate offers breathtaking 360-degree panoramic views stretching across Folsom Lake, Bass Lake, the Sutter Buttes, Sierras and sparkling city lights. Designed to embrace its spectacular surroundings, every room showcases incredible vistas through windows and private sliding glass doors. This exceptio&hellip;</p>
-    <p class="note"><b>Worth knowing:</b> Meets every criterion but is under contract (Sale Pending). Kept on file in case the deal falls through.</p>
-    <div class="meta">MLS 226087456 &middot; listed 2026-07-16 &middot; pending since 2026-08-09 &middot; 3-car garage &middot; Well</div>
-  </div>
-</article><article class="card dim" id="1988-cold-springs-rd-placerville">
-  <div class="media"><div class="strip"><img src="https://m1.cbhomes.com/p/371/226033527/67D4c74cf6314cC/full.webp" alt="1988 Cold Springs Rd, Placerville — photo 1" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m1.cbhomes.com/p/371/226033527/4049C87686094d6/full.webp" alt="1988 Cold Springs Rd, Placerville — photo 2" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m.cbhomes.com/p/371/226033527/41c104a8B1034E8/full.webp" alt="1988 Cold Springs Rd, Placerville — photo 3" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m1.cbhomes.com/p/371/226033527/Fa9cc4d98cD6489/full.webp" alt="1988 Cold Springs Rd, Placerville — photo 4" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m.cbhomes.com/p/371/226033527/bB59eEbBBd1542A/full.webp" alt="1988 Cold Springs Rd, Placerville — photo 5" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><img src="https://m1.cbhomes.com/p/371/226033527/a5CB0cEf9eFF434/full.webp" alt="1988 Cold Springs Rd, Placerville — photo 6" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"></div><span class="count">6 photos &middot; scroll &rarr;</span><a class="tile" href="https://www.coldwellbankerhomes.com/ca/placerville/1988-cold-springs-rd/pid_70227860/" target="_blank" rel="noopener"><span class="tile-ico" aria-hidden="true">&#9968;</span><span class="tile-txt">View on coldwellbankerhomes.com &rarr;</span></a></div>
-  <div class="body">
-    <div class="badges"><span class="b pend">Sale pending</span></div>
-    <h3><a href="https://www.coldwellbankerhomes.com/ca/placerville/1988-cold-springs-rd/pid_70227860/" target="_blank" rel="noopener">1988 Cold Springs Rd</a></h3>
-    <div class="place">Placerville, CA 95667</div>
-    <div class="price">$850,000<span class="ppa">$311K/acre</span></div>
-    <div class="facts"><span><b>4</b> bd</span><span><b>3</b> ba</span><span><b>2,909</b> sqft</span><span><b>2.73</b> acres</span><span>built <b>2011</b></span></div>
-    <div class="pool"><span aria-hidden="true">&#127946;</span> Built-In, Pool Cover, Pool/Spa Combo</div>
-    <div class="view">Views: Pasture, Hills, Water</div>
-    <p class="sum">Beautiful farmhouse-inspired home featuring a stunning built-in pool &amp; spa, offering the perfect blend of convenience &amp; peaceful country living just minutes from town. This spacious property includes 4 bedrooms, 3 full bathrooms, a dedicated office or possible 5th bedroom, 2-car garage plus a detached garage/workshop, and sits on 2.73 usable acres with a year-round stream. The open-concept kitchen&hellip;</p>
-    <p class="note"><b>Worth knowing:</b> Meets every criterion but is under contract (Sale Pending). Kept on file in case the deal falls through.</p>
-    <div class="meta">MLS 226033527 &middot; listed 2026-03-20 &middot; pending since 2026-08-02 &middot; 2-car garage &middot; Public</div>
-  </div>
-</article></div>
-
-<h2>Near misses</h2>
-<p class="lede">Active, in the right towns, and clearing 4+ bed / 3+ bath / $1.5M — but each fails exactly one of the two hard filters. Listed in case one of them is negotiable.</p>
-<div class="tblwrap"><table>
-<thead><tr><th>Address</th><th>City</th><th>Price</th><th>Bd/Ba</th><th>Acres</th><th>Fails on</th></tr></thead>
-<tbody><tr>
-  <td><a href="https://www.coldwellbankerhomes.com/ca/placerville/3291-texas-hill-rd/pid_71568712/" target="_blank" rel="noopener">3291 Texas Hill Rd</a></td>
-  <td>Placerville</td><td class="num">$1,350,000</td>
-  <td class="num">4/4</td>
-  <td class="num">1.76</td>
-  <td class="miss">only 1.76 acres</td></tr><tr>
-  <td><a href="https://www.coldwellbankerhomes.com/ca/rescue/2805-aquamarine-circle/pid_71532329/" target="_blank" rel="noopener">2805 Aquamarine Cir</a></td>
-  <td>Rescue</td><td class="num">$699,000</td>
-  <td class="num">4/3</td>
-  <td class="num">0.21</td>
-  <td class="miss">only 0.21 acres</td></tr><tr>
-  <td><a href="https://www.coldwellbankerhomes.com/ca/placerville/1234-rising-hill-w-rd/pid_72120077/" target="_blank" rel="noopener">1234 Rising Hill W Rd</a></td>
-  <td>Placerville</td><td class="num">$685,000</td>
-  <td class="num">4/2.5</td>
-  <td class="num">2.66</td>
-  <td class="miss">only 2.5 baths</td></tr><tr>
-  <td><a href="https://www.coldwellbankerhomes.com/ca/placerville/1635-country-club-dr/pid_70089379/" target="_blank" rel="noopener">1635 Country Club Dr</a></td>
-  <td>Placerville</td><td class="num">$625,000</td>
-  <td class="num">4/3</td>
-  <td class="num">0.61</td>
-  <td class="miss">only 0.61 acres</td></tr><tr>
-  <td><a href="https://www.coldwellbankerhomes.com/ca/placerville/1200-w-el-largo-dr/pid_70987213/" target="_blank" rel="noopener">1200 W El Largo Dr</a></td>
-  <td>Placerville</td><td class="num">$1,200,000</td>
-  <td class="num">5/5</td>
-  <td class="num">5.02</td>
-  <td class="miss">no pool</td></tr><tr>
-  <td><a href="https://www.coldwellbankerhomes.com/ca/placerville/3430-old-ditch-dr/pid_72911450/" target="_blank" rel="noopener">3430 Old Ditch Dr</a></td>
-  <td>Placerville</td><td class="num">$1,175,000</td>
-  <td class="num">4/4</td>
-  <td class="num">5.12</td>
-  <td class="miss">no pool</td></tr><tr>
-  <td><a href="https://www.coldwellbankerhomes.com/ca/placerville/4810-robledo-dr/pid_72301750/" target="_blank" rel="noopener">4810 Robledo Dr</a></td>
-  <td>Placerville</td><td class="num">$1,049,900</td>
-  <td class="num">5/4.5</td>
-  <td class="num">5</td>
-  <td class="miss">no pool</td></tr><tr>
-  <td><a href="https://www.coldwellbankerhomes.com/ca/shingle-springs/5681-honeycomb-ln/pid_72996839/" target="_blank" rel="noopener">5681 Honeycomb Ln</a></td>
-  <td>Shingle Springs</td><td class="num">$950,000</td>
-  <td class="num">4/4.5</td>
-  <td class="num">5</td>
-  <td class="miss">no pool</td></tr><tr>
-  <td><a href="https://www.coldwellbankerhomes.com/ca/placerville/4661-holm-rd/pid_72562836/" target="_blank" rel="noopener">4661 Holm Rd</a></td>
-  <td>Placerville</td><td class="num">$935,000</td>
-  <td class="num">4/4.5</td>
-  <td class="num">5.12</td>
-  <td class="miss">no pool</td></tr><tr>
-  <td><a href="https://www.coldwellbankerhomes.com/ca/placerville/5025-eco-ridge-rd/pid_71882550/" target="_blank" rel="noopener">5025 Eco Ridge Rd</a></td>
-  <td>Placerville</td><td class="num">$799,999</td>
-  <td class="num">4/3</td>
-  <td class="num">4.83</td>
-  <td class="miss">no pool</td></tr><tr>
-  <td><a href="https://www.coldwellbankerhomes.com/ca/placerville/5000-reservation-rd/pid_72035132/" target="_blank" rel="noopener">5000 Reservation Rd</a></td>
-  <td>Placerville</td><td class="num">$799,000</td>
-  <td class="num">4/4.5</td>
-  <td class="num">5</td>
-  <td class="miss">no pool</td></tr><tr>
-  <td><a href="https://www.coldwellbankerhomes.com/ca/rescue/4181-thunderbird-ln/pid_71478521/" target="_blank" rel="noopener">4181 Thunderbird Ln</a></td>
-  <td>Rescue</td><td class="num">$799,000</td>
-  <td class="num">4/3.5</td>
-  <td class="num">10</td>
-  <td class="miss">no pool</td></tr><tr>
-  <td><a href="https://www.coldwellbankerhomes.com/ca/placerville/6560-agape-ct/pid_71736013/" target="_blank" rel="noopener">6560 Agape Ct</a></td>
-  <td>Placerville</td><td class="num">$649,000</td>
-  <td class="num">4/3</td>
-  <td class="num">5.02</td>
-  <td class="miss">no pool</td></tr><tr>
-  <td><a href="https://www.coldwellbankerhomes.com/ca/placerville/6287-oak-hill-rd/pid_71429392/" target="_blank" rel="noopener">6287 Oak Hill Rd</a></td>
-  <td>Placerville</td><td class="num">$599,000</td>
-  <td class="num">4/3</td>
-  <td class="num">10</td>
-  <td class="miss">no pool</td></tr></tbody></table></div>
+<div class="banner">
+  <h3>What changed this run</h3>
+  <p><strong>Nothing moved.</strong> No new listings, no price changes, and nothing left
+  the board since 2026-08-14. All 7 active matches and
+  3 pending were re-verified against the MLS of record today and are unchanged —
+  same prices, same status. The board below is current, not stale.</p>
+</div>
 
 
 
-<details><summary>Checked and ruled out (12)</summary>
-<ul class="list" style="margin-top:12px"><li><b>1601 Velvet Horn Ln, Rescue — $1,100,000</b><span>Still actively listed at $1,100,000 (no price change since last run), 5 acres with a sports pool and slide — but 3 bd / 3 ba, under the 4BR minimum.</span></li><li><b>5135 Bryant Rd, Shingle Springs — $1,690,000</b><span>Over budget; status unverified</span></li><li><b>1900 Deer Valley Rd, Rescue — $1,200,000</b><span>3bd/2ba, no pool</span></li><li><b>Howard Dr, Rescue (5.94 acres) — $2,275,000</b><span>Over budget</span></li><li><b>3359 Saint Ives Ct, Shingle Springs — $2,199,500</b><span>Over budget, only 4bd</span></li><li><b>765 Sierra View Ct, Shingle Springs — $3,499,999</b><span>Far over budget</span></li><li><b>5037 Milton Ranch Rd, Shingle Springs — $4,388,888</b><span>Far over budget</span></li><li><b>5040 Milton Ranch Rd, Shingle Springs</b><span>Not for sale — sold 2019 for $1.4M</span></li><li><b>5457 Bryant Rd, Shingle Springs</b><span>Not for sale — sold 2020 for $1,405,000</span></li><li><b>2800 La Paz Rd, Placerville — $995,000</b><span>4bd/2ba — under both minimums</span></li><li><b>2931 Texas Hill Rd, Placerville</b><span>4bd/2.5ba — under both minimums</span></li><li><b>4370 Hillwood Dr, Shingle Springs — $699,000</b><span>0.25 acres</span></li></ul></details>
+<h2>Still active from earlier runs <span class="count">(7)</span></h2>
+<p class="sectnote">Already on the board last run and still confirmed <strong>Active</strong> on
+MetroList as of 2026-08-15. Any price movement since it was first seen is shown on the card.</p>
+<div class="grid">
+  <article class="card">
+    <div class="media">
+      <a class="fallback" href="https://www.coldwellbankerhomes.com/ca/placerville/6881-sagittarius-dr/pid_72017706/" rel="noopener">View photos &rarr;</a>
+      <div class="strip">
+      <img src="https://m.cbhomes.com/p/371/226064449/A89aB686728049c/pdl23tp.webp" alt="6881 Sagittarius Dr — photo 1 of 6"
+           loading="eager" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226064449/d475Cc42E60C4e6/pdl23tp.webp" alt="6881 Sagittarius Dr — photo 2 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226064449/5c6d138a19244b0/pdl23tp.webp" alt="6881 Sagittarius Dr — photo 3 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226064449/77A180deceB644E/pdl23tp.webp" alt="6881 Sagittarius Dr — photo 4 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226064449/D0Af6Be21c09438/pdl23tp.webp" alt="6881 Sagittarius Dr — photo 5 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226064449/d41055c494cC4B1/pdl23tp.webp" alt="6881 Sagittarius Dr — photo 6 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()"></div>
+      <span class="shots">6 photos &middot; swipe</span>
+    </div>
+    <div class="body">
+      <div class="tags"><span class="tag ok">Active</span></div>
+      <p class="price">$1,489,000</p>
+      <p class="addr">6881 Sagittarius Dr</p>
+      <p class="city">Placerville, CA 95667 &middot; MLS 226064449</p>
+      <div class="facts"><span class="fact">4 bd</span><span class="fact">4 full ba</span><span class="fact">5,351 sqft</span><span class="fact acres pref">40 acres</span><span class="fact pool">Pool</span><span class="fact">Built 2005</span><span class="fact">Horse property</span></div>
+      <p class="pooldetail">Built-In, On Lot, Pool House, Pool Sweep, Salt Water, Other</p>
+      <p class="note">Crafted as the builder&#39;s own residence, this extraordinary European Country-inspired estate was designed without compromise. From its commanding setting on 40 acres with sweeping Sierra foothill views and timeless architectural details, every aspect of the property reflects quality and enduring elegance. From the moment you arrive, the home makes a striking impression, thoughtfully designed to frame a dramatic sightl</p>
+      
+      <dl class="micro">
+        <div><dt>Per acre</dt><dd>$37,225</dd></div>
+        <div><dt>Water</dt><dd>Well</dd></div>
+        <div><dt>Sewer</dt><dd>Septic System</dd></div>
+        <div><dt>HOA</dt><dd>$400</dd></div>
+      </dl>
+      <div class="links">
+        <a class="btn" href="https://www.coldwellbankerhomes.com/ca/placerville/6881-sagittarius-dr/pid_72017706/" rel="noopener">Listing &amp; photos &rarr;</a>
+        <a class="btn ghost" href="https://www.metrolistpro.com/homes/2/6/x/226064449" rel="noopener">MLS record</a>
+      </div>
+    </div>
+  </article>
+
+  <article class="card">
+    <div class="media">
+      <a class="fallback" href="https://www.coldwellbankerhomes.com/ca/shingle-springs/4071-voyager-way/pid_73037949/" rel="noopener">View photos &rarr;</a>
+      <div class="strip">
+      <img src="https://m.cbhomes.com/p/371/226082753/174d2448488d4C7/pdl23tp.webp" alt="4071 Voyager Way — photo 1 of 6"
+           loading="eager" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226082753/11e01b187E1144B/pdl23tp.webp" alt="4071 Voyager Way — photo 2 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226082753/5EcCf88500cF441/pdl23tp.webp" alt="4071 Voyager Way — photo 3 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226082753/bf32bc0849a9474/pdl23tp.webp" alt="4071 Voyager Way — photo 4 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226082753/F1105aAc704a4aF/pdl23tp.webp" alt="4071 Voyager Way — photo 5 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226082753/E790eCF07db2442/pdl23tp.webp" alt="4071 Voyager Way — photo 6 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()"></div>
+      <span class="shots">6 photos &middot; swipe</span>
+    </div>
+    <div class="body">
+      <div class="tags"><span class="tag ok">Active</span></div>
+      <p class="price">$1,299,000</p>
+      <p class="addr">4071 Voyager Way</p>
+      <p class="city">Shingle Springs, CA 95682 &middot; MLS 226082753</p>
+      <div class="facts"><span class="fact">4 bd</span><span class="fact">3 full ba</span><span class="fact">3,132 sqft</span><span class="fact acres pref">5.03 acres</span><span class="fact pool">Pool</span><span class="fact">Built 2003</span></div>
+      <p class="pooldetail">Built-In, Salt Water</p>
+      <p class="note">Escape the hustle and bustle and discover your own private retreat in Shingle Springs. Set on approximately 5 private acres with sweeping hillside views, this single-story custom home offers over 3,000 sq. ft. of thoughtfully designed living space with 4 bedrooms, 3 full baths and an impressive 4-car garage. The outdoor setting is where this property truly shines. A stunning infinity-edge saltwater pool and spa overl</p>
+      
+      <dl class="micro">
+        <div><dt>Per acre</dt><dd>$258,250</dd></div>
+        <div><dt>Water</dt><dd>Well</dd></div>
+        <div><dt>Sewer</dt><dd>Septic System</dd></div>
+        <div><dt>HOA</dt><dd>$500</dd></div>
+      </dl>
+      <div class="links">
+        <a class="btn" href="https://www.coldwellbankerhomes.com/ca/shingle-springs/4071-voyager-way/pid_73037949/" rel="noopener">Listing &amp; photos &rarr;</a>
+        <a class="btn ghost" href="https://www.metrolistpro.com/homes/2/6/x/226082753" rel="noopener">MLS record</a>
+      </div>
+    </div>
+  </article>
+
+  <article class="card">
+    <div class="media">
+      <a class="fallback" href="https://www.coldwellbankerhomes.com/ca/shingle-springs/5551-saddlehorn-rd/pid_72318162/" rel="noopener">View photos &rarr;</a>
+      <div class="strip">
+      <img src="https://m.cbhomes.com/p/371/226083864/762EbF4a2F284A1/pdl23tp.webp" alt="5551 Saddlehorn Rd — photo 1 of 6"
+           loading="eager" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226083864/5BB5D4722f84410/pdl23tp.webp" alt="5551 Saddlehorn Rd — photo 2 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226083864/588Ba0466fFa45e/pdl23tp.webp" alt="5551 Saddlehorn Rd — photo 3 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226083864/47cF1eCfDf624a7/pdl23tp.webp" alt="5551 Saddlehorn Rd — photo 4 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226083864/4071C335315b465/pdl23tp.webp" alt="5551 Saddlehorn Rd — photo 5 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226083864/43a76f63241d4f3/pdl23tp.webp" alt="5551 Saddlehorn Rd — photo 6 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()"></div>
+      <span class="shots">6 photos &middot; swipe</span>
+    </div>
+    <div class="body">
+      <div class="tags"><span class="tag ok">Active</span></div>
+      <p class="price">$1,200,000</p>
+      <p class="addr">5551 Saddlehorn Rd</p>
+      <p class="city">Shingle Springs, CA 95682 &middot; MLS 226083864</p>
+      <div class="facts"><span class="fact">4 bd</span><span class="fact">3 full ba</span><span class="fact">3,400 sqft</span><span class="fact acres pref">10.11 acres</span><span class="fact pool">Pool</span><span class="fact">Built 1988</span><span class="fact">Horse property</span></div>
+      <p class="pooldetail">Built-In</p>
+      <p class="note">Just minutes from town yet worlds away, this 10 acre sanctuary delivers the ultimate retreat lifestyle. Step inside to discover a beautifully updated home with 4 bedrooms, 3 baths, and an inviting upstairs game room complete with a wet bar perfect for gatherings. The renovated kitchen shines with quartz counters, stainless appliances, and beautiful white cabinetry, flowing seamlessly into the family room with soaring</p>
+      
+      <dl class="micro">
+        <div><dt>Per acre</dt><dd>$118,694</dd></div>
+        <div><dt>Water</dt><dd>Well</dd></div>
+        <div><dt>Sewer</dt><dd>Septic System</dd></div>
+        <div><dt>HOA</dt><dd>$2, 078</dd></div>
+      </dl>
+      <div class="links">
+        <a class="btn" href="https://www.coldwellbankerhomes.com/ca/shingle-springs/5551-saddlehorn-rd/pid_72318162/" rel="noopener">Listing &amp; photos &rarr;</a>
+        <a class="btn ghost" href="https://www.metrolistpro.com/homes/2/6/x/226083864" rel="noopener">MLS record</a>
+      </div>
+    </div>
+  </article>
+
+  <article class="card">
+    <div class="media">
+      <a class="fallback" href="https://www.coldwellbankerhomes.com/ca/rescue/3720-four-springs-dr/pid_72298813/" rel="noopener">View photos &rarr;</a>
+      <div class="strip">
+      <img src="https://m.cbhomes.com/p/371/226083791/26b1693C05Ad41d/pdl23tp.webp" alt="3720 Four Springs Dr — photo 1 of 6"
+           loading="eager" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226083791/AAA3F5FD3Da745C/pdl23tp.webp" alt="3720 Four Springs Dr — photo 2 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226083791/cf47C6A8A6134D6/pdl23tp.webp" alt="3720 Four Springs Dr — photo 3 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226083791/6474D8784CE049A/pdl23tp.webp" alt="3720 Four Springs Dr — photo 4 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226083791/56e79e0733034dD/pdl23tp.webp" alt="3720 Four Springs Dr — photo 5 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226083791/2110bFe914ed47e/pdl23tp.webp" alt="3720 Four Springs Dr — photo 6 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()"></div>
+      <span class="shots">6 photos &middot; swipe</span>
+    </div>
+    <div class="body">
+      <div class="tags"><span class="tag ok">Active</span></div>
+      <p class="price">$1,199,900</p>
+      <p class="addr">3720 Four Springs Dr</p>
+      <p class="city">Rescue, CA 95672 &middot; MLS 226083791</p>
+      <div class="facts"><span class="fact">4 bd</span><span class="fact">3 full ba</span><span class="fact">2,506 sqft</span><span class="fact acres pref">5.86 acres</span><span class="fact pool">Pool</span><span class="fact">Built 1989</span><span class="fact">Horse property</span></div>
+      <p class="pooldetail">Built-In, On Lot, Pool Sweep, Gunite Construction</p>
+      <p class="note">Sought after area. Minutes from shopping, schools. Country living at its finest. Situated in a serene, park-like setting, this property offers unparalleled tranquility. End of road privacy. This custom-built two story family residence offers four bedrooms, a formal dining room, separate living and family spaces, and a chef&#39;s dream kitchen, complemented by three bathrooms. Additionally, there is a three-car detached g</p>
+      
+      <dl class="micro">
+        <div><dt>Per acre</dt><dd>$204,761</dd></div>
+        <div><dt>Water</dt><dd>Well</dd></div>
+        <div><dt>Sewer</dt><dd>Septic System</dd></div>
+        <div><dt>HOA</dt><dd>$72</dd></div>
+      </dl>
+      <div class="links">
+        <a class="btn" href="https://www.coldwellbankerhomes.com/ca/rescue/3720-four-springs-dr/pid_72298813/" rel="noopener">Listing &amp; photos &rarr;</a>
+        <a class="btn ghost" href="https://www.metrolistpro.com/homes/2/6/x/226083791" rel="noopener">MLS record</a>
+      </div>
+    </div>
+  </article>
+
+  <article class="card">
+    <div class="media">
+      <a class="fallback" href="https://www.coldwellbankerhomes.com/ca/shingle-springs/3784-cattle-dr/pid_72631576/" rel="noopener">View photos &rarr;</a>
+      <div class="strip">
+      <img src="https://m.cbhomes.com/p/371/226092223/CD31ec5b6eb1413/pdl23tp.webp" alt="3784 Cattle Dr — photo 1 of 6"
+           loading="eager" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226092223/71f2D5d81f42482/pdl23tp.webp" alt="3784 Cattle Dr — photo 2 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226092223/B1D3416F4b7a4dF/pdl23tp.webp" alt="3784 Cattle Dr — photo 3 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226092223/f07d590Feb1b444/pdl23tp.webp" alt="3784 Cattle Dr — photo 4 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226092223/78469b1B201a473/pdl23tp.webp" alt="3784 Cattle Dr — photo 5 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226092223/78fe2e51A602417/pdl23tp.webp" alt="3784 Cattle Dr — photo 6 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()"></div>
+      <span class="shots">6 photos &middot; swipe</span>
+    </div>
+    <div class="body">
+      <div class="tags"><span class="tag ok">Active</span></div>
+      <p class="price">$1,050,000
+      <span class="pricechg down">&darr;
+      $100,000 from $1,150,000</span></p>
+      <p class="addr">3784 Cattle Dr</p>
+      <p class="city">Shingle Springs, CA 95682 &middot; MLS 226092223</p>
+      <div class="facts"><span class="fact">4 bd</span><span class="fact">3 full + 1 half ba</span><span class="fact">2,295 sqft</span><span class="fact acres pref">5 acres</span><span class="fact pool">Pool</span><span class="fact">Built 1994</span><span class="fact">Horse property</span></div>
+      <p class="pooldetail">Built-In</p>
+      <p class="note">Custom Milton Estates pool home with great views! Home is situated on 5 ac of usable land with many fruit trees and endless opportunities. Features include great room concept with open spacious feel along with seller owned solar. Abundant natural light streams through windows. Well appointed kitchen with granite counter tops, Viking range and large center island. Dining area with built in lighted glass front cabinets</p>
+      
+      <dl class="micro">
+        <div><dt>Per acre</dt><dd>$210,000</dd></div>
+        <div><dt>Water</dt><dd>Well</dd></div>
+        <div><dt>Sewer</dt><dd>Septic System</dd></div>
+        <div><dt>HOA</dt><dd>None</dd></div>
+      </dl>
+      <div class="links">
+        <a class="btn" href="https://www.coldwellbankerhomes.com/ca/shingle-springs/3784-cattle-dr/pid_72631576/" rel="noopener">Listing &amp; photos &rarr;</a>
+        <a class="btn ghost" href="https://www.metrolistpro.com/homes/2/6/x/226092223" rel="noopener">MLS record</a>
+      </div>
+    </div>
+  </article>
+
+  <article class="card">
+    <div class="media">
+      <a class="fallback" href="https://www.coldwellbankerhomes.com/ca/placerville/2565-stagecoach-rd/pid_72639639/" rel="noopener">View photos &rarr;</a>
+      <div class="strip">
+      <img src="https://m.cbhomes.com/p/371/226059973/6e688FC8324a4f7/pdl23tp.webp" alt="2565 Stagecoach Rd — photo 1 of 6"
+           loading="eager" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226059973/93a16D8E4b14403/pdl23tp.webp" alt="2565 Stagecoach Rd — photo 2 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226059973/c0a0E7833d1d448/pdl23tp.webp" alt="2565 Stagecoach Rd — photo 3 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226059973/c5DEa8DD980A4Dd/pdl23tp.webp" alt="2565 Stagecoach Rd — photo 4 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226059973/ADEa9F08c3bF4E4/pdl23tp.webp" alt="2565 Stagecoach Rd — photo 5 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226059973/1773e3278624402/pdl23tp.webp" alt="2565 Stagecoach Rd — photo 6 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()"></div>
+      <span class="shots">6 photos &middot; swipe</span>
+    </div>
+    <div class="body">
+      <div class="tags"><span class="tag ok">Active</span></div>
+      <p class="price">$975,000</p>
+      <p class="addr">2565 Stagecoach Rd</p>
+      <p class="city">Placerville, CA 95667 &middot; MLS 226059973</p>
+      <div class="facts"><span class="fact">5 bd</span><span class="fact">4 full ba</span><span class="fact">3,885 sqft</span><span class="fact acres pref">5.05 acres</span><span class="fact pool">Pool</span><span class="fact">Built 1995</span><span class="fact">Horse property</span></div>
+      <p class="pooldetail">Built-In, Pool Sweep, Fenced, Gunite Construction</p>
+      <p class="note">Nestled on a stunning 5-acre homesite in the prestigious gated community of Greenstone Country, this custom estate blends luxury, privacy, and outdoor recreation. Surrounded by mature oak trees and rock outcroppings, the approximately 3,885 sq. ft. home is designed for comfortable living and entertaining. The spacious floorplan offers 5-6 bedrooms, 4 bathrooms, a 4-car garage, and a detached 2-car carport. Three bedr</p>
+      
+      <dl class="micro">
+        <div><dt>Per acre</dt><dd>$193,069</dd></div>
+        <div><dt>Water</dt><dd>Public, Meter on Site, Water District</dd></div>
+        <div><dt>Sewer</dt><dd>Septic System, Septic Connected, Septic Pump</dd></div>
+        <div><dt>HOA</dt><dd>$241</dd></div>
+      </dl>
+      <div class="links">
+        <a class="btn" href="https://www.coldwellbankerhomes.com/ca/placerville/2565-stagecoach-rd/pid_72639639/" rel="noopener">Listing &amp; photos &rarr;</a>
+        <a class="btn ghost" href="https://www.metrolistpro.com/homes/2/6/x/226059973" rel="noopener">MLS record</a>
+      </div>
+    </div>
+  </article>
+
+  <article class="card">
+    <div class="media">
+      <a class="fallback" href="https://www.coldwellbankerhomes.com/ca/placerville/1315-arrowbee-dr/pid_72934505/" rel="noopener">View photos &rarr;</a>
+      <div class="strip">
+      <img src="https://m.cbhomes.com/p/371/226085035/0A1b20073C4D4FD/pdl23tp.webp" alt="1315 Arrowbee Dr — photo 1 of 6"
+           loading="eager" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226085035/A096416DC394486/pdl23tp.webp" alt="1315 Arrowbee Dr — photo 2 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226085035/596e6049253f498/pdl23tp.webp" alt="1315 Arrowbee Dr — photo 3 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226085035/0Bc532CD238d426/pdl23tp.webp" alt="1315 Arrowbee Dr — photo 4 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226085035/AE79cEBfdBc14b2/pdl23tp.webp" alt="1315 Arrowbee Dr — photo 5 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226085035/08cCB0Eb74714cD/pdl23tp.webp" alt="1315 Arrowbee Dr — photo 6 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()"></div>
+      <span class="shots">6 photos &middot; swipe</span>
+    </div>
+    <div class="body">
+      <div class="tags"><span class="tag ok">Active</span></div>
+      <p class="price">$969,000</p>
+      <p class="addr">1315 Arrowbee Dr</p>
+      <p class="city">Placerville, CA 95667 &middot; MLS 226085035</p>
+      <div class="facts"><span class="fact">4 bd</span><span class="fact">3 full ba</span><span class="fact">2,780 sqft</span><span class="fact acres pref">5 acres</span><span class="fact pool">Pool</span><span class="fact">Built 1971</span><span class="fact">Horse property</span></div>
+      <p class="pooldetail">Built-In, Gunite Construction</p>
+      <p class="note">Welcome to this charming mini ranch with an ADU, tucked behind a gated entrance at the end of a paved driveway, offering privacy, versatility, and lovely views in a peaceful country setting. The single-story ranch home design welcomes you into a light-filled living room where vaulted ceilings and expansive picture windows showcase the scenery beyond. The updated kitchen features granite countertops, stainless steel a</p>
+      
+      <dl class="micro">
+        <div><dt>Per acre</dt><dd>$193,800</dd></div>
+        <div><dt>Water</dt><dd>Public</dd></div>
+        <div><dt>Sewer</dt><dd>Septic System</dd></div>
+        <div><dt>HOA</dt><dd>$140</dd></div>
+      </dl>
+      <div class="links">
+        <a class="btn" href="https://www.coldwellbankerhomes.com/ca/placerville/1315-arrowbee-dr/pid_72934505/" rel="noopener">Listing &amp; photos &rarr;</a>
+        <a class="btn ghost" href="https://www.metrolistpro.com/homes/2/6/x/226085035" rel="noopener">MLS record</a>
+      </div>
+    </div>
+  </article>
+</div>
+
+<h2>Sale pending <span class="count">(3)</span></h2>
+<p class="sectnote">Meets every criterion but already under contract. Kept on the board because
+pending sales fall through often enough to be worth watching — they move back up automatically if
+they return to Active.</p>
+<div class="grid">
+  <article class="card is-pending">
+    <div class="media">
+      <a class="fallback" href="https://www.coldwellbankerhomes.com/ca/rescue/3033-ridgeline-dr/pid_71947550/" rel="noopener">View photos &rarr;</a>
+      <div class="strip">
+      <img src="https://m.cbhomes.com/p/371/226074530/6185a51521d6488/pdl23tp.webp" alt="3033 Ridgeline Dr — photo 1 of 6"
+           loading="eager" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226074530/065bc4334AC0490/pdl23tp.webp" alt="3033 Ridgeline Dr — photo 2 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226074530/A74bcdaD13EA457/pdl23tp.webp" alt="3033 Ridgeline Dr — photo 3 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226074530/4E15240E8D86448/pdl23tp.webp" alt="3033 Ridgeline Dr — photo 4 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226074530/d43c4666654e41d/pdl23tp.webp" alt="3033 Ridgeline Dr — photo 5 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226074530/25392051E61b425/pdl23tp.webp" alt="3033 Ridgeline Dr — photo 6 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()"></div>
+      <span class="shots">6 photos &middot; swipe</span>
+    </div>
+    <div class="body">
+      <div class="tags"><span class="tag pend">Sale pending</span></div>
+      <p class="price">$1,349,999</p>
+      <p class="addr">3033 Ridgeline Dr</p>
+      <p class="city">Rescue, CA 95672 &middot; MLS 226074530</p>
+      <div class="facts"><span class="fact">4 bd</span><span class="fact">3 full ba</span><span class="fact">3,281 sqft</span><span class="fact acres pref">5 acres</span><span class="fact pool">Pool</span><span class="fact">Built 1992</span></div>
+      <p class="pooldetail">Built-In</p>
+      <p class="note">Welcome to a residence where privacy, luxury, and energy efficiency come together in one exceptional property. Nestled in a gated community on five peaceful acres, this beautifully updated home offers the serenity of country living with the convenience of El Dorado Hills&#39; premier shopping, dining, entertainment, and top-rated schools just minutes away. Designed for the way Californians want to live today, this home f</p>
+      
+      <dl class="micro">
+        <div><dt>Per acre</dt><dd>$270,000</dd></div>
+        <div><dt>Water</dt><dd>Well</dd></div>
+        <div><dt>Sewer</dt><dd>Septic System</dd></div>
+        <div><dt>HOA</dt><dd>$870</dd></div>
+      </dl>
+      <div class="links">
+        <a class="btn" href="https://www.coldwellbankerhomes.com/ca/rescue/3033-ridgeline-dr/pid_71947550/" rel="noopener">Listing &amp; photos &rarr;</a>
+        <a class="btn ghost" href="https://www.metrolistpro.com/homes/2/6/x/226074530" rel="noopener">MLS record</a>
+      </div>
+    </div>
+  </article>
+
+  <article class="card is-pending">
+    <div class="media">
+      <a class="fallback" href="https://www.coldwellbankerhomes.com/ca/rescue/3565-farview-ct/pid_72531546/" rel="noopener">View photos &rarr;</a>
+      <div class="strip">
+      <img src="https://m.cbhomes.com/p/371/226087456/44c37c7f4cb24b0/pdl23tp.webp" alt="3565 Farview Ct — photo 1 of 6"
+           loading="eager" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226087456/82A28bdb4473408/pdl23tp.webp" alt="3565 Farview Ct — photo 2 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226087456/5E26A6C4A7164DB/pdl23tp.webp" alt="3565 Farview Ct — photo 3 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226087456/b53555E9ddA443D/pdl23tp.webp" alt="3565 Farview Ct — photo 4 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226087456/416c4722F50d494/pdl23tp.webp" alt="3565 Farview Ct — photo 5 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226087456/b1A15A77311642e/pdl23tp.webp" alt="3565 Farview Ct — photo 6 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()"></div>
+      <span class="shots">6 photos &middot; swipe</span>
+    </div>
+    <div class="body">
+      <div class="tags"><span class="tag pend">Sale pending</span></div>
+      <p class="price">$1,289,000</p>
+      <p class="addr">3565 Farview Ct</p>
+      <p class="city">Rescue, CA 95672 &middot; MLS 226087456</p>
+      <div class="facts"><span class="fact">4 bd</span><span class="fact">4 full ba</span><span class="fact">3,227 sqft</span><span class="fact acres pref">9.64 acres</span><span class="fact pool">Pool</span><span class="fact">Built 1993</span><span class="fact">Horse property</span></div>
+      <p class="pooldetail">Built-In, On Lot, Pool House, Solar Heat</p>
+      <p class="note">Perched at the end of a private court on its own private road, this fully remodeled custom hilltop estate offers breathtaking 360-degree panoramic views stretching across Folsom Lake, Bass Lake, the Sutter Buttes, Sierras and sparkling city lights. Designed to embrace its spectacular surroundings, every room showcases incredible vistas through windows and private sliding glass doors. This exceptional home offers 4-6 </p>
+      
+      <dl class="micro">
+        <div><dt>Per acre</dt><dd>$133,714</dd></div>
+        <div><dt>Water</dt><dd>Well</dd></div>
+        <div><dt>Sewer</dt><dd>Septic System, Private Sewer</dd></div>
+        <div><dt>HOA</dt><dd>None</dd></div>
+      </dl>
+      <div class="links">
+        <a class="btn" href="https://www.coldwellbankerhomes.com/ca/rescue/3565-farview-ct/pid_72531546/" rel="noopener">Listing &amp; photos &rarr;</a>
+        <a class="btn ghost" href="https://www.metrolistpro.com/homes/2/6/x/226087456" rel="noopener">MLS record</a>
+      </div>
+    </div>
+  </article>
+
+  <article class="card is-pending">
+    <div class="media">
+      <a class="fallback" href="https://www.coldwellbankerhomes.com/ca/placerville/1988-cold-springs-rd/pid_70227860/" rel="noopener">View photos &rarr;</a>
+      <div class="strip">
+      <img src="https://m.cbhomes.com/p/371/226033527/41c104a8B1034E8/pdl23tp.webp" alt="1988 Cold Springs Rd — photo 1 of 6"
+           loading="eager" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226033527/bB59eEbBBd1542A/pdl23tp.webp" alt="1988 Cold Springs Rd — photo 2 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226033527/cb6631BA8a87486/pdl23tp.webp" alt="1988 Cold Springs Rd — photo 3 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226033527/6be16F7F098f4f6/pdl23tp.webp" alt="1988 Cold Springs Rd — photo 4 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226033527/e2968e4146dB4d9/pdl23tp.webp" alt="1988 Cold Springs Rd — photo 5 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226033527/41D254cB1Cc6476/pdl23tp.webp" alt="1988 Cold Springs Rd — photo 6 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()"></div>
+      <span class="shots">6 photos &middot; swipe</span>
+    </div>
+    <div class="body">
+      <div class="tags"><span class="tag pend">Sale pending</span></div>
+      <p class="price">$850,000</p>
+      <p class="addr">1988 Cold Springs Rd</p>
+      <p class="city">Placerville, CA 95667 &middot; MLS 226033527</p>
+      <div class="facts"><span class="fact">4 bd</span><span class="fact">3 full ba</span><span class="fact">2,909 sqft</span><span class="fact acres">2.73 acres</span><span class="fact pool">Pool</span><span class="fact">Built 2011</span><span class="fact">Horse property</span></div>
+      <p class="pooldetail">Built-In, Pool Cover, Pool/Spa Combo</p>
+      <p class="note">Beautiful farmhouse-inspired home featuring a stunning built-in pool &amp; spa, offering the perfect blend of convenience &amp; peaceful country living just minutes from town. This spacious property includes 4 bedrooms, 3 full bathrooms, a dedicated office or possible 5th bedroom, 2-car garage plus a detached garage/workshop, and sits on 2.73 usable acres with a year-round stream. The open-concept kitchen and dining area is </p>
+      <p class="flagnote">IDX feed showed Active; MetroListPRO (MLS of record) shows Pending. Using Pending.</p>
+      <dl class="micro">
+        <div><dt>Per acre</dt><dd>$311,355</dd></div>
+        <div><dt>Water</dt><dd>Public</dd></div>
+        <div><dt>Sewer</dt><dd>Septic System</dd></div>
+        <div><dt>HOA</dt><dd>None</dd></div>
+      </dl>
+      <div class="links">
+        <a class="btn" href="https://www.coldwellbankerhomes.com/ca/placerville/1988-cold-springs-rd/pid_70227860/" rel="noopener">Listing &amp; photos &rarr;</a>
+        <a class="btn ghost" href="https://www.metrolistpro.com/homes/2/6/x/226033527" rel="noopener">MLS record</a>
+      </div>
+    </div>
+  </article>
+</div>
+
+<h2>Near misses <span class="count">(9)</span></h2>
+<p class="sectnote">Clears everything except one criterion, by a small margin. Shown so the call is
+yours rather than the script's.</p>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Property</th><th>Price</th><th>Land</th><th>Size</th><th>Why it is not in the list</th></tr></thead>
+  <tbody>
+    <tr><td><a href="https://www.coldwellbankerhomes.com/ca/placerville/1234-rising-hill-w-rd/pid_72120077/" rel="noopener">1234 Rising Hill W Rd</a>, Placerville</td>
+        <td>$685,000</td><td>2.66 ac</td>
+        <td>4 bd / 2 full ba</td><td>2 full + 1 half bath — some sites call this 3 baths; MetroList does not</td></tr>
+    <tr><td><a href="https://www.coldwellbankerhomes.com/ca/placerville/6821-mosquito-rd/pid_71736040/" rel="noopener">6821 Mosquito Rd</a>, Placerville</td>
+        <td>$699,000</td><td>2.09 ac</td>
+        <td>5 bd / 2 full ba</td><td>2.09 acres — under the 2.5 acre minimum; 2 full + 1 half bath — some sites call this 3 baths; MetroList does not</td></tr>
+    <tr><td><a href="https://www.coldwellbankerhomes.com/ca/placerville/3291-texas-hill-rd/pid_71568712/" rel="noopener">3291 Texas Hill Rd</a>, Placerville</td>
+        <td>$1,350,000</td><td>1.76 ac</td>
+        <td>4 bd / 4 full ba</td><td>1.76 acres — under the 2.5 acre minimum</td></tr>
+    <tr><td><a href="https://www.coldwellbankerhomes.com/ca/rescue/2303-pinon-rd/pid_70894255/" rel="noopener">2303 Pinon Rd</a>, Rescue</td>
+        <td>$825,000</td><td>0.99 ac</td>
+        <td>4 bd / 3 full ba</td><td>0.99 acres — under the 2.5 acre minimum</td></tr>
+    <tr><td><a href="https://www.coldwellbankerhomes.com/ca/shingle-springs/4032-vega-loop/pid_72451211/" rel="noopener">4032 Vega Loop</a>, Shingle Springs</td>
+        <td>$1,265,000</td><td>0.75 ac</td>
+        <td>4 bd / 2 full ba</td><td>0.75 acres — under the 2.5 acre minimum; 2 full + 1 half bath — some sites call this 3 baths; MetroList does not</td></tr>
+    <tr><td><a href="https://www.coldwellbankerhomes.com/ca/placerville/1635-country-club-dr/pid_70089379/" rel="noopener">1635 Country Club Dr</a>, Placerville</td>
+        <td>$625,000</td><td>0.61 ac</td>
+        <td>4 bd / 3 full ba</td><td>0.61 acres — under the 2.5 acre minimum</td></tr>
+    <tr><td><a href="https://www.coldwellbankerhomes.com/ca/rescue/3537-foxmore-ln/pid_72434210/" rel="noopener">3537 Foxmore Ln</a>, Rescue</td>
+        <td>$849,900</td><td>0.46 ac</td>
+        <td>4 bd / 2 full ba</td><td>0.46 acres — under the 2.5 acre minimum; 2 full + 1 half bath — some sites call this 3 baths; MetroList does not</td></tr>
+    <tr><td><a href="https://www.coldwellbankerhomes.com/ca/rescue/1023-bridger-dr/pid_72701924/" rel="noopener">1023 Bridger Dr</a>, Rescue</td>
+        <td>$1,349,000</td><td>0.31 ac</td>
+        <td>6 bd / 4 full ba</td><td>0.31 acres — under the 2.5 acre minimum</td></tr>
+    <tr><td><a href="https://www.coldwellbankerhomes.com/ca/rescue/2805-aquamarine-circle/pid_71532329/" rel="noopener">2805 Aquamarine Cir</a>, Rescue</td>
+        <td>$699,000</td><td>0.2052 ac</td>
+        <td>4 bd / 3 full ba</td><td>0.2052 acres — under the 2.5 acre minimum</td></tr>
+  </tbody>
+</table>
+</div>
+
+
+
+<h2>Right land, no pool <span class="count">(12)</span></h2>
+<p class="sectnote">The pool is the binding constraint on this search, not the budget — so these are
+worth a look. Each one is <strong>on the market now</strong> and clears bedrooms, full baths, acreage
+and price; MetroList simply records no pool. On this much land a pool is an addable feature, and
+several of these sit far enough under $1.5M to fund one. Sorted by acreage; check the status column,
+one is already pending.</p>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Property</th><th>Price</th><th>Land</th><th>Size</th><th>Sqft</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td><a href="https://www.coldwellbankerhomes.com/ca/placerville/4351-rossler-rd/pid_72839847/" rel="noopener">4351 Rossler Rd</a>, Placerville</td>
+        <td>$595,000</td><td>10.02 ac</td>
+        <td>4 bd / 3 full ba</td>
+        <td>2,300</td>
+        <td>Active</td></tr>
+    <tr><td><a href="https://www.coldwellbankerhomes.com/ca/placerville/6287-oak-hill-rd/pid_71429392/" rel="noopener">6287 Oak Hill Rd</a>, Placerville</td>
+        <td>$599,000</td><td>10 ac</td>
+        <td>4 bd / 3 full ba</td>
+        <td>4,516</td>
+        <td>Active</td></tr>
+    <tr><td><a href="https://www.coldwellbankerhomes.com/ca/rescue/4181-thunderbird-ln/pid_71478521/" rel="noopener">4181 Thunderbird Ln</a>, Rescue</td>
+        <td>$799,000</td><td>10 ac</td>
+        <td>4 bd / 3 full ba</td>
+        <td>3,294</td>
+        <td>Active</td></tr>
+    <tr><td><a href="https://www.coldwellbankerhomes.com/ca/placerville/4661-holm-rd/pid_72562836/" rel="noopener">4661 Holm Rd</a>, Placerville</td>
+        <td>$935,000</td><td>5.12 ac</td>
+        <td>4 bd / 4 full ba</td>
+        <td>4,525</td>
+        <td>Active</td></tr>
+    <tr><td><a href="https://www.coldwellbankerhomes.com/ca/placerville/3430-old-ditch-dr/pid_72911450/" rel="noopener">3430 Old Ditch Dr</a>, Placerville</td>
+        <td>$1,175,000</td><td>5.12 ac</td>
+        <td>4 bd / 4 full ba</td>
+        <td>4,563</td>
+        <td>Active</td></tr>
+    <tr><td><a href="https://www.coldwellbankerhomes.com/ca/placerville/6560-agape-ct/pid_71736013/" rel="noopener">6560 Agape Ct</a>, Placerville</td>
+        <td>$649,000</td><td>5.02 ac</td>
+        <td>4 bd / 3 full ba</td>
+        <td>2,562</td>
+        <td>Active</td></tr>
+    <tr><td><a href="https://www.coldwellbankerhomes.com/ca/placerville/1200-w-el-largo-dr/pid_70987213/" rel="noopener">1200 W El Largo Dr</a>, Placerville</td>
+        <td>$1,200,000</td><td>5.02 ac</td>
+        <td>5 bd / 5 full ba</td>
+        <td>3,700</td>
+        <td>Active</td></tr>
+    <tr><td><a href="https://www.coldwellbankerhomes.com/ca/placerville/5000-reservation-rd/pid_72035132/" rel="noopener">5000 Reservation Rd</a>, Placerville</td>
+        <td>$799,000</td><td>5 ac</td>
+        <td>4 bd / 4 full ba</td>
+        <td>3,752</td>
+        <td>Active</td></tr>
+    <tr><td><a href="https://www.coldwellbankerhomes.com/ca/shingle-springs/5681-honeycomb-ln/pid_72996839/" rel="noopener">5681 Honeycomb Ln</a>, Shingle Springs</td>
+        <td>$950,000</td><td>5 ac</td>
+        <td>4 bd / 4 full ba</td>
+        <td>3,210</td>
+        <td>Active</td></tr>
+    <tr><td><a href="https://www.coldwellbankerhomes.com/ca/placerville/4810-robledo-dr/pid_72301750/" rel="noopener">4810 Robledo Dr</a>, Placerville</td>
+        <td>$1,049,900</td><td>5 ac</td>
+        <td>5 bd / 4 full ba</td>
+        <td>4,313</td>
+        <td>Active</td></tr>
+    <tr><td><a href="https://www.coldwellbankerhomes.com/ca/placerville/5025-eco-ridge-rd/pid_71882550/" rel="noopener">5025 Eco Ridge Rd</a>, Placerville</td>
+        <td>$799,999</td><td>4.83 ac</td>
+        <td>4 bd / 3 full ba</td>
+        <td>3,089</td>
+        <td>Active</td></tr>
+    <tr><td><a href="https://www.coldwellbankerhomes.com/ca/shingle-springs/2730-golden-fawn-trail/pid_72585811/" rel="noopener">2730 Golden Fawn Trail</a>, Shingle Springs</td>
+        <td>$839,900</td><td>3.42 ac</td>
+        <td>4 bd / 3 full ba</td>
+        <td>3,083</td>
+        <td>Pending</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>Ruled out on the facts</h2>
+<p class="sectnote">Checked in earlier runs and failed a hard criterion regardless of availability.</p>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Address</th><th>Price</th><th>Why not</th></tr></thead>
+  <tbody>
+    <tr><td>1781 Springvale Rd, Placerville</td><td>$1,250,000</td><td>Tracked as a relist after dropping from $1.5M. Resolved this run against MetroListPRO (MLS 226100125): Property Subtype is Triplex — multi-unit residential income, 10.27 acres, no pool. Fails the pool requirement and is not a single-family home. Retired from tracking.</td></tr>
+    <tr><td>1601 Velvet Horn Ln, Rescue</td><td>$1,100,000</td><td>Still actively listed at $1,100,000 (no price change since last run), 5 acres with a sports pool and slide — but 3 bd / 3 ba, under the 4BR minimum.</td></tr>
+    <tr><td>5135 Bryant Rd, Shingle Springs</td><td>$1,690,000</td><td>Over budget; status unverified</td></tr>
+    <tr><td>1900 Deer Valley Rd, Rescue</td><td>$1,200,000</td><td>3bd/2ba, no pool</td></tr>
+    <tr><td>Howard Dr, Rescue (5.94 acres)</td><td>$2,275,000</td><td>Over budget</td></tr>
+    <tr><td>3359 Saint Ives Ct, Shingle Springs</td><td>$2,199,500</td><td>Over budget, only 4bd</td></tr>
+    <tr><td>765 Sierra View Ct, Shingle Springs</td><td>$3,499,999</td><td>Far over budget</td></tr>
+    <tr><td>5037 Milton Ranch Rd, Shingle Springs</td><td>$4,388,888</td><td>Far over budget</td></tr>
+    <tr><td>5040 Milton Ranch Rd, Shingle Springs</td><td>—</td><td>Not for sale — sold 2019 for $1.4M</td></tr>
+    <tr><td>5457 Bryant Rd, Shingle Springs</td><td>—</td><td>Not for sale — sold 2020 for $1,405,000</td></tr>
+    <tr><td>2800 La Paz Rd, Placerville</td><td>$995,000</td><td>4bd/2ba — under both minimums</td></tr>
+    <tr><td>2931 Texas Hill Rd, Placerville</td><td>—</td><td>4bd/2.5ba — under both minimums</td></tr>
+    <tr><td>4370 Hillwood Dr, Shingle Springs</td><td>$699,000</td><td>0.25 acres</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>How this list is built</h2>
+<p class="sectnote">Earlier runs of this tracker had no way to read a live listing page and inferred
+status from search-engine text, which produced four confident matches that were all off market. That
+failure mode is now closed off.</p>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Step</th><th>What happens</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Enumerate</strong></td><td>Every active listing in the three cities is pulled from an IDX feed carrying MetroList data — — properties this run, not a search-result sample.</td></tr>
+    <tr><td><strong>Filter</strong></td><td>Hard criteria applied to structured MLS fields, never to prose: — cleared beds/baths/price, then acreage and pool narrowed it to 10.</td></tr>
+    <tr><td><strong>Verify</strong></td><td>Each survivor is re-read from <strong>MetroListPRO</strong>, the official MetroList MLS site, and price, beds, full baths, acreage and pool must match. All 10 agreed.</td></tr>
+    <tr><td><strong>Resolve</strong></td><td>Where sources disagree, the MLS of record wins and the disagreement is printed on the card rather than hidden.</td></tr>
+  </tbody>
+</table>
+</div>
+<p class="sectnote" style="margin-top:14px">Two things that bite here and are handled explicitly:
+<strong>half baths</strong> — some sites report 2 full + 1 half as &ldquo;3 baths&rdquo;, so the bath
+test counts full baths only; and <strong>MetroList MLS number prefixes encode the listing year</strong>
+(<code>226…</code> = 2026), which makes a stale listing easy to spot. Every property on this page
+carries a 226 number.</p>
 
 <footer>
-  <p><strong>How this list is built.</strong> Enumerated every active listing in Placerville, Shingle Springs and Rescue, then pulled each candidate&#39;s detail page for lot size, pool fields and true MLS status. Every run is then cross-checked against a second live feed, queried by map polygon in tiles so nothing is silently truncated. That cross-check exists because the IDX feed has twice carried listings as Active that were already in escrow.
-  Source: Coldwell Banker Homes (MetroList MLS IDX feed), cross-checked against Redfin&#39;s live active-listing feed.
-  297 active listings across the three towns were scanned;
-  61 cleared beds, baths and price;
-  7 of those have both a pool and 2.5+ acres and are still Active.</p>
-  <p>A property is only shown as a match when its detail page carries an explicit MLS
-  <code>Pool</code> field, a numeric <code>Lot Size (Acres)</code> field, and a status of <code>Active</code>.
-  Note that the feed's <code>IsActive</code> flag stays true on Sale Pending listings, so status is read
-  from the listing's own status field instead.</p>
-  <p>Photos are hotlinked from the listing brokerage and remain their copyright.
-  Generated from <code>listings.json</code> by <code>build.js</code> &middot; 2026-08-14.</p>
+  <p>Generated from <code>listings.json</code> by <code>build.js</code>.
+  10 properties tracked &middot; 7 active &middot;
+  3 pending &middot; 0 removed this run.
+  Data from MetroList MLS via IDX; listing photos are the copyright of the listing brokerages and are
+  hotlinked here for private use. Verify all figures with your agent before acting on them.</p>
 </footer>
 
 </div>
