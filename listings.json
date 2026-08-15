@@ -1,8 +1,8 @@
 {
-  "_comment": "Canonical listing store. Status reflects VERIFICATION state. Nothing is promoted to a match until price/beds/baths/acres/pool are confirmed against MetroListPRO, the official MetroList MLS site. Search-engine snippets are not a valid source.",
+  "_comment": "Canonical listing store. Status reflects VERIFICATION state. Nothing is promoted to a match until price, beds, full baths, acreage and pool are confirmed against MetroListPRO, the official MetroList MLS site. Search-engine snippets are not a valid source of listing status.",
   "criteria": {
     "beds": "4+",
-    "fullBaths": "3+",
+    "fullBaths": "3+ (half baths excluded)",
     "pool": true,
     "cities": [
       "Shingle Springs, CA",
@@ -14,41 +14,23 @@
     "maxPrice": 1500000
   },
   "lastRun": "2026-08-15",
-  "previousRun": "2026-07-26",
-  "criteriaChange": "Bedroom minimum relaxed from 5+ to 4+ this run, per the standing brief. Bath minimum read as 3 FULL baths.",
-  "sources": {
-    "primary": "Coldwell Banker IDX (carries the MetroList feed for El Dorado County)",
-    "verification": "MetroListPRO \u2014 the official MetroList MLS search site",
-    "method": "Every active listing in the three cities is enumerated from the IDX city pages, filtered on the hard criteria, then each surviving listing's price, beds, full baths, acreage, pool and status are re-read from its MetroList MLS record.",
+  "previousRun": "2026-08-14",
+  "source": {
+    "name": "Coldwell Banker IDX (MetroList feed), verified against MetroListPRO (MetroList MLS)",
+    "method": "Enumerated every active listing in the three cities from IDX city pages, applied the hard criteria to structured MLS fields, then re-read each survivor's record from MetroListPRO and required price, beds, full baths, acreage and pool to match.",
     "scanned": 303,
-    "passedBedsBathsPrice": 60
+    "passedBedsBathsPrice": 60,
+    "verifiedMatches": 10
   },
   "dataQuality": {
     "verifiedActiveListings": 7,
-    "note": "All listings below were cross-checked field-by-field against MetroListPRO. One status disagreement was found and resolved in favour of the MLS of record."
+    "note": "All 10 properties agreed with the MLS of record on price, beds, full baths, acreage and pool. One status disagreement: 1988 Cold Springs Rd reads Active on the IDX feed and Pending on MetroListPRO \u2014 shown as Pending. 24 listings carried no bedroom count in the feed (commercial, land and multi-unit); the only one with qualifying acreage, 1781 Springvale Rd, was checked directly and is a triplex with no pool."
   },
   "runSummary": {
-    "new": [
-      "6881-sagittarius-dr-placerville",
-      "3033-ridgeline-dr-rescue",
-      "4071-voyager-way-shingle-springs",
-      "3565-farview-ct-rescue",
-      "5551-saddlehorn-rd-shingle-springs",
-      "3720-four-springs-dr-rescue",
-      "3784-cattle-dr-shingle-springs",
-      "2565-stagecoach-rd-placerville",
-      "1315-arrowbee-dr-placerville",
-      "1988-cold-springs-rd-placerville"
-    ],
+    "new": [],
     "priceChanges": [],
-    "dropped": [
-      "1601 Velvet Horn Ln",
-      "4100 Black Oak Dr",
-      "5856 Fernwood Dr",
-      "1527 Velvet Horn Ln",
-      "5400 Horizon Ct",
-      "4280 Leisure Ln"
-    ]
+    "dropped": [],
+    "unchanged": 10
   },
   "listings": [
     {
@@ -60,25 +42,31 @@
       "currentPrice": 1489000,
       "priceHistory": [
         {
-          "date": "2026-08-15",
+          "date": "2026-07-26",
           "price": 1489000
         }
       ],
       "beds": 4,
+      "baths": 4.0,
       "fullBaths": 4,
-      "halfBaths": 0,
+      "partialBaths": null,
       "sqft": 5351,
       "acres": 40.0,
       "pool": true,
       "poolDetail": "Built-In, On Lot, Pool House, Pool Sweep, Salt Water, Other",
       "yearBuilt": "2005",
-      "garage": "3",
-      "horse": "Yes",
+      "garageSpaces": "3",
       "view": "Panoramic, Ridge, Other, Mountains",
       "water": "Well",
       "sewer": "Septic System",
       "hoa": "$400",
+      "horse": "Yes",
       "apn": "046-032-007-000",
+      "propertyType": "Single Family",
+      "mlsStatus": "Active",
+      "listedOn": "2026-06-16",
+      "lat": 38.6274,
+      "lng": -120.8029,
       "photos": [
         "https://m.cbhomes.com/p/371/226064449/A89aB686728049c/pdl23tp.webp",
         "https://m.cbhomes.com/p/371/226064449/d475Cc42E60C4e6/pdl23tp.webp",
@@ -88,26 +76,25 @@
         "https://m.cbhomes.com/p/371/226064449/d41055c494cC4B1/pdl23tp.webp"
       ],
       "url": "https://www.coldwellbankerhomes.com/ca/placerville/6881-sagittarius-dr/pid_72017706/",
+      "gallery": "https://www.coldwellbankerhomes.com/ca/placerville/6881-sagittarius-dr/pid_72017706/",
       "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226064449",
-      "status": "active",
-      "isNew": true,
-      "firstSeen": "2026-08-15",
+      "status": "match",
+      "isNew": false,
+      "firstSeen": "2026-07-26",
       "lastSeen": "2026-08-15",
-      "verified": {
-        "sources": [
-          "Coldwell Banker IDX (MetroList feed)",
-          "MetroListPRO (MetroList MLS)"
-        ],
-        "agree": [
-          "price",
-          "beds",
-          "baths",
-          "acres",
-          "pool"
-        ],
-        "statusDisagreement": null
-      },
-      "blurb": "Crafted as the builder's own residence, this extraordinary European Country-inspired estate was designed without compromise. From its commanding setting on 40 acres with sweeping Sierra foothill views and timeless architectural details, every aspect of the property reflects quality and enduring elegance."
+      "verifiedAgainst": [
+        "Coldwell Banker IDX (MetroList feed)",
+        "MetroListPRO (MetroList MLS)"
+      ],
+      "fieldsAgreed": [
+        "price",
+        "beds",
+        "fullBaths",
+        "acres",
+        "pool"
+      ],
+      "statusNote": null,
+      "summary": "Crafted as the builder's own residence, this extraordinary European Country-inspired estate was designed without compromise. From its commanding setting on 40 acres with sweeping Sierra foothill views and timeless architectural details, every aspect of the property reflects quality and enduring elegance. From the moment you arrive, the home makes a striking impression, thoughtfully designed to frame a dramatic sightl"
     },
     {
       "id": "4071-voyager-way-shingle-springs",
@@ -118,25 +105,31 @@
       "currentPrice": 1299000,
       "priceHistory": [
         {
-          "date": "2026-08-15",
+          "date": "2026-08-13",
           "price": 1299000
         }
       ],
       "beds": 4,
+      "baths": 3.0,
       "fullBaths": 3,
-      "halfBaths": 0,
+      "partialBaths": null,
       "sqft": 3132,
       "acres": 5.03,
       "pool": true,
       "poolDetail": "Built-In, Salt Water",
       "yearBuilt": "2003",
-      "garage": "4",
-      "horse": null,
+      "garageSpaces": "4",
       "view": "Panoramic, Forest, Valley, Hills",
       "water": "Well",
       "sewer": "Septic System",
       "hoa": "$500",
+      "horse": null,
       "apn": "087-280-034-000",
+      "propertyType": "Single Family",
+      "mlsStatus": "Active",
+      "listedOn": "2026-08-13",
+      "lat": 38.6092,
+      "lng": -120.9405,
       "photos": [
         "https://m.cbhomes.com/p/371/226082753/174d2448488d4C7/pdl23tp.webp",
         "https://m.cbhomes.com/p/371/226082753/11e01b187E1144B/pdl23tp.webp",
@@ -146,26 +139,25 @@
         "https://m.cbhomes.com/p/371/226082753/E790eCF07db2442/pdl23tp.webp"
       ],
       "url": "https://www.coldwellbankerhomes.com/ca/shingle-springs/4071-voyager-way/pid_73037949/",
+      "gallery": "https://www.coldwellbankerhomes.com/ca/shingle-springs/4071-voyager-way/pid_73037949/",
       "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226082753",
-      "status": "active",
-      "isNew": true,
-      "firstSeen": "2026-08-15",
+      "status": "match",
+      "isNew": false,
+      "firstSeen": "2026-08-13",
       "lastSeen": "2026-08-15",
-      "verified": {
-        "sources": [
-          "Coldwell Banker IDX (MetroList feed)",
-          "MetroListPRO (MetroList MLS)"
-        ],
-        "agree": [
-          "price",
-          "beds",
-          "baths",
-          "acres",
-          "pool"
-        ],
-        "statusDisagreement": null
-      },
-      "blurb": "Escape the hustle and bustle and discover your own private retreat in Shingle Springs. Set on approximately 5 private acres with sweeping hillside views, this single-story custom home offers over 3,000 sq. ft. of thoughtfully designed living space with 4 bedrooms, 3 full baths and an impressive 4-car garage."
+      "verifiedAgainst": [
+        "Coldwell Banker IDX (MetroList feed)",
+        "MetroListPRO (MetroList MLS)"
+      ],
+      "fieldsAgreed": [
+        "price",
+        "beds",
+        "fullBaths",
+        "acres",
+        "pool"
+      ],
+      "statusNote": null,
+      "summary": "Escape the hustle and bustle and discover your own private retreat in Shingle Springs. Set on approximately 5 private acres with sweeping hillside views, this single-story custom home offers over 3,000 sq. ft. of thoughtfully designed living space with 4 bedrooms, 3 full baths and an impressive 4-car garage. The outdoor setting is where this property truly shines. A stunning infinity-edge saltwater pool and spa overl"
     },
     {
       "id": "5551-saddlehorn-rd-shingle-springs",
@@ -176,25 +168,31 @@
       "currentPrice": 1200000,
       "priceHistory": [
         {
-          "date": "2026-08-15",
+          "date": "2026-07-26",
           "price": 1200000
         }
       ],
       "beds": 4,
+      "baths": 3.0,
       "fullBaths": 3,
-      "halfBaths": 0,
+      "partialBaths": null,
       "sqft": 3400,
       "acres": 10.11,
       "pool": true,
       "poolDetail": "Built-In",
       "yearBuilt": "1988",
-      "garage": "3",
-      "horse": "Yes",
+      "garageSpaces": "3",
       "view": null,
       "water": "Well",
       "sewer": "Septic System",
       "hoa": "$2, 078",
+      "horse": "Yes",
       "apn": "087-240-028-000",
+      "propertyType": "Single Family",
+      "mlsStatus": "Active",
+      "listedOn": "2026-07-03",
+      "lat": 38.6025,
+      "lng": -120.9874,
       "photos": [
         "https://m.cbhomes.com/p/371/226083864/762EbF4a2F284A1/pdl23tp.webp",
         "https://m.cbhomes.com/p/371/226083864/5BB5D4722f84410/pdl23tp.webp",
@@ -204,26 +202,25 @@
         "https://m.cbhomes.com/p/371/226083864/43a76f63241d4f3/pdl23tp.webp"
       ],
       "url": "https://www.coldwellbankerhomes.com/ca/shingle-springs/5551-saddlehorn-rd/pid_72318162/",
+      "gallery": "https://www.coldwellbankerhomes.com/ca/shingle-springs/5551-saddlehorn-rd/pid_72318162/",
       "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226083864",
-      "status": "active",
-      "isNew": true,
-      "firstSeen": "2026-08-15",
+      "status": "match",
+      "isNew": false,
+      "firstSeen": "2026-07-26",
       "lastSeen": "2026-08-15",
-      "verified": {
-        "sources": [
-          "Coldwell Banker IDX (MetroList feed)",
-          "MetroListPRO (MetroList MLS)"
-        ],
-        "agree": [
-          "price",
-          "beds",
-          "baths",
-          "acres",
-          "pool"
-        ],
-        "statusDisagreement": null
-      },
-      "blurb": "Just minutes from town yet worlds away, this 10 acre sanctuary delivers the ultimate retreat lifestyle. Step inside to discover a beautifully updated home with 4 bedrooms, 3 baths, and an inviting upstairs game room complete with a wet bar perfect for gatherings."
+      "verifiedAgainst": [
+        "Coldwell Banker IDX (MetroList feed)",
+        "MetroListPRO (MetroList MLS)"
+      ],
+      "fieldsAgreed": [
+        "price",
+        "beds",
+        "fullBaths",
+        "acres",
+        "pool"
+      ],
+      "statusNote": null,
+      "summary": "Just minutes from town yet worlds away, this 10 acre sanctuary delivers the ultimate retreat lifestyle. Step inside to discover a beautifully updated home with 4 bedrooms, 3 baths, and an inviting upstairs game room complete with a wet bar perfect for gatherings. The renovated kitchen shines with quartz counters, stainless appliances, and beautiful white cabinetry, flowing seamlessly into the family room with soaring"
     },
     {
       "id": "3720-four-springs-dr-rescue",
@@ -234,25 +231,31 @@
       "currentPrice": 1199900,
       "priceHistory": [
         {
-          "date": "2026-08-15",
+          "date": "2026-07-26",
           "price": 1199900
         }
       ],
       "beds": 4,
+      "baths": 3.0,
       "fullBaths": 3,
-      "halfBaths": 0,
+      "partialBaths": null,
       "sqft": 2506,
       "acres": 5.86,
       "pool": true,
       "poolDetail": "Built-In, On Lot, Pool Sweep, Gunite Construction",
       "yearBuilt": "1989",
-      "garage": "3",
-      "horse": "Yes",
+      "garageSpaces": "3",
       "view": "City Lights, Pasture, Hills, Woods",
       "water": "Well",
       "sewer": "Septic System",
       "hoa": "$72",
+      "horse": "Yes",
       "apn": "102-290-001-000",
+      "propertyType": "Single Family",
+      "mlsStatus": "Active",
+      "listedOn": "2026-07-02",
+      "lat": 38.7176,
+      "lng": -121.0157,
       "photos": [
         "https://m.cbhomes.com/p/371/226083791/26b1693C05Ad41d/pdl23tp.webp",
         "https://m.cbhomes.com/p/371/226083791/AAA3F5FD3Da745C/pdl23tp.webp",
@@ -262,26 +265,25 @@
         "https://m.cbhomes.com/p/371/226083791/2110bFe914ed47e/pdl23tp.webp"
       ],
       "url": "https://www.coldwellbankerhomes.com/ca/rescue/3720-four-springs-dr/pid_72298813/",
+      "gallery": "https://www.coldwellbankerhomes.com/ca/rescue/3720-four-springs-dr/pid_72298813/",
       "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226083791",
-      "status": "active",
-      "isNew": true,
-      "firstSeen": "2026-08-15",
+      "status": "match",
+      "isNew": false,
+      "firstSeen": "2026-07-26",
       "lastSeen": "2026-08-15",
-      "verified": {
-        "sources": [
-          "Coldwell Banker IDX (MetroList feed)",
-          "MetroListPRO (MetroList MLS)"
-        ],
-        "agree": [
-          "price",
-          "beds",
-          "baths",
-          "acres",
-          "pool"
-        ],
-        "statusDisagreement": null
-      },
-      "blurb": "Sought after area. Minutes from shopping, schools. Country living at its finest. Situated in a serene, park-like setting, this property offers unparalleled tranquility. End of road privacy."
+      "verifiedAgainst": [
+        "Coldwell Banker IDX (MetroList feed)",
+        "MetroListPRO (MetroList MLS)"
+      ],
+      "fieldsAgreed": [
+        "price",
+        "beds",
+        "fullBaths",
+        "acres",
+        "pool"
+      ],
+      "statusNote": null,
+      "summary": "Sought after area. Minutes from shopping, schools. Country living at its finest. Situated in a serene, park-like setting, this property offers unparalleled tranquility. End of road privacy. This custom-built two story family residence offers four bedrooms, a formal dining room, separate living and family spaces, and a chef's dream kitchen, complemented by three bathrooms. Additionally, there is a three-car detached g"
     },
     {
       "id": "3784-cattle-dr-shingle-springs",
@@ -292,25 +294,35 @@
       "currentPrice": 1050000,
       "priceHistory": [
         {
-          "date": "2026-08-15",
+          "date": "2026-07-26",
+          "price": 1150000
+        },
+        {
+          "date": "2026-07-27",
           "price": 1050000
         }
       ],
       "beds": 4,
+      "baths": 3.5,
       "fullBaths": 3,
-      "halfBaths": 1,
+      "partialBaths": 1,
       "sqft": 2295,
       "acres": 5.0,
       "pool": true,
       "poolDetail": "Built-In",
       "yearBuilt": "1994",
-      "garage": "4",
-      "horse": "Yes",
+      "garageSpaces": "4",
       "view": null,
       "water": "Well",
       "sewer": "Septic System",
       "hoa": null,
+      "horse": "Yes",
       "apn": "109-360-020-00",
+      "propertyType": "Single Family",
+      "mlsStatus": "Active",
+      "listedOn": "2026-07-21",
+      "lat": 38.619,
+      "lng": -120.9527,
       "photos": [
         "https://m.cbhomes.com/p/371/226092223/CD31ec5b6eb1413/pdl23tp.webp",
         "https://m.cbhomes.com/p/371/226092223/71f2D5d81f42482/pdl23tp.webp",
@@ -320,26 +332,25 @@
         "https://m.cbhomes.com/p/371/226092223/78fe2e51A602417/pdl23tp.webp"
       ],
       "url": "https://www.coldwellbankerhomes.com/ca/shingle-springs/3784-cattle-dr/pid_72631576/",
+      "gallery": "https://www.coldwellbankerhomes.com/ca/shingle-springs/3784-cattle-dr/pid_72631576/",
       "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226092223",
-      "status": "active",
-      "isNew": true,
-      "firstSeen": "2026-08-15",
+      "status": "match",
+      "isNew": false,
+      "firstSeen": "2026-07-26",
       "lastSeen": "2026-08-15",
-      "verified": {
-        "sources": [
-          "Coldwell Banker IDX (MetroList feed)",
-          "MetroListPRO (MetroList MLS)"
-        ],
-        "agree": [
-          "price",
-          "beds",
-          "baths",
-          "acres",
-          "pool"
-        ],
-        "statusDisagreement": null
-      },
-      "blurb": "Custom Milton Estates pool home with great views! Home is situated on 5 ac of usable land with many fruit trees and endless opportunities. Features include great room concept with open spacious feel along with seller owned solar. Abundant natural light streams through windows."
+      "verifiedAgainst": [
+        "Coldwell Banker IDX (MetroList feed)",
+        "MetroListPRO (MetroList MLS)"
+      ],
+      "fieldsAgreed": [
+        "price",
+        "beds",
+        "fullBaths",
+        "acres",
+        "pool"
+      ],
+      "statusNote": null,
+      "summary": "Custom Milton Estates pool home with great views! Home is situated on 5 ac of usable land with many fruit trees and endless opportunities. Features include great room concept with open spacious feel along with seller owned solar. Abundant natural light streams through windows. Well appointed kitchen with granite counter tops, Viking range and large center island. Dining area with built in lighted glass front cabinets"
     },
     {
       "id": "2565-stagecoach-rd-placerville",
@@ -350,25 +361,31 @@
       "currentPrice": 975000,
       "priceHistory": [
         {
-          "date": "2026-08-15",
+          "date": "2026-07-26",
           "price": 975000
         }
       ],
       "beds": 5,
+      "baths": 4.0,
       "fullBaths": 4,
-      "halfBaths": 0,
+      "partialBaths": null,
       "sqft": 3885,
       "acres": 5.05,
       "pool": true,
       "poolDetail": "Built-In, Pool Sweep, Fenced, Gunite Construction",
       "yearBuilt": "1995",
-      "garage": "4",
-      "horse": "Yes",
+      "garageSpaces": "4",
       "view": null,
       "water": "Public, Meter on Site, Water District",
       "sewer": "Septic System, Septic Connected, Septic Pump",
       "hoa": "$241",
+      "horse": "Yes",
       "apn": "317-381-005-000",
+      "propertyType": "Single Family",
+      "mlsStatus": "Active",
+      "listedOn": "2026-07-22",
+      "lat": 38.7323,
+      "lng": -120.907,
       "photos": [
         "https://m.cbhomes.com/p/371/226059973/6e688FC8324a4f7/pdl23tp.webp",
         "https://m.cbhomes.com/p/371/226059973/93a16D8E4b14403/pdl23tp.webp",
@@ -378,26 +395,25 @@
         "https://m.cbhomes.com/p/371/226059973/1773e3278624402/pdl23tp.webp"
       ],
       "url": "https://www.coldwellbankerhomes.com/ca/placerville/2565-stagecoach-rd/pid_72639639/",
+      "gallery": "https://www.coldwellbankerhomes.com/ca/placerville/2565-stagecoach-rd/pid_72639639/",
       "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226059973",
-      "status": "active",
-      "isNew": true,
-      "firstSeen": "2026-08-15",
+      "status": "match",
+      "isNew": false,
+      "firstSeen": "2026-07-26",
       "lastSeen": "2026-08-15",
-      "verified": {
-        "sources": [
-          "Coldwell Banker IDX (MetroList feed)",
-          "MetroListPRO (MetroList MLS)"
-        ],
-        "agree": [
-          "price",
-          "beds",
-          "baths",
-          "acres",
-          "pool"
-        ],
-        "statusDisagreement": null
-      },
-      "blurb": "Nestled on a stunning 5-acre homesite in the prestigious gated community of Greenstone Country, this custom estate blends luxury, privacy, and outdoor recreation. Surrounded by mature oak trees and rock outcroppings, the approximately 3,885 sq. ft. home is designed for comfortable living and entertaining."
+      "verifiedAgainst": [
+        "Coldwell Banker IDX (MetroList feed)",
+        "MetroListPRO (MetroList MLS)"
+      ],
+      "fieldsAgreed": [
+        "price",
+        "beds",
+        "fullBaths",
+        "acres",
+        "pool"
+      ],
+      "statusNote": null,
+      "summary": "Nestled on a stunning 5-acre homesite in the prestigious gated community of Greenstone Country, this custom estate blends luxury, privacy, and outdoor recreation. Surrounded by mature oak trees and rock outcroppings, the approximately 3,885 sq. ft. home is designed for comfortable living and entertaining. The spacious floorplan offers 5-6 bedrooms, 4 bathrooms, a 4-car garage, and a detached 2-car carport. Three bedr"
     },
     {
       "id": "1315-arrowbee-dr-placerville",
@@ -408,25 +424,31 @@
       "currentPrice": 969000,
       "priceHistory": [
         {
-          "date": "2026-08-15",
+          "date": "2026-08-07",
           "price": 969000
         }
       ],
       "beds": 4,
+      "baths": 3.0,
       "fullBaths": 3,
-      "halfBaths": 0,
+      "partialBaths": null,
       "sqft": 2780,
       "acres": 5.0,
       "pool": true,
       "poolDetail": "Built-In, Gunite Construction",
       "yearBuilt": "1971",
-      "garage": "2",
-      "horse": "Yes",
+      "garageSpaces": "2",
       "view": "Pasture",
       "water": "Public",
       "sewer": "Septic System",
       "hoa": "$140",
+      "horse": "Yes",
       "apn": "105-170-010-000",
+      "propertyType": "Single Family",
+      "mlsStatus": "Active",
+      "listedOn": "2026-08-06",
+      "lat": 38.785,
+      "lng": -120.9315,
       "photos": [
         "https://m.cbhomes.com/p/371/226085035/0A1b20073C4D4FD/pdl23tp.webp",
         "https://m.cbhomes.com/p/371/226085035/A096416DC394486/pdl23tp.webp",
@@ -436,27 +458,28 @@
         "https://m.cbhomes.com/p/371/226085035/08cCB0Eb74714cD/pdl23tp.webp"
       ],
       "url": "https://www.coldwellbankerhomes.com/ca/placerville/1315-arrowbee-dr/pid_72934505/",
+      "gallery": "https://www.coldwellbankerhomes.com/ca/placerville/1315-arrowbee-dr/pid_72934505/",
       "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226085035",
-      "status": "active",
-      "isNew": true,
-      "firstSeen": "2026-08-15",
+      "status": "match",
+      "isNew": false,
+      "firstSeen": "2026-08-07",
       "lastSeen": "2026-08-15",
-      "verified": {
-        "sources": [
-          "Coldwell Banker IDX (MetroList feed)",
-          "MetroListPRO (MetroList MLS)"
-        ],
-        "agree": [
-          "price",
-          "beds",
-          "baths",
-          "acres",
-          "pool"
-        ],
-        "statusDisagreement": null
-      },
-      "blurb": "Welcome to this charming mini ranch with an ADU, tucked behind a gated entrance at the end of a paved driveway, offering privacy, versatility, and lovely views in a peaceful country setting."
-    },
+      "verifiedAgainst": [
+        "Coldwell Banker IDX (MetroList feed)",
+        "MetroListPRO (MetroList MLS)"
+      ],
+      "fieldsAgreed": [
+        "price",
+        "beds",
+        "fullBaths",
+        "acres",
+        "pool"
+      ],
+      "statusNote": null,
+      "summary": "Welcome to this charming mini ranch with an ADU, tucked behind a gated entrance at the end of a paved driveway, offering privacy, versatility, and lovely views in a peaceful country setting. The single-story ranch home design welcomes you into a light-filled living room where vaulted ceilings and expansive picture windows showcase the scenery beyond. The updated kitchen features granite countertops, stainless steel a"
+    }
+  ],
+  "pending": [
     {
       "id": "3033-ridgeline-dr-rescue",
       "address": "3033 Ridgeline Dr",
@@ -466,25 +489,31 @@
       "currentPrice": 1349999,
       "priceHistory": [
         {
-          "date": "2026-08-15",
+          "date": "2026-08-04",
           "price": 1349999
         }
       ],
       "beds": 4,
+      "baths": 3.0,
       "fullBaths": 3,
-      "halfBaths": 0,
+      "partialBaths": null,
       "sqft": 3281,
       "acres": 5.0,
       "pool": true,
       "poolDetail": "Built-In",
       "yearBuilt": "1992",
-      "garage": "3",
-      "horse": null,
+      "garageSpaces": "3",
       "view": null,
       "water": "Well",
       "sewer": "Septic System",
       "hoa": "$870",
+      "horse": null,
       "apn": "102-290-014-000",
+      "propertyType": "Single Family",
+      "mlsStatus": "Pending",
+      "listedOn": "2026-06-12",
+      "lat": 38.7124,
+      "lng": -121.0111,
       "photos": [
         "https://m.cbhomes.com/p/371/226074530/6185a51521d6488/pdl23tp.webp",
         "https://m.cbhomes.com/p/371/226074530/065bc4334AC0490/pdl23tp.webp",
@@ -494,26 +523,25 @@
         "https://m.cbhomes.com/p/371/226074530/25392051E61b425/pdl23tp.webp"
       ],
       "url": "https://www.coldwellbankerhomes.com/ca/rescue/3033-ridgeline-dr/pid_71947550/",
+      "gallery": "https://www.coldwellbankerhomes.com/ca/rescue/3033-ridgeline-dr/pid_71947550/",
       "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226074530",
       "status": "pending",
-      "isNew": true,
-      "firstSeen": "2026-08-15",
+      "isNew": false,
+      "firstSeen": "2026-08-02",
       "lastSeen": "2026-08-15",
-      "verified": {
-        "sources": [
-          "Coldwell Banker IDX (MetroList feed)",
-          "MetroListPRO (MetroList MLS)"
-        ],
-        "agree": [
-          "price",
-          "beds",
-          "baths",
-          "acres",
-          "pool"
-        ],
-        "statusDisagreement": null
-      },
-      "blurb": "Welcome to a residence where privacy, luxury, and energy efficiency come together in one exceptional property. Nestled in a gated community on five peaceful acres, this beautifully updated home offers the serenity of country living with the convenience of El Dorado Hills' premier shopping, dining, entertainment, and top-rated schools just\u2026"
+      "verifiedAgainst": [
+        "Coldwell Banker IDX (MetroList feed)",
+        "MetroListPRO (MetroList MLS)"
+      ],
+      "fieldsAgreed": [
+        "price",
+        "beds",
+        "fullBaths",
+        "acres",
+        "pool"
+      ],
+      "statusNote": null,
+      "summary": "Welcome to a residence where privacy, luxury, and energy efficiency come together in one exceptional property. Nestled in a gated community on five peaceful acres, this beautifully updated home offers the serenity of country living with the convenience of El Dorado Hills' premier shopping, dining, entertainment, and top-rated schools just minutes away. Designed for the way Californians want to live today, this home f"
     },
     {
       "id": "3565-farview-ct-rescue",
@@ -524,25 +552,31 @@
       "currentPrice": 1289000,
       "priceHistory": [
         {
-          "date": "2026-08-15",
+          "date": "2026-08-09",
           "price": 1289000
         }
       ],
       "beds": 4,
+      "baths": 4.0,
       "fullBaths": 4,
-      "halfBaths": 0,
+      "partialBaths": null,
       "sqft": 3227,
       "acres": 9.64,
       "pool": true,
       "poolDetail": "Built-In, On Lot, Pool House, Solar Heat",
       "yearBuilt": "1993",
-      "garage": "3",
-      "horse": "Yes",
+      "garageSpaces": "3",
       "view": "Panoramic, City Lights, Valley, Hills, Water, Lake, Woods, Mountains",
       "water": "Well",
       "sewer": "Septic System, Private Sewer",
       "hoa": null,
+      "horse": "Yes",
       "apn": "102-060-039-000",
+      "propertyType": "Single Family",
+      "mlsStatus": "Pending",
+      "listedOn": "2026-07-16",
+      "lat": 38.7314,
+      "lng": -120.99,
       "photos": [
         "https://m.cbhomes.com/p/371/226087456/44c37c7f4cb24b0/pdl23tp.webp",
         "https://m.cbhomes.com/p/371/226087456/82A28bdb4473408/pdl23tp.webp",
@@ -552,26 +586,25 @@
         "https://m.cbhomes.com/p/371/226087456/b1A15A77311642e/pdl23tp.webp"
       ],
       "url": "https://www.coldwellbankerhomes.com/ca/rescue/3565-farview-ct/pid_72531546/",
+      "gallery": "https://www.coldwellbankerhomes.com/ca/rescue/3565-farview-ct/pid_72531546/",
       "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226087456",
       "status": "pending",
-      "isNew": true,
-      "firstSeen": "2026-08-15",
+      "isNew": false,
+      "firstSeen": "2026-08-09",
       "lastSeen": "2026-08-15",
-      "verified": {
-        "sources": [
-          "Coldwell Banker IDX (MetroList feed)",
-          "MetroListPRO (MetroList MLS)"
-        ],
-        "agree": [
-          "price",
-          "beds",
-          "baths",
-          "acres",
-          "pool"
-        ],
-        "statusDisagreement": null
-      },
-      "blurb": "Perched at the end of a private court on its own private road, this fully remodeled custom hilltop estate offers breathtaking 360-degree panoramic views stretching across Folsom Lake, Bass Lake, the Sutter Buttes, Sierras and sparkling city lights."
+      "verifiedAgainst": [
+        "Coldwell Banker IDX (MetroList feed)",
+        "MetroListPRO (MetroList MLS)"
+      ],
+      "fieldsAgreed": [
+        "price",
+        "beds",
+        "fullBaths",
+        "acres",
+        "pool"
+      ],
+      "statusNote": null,
+      "summary": "Perched at the end of a private court on its own private road, this fully remodeled custom hilltop estate offers breathtaking 360-degree panoramic views stretching across Folsom Lake, Bass Lake, the Sutter Buttes, Sierras and sparkling city lights. Designed to embrace its spectacular surroundings, every room showcases incredible vistas through windows and private sliding glass doors. This exceptional home offers 4-6 "
     },
     {
       "id": "1988-cold-springs-rd-placerville",
@@ -582,25 +615,31 @@
       "currentPrice": 850000,
       "priceHistory": [
         {
-          "date": "2026-08-15",
+          "date": "2026-08-04",
           "price": 850000
         }
       ],
       "beds": 4,
+      "baths": 3.0,
       "fullBaths": 3,
-      "halfBaths": 0,
+      "partialBaths": null,
       "sqft": 2909,
       "acres": 2.73,
       "pool": true,
       "poolDetail": "Built-In, Pool Cover, Pool/Spa Combo",
       "yearBuilt": "2011",
-      "garage": "2",
-      "horse": "Yes",
+      "garageSpaces": "2",
       "view": "Pasture, Hills, Water",
       "water": "Public",
       "sewer": "Septic System",
       "hoa": null,
+      "horse": "Yes",
       "apn": "323-050-011-000",
+      "propertyType": "Single Family",
+      "mlsStatus": "Pending",
+      "listedOn": "2026-03-20",
+      "lat": 38.7387,
+      "lng": -120.8572,
       "photos": [
         "https://m.cbhomes.com/p/371/226033527/41c104a8B1034E8/pdl23tp.webp",
         "https://m.cbhomes.com/p/371/226033527/bB59eEbBBd1542A/pdl23tp.webp",
@@ -610,96 +649,373 @@
         "https://m.cbhomes.com/p/371/226033527/41D254cB1Cc6476/pdl23tp.webp"
       ],
       "url": "https://www.coldwellbankerhomes.com/ca/placerville/1988-cold-springs-rd/pid_70227860/",
+      "gallery": "https://www.coldwellbankerhomes.com/ca/placerville/1988-cold-springs-rd/pid_70227860/",
       "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226033527",
       "status": "pending",
-      "isNew": true,
-      "firstSeen": "2026-08-15",
+      "isNew": false,
+      "firstSeen": "2026-08-02",
       "lastSeen": "2026-08-15",
-      "verified": {
-        "sources": [
-          "Coldwell Banker IDX (MetroList feed)",
-          "MetroListPRO (MetroList MLS)"
-        ],
-        "agree": [
-          "price",
-          "beds",
-          "baths",
-          "acres",
-          "pool"
-        ],
-        "statusDisagreement": "Coldwell Banker IDX showed Active; MetroListPRO (MLS of record) shows Pending. Using Pending."
-      },
-      "blurb": "Beautiful farmhouse-inspired home featuring a stunning built-in pool & spa, offering the perfect blend of convenience & peaceful country living just minutes from town."
+      "verifiedAgainst": [
+        "Coldwell Banker IDX (MetroList feed)",
+        "MetroListPRO (MetroList MLS)"
+      ],
+      "fieldsAgreed": [
+        "price",
+        "beds",
+        "fullBaths",
+        "acres",
+        "pool"
+      ],
+      "statusNote": "IDX feed showed Active; MetroListPRO (MLS of record) shows Pending. Using Pending.",
+      "summary": "Beautiful farmhouse-inspired home featuring a stunning built-in pool & spa, offering the perfect blend of convenience & peaceful country living just minutes from town. This spacious property includes 4 bedrooms, 3 full bathrooms, a dedicated office or possible 5th bedroom, 2-car garage plus a detached garage/workshop, and sits on 2.73 usable acres with a year-round stream. The open-concept kitchen and dining area is "
     }
   ],
-  "dropped": [
+  "poolless": [
     {
-      "address": "1601 Velvet Horn Ln",
-      "city": "Rescue",
-      "mls": "226060031",
-      "lastPrice": 1100000,
-      "priorStatus": "active-fails-criteria",
-      "droppedOn": "2026-08-15",
-      "reason": "Not present in the live MetroList feed for this city \u2014 sold or withdrawn."
-    },
-    {
-      "address": "4100 Black Oak Dr",
-      "city": "Shingle Springs",
-      "mls": "225006994",
-      "lastPrice": 1250000,
-      "priorStatus": "off-market",
-      "droppedOn": "2026-08-15",
-      "reason": "Not present in the live MetroList feed for this city \u2014 sold or withdrawn."
-    },
-    {
-      "address": "5856 Fernwood Dr",
-      "city": "Shingle Springs",
-      "mls": "225000829",
-      "lastPrice": 1490000,
-      "priorStatus": "off-market",
-      "droppedOn": "2026-08-15",
-      "reason": "Not present in the live MetroList feed for this city \u2014 sold or withdrawn."
-    },
-    {
-      "address": "1527 Velvet Horn Ln",
-      "city": "Rescue",
-      "mls": null,
-      "lastPrice": null,
-      "priorStatus": "off-market",
-      "droppedOn": "2026-08-15",
-      "reason": "Not present in the live MetroList feed for this city \u2014 sold or withdrawn."
-    },
-    {
-      "address": "5400 Horizon Ct",
+      "address": "4351 Rossler Rd",
       "city": "Placerville",
-      "mls": "221136905",
-      "lastPrice": 998999,
-      "priorStatus": "off-market",
-      "droppedOn": "2026-08-15",
-      "reason": "Not present in the live MetroList feed for this city \u2014 sold or withdrawn."
+      "mls": "226097299",
+      "price": 595000,
+      "beds": 4,
+      "fullBaths": 3,
+      "halfBaths": 0,
+      "sqft": 2300,
+      "acres": 10.02,
+      "status": "Active",
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/4351-rossler-rd/pid_72839847/",
+      "reason": "MetroList records no pool"
     },
     {
-      "address": "4280 Leisure Ln",
+      "address": "6287 Oak Hill Rd",
       "city": "Placerville",
-      "mls": "225153794",
-      "lastPrice": 1173000,
-      "priorStatus": "off-market",
-      "droppedOn": "2026-08-15",
-      "reason": "Not present in the live MetroList feed for this city \u2014 sold or withdrawn."
+      "mls": "226063059",
+      "price": 599000,
+      "beds": 4,
+      "fullBaths": 3,
+      "halfBaths": 0,
+      "sqft": 4516,
+      "acres": 10.0,
+      "status": "Active",
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/6287-oak-hill-rd/pid_71429392/",
+      "reason": "MetroList records no pool"
+    },
+    {
+      "address": "4181 Thunderbird Ln",
+      "city": "Rescue",
+      "mls": "226064393",
+      "price": 799000,
+      "beds": 4,
+      "fullBaths": 3,
+      "halfBaths": 1,
+      "sqft": 3294,
+      "acres": 10.0,
+      "status": "Active",
+      "url": "https://www.coldwellbankerhomes.com/ca/rescue/4181-thunderbird-ln/pid_71478521/",
+      "reason": "MetroList records no pool"
+    },
+    {
+      "address": "4661 Holm Rd",
+      "city": "Placerville",
+      "mls": "226083194",
+      "price": 935000,
+      "beds": 4,
+      "fullBaths": 4,
+      "halfBaths": 1,
+      "sqft": 4525,
+      "acres": 5.12,
+      "status": "Active",
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/4661-holm-rd/pid_72562836/",
+      "reason": "MetroList records no pool"
+    },
+    {
+      "address": "3430 Old Ditch Dr",
+      "city": "Placerville",
+      "mls": "226089905",
+      "price": 1175000,
+      "beds": 4,
+      "fullBaths": 4,
+      "halfBaths": 0,
+      "sqft": 4563,
+      "acres": 5.12,
+      "status": "Active",
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/3430-old-ditch-dr/pid_72911450/",
+      "reason": "MetroList records no pool"
+    },
+    {
+      "address": "6560 Agape Ct",
+      "city": "Placerville",
+      "mls": "226070903",
+      "price": 649000,
+      "beds": 4,
+      "fullBaths": 3,
+      "halfBaths": 0,
+      "sqft": 2562,
+      "acres": 5.02,
+      "status": "Active",
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/6560-agape-ct/pid_71736013/",
+      "reason": "MetroList records no pool"
+    },
+    {
+      "address": "1200 W El Largo Dr",
+      "city": "Placerville",
+      "mls": "226053498",
+      "price": 1200000,
+      "beds": 5,
+      "fullBaths": 5,
+      "halfBaths": 0,
+      "sqft": 3700,
+      "acres": 5.02,
+      "status": "Active",
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/1200-w-el-largo-dr/pid_70987213/",
+      "reason": "MetroList records no pool"
+    },
+    {
+      "address": "5000 Reservation Rd",
+      "city": "Placerville",
+      "mls": "226077234",
+      "price": 799000,
+      "beds": 4,
+      "fullBaths": 4,
+      "halfBaths": 1,
+      "sqft": 3752,
+      "acres": 5.0,
+      "status": "Active",
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/5000-reservation-rd/pid_72035132/",
+      "reason": "MetroList records no pool"
+    },
+    {
+      "address": "5681 Honeycomb Ln",
+      "city": "Shingle Springs",
+      "mls": "226068369",
+      "price": 950000,
+      "beds": 4,
+      "fullBaths": 4,
+      "halfBaths": 1,
+      "sqft": 3210,
+      "acres": 5.0,
+      "status": "Active",
+      "url": "https://www.coldwellbankerhomes.com/ca/shingle-springs/5681-honeycomb-ln/pid_72996839/",
+      "reason": "MetroList records no pool"
+    },
+    {
+      "address": "4810 Robledo Dr",
+      "city": "Placerville",
+      "mls": "226083409",
+      "price": 1049900,
+      "beds": 5,
+      "fullBaths": 4,
+      "halfBaths": 1,
+      "sqft": 4313,
+      "acres": 5.0,
+      "status": "Active",
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/4810-robledo-dr/pid_72301750/",
+      "reason": "MetroList records no pool"
+    },
+    {
+      "address": "5025 Eco Ridge Rd",
+      "city": "Placerville",
+      "mls": "226072037",
+      "price": 799999,
+      "beds": 4,
+      "fullBaths": 3,
+      "halfBaths": 0,
+      "sqft": 3089,
+      "acres": 4.83,
+      "status": "Active",
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/5025-eco-ridge-rd/pid_71882550/",
+      "reason": "MetroList records no pool"
+    },
+    {
+      "address": "2730 Golden Fawn Trail",
+      "city": "Shingle Springs",
+      "mls": "226091151",
+      "price": 839900,
+      "beds": 4,
+      "fullBaths": 3,
+      "halfBaths": 0,
+      "sqft": 3083,
+      "acres": 3.42,
+      "status": "Pending",
+      "url": "https://www.coldwellbankerhomes.com/ca/shingle-springs/2730-golden-fawn-trail/pid_72585811/",
+      "reason": "MetroList records no pool"
     }
   ],
-  "nearMiss": [
+  "nearMisses": [
     {
       "address": "1234 Rising Hill W Rd",
       "city": "Placerville",
       "mls": "226079329",
       "price": 685000,
+      "beds": 4,
+      "fullBaths": 2,
+      "halfBaths": 1,
+      "sqft": 2400,
       "acres": 2.66,
-      "pool": true,
-      "reason": "2 full + 1 half bath. Some sites round this to \"3 baths\"; MetroList reports 2|1, so it misses the 3-full-bath minimum."
+      "status": "Active",
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/1234-rising-hill-w-rd/pid_72120077/",
+      "reason": "2 full + 1 half bath \u2014 some sites call this 3 baths; MetroList does not"
+    },
+    {
+      "address": "6821 Mosquito Rd",
+      "city": "Placerville",
+      "mls": "226026830",
+      "price": 699000,
+      "beds": 5,
+      "fullBaths": 2,
+      "halfBaths": 1,
+      "sqft": 2908,
+      "acres": 2.09,
+      "status": "Active",
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/6821-mosquito-rd/pid_71736040/",
+      "reason": "2.09 acres \u2014 under the 2.5 acre minimum; 2 full + 1 half bath \u2014 some sites call this 3 baths; MetroList does not"
+    },
+    {
+      "address": "3291 Texas Hill Rd",
+      "city": "Placerville",
+      "mls": "226066603",
+      "price": 1350000,
+      "beds": 4,
+      "fullBaths": 4,
+      "halfBaths": 0,
+      "sqft": 3837,
+      "acres": 1.76,
+      "status": "Active",
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/3291-texas-hill-rd/pid_71568712/",
+      "reason": "1.76 acres \u2014 under the 2.5 acre minimum"
+    },
+    {
+      "address": "2303 Pinon Rd",
+      "city": "Rescue",
+      "mls": "226051766",
+      "price": 825000,
+      "beds": 4,
+      "fullBaths": 3,
+      "halfBaths": 0,
+      "sqft": 3168,
+      "acres": 0.99,
+      "status": "Pending",
+      "url": "https://www.coldwellbankerhomes.com/ca/rescue/2303-pinon-rd/pid_70894255/",
+      "reason": "0.99 acres \u2014 under the 2.5 acre minimum"
+    },
+    {
+      "address": "4032 Vega Loop",
+      "city": "Shingle Springs",
+      "mls": "226074764",
+      "price": 1265000,
+      "beds": 4,
+      "fullBaths": 2,
+      "halfBaths": 1,
+      "sqft": 2919,
+      "acres": 0.75,
+      "status": "Active",
+      "url": "https://www.coldwellbankerhomes.com/ca/shingle-springs/4032-vega-loop/pid_72451211/",
+      "reason": "0.75 acres \u2014 under the 2.5 acre minimum; 2 full + 1 half bath \u2014 some sites call this 3 baths; MetroList does not"
+    },
+    {
+      "address": "1635 Country Club Dr",
+      "city": "Placerville",
+      "mls": "226029772",
+      "price": 625000,
+      "beds": 4,
+      "fullBaths": 3,
+      "halfBaths": 0,
+      "sqft": 2414,
+      "acres": 0.61,
+      "status": "Active",
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/1635-country-club-dr/pid_70089379/",
+      "reason": "0.61 acres \u2014 under the 2.5 acre minimum"
+    },
+    {
+      "address": "3537 Foxmore Ln",
+      "city": "Rescue",
+      "mls": "226087398",
+      "price": 849900,
+      "beds": 4,
+      "fullBaths": 2,
+      "halfBaths": 1,
+      "sqft": 3369,
+      "acres": 0.46,
+      "status": "Active",
+      "url": "https://www.coldwellbankerhomes.com/ca/rescue/3537-foxmore-ln/pid_72434210/",
+      "reason": "0.46 acres \u2014 under the 2.5 acre minimum; 2 full + 1 half bath \u2014 some sites call this 3 baths; MetroList does not"
+    },
+    {
+      "address": "1023 Bridger Dr",
+      "city": "Rescue",
+      "mls": "41142748",
+      "price": 1349000,
+      "beds": 6,
+      "fullBaths": 4,
+      "halfBaths": 0,
+      "sqft": null,
+      "acres": 0.31,
+      "status": "Pending",
+      "url": "https://www.coldwellbankerhomes.com/ca/rescue/1023-bridger-dr/pid_72701924/",
+      "reason": "0.31 acres \u2014 under the 2.5 acre minimum"
+    },
+    {
+      "address": "2805 Aquamarine Cir",
+      "city": "Rescue",
+      "mls": "226063967",
+      "price": 699000,
+      "beds": 4,
+      "fullBaths": 3,
+      "halfBaths": 0,
+      "sqft": 2288,
+      "acres": 0.2052,
+      "status": "Active",
+      "url": "https://www.coldwellbankerhomes.com/ca/rescue/2805-aquamarine-circle/pid_71532329/",
+      "reason": "0.2052 acres \u2014 under the 2.5 acre minimum"
+    }
+  ],
+  "dropped": [],
+  "relisted": [
+    {
+      "id": "1781-springvale-rd-placerville",
+      "address": "1781 Springvale Rd",
+      "city": "Placerville",
+      "zip": "95667",
+      "priorMls": "226093241",
+      "mls": "226100125",
+      "priorPrice": 1500000,
+      "currentPrice": 1250000,
+      "priceHistory": [
+        {
+          "date": "2026-07-26",
+          "price": 1500000
+        },
+        {
+          "date": "2026-08-08",
+          "price": 1250000
+        }
+      ],
+      "beds": 4,
+      "baths": 4,
+      "sqft": 2025,
+      "acres": 10.27,
+      "daysOnMarket": 7,
+      "photos": [
+        "https://m.cbhomes.com/p/371/226093241/D391c910B23B48a/full.webp",
+        "https://m1.cbhomes.com/p/371/226093241/945cC4344A22432/full.webp",
+        "https://m.cbhomes.com/p/371/226093241/6e2De5a825f9449/full.webp",
+        "https://m1.cbhomes.com/p/371/226093241/ec6A1Effc8D04A6/full.webp",
+        "https://m.cbhomes.com/p/371/226093241/BCd556cDdf2544d/full.webp",
+        "https://m1.cbhomes.com/p/371/226093241/d6b6dd92A7Df44c/full.webp"
+      ],
+      "url": "https://www.redfin.com/CA/Placerville/1781-Springvale-Rd-95667/home/167348318",
+      "firstSeen": "2026-07-26",
+      "lastSeen": "2026-08-14",
+      "relistedOn": "2026-08-08",
+      "rescuedThisRun": false,
+      "status": "relisted"
     }
   ],
   "rejected": [
+    {
+      "address": "1601 Velvet Horn Ln, Rescue",
+      "price": 1100000,
+      "reason": "Still actively listed at $1,100,000 (no price change since last run), 5 acres with a sports pool and slide \u2014 but 3 bd / 3 ba, under the 4BR minimum."
+    },
     {
       "address": "5135 Bryant Rd, Shingle Springs",
       "price": 1690000,
@@ -718,7 +1034,7 @@
     {
       "address": "3359 Saint Ives Ct, Shingle Springs",
       "price": 2199500,
-      "reason": "Over budget at $2.2M"
+      "reason": "Over budget, only 4bd"
     },
     {
       "address": "765 Sierra View Ct, Shingle Springs",
@@ -739,182 +1055,18 @@
       "reason": "Not for sale \u2014 sold 2020 for $1,405,000"
     },
     {
-      "address": "4661 Holm Rd, Placerville",
-      "price": 1200000,
-      "reason": "Re-checked this run: currently Active at $935,000, 4bd / 4 full + 1 half bath on 5.12 acres (MLS 226083194) \u2014 the earlier 3bd/3ba $1.2M record was wrong. Excluded only because MetroList records no pool; see the no-pool table."
-    },
-    {
       "address": "2800 La Paz Rd, Placerville",
       "price": 995000,
-      "reason": "4bd/2ba \u2014 under the 3 full bath minimum"
+      "reason": "4bd/2ba \u2014 under both minimums"
     },
     {
       "address": "2931 Texas Hill Rd, Placerville",
-      "reason": "4bd/2.5ba \u2014 under the 3 full bath minimum"
+      "reason": "4bd/2.5ba \u2014 under both minimums"
     },
     {
       "address": "4370 Hillwood Dr, Shingle Springs",
       "price": 699000,
-      "reason": "0.25 acres \u2014 under the 2.5 acre minimum"
+      "reason": "0.25 acres"
     }
-  ],
-  "poolless": [
-    {
-      "address": "4351 Rossler Rd",
-      "city": "Placerville",
-      "mls": "226097299",
-      "price": 595000,
-      "beds": 4,
-      "fullBaths": 3,
-      "halfBaths": 0,
-      "sqft": 2300,
-      "acres": 10.02,
-      "status": "Active",
-      "url": "https://www.coldwellbankerhomes.com/ca/placerville/4351-rossler-rd/pid_72839847/"
-    },
-    {
-      "address": "6287 Oak Hill Rd",
-      "city": "Placerville",
-      "mls": "226063059",
-      "price": 599000,
-      "beds": 4,
-      "fullBaths": 3,
-      "halfBaths": 0,
-      "sqft": 4516,
-      "acres": 10.0,
-      "status": "Active",
-      "url": "https://www.coldwellbankerhomes.com/ca/placerville/6287-oak-hill-rd/pid_71429392/"
-    },
-    {
-      "address": "4181 Thunderbird Ln",
-      "city": "Rescue",
-      "mls": "226064393",
-      "price": 799000,
-      "beds": 4,
-      "fullBaths": 3,
-      "halfBaths": 1,
-      "sqft": 3294,
-      "acres": 10.0,
-      "status": "Active",
-      "url": "https://www.coldwellbankerhomes.com/ca/rescue/4181-thunderbird-ln/pid_71478521/"
-    },
-    {
-      "address": "4661 Holm Rd",
-      "city": "Placerville",
-      "mls": "226083194",
-      "price": 935000,
-      "beds": 4,
-      "fullBaths": 4,
-      "halfBaths": 1,
-      "sqft": 4525,
-      "acres": 5.12,
-      "status": "Active",
-      "url": "https://www.coldwellbankerhomes.com/ca/placerville/4661-holm-rd/pid_72562836/"
-    },
-    {
-      "address": "3430 Old Ditch Dr",
-      "city": "Placerville",
-      "mls": "226089905",
-      "price": 1175000,
-      "beds": 4,
-      "fullBaths": 4,
-      "halfBaths": 0,
-      "sqft": 4563,
-      "acres": 5.12,
-      "status": "Active",
-      "url": "https://www.coldwellbankerhomes.com/ca/placerville/3430-old-ditch-dr/pid_72911450/"
-    },
-    {
-      "address": "6560 Agape Ct",
-      "city": "Placerville",
-      "mls": "226070903",
-      "price": 649000,
-      "beds": 4,
-      "fullBaths": 3,
-      "halfBaths": 0,
-      "sqft": 2562,
-      "acres": 5.02,
-      "status": "Active",
-      "url": "https://www.coldwellbankerhomes.com/ca/placerville/6560-agape-ct/pid_71736013/"
-    },
-    {
-      "address": "1200 W El Largo Dr",
-      "city": "Placerville",
-      "mls": "226053498",
-      "price": 1200000,
-      "beds": 5,
-      "fullBaths": 5,
-      "halfBaths": 0,
-      "sqft": 3700,
-      "acres": 5.02,
-      "status": "Active",
-      "url": "https://www.coldwellbankerhomes.com/ca/placerville/1200-w-el-largo-dr/pid_70987213/"
-    },
-    {
-      "address": "5000 Reservation Rd",
-      "city": "Placerville",
-      "mls": "226077234",
-      "price": 799000,
-      "beds": 4,
-      "fullBaths": 4,
-      "halfBaths": 1,
-      "sqft": 3752,
-      "acres": 5.0,
-      "status": "Active",
-      "url": "https://www.coldwellbankerhomes.com/ca/placerville/5000-reservation-rd/pid_72035132/"
-    },
-    {
-      "address": "5681 Honeycomb Ln",
-      "city": "Shingle Springs",
-      "mls": "226068369",
-      "price": 950000,
-      "beds": 4,
-      "fullBaths": 4,
-      "halfBaths": 1,
-      "sqft": 3210,
-      "acres": 5.0,
-      "status": "Active",
-      "url": "https://www.coldwellbankerhomes.com/ca/shingle-springs/5681-honeycomb-ln/pid_72996839/"
-    },
-    {
-      "address": "4810 Robledo Dr",
-      "city": "Placerville",
-      "mls": "226083409",
-      "price": 1049900,
-      "beds": 5,
-      "fullBaths": 4,
-      "halfBaths": 1,
-      "sqft": 4313,
-      "acres": 5.0,
-      "status": "Active",
-      "url": "https://www.coldwellbankerhomes.com/ca/placerville/4810-robledo-dr/pid_72301750/"
-    },
-    {
-      "address": "5025 Eco Ridge Rd",
-      "city": "Placerville",
-      "mls": "226072037",
-      "price": 799999,
-      "beds": 4,
-      "fullBaths": 3,
-      "halfBaths": 0,
-      "sqft": 3089,
-      "acres": 4.83,
-      "status": "Active",
-      "url": "https://www.coldwellbankerhomes.com/ca/placerville/5025-eco-ridge-rd/pid_71882550/"
-    },
-    {
-      "address": "2730 Golden Fawn Trail",
-      "city": "Shingle Springs",
-      "mls": "226091151",
-      "price": 839900,
-      "beds": 4,
-      "fullBaths": 3,
-      "halfBaths": 0,
-      "sqft": 3083,
-      "acres": 3.42,
-      "status": "Pending",
-      "url": "https://www.coldwellbankerhomes.com/ca/shingle-springs/2730-golden-fawn-trail/pid_72585811/"
-    }
-  ],
-  "rejectedNote": "Re-evaluated against the relaxed 4+ bedroom rule this run; reasons that only held under the old 5+ bedroom rule have been corrected."
+  ]
 }

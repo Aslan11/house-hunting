@@ -20,8 +20,10 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
 const money = (n) => (n == null ? '—' : '$' + n.toLocaleString('en-US'));
 const short = (n) => (n == null ? '—' : '$' + (n / 1e6).toFixed(3).replace(/0+$/, '').replace(/\.$/, '') + 'M');
 
+// MetroList reports baths as "full | half". Half baths are shown but never counted toward the
+// 3-bath minimum, because "2 full + 1 half" is a 2.5-bath house however other sites label it.
 const bathLabel = (l) => {
-  const h = l.halfBaths ? ` + ${l.halfBaths} half` : '';
+  const h = l.partialBaths ? ` + ${l.partialBaths} half` : '';
   return `${l.fullBaths} full${h} ba`;
 };
 
@@ -95,9 +97,8 @@ function card(l) {
       <p class="city">${esc(l.city)}, CA ${esc(l.zip)} &middot; MLS ${esc(l.mls)}</p>
       <div class="facts">${facts(l)}</div>
       <p class="pooldetail">${esc(l.poolDetail)}</p>
-      <p class="note">${esc(l.blurb)}</p>
-      ${l.verified && l.verified.statusDisagreement
-        ? `<p class="flagnote">${esc(l.verified.statusDisagreement)}</p>` : ''}
+      <p class="note">${esc(l.summary)}</p>
+      ${l.statusNote ? `<p class="flagnote">${esc(l.statusNote)}</p>` : ''}
       <dl class="micro">
         ${perAcre ? `<div><dt>Per acre</dt><dd>${money(perAcre)}</dd></div>` : ''}
         <div><dt>Water</dt><dd>${esc(l.water || '—')}</dd></div>
@@ -112,17 +113,17 @@ function card(l) {
   </article>`;
 }
 
-const listings = data.listings || [];
+const activeList = data.listings || [];
+const pendingList = data.pending || [];
+const listings = activeList.concat(pendingList);
 const fresh = listings.filter((l) => l.isNew);
-const activeList = listings.filter((l) => l.status === 'active');
-const pendingList = listings.filter((l) => l.status === 'pending');
 
 // Sections are mutually exclusive so no property is ever rendered twice: anything new goes in the
 // top section, and the standing sections carry only what was already on the board last run.
 const heldActive = activeList.filter((l) => !l.isNew);
 const heldPending = pendingList.filter((l) => !l.isNew);
 const dropped = data.dropped || [];
-const nearMiss = data.nearMiss || [];
+const nearMiss = data.nearMisses || [];
 const priceMoves = (data.runSummary && data.runSummary.priceChanges) || [];
 
 const cheapest = activeList.length ? Math.min(...activeList.map((l) => l.currentPrice)) : null;
@@ -133,8 +134,9 @@ const droppedRows = dropped.map((d) => `
         <td>${esc(d.mls || '—')}</td><td>${esc(d.reason)}</td></tr>`).join('');
 
 const nearRows = nearMiss.map((n) => `
-    <tr><td>${esc(n.address)}, ${esc(n.city)}</td><td>${money(n.price)}</td>
-        <td>${esc(n.acres)} ac</td><td>${esc(n.reason)}</td></tr>`).join('');
+    <tr><td><a href="${esc(n.url)}" rel="noopener">${esc(n.address)}</a>, ${esc(n.city)}</td>
+        <td>${money(n.price)}</td><td>${esc(n.acres)} ac</td>
+        <td>${n.beds} bd / ${n.fullBaths} full ba</td><td>${esc(n.reason)}</td></tr>`).join('');
 
 const poolless = data.poolless || [];
 const poollessRows = poolless.map((r) => `
@@ -294,10 +296,13 @@ const html = `<!DOCTYPE html>
 <div class="banner">
   <h3>What changed this run</h3>
   ${fresh.length || priceMoves.length || dropped.length ? `<ul>
-    ${fresh.length ? `<li><strong>${fresh.length} new ${fresh.length === 1 ? 'listing' : 'listings'}</strong> meeting every hard criterion — all of them, this run, because the search finally has a working data source (see the footer).</li>` : ''}
+    ${fresh.length ? `<li><strong>${fresh.length} new ${fresh.length === 1 ? 'listing' : 'listings'}</strong> meeting every hard criterion — see the top section.</li>` : ''}
     ${priceMoves.length ? `<li><strong>${priceMoves.length} price ${priceMoves.length === 1 ? 'change' : 'changes'}</strong> on properties already tracked.</li>` : ''}
     ${dropped.length ? `<li><strong>${dropped.length} previously tracked ${dropped.length === 1 ? 'property' : 'properties'} removed</strong> — no longer on the market. Listed at the bottom.</li>` : ''}
-  </ul>` : `<p>No new listings, no price changes, nothing removed.</p>`}
+  </ul>` : `<p><strong>Nothing moved.</strong> No new listings, no price changes, and nothing left
+  the board since ${esc(data.previousRun)}. All ${activeList.length} active matches and
+  ${pendingList.length} pending were re-verified against the MLS of record today and are unchanged —
+  same prices, same status. The board below is current, not stale.</p>`}
 </div>
 
 ${fresh.length ? `<h2>New this run <span class="count">(${fresh.length})</span></h2>
@@ -325,7 +330,7 @@ ${nearMiss.length ? `<h2>Near misses <span class="count">(${nearMiss.length})</s
 yours rather than the script's.</p>
 <div class="tablewrap">
 <table>
-  <thead><tr><th>Property</th><th>Price</th><th>Land</th><th>Why it is not in the list</th></tr></thead>
+  <thead><tr><th>Property</th><th>Price</th><th>Land</th><th>Size</th><th>Why it is not in the list</th></tr></thead>
   <tbody>${nearRows}
   </tbody>
 </table>

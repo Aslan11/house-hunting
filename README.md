@@ -88,7 +88,18 @@ republish more broadly.
 
 ## Dedupe rules for future runs
 
-Read `listings.json` **before** reporting anything.
+**Read the baseline from `origin/gh-pages`, not from your working branch.** Each run is published to
+`gh-pages`, and development branches are cut fresh from an older default branch — so the copy of
+`listings.json` you start with is very likely stale. The 2026-08-15 run began from a branch stuck at
+2026-07-26 and, on that basis, was about to report all ten properties as brand new and drop six that
+were never gone. The live lineage was three runs further along and already tracked exactly those ten.
+
+```bash
+git fetch origin gh-pages
+git show origin/gh-pages:listings.json > baseline.json
+```
+
+Then compare against `baseline.json` before reporting anything.
 
 1. A property already in `listings` is a duplicate — don't re-surface it. Set `isNew: false`.
 2. Exception: a price different from `currentPrice` *is* worth reporting. Append to `priceHistory`
