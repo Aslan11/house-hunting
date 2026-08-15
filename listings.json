@@ -969,48 +969,12 @@
     }
   ],
   "dropped": [],
-  "relisted": [
-    {
-      "id": "1781-springvale-rd-placerville",
-      "address": "1781 Springvale Rd",
-      "city": "Placerville",
-      "zip": "95667",
-      "priorMls": "226093241",
-      "mls": "226100125",
-      "priorPrice": 1500000,
-      "currentPrice": 1250000,
-      "priceHistory": [
-        {
-          "date": "2026-07-26",
-          "price": 1500000
-        },
-        {
-          "date": "2026-08-08",
-          "price": 1250000
-        }
-      ],
-      "beds": 4,
-      "baths": 4,
-      "sqft": 2025,
-      "acres": 10.27,
-      "daysOnMarket": 7,
-      "photos": [
-        "https://m.cbhomes.com/p/371/226093241/D391c910B23B48a/full.webp",
-        "https://m1.cbhomes.com/p/371/226093241/945cC4344A22432/full.webp",
-        "https://m.cbhomes.com/p/371/226093241/6e2De5a825f9449/full.webp",
-        "https://m1.cbhomes.com/p/371/226093241/ec6A1Effc8D04A6/full.webp",
-        "https://m.cbhomes.com/p/371/226093241/BCd556cDdf2544d/full.webp",
-        "https://m1.cbhomes.com/p/371/226093241/d6b6dd92A7Df44c/full.webp"
-      ],
-      "url": "https://www.redfin.com/CA/Placerville/1781-Springvale-Rd-95667/home/167348318",
-      "firstSeen": "2026-07-26",
-      "lastSeen": "2026-08-14",
-      "relistedOn": "2026-08-08",
-      "rescuedThisRun": false,
-      "status": "relisted"
-    }
-  ],
   "rejected": [
+    {
+      "address": "1781 Springvale Rd, Placerville",
+      "price": 1250000,
+      "reason": "Tracked as a relist after dropping from $1.5M. Resolved this run against MetroListPRO (MLS 226100125): Property Subtype is Triplex \u2014 multi-unit residential income, 10.27 acres, no pool. Fails the pool requirement and is not a single-family home. Retired from tracking."
+    },
     {
       "address": "1601 Velvet Horn Ln, Rescue",
       "price": 1100000,
