@@ -68,6 +68,25 @@ silently pass a 3-bath filter with a 2.5-bath house. **Filter on `Full Bathrooms
 dropped 1234 Rising Hill W Rd (2 full + 1 half) from the 2026-08-15 matches; it is listed under
 "Near misses" instead.
 
+### A criterion that silently matched nothing
+
+Renaming `criteria.baths` to `criteria.fullBaths` on 2026-08-15 broke `scrape.js`, which still read
+`C.baths`. `parseInt(undefined)` is `NaN`, every comparison against `NaN` is false, and so the card
+filter rejected **all 297 listings** on 2026-08-16 while printing a perfectly calm
+`0 clear beds/baths/price`. The board still looked right, because the Redfin relist rescue re-found
+the seven properties already on it — the failure was invisible in the output and would only have
+shown up as new inventory never appearing again. Fixed by reading `fullBaths` with `baths` as a
+fallback, and by routing every threshold through `threshold()`, which throws on a missing or
+unparseable criterion instead of returning `NaN`.
+
+Two habits this argues for, both cheap:
+
+- **Rename a criterion, grep for the old key.** `listings.json` is read by `scrape.js`, `build.js`
+  and the Python helpers, and none of them fail loudly on a key that isn't there.
+- **Treat a zero-candidate stage as a bug until proven otherwise.** The three towns always carry a
+  few hundred active listings; "0 of 297 cleared" is a parser regression, not a quiet market. Any
+  count that collapses to zero between stages deserves a look before the run is published.
+
 ## Photos
 
 Photos are hotlinked from `m.cbhomes.com`, pulled off each detail page in document order:

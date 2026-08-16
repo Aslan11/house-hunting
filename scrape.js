@@ -34,8 +34,29 @@ const TODAY = new Date().toISOString().slice(0, 10);
 
 const prior = JSON.parse(fs.readFileSync(FILE, 'utf8'));
 const C = prior.criteria;
-const MIN_BEDS = parseInt(C.beds, 10);
-const MIN_BATHS = parseInt(C.baths, 10);
+
+/**
+ * Criteria thresholds.
+ *
+ * `criteria.baths` was renamed to `criteria.fullBaths` in the 2026-08-15 run to record that half
+ * baths don't count toward the minimum. This file kept reading `C.baths`, so MIN_BATHS became NaN
+ * — and since every comparison against NaN is false, the card filter rejected all 297 listings on
+ * 2026-08-16 while reporting a cheerful "0 clear beds/baths/price". Only already-tracked homes
+ * survived, via the Redfin relist rescue, so the board looked correct while new inventory was
+ * invisible. Hence `threshold()`: a missing or malformed criterion is a crash, never a silent zero.
+ */
+function threshold(name, ...keys) {
+  for (const k of keys) {
+    const n = parseInt(C[k], 10);
+    if (Number.isFinite(n)) return n;
+  }
+  throw new Error(
+    `criteria.${keys.join('/')} missing or unparseable in listings.json — refusing to run with a ` +
+    `NaN ${name} threshold, which would silently match nothing. Found: ${JSON.stringify(C)}`);
+}
+
+const MIN_BEDS = threshold('bedroom', 'beds');
+const MIN_BATHS = threshold('bathroom', 'fullBaths', 'baths');
 
 const sleep = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 
@@ -76,6 +97,9 @@ function searchPageRows(html) {
           cbid: it['@id'], url: it.url, name: it.name,
           price: (it.offers || {}).price,
           beds: me.numberOfBedrooms, baths: me.numberOfBathroomsTotal,
+          // Cards carry the full/half split too. The minimum is on FULL baths (README
+          // "Half baths"), so a 2-full + 1-half house must not pass as "3 baths".
+          fullBaths: me.numberOfFullBathrooms,
           sqft: fs_.value, street: addr.streetAddress, city: addr.addressLocality,
           zip: addr.postalCode, lat: (me.geo || {}).latitude, lng: (me.geo || {}).longitude,
         });
@@ -376,9 +400,19 @@ for (const slugName of Object.keys(CITY_SLUGS)) {
 const byId = new Map(raw.map((r) => [r.cbid, r]));
 const all = [...byId.values()].filter((r) => Object.values(CITY_SLUGS).includes(r.city));
 
+/*
+ * Card-level filter. Deliberately permissive on baths: the card's full-bath count decides when it
+ * is present, but a card missing that field falls back to the total so the listing survives to the
+ * detail stage, which reads the authoritative MLS field table. Cheap to over-admit here; a listing
+ * dropped at this stage is never looked at again.
+ */
 const candidates = all.filter((r) => {
-  const b = +r.beds, ba = +r.baths, p = +r.price;
-  return b >= MIN_BEDS && ba >= MIN_BATHS && p <= C.maxPrice;
+  const b = +r.beds, p = +r.price;
+  const full = +r.fullBaths, total = +r.baths;
+  const bathsOk = Number.isFinite(full) ? full >= MIN_BATHS
+                : Number.isFinite(total) ? total >= MIN_BATHS
+                : true;
+  return b >= MIN_BEDS && bathsOk && p <= C.maxPrice;
 });
 process.stderr.write(`\n${all.length} active in target cities, ${candidates.length} clear beds/baths/price\n`);
 
@@ -445,7 +479,10 @@ candidates.forEach((r, i) => {
     notes: '',
   };
   const bigEnough = d.acres != null && d.acres >= C.minAcres;
-  const bathsOk = rec.baths == null || rec.baths >= MIN_BATHS;
+  // Authoritative bath check: MLS full-bath count when the detail page reports one, total only as
+  // a fallback. Counting a half bath toward a 3-bath minimum admits 2.5-bath houses.
+  const bathsOk = rec.fullBaths != null ? rec.fullBaths >= MIN_BATHS
+                : rec.baths == null || rec.baths >= MIN_BATHS;
   const ok = bigEnough && d.pool && bathsOk;
 
   /* Reconcile status across feeds before classifying. */
