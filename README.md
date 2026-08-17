@@ -22,6 +22,14 @@ Direct portal access is still blocked in practice — Zillow, Movoto, Homes.com 
 `403` to this environment, and Redfin serves a **decoy page for a different state** rather than an
 error, which is worse than a refusal because it looks like success. Do not trust Redfin from here.
 
+That warning is about Redfin as an *enumerator*, and it is worth being precise, because Redfin is
+still what `mls-status.js` and `crosscheck.js` read for the second-opinion status check. Redfin's
+`/zipcode/<zip>/filter/…` search does return genuine El Dorado County listings — a 2026-08-17 spot
+check pulled 18 in the three zips and every field agreed with the IDX feed and MetroList. It is
+nonetheless **not safe as the source of the board**, because it is silently incomplete: that same
+search returned 12 listings for 95667 against the IDX feed's 220, and it missed an active tracked
+match (1315 Arrowbee Dr). Use Redfin to contradict a status, never to establish the inventory.
+
 Two hosts do serve real, current El Dorado County data and are what the pipeline runs on:
 
 1. **`www.coldwellbankerhomes.com`** — an IDX site carrying the **MetroList** feed. City pages embed
@@ -130,9 +138,34 @@ Then compare against `baseline.json` before reporting anything.
    bedroom rule and had to be corrected.
 5. Update `lastSeen` on confirmed-active properties and `lastRun` on every run.
 
+## Running a refresh
+
+Three steps, in this order. **`scrape.js` does not perform the MetroListPRO check** — it verifies
+against Redfin's feed only. The page's "How this list is built" table states that every match was
+re-read from MetroListPRO, so skipping step 2 publishes a verification claim nothing tested.
+
+```bash
+node scrape.js                                    # 1. enumerate + filter + Redfin status check
+node -e 'const d=require("./listings.json");require("fs").writeFileSync("matches.json",
+  JSON.stringify([...d.listings,...(d.pending||[])].map(l=>({address:l.address,city:l.city,
+  mls:l.mls,price:l.currentPrice,beds:l.beds,fullBaths:l.fullBaths,acres:l.acres,
+  status:l.status}))))' && python3 verify.py     # 2. confirm each one against the MLS of record
+node build.js                                     # 3. render index.html
+```
+
+Step 2 prints one line per property; every field must read back clean (`price beds baths acres
+pool`). Anything else is a disagreement, and per the verification gate the MLS of record wins and
+the disagreement belongs on the card.
+
+`verify.py` reads `matches.json` and writes `verified.json`; both are intermediates and gitignored.
+
 ## Files
 
 - **`listings.json`** — canonical data. Single source of truth.
+- **`scrape.js`** — refreshes `listings.json` from the IDX feed; handles dedupe, price history, drops.
+- **`verify.py`** — independent MetroListPRO confirmation of every match and pending listing.
+- **`crosscheck.js`** / **`mls-status.js`** — the Redfin second opinion `scrape.js` calls to catch
+  listings the IDX feed still reports Active after they have gone into escrow.
 - **`build.js`** — renders `index.html` from `listings.json`. No dependencies: `node build.js`.
 - **`ingest.js`** — merges listings pasted from a portal results page, applying the dedupe rules.
   Kept as a manual fallback; the scrape path above supersedes it.
