@@ -100,6 +100,16 @@ const matches  = byStatus('match');
 const active   = byStatus('active-fails-criteria');
 const archived = byStatus('off-market');
 
+// "New this run": first seen on the current run. Price changes: newest history
+// point landed on the current run and differs from the one before it.
+const isNew = (l) => l.firstSeen === data.lastRun;
+const newMatches = matches.filter(isNew);
+const priceChanged = matches.filter((l) => {
+  const h = l.priceHistory || [];
+  return h.length > 1 && h[h.length - 1].date === data.lastRun
+    && h[h.length - 1].price !== h[h.length - 2].price;
+});
+
 const rejectedRows = data.rejected
   .map((r) => `    <tr><td>${esc(r.address)}</td><td>${money(r.price)}</td><td>${esc(r.reason)}</td></tr>`)
   .join('\n');
@@ -190,6 +200,8 @@ const html = `<!DOCTYPE html>
   a.btn:hover{background:var(--accent-soft)}
   .banner{background:var(--warn-soft);border:1px solid var(--line);border-left:4px solid var(--warn);
     border-radius:10px;padding:16px 18px;margin-bottom:28px;font-size:.9rem}
+  .banner.ok-banner{background:var(--accent-soft);border-left-color:var(--accent)}
+  .banner.ok-banner h3{color:var(--accent)}
   .banner h3{margin:0 0 6px;font-size:.95rem}
   .banner p{margin:0 0 8px;color:var(--muted)}
   .banner p:last-child{margin-bottom:0}
@@ -210,7 +222,7 @@ const html = `<!DOCTYPE html>
   <h1>House Hunt: El Dorado County</h1>
   <p class="sub">Shingle Springs · Rescue · Placerville — updated <strong>${esc(data.lastRun)}</strong></p>
   <div class="criteria">
-    <span class="chip">5+ bedrooms</span>
+    <span class="chip">4+ bedrooms</span>
     <span class="chip">3+ bathrooms</span>
     <span class="chip">Pool required</span>
     <span class="chip">2.5+ acres (5+ preferred)</span>
@@ -218,40 +230,31 @@ const html = `<!DOCTYPE html>
   </div>
 </header>
 
-<div class="banner">
-  <h3>&#9888; This search has no verified results yet</h3>
-  <p>The first run of this page presented four properties as matches. <strong>All of them were off
-  market.</strong> The cause: listing status was inferred from search-engine text, and search engines
-  keep indexing sold listings with &ldquo;For Sale&rdquo; in the title for years afterward. Every
-  listing portal and MLS site is blocked from the environment that generates this page, so no live
-  listing page can be read to check.</p>
-  <p>Nothing is shown as a match below until its status can be confirmed against a live source.
-  The properties on this page are kept as an <strong>archive of what was checked and ruled out</strong>,
-  so a genuine relist gets flagged rather than re-reported as new. See
-  <a href="#fix">how to fix the pipeline</a>.</p>
+<div class="banner ok-banner">
+  <h3>&#10003; ${matches.length} verified match${matches.length === 1 ? '' : 'es'} this run</h3>
+  <p>Redfin is reachable directly from this environment now, so every match below was confirmed on
+  its <strong>live listing page</strong> &mdash; MLS status <em>Active</em> and a pool confirmed via the
+  MLS <code>POOL_PRIVATE_YN</code> amenity field, not inferred from search-engine text (the failure
+  mode that produced four false matches on the first run).</p>
+  <p><strong>The pool is still the binding constraint.</strong> 20 homes cleared the bed / bath / acre /
+  price filters across the three towns this run; only ${matches.length} of them actually have a pool.
+  The rest are listed under &ldquo;Ruled out&rdquo; below.</p>
   <p>${photoNote}</p>
 </div>
 
-<h2 id="fix">Making this work</h2>
-<p class="sectnote">One of these unblocks real results. The first is the cheapest and also solves
-photos, since listing-alert emails carry both current status and image URLs:</p>
-<div class="tablewrap" style="margin-bottom:8px">
-<table>
-  <thead><tr><th>Option</th><th>What it fixes</th><th>Effort</th></tr></thead>
-  <tbody>
-    <tr><td><strong>Zillow/Redfin saved search &rarr; email alerts</strong> to this Gmail</td><td>Status + photos + price cuts, authoritative</td><td>~5 min, one-time</td></tr>
-    <tr><td>Have your agent set up an <strong>MLS/IDX client portal</strong> with email alerts</td><td>Same, plus full MLS data</td><td>One ask</td></tr>
-    <tr><td>Add a <strong>real-estate data API key</strong> to the environment</td><td>Direct queries, no email round-trip</td><td>Paid API</td></tr>
-    <tr><td><strong>Allowlist</strong> a listing domain in the environment's network policy</td><td>Direct reads, but portals still bot-block</td><td>Unreliable</td></tr>
-  </tbody>
-</table>
-</div>
-<p class="sectnote">With alerts flowing into Gmail, this page becomes reliable: current listings,
-correct status, real photos, and genuine price-change detection.</p>
+${newMatches.length ? `<h2>&#10024; New this run</h2>
+<p class="sectnote">Added on ${esc(data.lastRun)} &mdash; not shown on a previous run.</p>
+<div class="grid">${newMatches.map(card).join('\n')}
+</div>` : ''}
 
-${matches.length ? `<h2>Verified matches</h2>
-<p class="sectnote">Confirmed active and meeting every hard criterion.</p>
-<div class="grid">${matches.map(card).join('\n')}
+${priceChanged.length ? `<h2>&#8595; Price changes this run</h2>
+<p class="sectnote">Already tracked, but the list price moved since the last run.</p>
+<div class="grid">${priceChanged.map(card).join('\n')}
+</div>` : ''}
+
+${matches.length ? `<h2>All verified matches</h2>
+<p class="sectnote">Confirmed active and meeting every hard criterion, cheapest first.</p>
+<div class="grid">${[...matches].sort((a, b) => (a.currentPrice || 0) - (b.currentPrice || 0)).map(card).join('\n')}
 </div>` : ''}
 
 ${active.length ? `<h2>Active, but doesn't meet criteria</h2>
@@ -277,15 +280,20 @@ ${rejectedRows}
 </table>
 </div>
 
-<h2>What the search did establish</h2>
-<p class="sectnote">Even with unreliable status data, the shape of the market came through
-consistently across sources, and this part is worth keeping: <strong>the pool is the binding
-constraint, not the budget.</strong> Five-bedroom homes on 5+ acres under $1.5M are common in all
-three towns; ones with a pool are rare. Placerville is well stocked with large acreage homes at
-$1.0–1.2M that have <em>ponds</em> rather than pools. Shingle Springs pool properties tend to jump
-from roughly $1.5M straight to $2M+. So a genuine 5BR/3BA pool property on 5 acres near $1.25M is an
-outlier worth moving quickly on — which is also why stale listings at that price looked so
-convincing. Expect few candidates at any given moment, and prioritise speed when one appears.</p>
+<h2>What the search established</h2>
+<p class="sectnote"><strong>The pool is the binding constraint, not the budget.</strong> Homes with
+4+ beds on 5+ acres under $1.5M are plentiful across all three towns &mdash; this run alone found 20 of
+them &mdash; but only ${matches.length} had a pool. Placerville is well stocked with large-acreage homes
+at $0.6&ndash;1.2M that carry <em>ponds</em>, not pools. Pool homes cluster higher: most of this run's
+matches sit between $1.05M and $1.5M, with a couple of outliers near $0.97M. When a genuine pool
+property on acreage appears in range, expect it to move &mdash; prioritise speed.</p>
+
+<h2 id="fix">How this page is built</h2>
+<p class="sectnote">Data comes straight from Redfin's filtered city/zip searches, which embed the live
+MLS result set. Each candidate's detail page is then fetched to confirm it is Active and to read the
+<code>POOL_PRIVATE_YN</code> amenity field before it is promoted to a match. If Redfin starts
+bot-blocking this environment again, the fallback is a Redfin/Zillow saved-search email alert into the
+connected Gmail &mdash; same authoritative status, photos, and price cuts, no network change needed.</p>
 
 <footer>
   <p>Generated from <code>listings.json</code> by <code>build.js</code>.

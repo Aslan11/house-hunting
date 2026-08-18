@@ -6,11 +6,30 @@ Automated house-hunt tracker for **Shingle Springs**, **Rescue**, and **Placervi
 
 | Requirement | Value |
 |---|---|
-| Bedrooms | 5+ |
+| Bedrooms | 4+ |
 | Bathrooms | 3+ |
 | Pool | Required |
 | Lot size | 2.5 acres minimum, 5+ preferred |
 | Max price | $1,500,000 |
+
+## Status: pipeline is working (2026-08-18)
+
+As of the 2026-08-18 run the network policy reaches **Redfin** directly (`WebFetch` works too), so
+listings are now verified against **live listing pages** rather than search-engine snippets. The run
+found **8 verified matches** — each confirmed Active with a pool via the MLS `POOL_PRIVATE_YN` field.
+The rest of this README documents the earlier blocked state and the fallbacks; keep it in case Redfin
+starts bot-blocking this environment again.
+
+### How a run works now
+
+1. Fetch Redfin's filtered city/zip search for each town with the hard criteria baked into the URL
+   (`min-beds=4,min-baths=3,max-price=1.5M,min-lot-size=2.5-acre`). Region IDs: Shingle Springs
+   `25976`, Placerville `14915`, Rescue via zip `95672`. The page embeds the live MLS result set as
+   JSON.
+2. For each candidate, fetch its detail page and read `POOL_PRIVATE_YN` (authoritative) — the free-text
+   "pool" mentions include nearby-home boilerplate and can't be trusted alone.
+3. Only Active + pool + all hard criteria → `status: "match"`. Everything else is recorded as rejected
+   with the reason.
 
 ## ⚠️ Verification gate — read before reporting anything
 
