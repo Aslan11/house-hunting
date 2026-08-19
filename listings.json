@@ -14,8 +14,8 @@
     "maxPrice": 1500000
   },
   "lastRun": "2026-08-19",
-  "previousRun": "2026-07-26",
-  "criteriaNote": "Bedroom minimum is 4 this run; the stored criteria from the 2026-07-26 run said 5. The 4+ figure comes from the standing search request and is what was applied.",
+  "previousRun": "2026-08-17",
+  "criteriaNote": "Bedroom minimum applied is 4+, per the standing search request.",
   "sources": {
     "primary": "coldwellbankerhomes.com IDX (MetroList/MLS feed) \u2014 per-listing structured MLS fields",
     "secondary": "homefinder.com (MetroList via the Move/realtor.com data pipeline)",
@@ -33,7 +33,7 @@
       "currentPrice": 1489000,
       "priceHistory": [
         {
-          "date": "2026-08-19",
+          "date": "2026-07-26",
           "price": 1489000
         }
       ],
@@ -65,9 +65,9 @@
       ],
       "url": "https://www.coldwellbankerhomes.com/ca/placerville/6881-sagittarius-dr/pid_72017706/",
       "gallery": "https://www.coldwellbankerhomes.com/ca/placerville/6881-sagittarius-dr/pid_72017706/",
-      "firstSeen": "2026-08-19",
+      "firstSeen": "2026-07-26",
       "lastSeen": "2026-08-19",
-      "isNew": true,
+      "isNew": false,
       "verification": {
         "primary": "ColdwellBankerHomes IDX (MetroList feed) \u2014 status \"Active\", MLS 226064449",
         "secondary": null,
@@ -84,7 +84,7 @@
       "currentPrice": 1200000,
       "priceHistory": [
         {
-          "date": "2026-08-19",
+          "date": "2026-07-26",
           "price": 1200000
         }
       ],
@@ -116,9 +116,9 @@
       ],
       "url": "https://www.coldwellbankerhomes.com/ca/shingle-springs/5551-saddlehorn-rd/pid_72318162/",
       "gallery": "https://www.coldwellbankerhomes.com/ca/shingle-springs/5551-saddlehorn-rd/pid_72318162/",
-      "firstSeen": "2026-08-19",
+      "firstSeen": "2026-07-26",
       "lastSeen": "2026-08-19",
-      "isNew": true,
+      "isNew": false,
       "verification": {
         "primary": "ColdwellBankerHomes IDX (MetroList feed) \u2014 status \"Active\", MLS 226083864",
         "secondary": "Homefinder.com (MetroList via Move/realtor.com data) \u2014 status \"for_sale\", $1,200,000, 4bd/3ba, 10.11 ac",
@@ -135,7 +135,7 @@
       "currentPrice": 1289000,
       "priceHistory": [
         {
-          "date": "2026-08-19",
+          "date": "2026-08-09",
           "price": 1289000
         }
       ],
@@ -167,9 +167,9 @@
       ],
       "url": "https://www.coldwellbankerhomes.com/ca/rescue/3565-farview-ct/pid_72531546/",
       "gallery": "https://www.coldwellbankerhomes.com/ca/rescue/3565-farview-ct/pid_72531546/",
-      "firstSeen": "2026-08-19",
+      "firstSeen": "2026-08-09",
       "lastSeen": "2026-08-19",
-      "isNew": true,
+      "isNew": false,
       "verification": {
         "primary": "ColdwellBankerHomes IDX (MetroList feed) \u2014 status \"Pending\", MLS 226087456",
         "secondary": "Homefinder.com (MetroList via Move/realtor.com data) \u2014 status \"for_sale\", $1,289,000, 4bd/4ba, 9.64 ac",
@@ -185,6 +185,10 @@
       "mls": "226083791",
       "currentPrice": 1175000,
       "priceHistory": [
+        {
+          "date": "2026-08-17",
+          "price": 1199900
+        },
         {
           "date": "2026-08-19",
           "price": 1175000
@@ -218,9 +222,9 @@
       ],
       "url": "https://www.coldwellbankerhomes.com/ca/rescue/3720-four-springs-dr/pid_72298813/",
       "gallery": "https://www.coldwellbankerhomes.com/ca/rescue/3720-four-springs-dr/pid_72298813/",
-      "firstSeen": "2026-08-19",
+      "firstSeen": "2026-07-26",
       "lastSeen": "2026-08-19",
-      "isNew": true,
+      "isNew": false,
       "verification": {
         "primary": "ColdwellBankerHomes IDX (MetroList feed) \u2014 status \"Active\", MLS 226083791",
         "secondary": "Homefinder.com (MetroList via Move/realtor.com data) \u2014 status \"for_sale\", $1,175,000, 4bd/3ba, 5.86 ac",
@@ -237,7 +241,7 @@
       "currentPrice": 975000,
       "priceHistory": [
         {
-          "date": "2026-08-19",
+          "date": "2026-07-26",
           "price": 975000
         }
       ],
@@ -269,9 +273,9 @@
       ],
       "url": "https://www.coldwellbankerhomes.com/ca/placerville/2565-stagecoach-rd/pid_72639639/",
       "gallery": "https://www.coldwellbankerhomes.com/ca/placerville/2565-stagecoach-rd/pid_72639639/",
-      "firstSeen": "2026-08-19",
+      "firstSeen": "2026-07-26",
       "lastSeen": "2026-08-19",
-      "isNew": true,
+      "isNew": false,
       "verification": {
         "primary": "ColdwellBankerHomes IDX (MetroList feed) \u2014 status \"Active\", MLS 226059973",
         "secondary": null,
@@ -288,7 +292,7 @@
       "currentPrice": 1299000,
       "priceHistory": [
         {
-          "date": "2026-08-19",
+          "date": "2026-08-13",
           "price": 1299000
         }
       ],
@@ -320,9 +324,9 @@
       ],
       "url": "https://www.coldwellbankerhomes.com/ca/shingle-springs/4071-voyager-way/pid_73037949/",
       "gallery": "https://www.coldwellbankerhomes.com/ca/shingle-springs/4071-voyager-way/pid_73037949/",
-      "firstSeen": "2026-08-19",
+      "firstSeen": "2026-08-13",
       "lastSeen": "2026-08-19",
-      "isNew": true,
+      "isNew": false,
       "verification": {
         "primary": "ColdwellBankerHomes IDX (MetroList feed) \u2014 status \"Active\", MLS 226082753",
         "secondary": "Homefinder.com (MetroList via Move/realtor.com data) \u2014 status \"for_sale\", $1,299,000, 4bd/3ba, 5.03 ac",
@@ -339,7 +343,7 @@
       "currentPrice": 1349999,
       "priceHistory": [
         {
-          "date": "2026-08-19",
+          "date": "2026-08-04",
           "price": 1349999
         }
       ],
@@ -371,9 +375,9 @@
       ],
       "url": "https://www.coldwellbankerhomes.com/ca/rescue/3033-ridgeline-dr/pid_71947550/",
       "gallery": "https://www.coldwellbankerhomes.com/ca/rescue/3033-ridgeline-dr/pid_71947550/",
-      "firstSeen": "2026-08-19",
+      "firstSeen": "2026-08-02",
       "lastSeen": "2026-08-19",
-      "isNew": true,
+      "isNew": false,
       "verification": {
         "primary": "ColdwellBankerHomes IDX (MetroList feed) \u2014 status \"Pending\", MLS 226074530",
         "secondary": "Homefinder.com (MetroList via Move/realtor.com data) \u2014 status \"for_sale\", $1,349,999, 4bd/3ba, 5.0 ac",
@@ -390,7 +394,7 @@
       "currentPrice": 969000,
       "priceHistory": [
         {
-          "date": "2026-08-19",
+          "date": "2026-08-07",
           "price": 969000
         }
       ],
@@ -422,15 +426,17 @@
       ],
       "url": "https://www.coldwellbankerhomes.com/ca/placerville/1315-arrowbee-dr/pid_72934505/",
       "gallery": "https://www.coldwellbankerhomes.com/ca/placerville/1315-arrowbee-dr/pid_72934505/",
-      "firstSeen": "2026-08-19",
+      "firstSeen": "2026-08-07",
       "lastSeen": "2026-08-19",
-      "isNew": true,
+      "isNew": false,
       "verification": {
         "primary": "ColdwellBankerHomes IDX (MetroList feed) \u2014 status \"Active\", MLS 226085035",
         "secondary": "Homefinder.com (MetroList via Move/realtor.com data) \u2014 status \"for_sale\", $969,000, 4bd/3ba, 5.0 ac",
         "dualSourced": true,
         "agrees": true
-      }
+      },
+      "statusChange": "Carried over from 2026-08-17, but reclassified this run: the bedroom count is made up partly by a detached ADU.",
+      "changeKind": "reclassified"
     },
     {
       "id": "1988-cold-springs-rd-placerville",
@@ -441,7 +447,7 @@
       "currentPrice": 850000,
       "priceHistory": [
         {
-          "date": "2026-08-19",
+          "date": "2026-08-04",
           "price": 850000
         }
       ],
@@ -473,15 +479,17 @@
       ],
       "url": "https://www.coldwellbankerhomes.com/ca/placerville/1988-cold-springs-rd/pid_70227860/",
       "gallery": "https://www.coldwellbankerhomes.com/ca/placerville/1988-cold-springs-rd/pid_70227860/",
-      "firstSeen": "2026-08-19",
+      "firstSeen": "2026-08-02",
       "lastSeen": "2026-08-19",
-      "isNew": true,
+      "isNew": false,
       "verification": {
         "primary": "ColdwellBankerHomes IDX (MetroList feed) \u2014 status \"Active\", MLS 226033527",
         "secondary": null,
         "dualSourced": false,
         "agrees": false
-      }
+      },
+      "statusChange": "Was pending on 2026-08-17 \u2014 back on the market and taking offers again.",
+      "changeKind": "status"
     },
     {
       "id": "1234-rising-hill-w-rd-placerville",
@@ -851,49 +859,26 @@
   ],
   "removed": [
     {
-      "address": "1601 Velvet Horn Ln",
-      "city": "Rescue",
-      "reason": "Still actively listed at $1,100,000 (MLS 226060031), but it is 3bd/3ba \u2014 under the 4-bedroom minimum. Dropped from the board, kept on file.",
-      "kind": "fails-criteria",
-      "removedOn": "2026-08-19"
-    },
-    {
-      "address": "4100 Black Oak Dr",
+      "address": "3784 Cattle Dr",
       "city": "Shingle Springs",
-      "reason": "Not present in the live MetroList feed for its city \u2014 off market. MLS 225006994 is a 2025 listing number; user confirms off market.",
+      "mls": "226092223",
+      "lastPrice": 1050000,
       "kind": "off-market",
-      "removedOn": "2026-08-19"
-    },
-    {
-      "address": "5856 Fernwood Dr",
-      "city": "Shingle Springs",
-      "reason": "Not present in the live MetroList feed for its city \u2014 off market. MLS 225000829 is a 2025 listing number; a source showed it sold for $1,400,000 in June 2025.",
-      "kind": "off-market",
-      "removedOn": "2026-08-19"
-    },
-    {
-      "address": "1527 Velvet Horn Ln",
-      "city": "Rescue",
-      "reason": "Not present in the live MetroList feed for its city \u2014 off market. The ~$942K figure reported earlier was an automated valuation estimate, never a list price.",
-      "kind": "off-market",
-      "removedOn": "2026-08-19"
-    },
-    {
-      "address": "5400 Horizon Ct",
-      "city": "Placerville",
-      "reason": "Not present in the live MetroList feed for its city \u2014 off market. MLS 221136905 is a 2021 listing number, and a source shows it sold for $942,000 in March 2022.",
-      "kind": "off-market",
-      "removedOn": "2026-08-19"
-    },
-    {
-      "address": "4280 Leisure Ln",
-      "city": "Placerville",
-      "reason": "Not present in the live MetroList feed for its city \u2014 off market. 2025 listing number; Trulia also carries a 2023 MLS (223062885) for the same address.",
-      "kind": "off-market",
-      "removedOn": "2026-08-19"
+      "removedOn": "2026-08-19",
+      "reason": "Absent from both MLS feeds this run and its listing page now returns 404 \u2014 sold, withdrawn or expired. Was $1,050,000, 5 acres with a built-in pool."
     }
   ],
   "rejected": [
+    {
+      "address": "1781 Springvale Rd, Placerville",
+      "price": 1250000,
+      "reason": "Tracked as a relist after dropping from $1.5M. Resolved this run against MetroListPRO (MLS 226100125): Property Subtype is Triplex \u2014 multi-unit residential income, 10.27 acres, no pool. Fails the pool requirement and is not a single-family home. Retired from tracking."
+    },
+    {
+      "address": "1601 Velvet Horn Ln, Rescue",
+      "price": 1100000,
+      "reason": "Still actively listed at $1,100,000 (no price change since last run), 5 acres with a sports pool and slide \u2014 but 3 bd / 3 ba, under the 4BR minimum."
+    },
     {
       "address": "5135 Bryant Rd, Shingle Springs",
       "price": 1690000,
@@ -916,15 +901,13 @@
     },
     {
       "address": "765 Sierra View Ct, Shingle Springs",
-      "price": 3350000,
-      "reason": "Far over budget (price now $3,350,000, was $3,499,999 \u2014 still out)",
-      "previousPrice": 3499999
+      "price": 3499999,
+      "reason": "Far over budget"
     },
     {
       "address": "5037 Milton Ranch Rd, Shingle Springs",
-      "price": 3949000,
-      "reason": "Far over budget (price now $3,949,000, was $4,388,888 \u2014 still out)",
-      "previousPrice": 4388888
+      "price": 4388888,
+      "reason": "Far over budget"
     },
     {
       "address": "5040 Milton Ranch Rd, Shingle Springs",
@@ -933,12 +916,6 @@
     {
       "address": "5457 Bryant Rd, Shingle Springs",
       "reason": "Not for sale \u2014 sold 2020 for $1,405,000"
-    },
-    {
-      "address": "4661 Holm Rd, Placerville",
-      "price": 935000,
-      "reason": "3bd/3ba \u2014 under bedroom minimum (price now $935,000, was $1,200,000 \u2014 still out)",
-      "previousPrice": 1200000
     },
     {
       "address": "2800 La Paz Rd, Placerville",
@@ -954,5 +931,30 @@
       "price": 699000,
       "reason": "0.25 acres"
     }
-  ]
+  ],
+  "runSummary": {
+    "new": [
+      "1234-rising-hill-w-rd-placerville"
+    ],
+    "priceChanges": [
+      {
+        "address": "3720 Four Springs Dr",
+        "city": "Rescue",
+        "from": 1199900,
+        "to": 1175000
+      }
+    ],
+    "statusChanges": [
+      {
+        "address": "1988 Cold Springs Rd",
+        "city": "Placerville",
+        "from": "Pending",
+        "to": "Active"
+      }
+    ],
+    "dropped": [
+      "3784 Cattle Dr"
+    ],
+    "unchanged": 7
+  }
 }

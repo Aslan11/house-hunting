@@ -57,6 +57,9 @@
     padding:2px 7px;border-radius:4px}
   .dtag.warn{background:var(--warn-soft);color:var(--warn)}
   .dtag.pend{background:var(--pend-soft);color:var(--pend)}
+  .dtag.new{background:var(--new);color:#fff}
+  .dtag.drop{background:var(--accent-soft);color:var(--accent)}
+  .dflags{display:flex;gap:5px;flex-wrap:wrap}
   @media (max-width:720px){
     .drow{grid-template-columns:1fr 1fr}
     .dflags{grid-column:1/-1}
@@ -114,6 +117,11 @@
   .caveat{font-size:.85rem;background:var(--warn-soft);color:var(--ink);border-radius:8px;
     padding:10px 12px;margin:0 0 12px;line-height:1.5}
   .caveat strong{color:var(--warn)}
+  .changed{font-size:.85rem;background:var(--pend-soft);color:var(--ink);border-radius:8px;
+    padding:10px 12px;margin:0 0 12px;line-height:1.5}
+  .changed strong{color:var(--pend)}
+  .changed.reclassified{background:var(--warn-soft)}
+  .changed.reclassified strong{color:var(--warn)}
   .pooldetail{font-size:.83rem;color:var(--muted);margin:0 0 12px}
   .pooldetail strong{color:var(--ink)}
   .verify{font-size:.79rem;color:var(--muted);margin:0 0 14px;display:flex;gap:7px;align-items:flex-start;
@@ -152,7 +160,7 @@
 <header>
   <h1>House Hunt: El Dorado County</h1>
   <p class="sub">Shingle Springs · Rescue · Placerville — run <strong>2026-08-19</strong>,
-  previous run 2026-07-26</p>
+  previous run 2026-08-17</p>
   <div class="criteria">
     <span class="chip">4+ bedrooms</span>
     <span class="chip">3+ bathrooms</span>
@@ -162,7 +170,7 @@
   </div>
   <div class="summary">
     <div class="stat"><b>10</b><span>On the board</span></div>
-    <div class="stat"><b>10</b><span>New this run</span></div>
+    <div class="stat"><b>4</b><span>Changed this run</span></div>
     <div class="stat"><b>$685K</b><span>Entry price</span></div>
     <div class="stat"><b>40 ac</b><span>Largest parcel</span></div>
     <div class="stat"><b>303</b><span>Listings scanned</span></div>
@@ -172,72 +180,39 @@
 
 <section class="highlight" id="new">
   <div class="hl-head">
-    <h2>New this run</h2>
-    <span class="count">10</span>
+    <h2>What changed this run</h2>
+    <span class="count">4</span>
   </div>
-  <p class="sectnote">Every property on the board is new since 2026-07-26 — the previous board was
-       entirely unverified and has been cleared out. Nothing here has been shown to you before.
-  Tap any row for the full card and photos.</p>
+  <p class="sectnote">What actually changed since 2026-08-17:
+  <strong>1 new listing</strong>,
+  <strong>1 price change</strong>,
+  <strong>1 status change</strong>.
+  The other 6 properties on the board are unchanged from last run and
+  are not repeated here. Tap any row for the full card and photos.</p>
   <div class="digest">
-    <a class="drow match" href="#6881-sagittarius-dr-placerville">
-      <span class="dprice">$1,489,000</span>
-      <span class="daddr">6881 Sagittarius Dr<span class="dcity">Placerville</span></span>
-      <span class="dfacts">4bd &middot; 4 ba &middot; 40 ac &middot; 5,351 sqft</span>
-      <span class="dflags"></span>
-    </a>
-    <a class="drow match" href="#5551-saddlehorn-rd-shingle-springs">
-      <span class="dprice">$1,200,000</span>
-      <span class="daddr">5551 Saddlehorn Rd<span class="dcity">Shingle Springs</span></span>
-      <span class="dfacts">4bd &middot; 3 ba &middot; 10.11 ac &middot; 3,400 sqft</span>
-      <span class="dflags"></span>
-    </a>
-    <a class="drow pending" href="#3565-farview-ct-rescue">
-      <span class="dprice">$1,289,000</span>
-      <span class="daddr">3565 Farview Ct<span class="dcity">Rescue</span></span>
-      <span class="dfacts">4bd &middot; 4 ba &middot; 9.64 ac &middot; 3,227 sqft</span>
-      <span class="dflags"><span class="dtag pend">Pending</span></span>
-    </a>
     <a class="drow match" href="#3720-four-springs-dr-rescue">
-      <span class="dprice">$1,175,000</span>
+      <span class="dprice">$1,175,000<span class="dmoved">&darr; from $1,199,900</span></span>
       <span class="daddr">3720 Four Springs Dr<span class="dcity">Rescue</span></span>
       <span class="dfacts">4bd &middot; 3 ba &middot; 5.86 ac &middot; 2,506 sqft</span>
-      <span class="dflags"></span>
-    </a>
-    <a class="drow match" href="#2565-stagecoach-rd-placerville">
-      <span class="dprice">$975,000</span>
-      <span class="daddr">2565 Stagecoach Rd<span class="dcity">Placerville</span></span>
-      <span class="dfacts">5bd &middot; 4 ba &middot; 5.05 ac &middot; 3,885 sqft</span>
-      <span class="dflags"></span>
-    </a>
-    <a class="drow match" href="#4071-voyager-way-shingle-springs">
-      <span class="dprice">$1,299,000</span>
-      <span class="daddr">4071 Voyager Way<span class="dcity">Shingle Springs</span></span>
-      <span class="dfacts">4bd &middot; 3 ba &middot; 5.03 ac &middot; 3,132 sqft</span>
-      <span class="dflags"></span>
-    </a>
-    <a class="drow pending" href="#3033-ridgeline-dr-rescue">
-      <span class="dprice">$1,349,999</span>
-      <span class="daddr">3033 Ridgeline Dr<span class="dcity">Rescue</span></span>
-      <span class="dfacts">4bd &middot; 3 ba &middot; 5 ac &middot; 3,281 sqft</span>
-      <span class="dflags"><span class="dtag pend">Pending</span></span>
+      <span class="dflags"><span class="dtag drop">Price cut</span></span>
     </a>
     <a class="drow caution" href="#1315-arrowbee-dr-placerville">
       <span class="dprice">$969,000</span>
       <span class="daddr">1315 Arrowbee Dr<span class="dcity">Placerville</span></span>
       <span class="dfacts">4bd &middot; 3 ba &middot; 5 ac</span>
-      <span class="dflags"><span class="dtag warn">Caveat</span></span>
+      <span class="dflags"><span class="dtag warn">Reclassified</span> <span class="dtag warn">Caveat</span></span>
     </a>
     <a class="drow match" href="#1988-cold-springs-rd-placerville">
       <span class="dprice">$850,000</span>
       <span class="daddr">1988 Cold Springs Rd<span class="dcity">Placerville</span></span>
       <span class="dfacts">4bd &middot; 3 ba &middot; 2.73 ac &middot; 2,909 sqft</span>
-      <span class="dflags"></span>
+      <span class="dflags"><span class="dtag pend">Back on market</span></span>
     </a>
     <a class="drow caution" href="#1234-rising-hill-w-rd-placerville">
       <span class="dprice">$685,000</span>
       <span class="daddr">1234 Rising Hill W Rd<span class="dcity">Placerville</span></span>
       <span class="dfacts">4bd &middot; 2 full + 1 half ba &middot; 2.66 ac &middot; 2,400 sqft</span>
-      <span class="dflags"><span class="dtag warn">Caveat</span></span>
+      <span class="dflags"><span class="dtag new">New listing</span> <span class="dtag warn">Caveat</span></span>
     </a>
   </div>
 </section>
@@ -260,13 +235,14 @@
     <div class="body">
       <div class="tags">
         <span class="tag ok">Meets every criterion</span>
-        <span class="tag new">New</span>
+        
       </div>
       <p class="price">$1,489,000</p>
       <p class="addr">6881 Sagittarius Dr</p>
       <p class="city">Placerville, CA 95667 &middot; MLS 226064449 &middot; $37K/acre</p>
       <div class="facts"><span class="fact">4 bd</span><span class="fact">4 ba</span><span class="fact">5,351 sqft</span><span class="fact acres pref">40 acres</span><span class="fact pool">Pool</span><span class="fact">Horse property</span><span class="fact">Built 2005</span><span class="fact">3-car garage</span></div>
       <p class="note">Builder&#39;s own residence: a European-country estate on 40 acres with panoramic Sierra foothill views. Hand-carved rock saltwater pool with waterfall and a pool house, plus a movie theater room, three ensuite bedrooms, 22kW whole-house generator and a 3-car garage. Zoned RA20 and set up for horses. The largest parcel on this list by a wide margin.</p>
+      
       
       <p class="pooldetail"><strong>Pool:</strong> Built-In, On Lot, Pool House, Pool Sweep, Salt Water, Other</p>
       <p class="verify one"><span class="vdot"></span>Confirmed active on the primary MetroList IDX feed (MLS 226064449). Second feed doesn't index this one — worth a call before you drive out.</p>
@@ -283,13 +259,14 @@
     <div class="body">
       <div class="tags">
         <span class="tag ok">Meets every criterion</span>
-        <span class="tag new">New</span>
+        
       </div>
       <p class="price">$1,200,000</p>
       <p class="addr">5551 Saddlehorn Rd</p>
       <p class="city">Shingle Springs, CA 95682 &middot; MLS 226083864 &middot; $119K/acre</p>
       <div class="facts"><span class="fact">4 bd</span><span class="fact">3 ba</span><span class="fact">3,400 sqft</span><span class="fact acres pref">10.11 acres</span><span class="fact pool">Pool</span><span class="fact">Horse property</span><span class="fact">Built 1988</span><span class="fact">3-car garage</span></div>
       <p class="note">A 10-acre retreat minutes from town: updated kitchen with quartz counters, upstairs game room with wet bar, and a resort-style backyard with pool, spa, waterfall and a gazebo housing a full outdoor kitchen. Leased solar and a whole-house generator. Horse property with room for agriculture or equestrian use.</p>
+      
       
       <p class="pooldetail"><strong>Pool:</strong> Built-In</p>
       <p class="verify ok"><span class="vdot"></span>Confirmed on two independent MLS feeds — price, beds, baths and acreage agree exactly.</p>
@@ -306,13 +283,14 @@
     <div class="body">
       <div class="tags">
         <span class="tag ok">Meets every criterion</span>
-        <span class="tag new">New</span>
+        
       </div>
-      <p class="price">$1,175,000</p>
+      <p class="price">$1,175,000<span class="pricechg down">&darr; $24,900 from $1,199,900</span></p>
       <p class="addr">3720 Four Springs Dr</p>
       <p class="city">Rescue, CA 95672 &middot; MLS 226083791 &middot; $201K/acre</p>
       <div class="facts"><span class="fact">4 bd</span><span class="fact">3 ba</span><span class="fact">2,506 sqft</span><span class="fact acres pref">5.86 acres</span><span class="fact pool">Pool</span><span class="fact">Horse property</span><span class="fact">Built 1989</span><span class="fact">3-car garage</span></div>
       <p class="note">End-of-road privacy on nearly six acres in a sought-after Rescue pocket. Built-in pool surrounded by mature landscaping, plus an approx. 750 sq ft entertainment suite — game room, extra room and bath — above the detached 3-car garage. Fenced areas and a loafing shed; front-row views toward Sacramento.</p>
+      
       
       <p class="pooldetail"><strong>Pool:</strong> Built-In, On Lot, Pool Sweep, Gunite Construction</p>
       <p class="verify ok"><span class="vdot"></span>Confirmed on two independent MLS feeds — price, beds, baths and acreage agree exactly.</p>
@@ -329,13 +307,14 @@
     <div class="body">
       <div class="tags">
         <span class="tag ok">Meets every criterion</span>
-        <span class="tag new">New</span>
+        
       </div>
       <p class="price">$975,000</p>
       <p class="addr">2565 Stagecoach Rd</p>
       <p class="city">Placerville, CA 95667 &middot; MLS 226059973 &middot; $193K/acre</p>
       <div class="facts"><span class="fact">5 bd</span><span class="fact">4 ba</span><span class="fact">3,885 sqft</span><span class="fact acres pref">5.05 acres</span><span class="fact pool">Pool</span><span class="fact">Horse property</span><span class="fact">Built 1995</span><span class="fact">4-car garage</span></div>
       <p class="note">Custom estate on 5 acres inside the gated Greenstone Country equestrian community. Fenced pool with waterfall, covered pergola, wraparound porch, olive orchard and fenced garden. 4-car garage plus a detached 2-car carport. Community amenities include a riding arena, trails, fishing ponds and tennis courts. The best price-per-acre of the clean matches.</p>
+      
       
       <p class="pooldetail"><strong>Pool:</strong> Built-In, Pool Sweep, Fenced, Gunite Construction</p>
       <p class="verify one"><span class="vdot"></span>Confirmed active on the primary MetroList IDX feed (MLS 226059973). Second feed doesn't index this one — worth a call before you drive out.</p>
@@ -352,13 +331,14 @@
     <div class="body">
       <div class="tags">
         <span class="tag ok">Meets every criterion</span>
-        <span class="tag new">New</span>
+        
       </div>
       <p class="price">$1,299,000</p>
       <p class="addr">4071 Voyager Way</p>
       <p class="city">Shingle Springs, CA 95682 &middot; MLS 226082753 &middot; $258K/acre</p>
       <div class="facts"><span class="fact">4 bd</span><span class="fact">3 ba</span><span class="fact">3,132 sqft</span><span class="fact acres pref">5.03 acres</span><span class="fact pool">Pool</span><span class="fact">Built 2003</span><span class="fact">4-car garage</span></div>
       <p class="note">Single-story custom home on roughly 5 private acres with an infinity-edge saltwater pool and spa overlooking the hills, travertine decking and an outdoor shower and bathroom. Separate living area with its own bedroom, bath and private entrance. Owned solar, generator, well, 4-car garage and a 20×30 detached workshop.</p>
+      
       
       <p class="pooldetail"><strong>Pool:</strong> Built-In, Salt Water</p>
       <p class="verify ok"><span class="vdot"></span>Confirmed on two independent MLS feeds — price, beds, baths and acreage agree exactly.</p>
@@ -375,13 +355,14 @@
     <div class="body">
       <div class="tags">
         <span class="tag ok">Meets every criterion</span>
-        <span class="tag new">New</span>
+        
       </div>
       <p class="price">$850,000</p>
       <p class="addr">1988 Cold Springs Rd</p>
       <p class="city">Placerville, CA 95667 &middot; MLS 226033527 &middot; $311K/acre</p>
       <div class="facts"><span class="fact">4 bd</span><span class="fact">3 ba</span><span class="fact">2,909 sqft</span><span class="fact acres">2.73 acres</span><span class="fact pool">Pool</span><span class="fact">Horse property</span><span class="fact">Built 2011</span><span class="fact">2-car garage</span></div>
       <p class="note">Farmhouse-inspired home on 2.73 usable acres with a year-round stream and no HOA. Built-in pool and spa, open-concept kitchen with an oversized marble island, main-level primary suite, plus a dedicated office (possible 5th bedroom) overlooking the pool. Detached garage/workshop and room for RV parking.</p>
+      <p class="changed status"><strong>Changed since 2026-08-17:</strong> Was pending on 2026-08-17 — back on the market and taking offers again.</p>
       
       <p class="pooldetail"><strong>Pool:</strong> Built-In, Pool Cover, Pool/Spa Combo</p>
       <p class="verify one"><span class="vdot"></span>Confirmed active on the primary MetroList IDX feed (MLS 226033527). Second feed doesn't index this one — worth a call before you drive out.</p>
@@ -403,13 +384,14 @@
     <div class="body">
       <div class="tags">
         <span class="tag warn">Meets it on paper — read the caveat</span>
-        <span class="tag new">New</span>
+        
       </div>
       <p class="price">$969,000</p>
       <p class="addr">1315 Arrowbee Dr</p>
       <p class="city">Placerville, CA 95667 &middot; MLS 226085035 &middot; $194K/acre</p>
       <div class="facts"><span class="fact">4 bd</span><span class="fact">3 ba</span><span class="fact acres pref">5 acres</span><span class="fact pool">Pool</span><span class="fact">Horse property</span><span class="fact">Built 1971</span><span class="fact">2-car garage</span></div>
       <p class="note">Gated mini ranch on 5 acres with an in-ground pool, owned solar, pergola with a full outdoor kitchen, and a wine cave. Set up for horses: round pen, large arena, three covered turnouts and cross-fenced pastures. A detached 1bd/1ba ADU with washer/dryer adds guest, caretaker or rental potential.</p>
+      <p class="changed reclassified"><strong>Correction:</strong> Carried over from 2026-08-17, but reclassified this run: the bedroom count is made up partly by a detached ADU.</p>
       <p class="caveat"><strong>Caveat:</strong> The 4bd/3ba count combines the 3bd/2ba main ranch house with a detached 1bd/1ba ADU — it is not four bedrooms under one roof. MetroList classifies it as multi-family. Worth a look if a guest/caretaker unit suits you.</p>
       <p class="pooldetail"><strong>Pool:</strong> Built-In, Gunite Construction</p>
       <p class="verify ok"><span class="vdot"></span>Confirmed on two independent MLS feeds — price, beds, baths and acreage agree exactly.</p>
@@ -433,6 +415,7 @@
       <p class="city">Placerville, CA 95667 &middot; MLS 226079329 &middot; $258K/acre</p>
       <div class="facts"><span class="fact">4 bd</span><span class="fact">2 full + 1 half ba</span><span class="fact">2,400 sqft</span><span class="fact acres">2.66 acres</span><span class="fact pool">Pool</span><span class="fact">Horse property</span><span class="fact">Built 1961</span><span class="fact">1-car garage</span></div>
       <p class="note">In-ground pool with natural rock features and dense planting for seclusion, a barn, a double carport, and an upstairs primary suite with a private balcony over the pool. Priced well below everything else on this list — the caveats below are why.</p>
+      
       <p class="caveat"><strong>Caveat:</strong> The 2.69 acres is two parcels — a 1.39-acre primary and a separate flat 1.3-acre lot that can be sold off, so the home parcel alone is under your 2.5-acre floor. Baths are 2 full + 1 half, not 3 full. The listing states the home needs work and will not qualify for VA/FHA financing.</p>
       <p class="pooldetail"><strong>Pool:</strong> Built-In</p>
       <p class="verify one"><span class="vdot"></span>Confirmed active on the primary MetroList IDX feed (MLS 226079329). Second feed doesn't index this one — worth a call before you drive out.</p>
@@ -454,13 +437,14 @@
     <div class="body">
       <div class="tags">
         <span class="tag pend">Sale pending</span>
-        <span class="tag new">New</span>
+        
       </div>
       <p class="price">$1,289,000</p>
       <p class="addr">3565 Farview Ct</p>
       <p class="city">Rescue, CA 95672 &middot; MLS 226087456 &middot; $134K/acre</p>
       <div class="facts"><span class="fact">4 bd</span><span class="fact">4 ba</span><span class="fact">3,227 sqft</span><span class="fact acres pref">9.64 acres</span><span class="fact pool">Pool</span><span class="fact">Horse property</span><span class="fact">Built 1993</span><span class="fact">3-car garage</span></div>
       <p class="note">Fully remodeled hilltop estate at the end of a private court, with 360-degree views over Folsom Lake, Bass Lake, the Sutter Buttes and the Sierras. Solar-heated pool, attached guest/pool house with full bath, smart-home integration, 3-car garage and RV/boat room. Listed as 4–6 bedrooms.</p>
+      
       
       <p class="pooldetail"><strong>Pool:</strong> Built-In, On Lot, Pool House, Solar Heat</p>
       <p class="verify ok"><span class="vdot"></span>Confirmed on two independent MLS feeds — price, beds, baths and acreage agree exactly.</p>
@@ -477,13 +461,14 @@
     <div class="body">
       <div class="tags">
         <span class="tag pend">Sale pending</span>
-        <span class="tag new">New</span>
+        
       </div>
       <p class="price">$1,349,999</p>
       <p class="addr">3033 Ridgeline Dr</p>
       <p class="city">Rescue, CA 95672 &middot; MLS 226074530 &middot; $270K/acre</p>
       <div class="facts"><span class="fact">4 bd</span><span class="fact">3 ba</span><span class="fact">3,281 sqft</span><span class="fact acres pref">5 acres</span><span class="fact pool">Pool</span><span class="fact">Built 1992</span><span class="fact">3-car garage</span></div>
       <p class="note">Five acres in a gated community minutes from El Dorado Hills. Custom pool and a large entertaining deck; inside, 3,200+ sq ft with new luxury vinyl plank flooring. Heavily equipped for energy independence: fully owned solar, two Tesla Powerwalls, EV charger, well and septic.</p>
+      
       
       <p class="pooldetail"><strong>Pool:</strong> Built-In</p>
       <p class="verify ok"><span class="vdot"></span>Confirmed on two independent MLS feeds — price, beds, baths and acreage agree exactly.</p>
@@ -496,43 +481,17 @@
 
 <section id="changes">
   <h2>Dropped since last run</h2>
-  <p class="sectnote">Every property carried over from 2026-07-26 was re-checked against
-  the live feed. All of them came off the board — five are genuinely off market, and the one still
-  listed doesn't meet the bedroom minimum. They stay on file so a genuine relist gets flagged as news
-  rather than re-reported as a new find.</p>
+  <p class="sectnote">Every property carried over from 2026-08-17 was re-checked against
+  both live feeds. These no longer appear in either. They stay on file, so if one comes back on the
+  market it gets flagged as news rather than re-reported as a new find.</p>
   <div class="tablewrap">
   <table>
     <thead><tr><th>Property</th><th>Status</th><th>Why it left the board</th></tr></thead>
     <tbody>
-    <tr class="fails-criteria">
-      <td><strong>1601 Velvet Horn Ln</strong><br><span class="dim">Rescue, CA</span></td>
-      <td>No longer qualifies</td>
-      <td class="wrapcell">Still actively listed at $1,100,000 (MLS 226060031), but it is 3bd/3ba — under the 4-bedroom minimum. Dropped from the board, kept on file.</td>
-    </tr>
     <tr class="off-market">
-      <td><strong>4100 Black Oak Dr</strong><br><span class="dim">Shingle Springs, CA</span></td>
+      <td><strong>3784 Cattle Dr</strong><br><span class="dim">Shingle Springs, CA</span></td>
       <td>Off market</td>
-      <td class="wrapcell">Not present in the live MetroList feed for its city — off market. MLS 225006994 is a 2025 listing number; user confirms off market.</td>
-    </tr>
-    <tr class="off-market">
-      <td><strong>5856 Fernwood Dr</strong><br><span class="dim">Shingle Springs, CA</span></td>
-      <td>Off market</td>
-      <td class="wrapcell">Not present in the live MetroList feed for its city — off market. MLS 225000829 is a 2025 listing number; a source showed it sold for $1,400,000 in June 2025.</td>
-    </tr>
-    <tr class="off-market">
-      <td><strong>1527 Velvet Horn Ln</strong><br><span class="dim">Rescue, CA</span></td>
-      <td>Off market</td>
-      <td class="wrapcell">Not present in the live MetroList feed for its city — off market. The ~$942K figure reported earlier was an automated valuation estimate, never a list price.</td>
-    </tr>
-    <tr class="off-market">
-      <td><strong>5400 Horizon Ct</strong><br><span class="dim">Placerville, CA</span></td>
-      <td>Off market</td>
-      <td class="wrapcell">Not present in the live MetroList feed for its city — off market. MLS 221136905 is a 2021 listing number, and a source shows it sold for $942,000 in March 2022.</td>
-    </tr>
-    <tr class="off-market">
-      <td><strong>4280 Leisure Ln</strong><br><span class="dim">Placerville, CA</span></td>
-      <td>Off market</td>
-      <td class="wrapcell">Not present in the live MetroList feed for its city — off market. 2025 listing number; Trulia also carries a 2023 MLS (223062885) for the same address.</td>
+      <td class="wrapcell">Absent from both MLS feeds this run and its listing page now returns 404 — sold, withdrawn or expired. Was $1,050,000, 5 acres with a built-in pool.</td>
     </tr>
     </tbody>
   </table>
@@ -771,15 +730,16 @@
   <table>
     <thead><tr><th>Address</th><th>Price</th><th>Why not</th></tr></thead>
     <tbody>
+    <tr><td>1781 Springvale Rd, Placerville</td><td>$1,250,000</td><td class="wrapcell">Tracked as a relist after dropping from $1.5M. Resolved this run against MetroListPRO (MLS 226100125): Property Subtype is Triplex — multi-unit residential income, 10.27 acres, no pool. Fails the pool requirement and is not a single-family home. Retired from tracking.</td></tr>
+    <tr><td>1601 Velvet Horn Ln, Rescue</td><td>$1,100,000</td><td class="wrapcell">Still actively listed at $1,100,000 (no price change since last run), 5 acres with a sports pool and slide — but 3 bd / 3 ba, under the 4BR minimum.</td></tr>
     <tr><td>5135 Bryant Rd, Shingle Springs</td><td>$1,690,000</td><td class="wrapcell">Over budget; status unverified</td></tr>
     <tr><td>1900 Deer Valley Rd, Rescue</td><td>$1,200,000</td><td class="wrapcell">3bd/2ba, no pool</td></tr>
     <tr><td>Howard Dr, Rescue (5.94 acres)</td><td>$2,275,000</td><td class="wrapcell">Over budget</td></tr>
     <tr><td>3359 Saint Ives Ct, Shingle Springs</td><td>$2,199,500</td><td class="wrapcell">Over budget, only 4bd</td></tr>
-    <tr><td>765 Sierra View Ct, Shingle Springs</td><td>$3,350,000</td><td class="wrapcell">Far over budget (price now $3,350,000, was $3,499,999 — still out)</td></tr>
-    <tr><td>5037 Milton Ranch Rd, Shingle Springs</td><td>$3,949,000</td><td class="wrapcell">Far over budget (price now $3,949,000, was $4,388,888 — still out)</td></tr>
+    <tr><td>765 Sierra View Ct, Shingle Springs</td><td>$3,499,999</td><td class="wrapcell">Far over budget</td></tr>
+    <tr><td>5037 Milton Ranch Rd, Shingle Springs</td><td>$4,388,888</td><td class="wrapcell">Far over budget</td></tr>
     <tr><td>5040 Milton Ranch Rd, Shingle Springs</td><td>—</td><td class="wrapcell">Not for sale — sold 2019 for $1.4M</td></tr>
     <tr><td>5457 Bryant Rd, Shingle Springs</td><td>—</td><td class="wrapcell">Not for sale — sold 2020 for $1,405,000</td></tr>
-    <tr><td>4661 Holm Rd, Placerville</td><td>$935,000</td><td class="wrapcell">3bd/3ba — under bedroom minimum (price now $935,000, was $1,200,000 — still out)</td></tr>
     <tr><td>2800 La Paz Rd, Placerville</td><td>$995,000</td><td class="wrapcell">4bd/2ba — under both minimums</td></tr>
     <tr><td>2931 Texas Hill Rd, Placerville</td><td>—</td><td class="wrapcell">4bd/2.5ba — under both minimums</td></tr>
     <tr><td>4370 Hillwood Dr, Shingle Springs</td><td>$699,000</td><td class="wrapcell">0.25 acres</td></tr>
@@ -812,9 +772,9 @@
 <footer>
   <p>Generated from <code>listings.json</code> by <code>build.js</code>.
   10 on the board (6 clean, 2 with caveats,
-  2 pending) · 24 near misses · 6 dropped this run.
+  2 pending) · 24 near misses · 1 dropped this run.
   Repeat listings are suppressed automatically; a property only reappears here if its price moves.</p>
-  <p>Bedroom minimum is 4 this run; the stored criteria from the 2026-07-26 run said 5. The 4+ figure comes from the standing search request and is what was applied.</p>
+  <p>Bedroom minimum applied is 4+, per the standing search request.</p>
 </footer>
 
 </div>

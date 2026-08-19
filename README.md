@@ -70,7 +70,17 @@ title for years.
 
 ## Dedupe rules for future runs
 
-Read `listings.json` **before** reporting anything.
+> **Read the previous state from `gh-pages`, not from your working branch.** Each run happens on a
+> fresh `claude/*` branch cut from the default branch, and the default branch can be many runs
+> behind. On 2026-08-19 the branch copy of `listings.json` was dated 2026-07-26 while `gh-pages`
+> held the real 2026-08-17 state — diffing against the branch copy would have re-announced seven
+> already-reported properties as new finds. Start every run with:
+>
+> ```bash
+> git fetch origin gh-pages && git show origin/gh-pages:listings.json > prev.json
+> ```
+
+Read that `prev.json` **before** reporting anything.
 
 1. A property already in `listings` is a **duplicate** — don't re-surface it as new. Clear `isNew`
    on entries carried over from the previous run.

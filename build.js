@@ -34,13 +34,16 @@ const TIERS = {
 };
 
 const listings = data.listings || [];
+const rs = data.runSummary || {};
 const tier = (t) => listings.filter((l) => l.status === t);
 const matches = tier('match');
 const caveats = tier('caveat');
 const pendings = tier('pending');
 
 const priceMoved = (l) => (l.priceHistory || []).length > 1;
-const fresh = listings.filter((l) => l.isNew || priceMoved(l));
+/* "New this run" means: never shown before, price moved, or the listing changed hands
+   between active and pending. Everything else is a duplicate and is not re-announced. */
+const fresh = listings.filter((l) => l.isNew || priceMoved(l) || l.statusChange);
 
 function host(u) {
   try { return new URL(u).hostname.replace(/^www\./, '').split('.')[0]; }
@@ -116,8 +119,14 @@ function verifyLine(l) {
 /** Compact row for the "new this run" digest — links down to the full card. */
 function digestRow(l) {
   const meta = TIERS[l.status] || TIERS.match;
-  const flag = l.status === 'pending' ? '<span class="dtag pend">Pending</span>'
-             : l.status === 'caveat' ? '<span class="dtag warn">Caveat</span>' : '';
+  const flags = [];
+  if (l.isNew) flags.push('<span class="dtag new">New listing</span>');
+  if (priceMoved(l)) flags.push('<span class="dtag drop">Price cut</span>');
+  if (l.changeKind === 'status') flags.push('<span class="dtag pend">Back on market</span>');
+  if (l.changeKind === 'reclassified') flags.push('<span class="dtag warn">Reclassified</span>');
+  if (l.status === 'pending') flags.push('<span class="dtag pend">Pending</span>');
+  if (l.status === 'caveat') flags.push('<span class="dtag warn">Caveat</span>');
+  const flag = flags.join(' ');
   const hist = l.priceHistory || [];
   const moved = hist.length > 1
     ? `<span class="dmoved">${hist[hist.length - 1].price < hist[hist.length - 2].price ? '&darr;' : '&uarr;'} from ${money(hist[hist.length - 2].price)}</span>`
@@ -147,6 +156,7 @@ function card(l, opts = {}) {
       <p class="city">${esc(l.city)}, CA ${esc(l.zip)} &middot; MLS ${esc(l.mls)}${perAcre}</p>
       <div class="facts">${facts(l)}</div>
       <p class="note">${esc(l.blurb)}</p>
+      ${l.statusChange ? `<p class="changed ${esc(l.changeKind || '')}"><strong>${l.changeKind === 'reclassified' ? 'Correction' : 'Changed since ' + esc(data.previousRun)}:</strong> ${esc(l.statusChange)}</p>` : ''}
       ${l.caveat ? `<p class="caveat"><strong>Caveat:</strong> ${esc(l.caveat)}</p>` : ''}
       <p class="pooldetail"><strong>Pool:</strong> ${esc(l.poolDetail)}</p>
       ${verifyLine(l)}
@@ -160,19 +170,20 @@ function card(l, opts = {}) {
 const newSection = fresh.length ? `
 <section class="highlight" id="new">
   <div class="hl-head">
-    <h2>New this run</h2>
+    <h2>What changed this run</h2>
     <span class="count">${fresh.length}</span>
   </div>
-  <p class="sectnote">${fresh.length === listings.length
-    ? `Every property on the board is new since ${esc(data.previousRun)} — the previous board was
-       entirely unverified and has been cleared out. Nothing here has been shown to you before.`
-    : `New to this board since ${esc(data.previousRun)}. Nothing here has been shown to you before.`}
-  Tap any row for the full card and photos.</p>
+  <p class="sectnote">What actually changed since ${esc(data.previousRun)}:
+  <strong>${(rs.new || []).length} new listing${(rs.new || []).length === 1 ? '' : 's'}</strong>,
+  <strong>${(rs.priceChanges || []).length} price change${(rs.priceChanges || []).length === 1 ? '' : 's'}</strong>,
+  <strong>${(rs.statusChanges || []).length} status change${(rs.statusChanges || []).length === 1 ? '' : 's'}</strong>.
+  The other ${listings.length - fresh.length} properties on the board are unchanged from last run and
+  are not repeated here. Tap any row for the full card and photos.</p>
   <div class="digest">${fresh.map(digestRow).join('')}
   </div>
 </section>` : `
 <section class="highlight quiet" id="new">
-  <div class="hl-head"><h2>New this run</h2><span class="count">0</span></div>
+  <div class="hl-head"><h2>What changed this run</h2><span class="count">0</span></div>
   <p class="sectnote">No new listings and no price changes since ${esc(data.previousRun)}.
   The board below is unchanged.</p>
 </section>`;
@@ -263,6 +274,9 @@ const html = `<!DOCTYPE html>
     padding:2px 7px;border-radius:4px}
   .dtag.warn{background:var(--warn-soft);color:var(--warn)}
   .dtag.pend{background:var(--pend-soft);color:var(--pend)}
+  .dtag.new{background:var(--new);color:#fff}
+  .dtag.drop{background:var(--accent-soft);color:var(--accent)}
+  .dflags{display:flex;gap:5px;flex-wrap:wrap}
   @media (max-width:720px){
     .drow{grid-template-columns:1fr 1fr}
     .dflags{grid-column:1/-1}
@@ -320,6 +334,11 @@ const html = `<!DOCTYPE html>
   .caveat{font-size:.85rem;background:var(--warn-soft);color:var(--ink);border-radius:8px;
     padding:10px 12px;margin:0 0 12px;line-height:1.5}
   .caveat strong{color:var(--warn)}
+  .changed{font-size:.85rem;background:var(--pend-soft);color:var(--ink);border-radius:8px;
+    padding:10px 12px;margin:0 0 12px;line-height:1.5}
+  .changed strong{color:var(--pend)}
+  .changed.reclassified{background:var(--warn-soft)}
+  .changed.reclassified strong{color:var(--warn)}
   .pooldetail{font-size:.83rem;color:var(--muted);margin:0 0 12px}
   .pooldetail strong{color:var(--ink)}
   .verify{font-size:.79rem;color:var(--muted);margin:0 0 14px;display:flex;gap:7px;align-items:flex-start;
@@ -368,7 +387,7 @@ const html = `<!DOCTYPE html>
   </div>
   <div class="summary">
     <div class="stat"><b>${listings.length}</b><span>On the board</span></div>
-    <div class="stat"><b>${fresh.length}</b><span>New this run</span></div>
+    <div class="stat"><b>${fresh.length}</b><span>Changed this run</span></div>
     <div class="stat"><b>${short(cheapest)}</b><span>Entry price</span></div>
     <div class="stat"><b>${biggest ? biggest + ' ac' : '—'}</b><span>Largest parcel</span></div>
     <div class="stat"><b>${data.sources.scanned}</b><span>Listings scanned</span></div>
@@ -405,9 +424,8 @@ ${(data.removed || []).length ? `
 <section id="changes">
   <h2>Dropped since last run</h2>
   <p class="sectnote">Every property carried over from ${esc(data.previousRun)} was re-checked against
-  the live feed. All of them came off the board — five are genuinely off market, and the one still
-  listed doesn't meet the bedroom minimum. They stay on file so a genuine relist gets flagged as news
-  rather than re-reported as a new find.</p>
+  both live feeds. These no longer appear in either. They stay on file, so if one comes back on the
+  market it gets flagged as news rather than re-reported as a new find.</p>
   <div class="tablewrap">
   <table>
     <thead><tr><th>Property</th><th>Status</th><th>Why it left the board</th></tr></thead>
