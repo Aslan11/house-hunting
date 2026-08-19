@@ -1,55 +1,45 @@
-# Network reachability notes
+# Network reality for this tracker
 
-**Status as of 2026-08-19: no allowlist change is needed.** General outbound HTTPS works. An earlier
-version of this file said every listing site was blocked at the egress gateway; that is no longer
-true, and the tracker now runs end to end without any configuration change.
-
-What is blocked is **bot protection at the destinations**, not the gateway. That distinction matters:
-you can't fix it with an allowlist, and you don't need to.
-
-Verify proxy state at any time with:
+Superseded as of **2026-08-15**. Outbound HTTPS now works — the egress gateway is open and
+`recentRelayFailures` is empty:
 
 ```bash
 curl -sS "$HTTPS_PROXY/__agentproxy/status" | python3 -m json.tool
 ```
 
-## Reachability, measured
+What blocks listing data now is **site-side bot defence**, not the proxy. Distinguish the two: a
+gateway denial shows up in `recentRelayFailures`; a site block does not.
 
-| Host | Result | Notes |
+## Host status, measured 2026-08-15
+
+| Host | Result | Usable |
 |---|---|---|
-| `coldwellbankerhomes.com` | **200** | Primary source. Server-rendered, full MLS fields. |
-| `homefinder.com` | **200** | Cross-check source. `__NEXT_DATA__` JSON. |
-| `m.cbhomes.com` (photo CDN) | **200** | Hotlinks fine; no referrer or auth required. |
-| `century21.com` | 200 (stub) | Client-rendered; ~4 KB shell, no listing data. |
-| `bhhsdrysdale.com` | 200 | No usable search endpoint found. |
-| `zillow.com`, `trulia.com`, `har.com`, `metrolist.com`, `landwatch.com`, `point2homes.com`, `movoto.com`, `rocket.com`, `weichert.com` | 403 | Bot-blocked at the destination. |
-| `redfin.com` | 302 / 403 | Stingray API returns a CloudFront "Request blocked" page. |
-| `realtor.com` | 429 | Rate-limited; `WebFetch` also refuses it. |
-| `compass.com`, `sothebysrealty.com` | 202 | Challenge page, no content. |
+| `www.coldwellbankerhomes.com` | 200, correct city, full MetroList IDX data | **Yes — primary** |
+| `www.metrolistpro.com` | 200, official MetroList MLS records by MLS number | **Yes — verification** |
+| `m.cbhomes.com` | 200 on `GET` (rejects `HEAD`) | **Yes — photos** |
+| `www.redfin.com` | 200 but **serves a decoy page for an unrelated state** | No — actively misleading |
+| `www.zillow.com`, `www.homes.com`, `www.movoto.com`, `www.remax.com`, `www.har.com` | 403 | No |
+| `www.realtor.com` | 429 | No |
+| `www.redfin.com/stingray/*` | 403 (CloudFront) | No |
+| `www.century21.com` | 200 but client-rendered shell, no data in HTML | No |
 
-`WebFetch` is subject to the same destination blocks — it returned 403 on homes.com and 405 on
-Redfin. Use `curl` with a desktop User-Agent against the IDX sites instead.
+Both usable hosts require a browser `User-Agent`. The default agent string is blocked.
 
-## One genuine environment limitation
+The Redfin result is the one to watch out for: it returns HTTP 200 with a **complete, valid-looking
+page for a different city and state**. Any scraper that trusts the status code will silently ingest
+listings from the wrong place. Always assert the city appears in the returned HTML.
 
-Headless Chromium inside this container **cannot load images through the local agent proxy** —
-requests die with `net::ERR_CONNECTION_RESET`, while `curl` fetches the identical URLs at 200.
-So screenshots taken here show empty photo frames.
+## Headless browser
 
-This is an artifact of the container, not a problem with the page. The photo URLs are valid and
-public; a real viewer's browser loads them normally. Every `<img>` carries an `onerror` fallback, so
-even a genuinely dead URL degrades to a "view gallery" tile rather than a hole in the layout.
+Chromium in this container has **no outbound network at all** — even `https://example.com` fails
+with `ERR_CONNECTION_RESET`, with or without `--proxy-server`. Use it for layout checks only; verify
+remote URLs with `curl`, which honours `HTTPS_PROXY`.
 
-Don't chase this, and don't strip the photos because they look broken from in here.
+## If the usable hosts start blocking
 
-## If the primary source breaks
+Fall back to paths that don't fight bot defences:
 
-In rough order of effort:
-
-1. Find another broker IDX site that server-renders MetroList results (the pattern that works:
-   national brand, non-React, listing data in JSON-LD or `__NEXT_DATA__`).
-2. Set up a Zillow/Redfin saved search emailing `kvn.p.mrtn@gmail.com` — this runner has Gmail
-   access, so alert mail becomes an authoritative feed with status, price cuts and image URLs.
-3. Ask the buyer's agent for an MLS/IDX client portal with email alerts — fullest MLS data.
-4. Add a real-estate data API key (SimplyRETS, Bridge Interactive) to the environment.
-5. `ingest.js` accepts listings pasted straight off a portal results page as a manual fallback.
+1. A Zillow/Redfin **saved search with email alerts** into the connected Gmail — carries current
+   status, price cuts and image URLs, needs no network change.
+2. An agent-run **MLS/IDX client portal** with email alerts.
+3. A licensed **data API key** (SimplyRETS, Bridge Interactive, RapidAPI).
