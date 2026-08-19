@@ -40,6 +40,13 @@ Two hosts do serve real, current El Dorado County data and are what the pipeline
    Only the MLS number in the URL matters, so any record resolves directly:
    `https://www.metrolistpro.com/homes/2/6/x/<MLS>`
 
+A third source is available if either of the above breaks: **`www.homefinder.com`** serves MetroList
+records through the Move/realtor.com pipeline, embedded as JSON in `<script id="__NEXT_DATA__">`
+(`source.name === "MetroList"`, with `list_price`, `description.beds`, `baths_consolidated`,
+`lot_sqft` and `status`). It is independent of both the IDX feed and Redfin. Its limitation is the
+same as Redfin's: it renders roughly 40 listings per city and ignores path filters and pagination, so
+it can confirm or contradict a known listing but must never be used to enumerate inventory.
+
 Both need a normal browser `User-Agent`; the default agent string gets blocked.
 
 ```bash
@@ -94,6 +101,22 @@ Two habits this argues for, both cheap:
 - **Treat a zero-candidate stage as a bug until proven otherwise.** The three towns always carry a
   few hundred active listings; "0 of 297 cleared" is a parser regression, not a quiet market. Any
   count that collapses to zero between stages deserves a look before the run is published.
+
+### A summary that reported the previous run's news
+
+`scrape.js` builds its output as `{...prior, …}` and never set `runSummary`, so the key was carried
+forward untouched — while `build.js` renders it as the "What changed this run" banner. The 2026-08-17
+run legitimately recorded `{new: [], priceChanges: [], dropped: [], unchanged: 10}`. On 2026-08-19
+that stale object would have published "nothing moved" over a run that actually found a $24,900 price
+cut on 3720 Four Springs Dr and lost 3784 Cattle Dr from the market.
+
+This is the same shape of bug as the `previousRun` carry-forward already commented in `scrape.js`:
+spreading `prior` preserves *everything*, including the fields that describe the previous run rather
+than the data. `scrape.js` now recomputes `runSummary` from this run's own listings before writing.
+
+The general rule: **anything in `listings.json` that describes a run rather than a property must be
+rewritten every run, not spread forward.** Today that is `lastRun`, `previousRun`, `source`,
+`dataQuality` and `runSummary`.
 
 ## Photos
 

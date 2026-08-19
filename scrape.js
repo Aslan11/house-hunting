@@ -551,6 +551,25 @@ const nChg = listings.filter((l) => (l.priceHistory || []).length > 1 &&
   l.priceHistory.at(-1).price !== l.priceHistory.at(-2).price &&
   l.priceHistory.at(-1).date === TODAY).length;
 
+/* `...prior` carries runSummary forward unchanged, and build.js renders it as "what
+   changed this run" — so a stale copy reports the PREVIOUS run's news as today's. That is
+   the same trap the previousRun comment above describes, and it bit this run: the 08-17
+   summary said "nothing moved", which would have hidden a $24,900 cut and two departures.
+   Recompute it from this run's own data every time. */
+const movedToday = (l) => (l.priceHistory || []).length > 1 &&
+  l.priceHistory.at(-1).date === TODAY &&
+  l.priceHistory.at(-1).price !== l.priceHistory.at(-2).price;
+out.runSummary = {
+  new: listings.filter((l) => l.newThisRun).map((l) => `${l.address}, ${l.city}`),
+  priceChanges: listings.concat(pending).filter(movedToday).map((l) => ({
+    address: l.address, city: l.city,
+    from: l.priceHistory.at(-2).price, to: l.priceHistory.at(-1).price,
+  })),
+  relisted: relisted.filter((r) => r.rescuedThisRun).map((r) => `${r.address}, ${r.city}`),
+  dropped: dropped.map((d) => d.address),
+  unchanged: listings.filter((l) => !l.newThisRun && !movedToday(l)).length,
+};
+
 /* Never let a demotion be silent — it is the difference between reporting 7 matches
    and 6, and on 2026-08-03 it was the difference between reporting a new match and
    correctly reporting that nothing moved. */
