@@ -1,110 +1,55 @@
-# Network config needed for this tracker
+# Network reachability notes
 
-The container that runs this tracker denies outbound HTTPS to every listing site. The denial is
-at the egress gateway, not at the destination — a `CONNECT www.zillow.com:443` gets `403 Forbidden`
-from the local proxy, so no packet ever reaches Zillow.
+**Status as of 2026-08-19: no allowlist change is needed.** General outbound HTTPS works. An earlier
+version of this file said every listing site was blocked at the egress gateway; that is no longer
+true, and the tracker now runs end to end without any configuration change.
 
-Verify at any time with:
+What is blocked is **bot protection at the destinations**, not the gateway. That distinction matters:
+you can't fix it with an allowlist, and you don't need to.
+
+Verify proxy state at any time with:
 
 ```bash
 curl -sS "$HTTPS_PROXY/__agentproxy/status" | python3 -m json.tool
 ```
 
-`recentRelayFailures` records each denial as
-`"gateway answered 403 to CONNECT (policy denial or upstream failure)"`.
+## Reachability, measured
 
-## Where to change it
+| Host | Result | Notes |
+|---|---|---|
+| `coldwellbankerhomes.com` | **200** | Primary source. Server-rendered, full MLS fields. |
+| `homefinder.com` | **200** | Cross-check source. `__NEXT_DATA__` JSON. |
+| `m.cbhomes.com` (photo CDN) | **200** | Hotlinks fine; no referrer or auth required. |
+| `century21.com` | 200 (stub) | Client-rendered; ~4 KB shell, no listing data. |
+| `bhhsdrysdale.com` | 200 | No usable search endpoint found. |
+| `zillow.com`, `trulia.com`, `har.com`, `metrolist.com`, `landwatch.com`, `point2homes.com`, `movoto.com`, `rocket.com`, `weichert.com` | 403 | Bot-blocked at the destination. |
+| `redfin.com` | 302 / 403 | Stingray API returns a CloudFront "Request blocked" page. |
+| `realtor.com` | 429 | Rate-limited; `WebFetch` also refuses it. |
+| `compass.com`, `sothebysrealty.com` | 202 | Challenge page, no content. |
 
-**claude.ai → profile icon (bottom left) → Settings → Capabilities →
-"Code execution and file creation" → Domain allowlist**
+`WebFetch` is subject to the same destination blocks — it returned 403 on homes.com and 405 on
+Redfin. Use `curl` with a desktop User-Agent against the IDX sites instead.
 
-Either set it to **All domains**, or keep it restricted and add the hosts below under
-**Additional allowed domains**.
+## One genuine environment limitation
 
-If the environment was created through Claude Code on the web with its own network policy, that
-policy governs instead, and it's edited on the environment itself. See
-<https://code.claude.com/docs/en/claude-code-on-the-web> and
-<https://code.claude.com/docs/en/network-config>.
+Headless Chromium inside this container **cannot load images through the local agent proxy** —
+requests die with `net::ERR_CONNECTION_RESET`, while `curl` fetches the identical URLs at 200.
+So screenshots taken here show empty photo frames.
 
-## Minimal set — test viability first
+This is an artifact of the container, not a problem with the page. The photo URLs are valid and
+public; a real viewer's browser loads them normally. Every `<img>` carries an `onerror` fallback, so
+even a genuinely dead URL degrades to a "view gallery" tile rather than a hole in the layout.
 
-Start with Redfin alone. It's the most likely to actually work: it serves a structured CSV of
-search results, and it bot-blocks less aggressively than Zillow.
+Don't chase this, and don't strip the photos because they look broken from in here.
 
-```
-www.redfin.com
-ssl.cdn-redfin.com
-```
+## If the primary source breaks
 
-If that works, a filtered search can be pulled directly as CSV — the cleanest possible input for
-`ingest.js`, with no HTML parsing.
+In rough order of effort:
 
-## Full set — listing data plus photos
-
-The CDN hosts matter: without them, pages load but every photo is broken.
-
-```
-# Zillow (+ Trulia, same company)
-www.zillow.com
-zillow.com
-photos.zillowstatic.com
-www.trulia.com
-
-# Redfin
-www.redfin.com
-ssl.cdn-redfin.com
-
-# Realtor.com
-www.realtor.com
-api.realtor.com
-ap.rdcpix.com
-
-# Others carrying El Dorado County inventory
-www.homes.com
-images.homes.com
-www.movoto.com
-www.compass.com
-
-# MetroList — the actual MLS for El Dorado County
-www.metrolistpro.com
-www.metrolist.com
-```
-
-If the field accepts wildcards, this is equivalent and more robust:
-
-```
-*.zillow.com  *.zillowstatic.com  *.redfin.com  *.cdn-redfin.com
-*.realtor.com  *.rdcpix.com  *.homes.com  *.movoto.com
-*.compass.com  *.trulia.com  *.metrolistpro.com  *.metrolist.com
-```
-
-## Known issues to expect
-
-1. **The setting may not take effect.** Several open bugs report that "Additional allowed domains"
-   is not propagated to container egress — anthropics/claude-code
-   [#19087](https://github.com/anthropics/claude-code/issues/19087),
-   [#30112](https://github.com/anthropics/claude-code/issues/30112),
-   [#52982](https://github.com/anthropics/claude-code/issues/52982). If the hosts are still denied
-   after the change, "All domains" is the reliable fallback.
-2. **Allowlisting is necessary but may not be sufficient.** Zillow and Redfin block datacenter IP
-   ranges, which is what this container runs on. A second 403 may appear — that one genuinely from
-   the site. Distinguish them by source: a gateway denial shows up in `recentRelayFailures`, a site
-   block does not and returns an HTML body.
-3. **`WebFetch` is blocked too**, independently of `curl` (`example.com` returns 403). It's likely
-   governed by the same allowlist, so it may start working after the change — worth retesting.
-
-## Verifying after the change
-
-```bash
-curl -sS -o /dev/null -w "%{http_code}\n" https://www.redfin.com/
-```
-
-- `200` → egress open and the site is serving. Working.
-- `403` **with** a new entry in `recentRelayFailures` → still an egress policy denial.
-- `403` **without** a new relay-failure entry → egress is open; the site is bot-blocking.
-
-## If the sites block anyway
-
-Fall back to the paths that don't fight bot defenses: Zillow/Redfin saved-search **email alerts**
-into the connected Gmail (works today, needs no network change, and carries photo URLs), or a
-licensed data API key (SimplyRETS, Bridge Interactive, RapidAPI).
+1. Find another broker IDX site that server-renders MetroList results (the pattern that works:
+   national brand, non-React, listing data in JSON-LD or `__NEXT_DATA__`).
+2. Set up a Zillow/Redfin saved search emailing `kvn.p.mrtn@gmail.com` — this runner has Gmail
+   access, so alert mail becomes an authoritative feed with status, price cuts and image URLs.
+3. Ask the buyer's agent for an MLS/IDX client portal with email alerts — fullest MLS data.
+4. Add a real-estate data API key (SimplyRETS, Bridge Interactive) to the environment.
+5. `ingest.js` accepts listings pasted straight off a portal results page as a manual fallback.

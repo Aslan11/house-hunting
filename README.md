@@ -1,112 +1,99 @@
 # House Hunting — El Dorado County
 
 Automated house-hunt tracker for **Shingle Springs**, **Rescue**, and **Placerville, CA**.
+Published from the `gh-pages` branch.
 
 ## Criteria
 
 | Requirement | Value |
 |---|---|
-| Bedrooms | 5+ |
+| Bedrooms | 4+ |
 | Bathrooms | 3+ |
 | Pool | Required |
 | Lot size | 2.5 acres minimum, 5+ preferred |
 | Max price | $1,500,000 |
 
-## ⚠️ Verification gate — read before reporting anything
+> The 2026-07-26 run recorded the bedroom minimum as 5. The standing search request says **4+**,
+> which is what the 2026-08-19 run applied. If 5 is actually right, change `criteria.beds` in
+> `listings.json` and re-filter — three of the current matches would drop out.
 
-The first run of this tracker reported four properties as matches. **All four were off market.**
+## Data pipeline (working as of 2026-08-19)
 
-Root cause: listing status was inferred from search-engine result text. Search engines index
-listing pages that keep "For Sale" in the `<title>` for years after the sale closes, so stale
-listings read as active. A second failure compounded it — search snippets conflated two different
-properties on the same street, producing a listing with the wrong MLS number, bed count and price.
+Portals (Zillow, Redfin, Realtor, Trulia, Homes.com, Movoto) bot-block this environment, and
+`WebFetch` gets 403/405 from them. **Broker IDX sites do not.** They serve the same MetroList MLS
+feed as server-rendered HTML with structured per-listing fields, which is what this tracker reads.
 
-**Rules that follow from this:**
+| Source | Role | What it gives |
+|---|---|---|
+| `coldwellbankerhomes.com` | Primary | Server-rendered search results + detail pages. JSON-LD `LocationFeatureSpecification` blocks carry every MLS field: status, beds, baths, **lot acreage**, **`Pool` / `Pool Description`**, year built, garage, horse property. Photo CDN URLs included. |
+| `homefinder.com` | Cross-check | `__NEXT_DATA__` JSON carrying MetroList records via the Move/realtor.com pipeline. Independent of the primary. Indexes ~40 listings per city, so it can't confirm everything. |
 
-1. A property may only be given `status: "match"` when its active status is confirmed against a
-   live listing page or an authoritative feed. Search-result text is **not** sufficient.
-2. MetroList MLS numbers encode the listing year: `221…` = 2021, `223…` = 2023, `225…` = 2025,
-   `226…` = 2026. A prefix older than the current year is strong evidence the listing is stale.
-   Treat it as off market unless proven otherwise.
-3. Cross-check bed/bath/price against at least two independent sources before reporting. If they
-   disagree, report the disagreement rather than picking one.
-4. Prefer *under*-reporting. An empty result is correct and useful; a fabricated match is not.
+Scripts live in the run scratchpad, not the repo; the durable artifacts are `listings.json` (data)
+and `build.js` (renderer). The shape of a run:
 
-## Why the environment can't verify
+1. Scrape all result pages for the three cities → ~300 live listings.
+2. Filter on beds / baths / price from card data.
+3. Fetch a detail page per candidate → acreage and pool from MLS fields.
+4. Filter on acreage ≥ 2.5 and pool present.
+5. Cross-check each survivor against Homefinder; record whether it agreed.
+6. Merge into `listings.json` under the dedupe rules below, then `node build.js`.
 
-The network policy allows GitHub, package registries, and a keyed `maps.googleapis.com`. Everything
-else is blocked at the proxy — Zillow, Redfin, Realtor.com, Homes.com, Movoto, small brokerage
-sites, plus OpenStreetMap, Wikimedia and Esri tile servers. `WebFetch` is blocked outright
-(`example.com` returns 403). `WebSearch` is the only channel, and it returns summarised text, never
-live status and never image URLs.
+### Useful details
 
-## Fixing the pipeline
+- CB search card classes differ by property type — `beds` vs `total-beds`, `sq.-ft.` vs `sq-ft`.
+  Parse both or you silently lose most listings.
+- MetroList MLS numbers encode the listing year: `221…` = 2021, `225…` = 2025, `226…` = 2026.
+  A prefix older than the current year on a supposedly-active listing is a red flag.
+- Photo URLs (`m.cbhomes.com/p/…/m23cc.webp`) hotlink fine — no referrer or auth needed. They fail
+  to load *inside this environment* (the local agent proxy resets Chromium's connections), but they
+  load normally in a real browser. Don't "fix" that.
+- Curl with a desktop User-Agent. Without one, some hosts return stubs.
 
-Ranked cheapest-first. The first option solves listing status **and** photos at once:
+## Verification gate — read before reporting anything
 
-1. **Zillow/Redfin saved search with email alerts** to `kvn.p.mrtn@gmail.com`. This repo's runner
-   has Gmail access, so alert emails become an authoritative feed: current listings, correct
-   status, price cuts, and image URLs. ~5 minutes to set up, one time.
-2. **An agent-run MLS/IDX client portal** with email alerts — same benefits, fuller MLS data.
-3. **A real-estate data API key** in the environment (SimplyRETS, Bridge Interactive, a RapidAPI
-   provider) for direct queries.
-4. **Allowlisting a listing domain** in the network policy. Least reliable — the portals bot-block
-   independently of the proxy.
+The first run reported four properties as matches. **All four were off market**, because listing
+status was inferred from search-engine snippets, which index sold listings with "For Sale" in the
+title for years.
 
-## Photos
+**Rules:**
 
-Photo support is built and waiting on a source.
-
-- Each listing has a `photos` array in `listings.json`. Put any image URL in it and the card
-  renders it on the next build.
-- Hotlinking works even though this environment can't load images: the **viewer's browser** fetches
-  them, and it isn't behind this proxy. Images carry `referrerpolicy="no-referrer"`, which also
-  gets past most CDN referrer blocks.
-- If a photo URL 404s or is blocked, an `onerror` handler swaps in the fallback tile client-side,
-  so a dead URL never leaves a hole in the layout.
-- With no photo, the card shows a "View photos on <site>" tile linking to `gallery` (or `url`).
-
-Note that MLS photos are the copyright of the listing brokerage. Fine for a private hunting page;
-don't republish them more broadly.
-
-## Fastest path: paste from Zillow
-
-`ingest.js` takes listings copied straight off a Zillow or Redfin results page and merges them in,
-applying the dedupe rules below automatically.
-
-```bash
-node ingest.js paste.txt     # or:  pbpaste | node ingest.js
-node build.js
-```
-
-It reports what was new, what changed price, and what was already tracked. Anything outside the
-three target cities is skipped; anything failing a hard criterion is added but flagged rather than
-presented as a match. Image URLs in the paste become the card photo.
-
-Note the coverage problem this solves: web search returns only a small, stale, non-random slice of
-inventory, because it reads *summaries of* portal pages rather than querying the live MLS. A portal's
-own filtered search is the real result set. Do not treat a thin search-derived result list as
-evidence that inventory is thin.
-
-## Files
-
-- **`listings.json`** — canonical data. Single source of truth.
-- **`ingest.js`** — merge pasted portal listings into `listings.json`.
-- **`build.js`** — renders `index.html` from `listings.json`. No dependencies: `node build.js`.
-- **`index.html`** — generated. Don't hand-edit; edit the JSON and rebuild.
+1. A property may only reach the board when its active status comes from a **live MLS-fed source**.
+   Search-result text is never sufficient.
+2. Take pool and acreage from **MLS structured fields**, not marketing prose — otherwise "room for a
+   pool" reads as a pool.
+3. Cross-check against the second feed where it has the listing. Where it doesn't, say so on the
+   card rather than implying the same confidence.
+4. Run the **negative control** every time: re-check previously-confirmed-off-market addresses
+   against the live feed. They must be absent. If a known-dead listing shows up as active, the
+   pipeline is broken — stop and fix it before publishing.
+5. Prefer under-reporting. An empty board is a useful result; a fabricated match is not.
 
 ## Dedupe rules for future runs
 
 Read `listings.json` **before** reporting anything.
 
-1. A property already in `listings` is a **duplicate** — do not re-surface it.
-2. Exception: if the price differs from `currentPrice`, that *is* worth reporting. Append to
-   `priceHistory`, update `currentPrice`, and the card will render the delta automatically.
+1. A property already in `listings` is a **duplicate** — don't re-surface it as new. Clear `isNew`
+   on entries carried over from the previous run.
+2. Exception: a changed price *is* news. Append to `priceHistory`, update `currentPrice`; the card
+   and the top-of-page digest render the delta automatically.
 3. Anything in `rejected` stays rejected unless a price change brings it into range.
-4. An `off-market` property returning to market is newsworthy — but only once verified per the gate.
-5. Update `lastSeen` on confirmed-active properties and `lastRun` on every run.
+4. A property that disappears from the live feed has gone off market — move it to `removed` and off
+   the board.
+5. An `off-market` property returning to market is newsworthy, but only once it passes the gate.
+6. Update `lastSeen` on confirmed listings, and `lastRun` / `previousRun` on every run.
+
+## Files
+
+- **`listings.json`** — canonical data. Single source of truth.
+- **`build.js`** — renders `index.html`. No dependencies: `node build.js`.
+- **`index.html`** — generated. Don't hand-edit; edit the JSON and rebuild.
+- **`ingest.js`** — merges listings pasted from a Zillow/Redfin results page. A manual fallback,
+  kept for when the IDX route breaks.
+
+Note that MLS photos are copyright of the listing brokerage. Fine for a private hunting page; don't
+republish them more broadly.
 
 ## Publishing
 
-Served from the `gh-pages` branch at repo root. Enable under
+Served from the `gh-pages` branch at repo root:
 **Settings → Pages → Source: `gh-pages` / `(root)`**.
