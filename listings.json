@@ -13,15 +13,15 @@
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-08-19",
-  "previousRun": "2026-08-17",
+  "lastRun": "2026-08-20",
+  "previousRun": "2026-08-19",
   "source": {
     "name": "Coldwell Banker IDX (MetroList feed), verified against MetroListPRO (MetroList MLS)",
     "method": "Enumerated every active listing in the three cities from IDX city pages, applied the hard criteria to structured MLS fields, then re-read each survivor's record from MetroListPRO and required price, beds, full baths, acreage and pool to match.",
     "scanned": 301,
-    "passedBedsBathsPrice": 35,
+    "passedBedsBathsPrice": 34,
     "verifiedMatches": 10,
-    "inventoryScanned": 297,
+    "inventoryScanned": 298,
     "verifiedActiveMatches": 6,
     "mlsVerifiedOn": "2026-08-17"
   },
@@ -31,19 +31,12 @@
   },
   "runSummary": {
     "new": [],
-    "priceChanges": [
-      {
-        "address": "3720 Four Springs Dr",
-        "city": "Rescue",
-        "from": 1199900,
-        "to": 1175000
-      }
-    ],
+    "priceChanges": [],
     "relisted": [],
     "dropped": [
-      "3784 Cattle Dr, Shingle Springs"
+      "3033 Ridgeline Dr, Rescue"
     ],
-    "unchanged": 5
+    "unchanged": 6
   },
   "listings": [
     {
@@ -86,7 +79,7 @@
       "summary": "Crafted as the builder's own residence, this extraordinary European Country-inspired estate was designed without compromise. From its commanding setting on 40 acres with sweeping Sierra foothill views and timeless architectural details, every aspect of the property reflects quality and enduring elegance. From the moment you arrive, the home makes a striking impression, thoughtfully designed to fra",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-08-19",
+      "lastSeen": "2026-08-20",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -122,7 +115,7 @@
       "lat": 38.6092,
       "lng": -120.9405,
       "photos": [
-        "https://m1.cbhomes.com/p/371/226082753/174d2448488d4C7/full.webp",
+        "https://m.cbhomes.com/p/371/226082753/174d2448488d4C7/full.webp",
         "https://m1.cbhomes.com/p/371/226082753/50843B5EC3D94bd/full.webp",
         "https://m.cbhomes.com/p/371/226082753/11e01b187E1144B/full.webp",
         "https://m1.cbhomes.com/p/371/226082753/9cdf364E011e4f4/full.webp",
@@ -135,7 +128,7 @@
       "summary": "Escape the hustle and bustle and discover your own private retreat in Shingle Springs. Set on approximately 5 private acres with sweeping hillside views, this single-story custom home offers over 3,000 sq. ft. of thoughtfully designed living space with 4 bedrooms, 3 full baths and an impressive 4-car garage.    The outdoor setting is where this property truly shines. A stunning infinity-edge saltw",
       "notes": "",
       "firstSeen": "2026-08-13",
-      "lastSeen": "2026-08-19",
+      "lastSeen": "2026-08-20",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -184,7 +177,7 @@
       "summary": "Just minutes from town yet worlds away, this 10 acre sanctuary delivers the ultimate retreat lifestyle. Step inside to discover a beautifully updated home with 4 bedrooms, 3 baths, and an inviting upstairs game room complete with a wet bar  perfect for gatherings. The renovated kitchen shines with quartz counters, stainless appliances, and beautiful white cabinetry, flowing seamlessly into the fam",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-08-19",
+      "lastSeen": "2026-08-20",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -233,7 +226,7 @@
       "summary": "Sought-after area. Minutes from shopping, schools. Country living at its finest. Don't miss the approx. 750SF ultimate entertainment hub: game room plus extra room & bath situated above the detached three-car garage. Connected to the main house by a breeze-catching walkway, this private extra space makes a perfect teen hangout or man cave.  Situated in a serene, park-like setting, this property of",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-08-19",
+      "lastSeen": "2026-08-20",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -286,7 +279,7 @@
       "summary": "Nestled on a stunning 5-acre homesite in the prestigious gated community of Greenstone Country, this custom estate blends luxury, privacy, and outdoor recreation. Surrounded by mature oak trees and rock outcroppings, the approximately 3,885 sq. ft. home is designed for comfortable living and entertaining.    The spacious floorplan offers 5-6 bedrooms, 4 bathrooms, a 4-car garage, and a detached 2-",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-08-19",
+      "lastSeen": "2026-08-20",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -335,7 +328,7 @@
       "summary": "Welcome to this charming mini ranch with an ADU, tucked behind a gated entrance at the end of a paved driveway, offering privacy, versatility, and lovely views in a peaceful country setting. The single-story ranch home design welcomes you into a light-filled living room where vaulted ceilings and expansive picture windows showcase the scenery beyond. The updated kitchen features granite countertop",
       "notes": "",
       "firstSeen": "2026-08-07",
-      "lastSeen": "2026-08-19",
+      "lastSeen": "2026-08-20",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -346,56 +339,6 @@
     }
   ],
   "pending": [
-    {
-      "id": "3033-ridgeline-dr-rescue",
-      "address": "3033 Ridgeline Dr",
-      "city": "Rescue",
-      "zip": "95672",
-      "mls": "226074530",
-      "currentPrice": 1349999,
-      "beds": 4,
-      "baths": 3,
-      "fullBaths": 3,
-      "partialBaths": null,
-      "sqft": 3281,
-      "acres": 5,
-      "pool": true,
-      "poolDetail": "Built-In",
-      "yearBuilt": "1992",
-      "garageSpaces": "3",
-      "view": null,
-      "water": "Well",
-      "sewer": "Septic System",
-      "propertyType": "Single Family",
-      "mlsStatus": "Pending",
-      "flag": null,
-      "listedOn": "2026-06-12",
-      "lat": 38.7124,
-      "lng": -121.0111,
-      "photos": [
-        "https://m.cbhomes.com/p/371/226074530/1758ca1E24164B0/full.webp",
-        "https://m1.cbhomes.com/p/371/226074530/005e799D04C541D/full.webp",
-        "https://m.cbhomes.com/p/371/226074530/6185a51521d6488/full.webp",
-        "https://m1.cbhomes.com/p/371/226074530/b60287E69E9a4bc/full.webp",
-        "https://m.cbhomes.com/p/371/226074530/065bc4334AC0490/full.webp",
-        "https://m1.cbhomes.com/p/371/226074530/20D09Ee1dAFA48d/full.webp"
-      ],
-      "url": "https://www.coldwellbankerhomes.com/ca/rescue/3033-ridgeline-dr/pid_71947550/",
-      "gallery": "https://www.coldwellbankerhomes.com/ca/rescue/3033-ridgeline-dr/pid_71947550/",
-      "status": "pending",
-      "summary": "Welcome to a residence where privacy, luxury, and energy efficiency come together in one exceptional property. Nestled in a gated community on five peaceful acres, this beautifully updated home offers the serenity of country living with the convenience of El Dorado Hills' premier shopping, dining, entertainment, and top-rated schools just minutes away.    Designed for the way Californians want to ",
-      "notes": "Meets every criterion but is under contract (Sale Pending). Kept on file in case the deal falls through.",
-      "newThisRun": false,
-      "firstSeen": "2026-08-02",
-      "pendingSince": "2026-08-16",
-      "priceHistory": [
-        {
-          "date": "2026-08-04",
-          "price": 1349999
-        }
-      ],
-      "lastSeen": "2026-08-19"
-    },
     {
       "id": "3565-farview-ct-rescue",
       "address": "3565 Farview Ct",
@@ -423,7 +366,7 @@
       "lat": 38.7314,
       "lng": -120.99,
       "photos": [
-        "https://m.cbhomes.com/p/371/226087456/9E02f6e2aE934D6/full.webp",
+        "https://m1.cbhomes.com/p/371/226087456/9E02f6e2aE934D6/full.webp",
         "https://m1.cbhomes.com/p/371/226087456/aAEE71820A394FA/full.webp",
         "https://m.cbhomes.com/p/371/226087456/44c37c7f4cb24b0/full.webp",
         "https://m1.cbhomes.com/p/371/226087456/dB966bbCDcd546c/full.webp",
@@ -444,7 +387,7 @@
           "price": 1289000
         }
       ],
-      "lastSeen": "2026-08-19"
+      "lastSeen": "2026-08-20"
     },
     {
       "id": "1988-cold-springs-rd-placerville",
@@ -473,7 +416,7 @@
       "lat": 38.7387,
       "lng": -120.8572,
       "photos": [
-        "https://m.cbhomes.com/p/371/226033527/67D4c74cf6314cC/full.webp",
+        "https://m1.cbhomes.com/p/371/226033527/67D4c74cf6314cC/full.webp",
         "https://m1.cbhomes.com/p/371/226033527/4049C87686094d6/full.webp",
         "https://m.cbhomes.com/p/371/226033527/41c104a8B1034E8/full.webp",
         "https://m1.cbhomes.com/p/371/226033527/Fa9cc4d98cD6489/full.webp",
@@ -494,7 +437,7 @@
           "price": 850000
         }
       ],
-      "lastSeen": "2026-08-19"
+      "lastSeen": "2026-08-20"
     }
   ],
   "poolless": [
@@ -825,10 +768,10 @@
   ],
   "dropped": [
     {
-      "address": "3784 Cattle Dr, Shingle Springs",
-      "priorPrice": 1050000,
-      "reason": "No longer an active listing in the MLS feed — sold, expired, or withdrawn.",
-      "droppedOn": "2026-08-19"
+      "address": "3033 Ridgeline Dr, Rescue",
+      "priorPrice": 1349999,
+      "reason": "Was under contract since 2026-08-16 and has now left the active, pending and IDX feeds — the sale most likely closed.",
+      "droppedOn": "2026-08-20"
     }
   ],
   "rejected": [

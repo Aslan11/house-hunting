@@ -115,6 +115,10 @@ function card(l) {
 
 const activeList = data.listings || [];
 const pendingList = data.pending || [];
+// Normalise the new-this-run flag. scrape.js writes `newThisRun`; earlier code and this file both
+// read `isNew`. A mismatch here would silently empty the top "New this run" section — the whole
+// point of the brief — while runSummary correctly said something moved. Coalesce at read time.
+for (const l of activeList.concat(pendingList)) l.isNew = !!(l.isNew || l.newThisRun);
 const listings = activeList.concat(pendingList);
 const fresh = listings.filter((l) => l.isNew);
 
@@ -129,14 +133,20 @@ const priceMoves = (data.runSummary && data.runSummary.priceChanges) || [];
 const cheapest = activeList.length ? Math.min(...activeList.map((l) => l.currentPrice)) : null;
 const mostLand = activeList.length ? Math.max(...activeList.map((l) => l.acres)) : null;
 
+// scrape.js writes dropped records as `{ address: "Street, City", priorPrice, reason, droppedOn }` —
+// city is already embedded in `address`, the price key is `priorPrice`, and there is no `mls` field
+// (a departure means the MLS record is gone). Reading `d.city`, `d.lastPrice`, `d.mls` produced
+// "Street, Cityblank | — | — | …" rows every run.
 const droppedRows = dropped.map((d) => `
-    <tr><td>${esc(d.address)}, ${esc(d.city)}</td><td>${d.lastPrice ? money(d.lastPrice) : '—'}</td>
-        <td>${esc(d.mls || '—')}</td><td>${esc(d.reason)}</td></tr>`).join('');
+    <tr><td>${esc(d.address)}</td><td>${d.priorPrice ? money(d.priorPrice) : '—'}</td>
+        <td>${esc(d.droppedOn || '—')}</td><td>${esc(d.reason)}</td></tr>`).join('');
 
+// scrape.js writes near-miss records as `{ baths, missing, ... }`. Reading `n.fullBaths` and
+// `n.reason` rendered "undefined full ba" and an empty "Why it is not in the list" column.
 const nearRows = nearMiss.map((n) => `
     <tr><td><a href="${esc(n.url)}" rel="noopener">${esc(n.address)}</a>, ${esc(n.city)}</td>
         <td>${money(n.price)}</td><td>${esc(n.acres)} ac</td>
-        <td>${n.beds} bd / ${n.fullBaths} full ba</td><td>${esc(n.reason)}</td></tr>`).join('');
+        <td>${n.beds} bd / ${n.baths ?? n.fullBaths ?? '—'} ba</td><td>${esc(n.missing || n.reason || '')}</td></tr>`).join('');
 
 const poolless = data.poolless || [];
 const poollessRows = poolless.map((r) => `
@@ -341,7 +351,7 @@ ${dropped.length ? `<h2>Removed this run <span class="count">(${dropped.length})
 re-reported as fresh finds if a stale copy of the listing turns up in a future search.</p>
 <div class="tablewrap">
 <table>
-  <thead><tr><th>Property</th><th>Last price</th><th>MLS</th><th>Why removed</th></tr></thead>
+  <thead><tr><th>Property</th><th>Last price</th><th>Removed</th><th>Why removed</th></tr></thead>
   <tbody>${droppedRows}
   </tbody>
 </table>
