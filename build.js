@@ -156,6 +156,13 @@ const poollessRows = poolless.map((r) => `
         <td>${r.sqft ? r.sqft.toLocaleString('en-US') : '—'}</td>
         <td>${esc(r.status)}</td></tr>`).join('');
 
+// verify.py stamps mlsVerifiedOn only when every record agreed with the MLS of record.
+// If it did not run this time, say so on the page rather than repeating a blanket "all
+// agreed" that nothing tested — the whole point of the verification gate is that the
+// claim on the page matches the work actually done.
+const verifiedOn = data.source && data.source.mlsVerifiedOn;
+const verifiedToday = verifiedOn === data.lastRun;
+
 const rejectedRows = (data.rejected || []).map((r) => `
     <tr><td>${esc(r.address)}</td><td>${r.price ? money(r.price) : '—'}</td><td>${esc(r.reason)}</td></tr>`).join('');
 
@@ -310,9 +317,12 @@ const html = `<!DOCTYPE html>
     ${priceMoves.length ? `<li><strong>${priceMoves.length} price ${priceMoves.length === 1 ? 'change' : 'changes'}</strong> on properties already tracked.</li>` : ''}
     ${dropped.length ? `<li><strong>${dropped.length} previously tracked ${dropped.length === 1 ? 'property' : 'properties'} removed</strong> — no longer on the market. Listed at the bottom.</li>` : ''}
   </ul>` : `<p><strong>Nothing moved.</strong> No new listings, no price changes, and nothing left
-  the board since ${esc(data.previousRun)}. All ${activeList.length} active matches and
-  ${pendingList.length} pending were re-verified against the MLS of record today and are unchanged —
-  same prices, same status. The board below is current, not stale.</p>`}
+  the board since ${esc(data.previousRun)}. ${verifiedToday
+    ? `All ${activeList.length} active matches and ${pendingList.length} pending were re-verified
+       against the MLS of record today and are unchanged — same prices, same status. The board below
+       is current, not stale.`
+    : `The board was re-enumerated from the IDX feed today; the last field-by-field check against
+       the MLS of record was ${esc(verifiedOn || 'never run')}.`}</p>`}
 </div>
 
 ${fresh.length ? `<h2>New this run <span class="count">(${fresh.length})</span></h2>
@@ -391,7 +401,10 @@ failure mode is now closed off.</p>
   <tbody>
     <tr><td><strong>Enumerate</strong></td><td>Every active listing in the three cities is pulled from an IDX feed carrying MetroList data — ${data.source ? data.source.inventoryScanned : '—'} properties this run, not a search-result sample.</td></tr>
     <tr><td><strong>Filter</strong></td><td>Hard criteria applied to structured MLS fields, never to prose: ${data.source ? data.source.passedBedsBathsPrice : '—'} cleared beds/baths/price, then acreage and pool narrowed it to ${listings.length}.</td></tr>
-    <tr><td><strong>Verify</strong></td><td>Each survivor is re-read from <strong>MetroListPRO</strong>, the official MetroList MLS site, and price, beds, full baths, acreage and pool must match. All ${listings.length} agreed.</td></tr>
+    <tr><td><strong>Verify</strong></td><td>Each survivor is re-read from <strong>MetroListPRO</strong>, the official MetroList MLS site, and price, beds, full baths, acreage and pool must match.
+      ${verifiedToday
+        ? `All ${data.source.mlsVerifiedCount || listings.length} agreed, checked ${esc(verifiedOn)}.`
+        : `<strong>Last confirmed ${esc(verifiedOn || 'never')}</strong>, not on this run — treat the listings below as verified as of that date.`}</td></tr>
     <tr><td><strong>Resolve</strong></td><td>Where sources disagree, the MLS of record wins and the disagreement is printed on the card rather than hidden.</td></tr>
   </tbody>
 </table>

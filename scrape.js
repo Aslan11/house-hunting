@@ -533,9 +533,38 @@ const out = {
   // scrape.js never did. Only advance it when this is genuinely a later run, so
   // re-running on the same day doesn't overwrite it with today's date.
   previousRun: prior.lastRun && prior.lastRun !== TODAY ? prior.lastRun : prior.previousRun,
-  source: { ...prior.source, inventoryScanned: all.length,
-    passedBedsBathsPrice: candidates.length, verifiedActiveMatches: listings.length },
-  dataQuality: { ...prior.dataQuality, verifiedActiveListings: listings.length },
+  /* Built fresh, not spread from `prior`. These describe a run, and the README's rule is
+     that anything describing a run is rewritten every run — spreading kept `scanned: 301`
+     and `verifiedMatches: 10` alive from an older sweep long after both numbers changed,
+     and `dataQuality.note` still described a status disagreement resolved days earlier.
+     `mlsVerifiedOn` is deliberately NOT set here: scrape.js does not talk to MetroListPRO,
+     so it cannot honestly claim a verification date. verify.py stamps it when it runs, and
+     build.js reads it — so skipping step 2 now shows as a stale date rather than a lie. */
+  source: {
+    name: 'Coldwell Banker IDX (MetroList feed), verified against MetroListPRO (MetroList MLS)',
+    method: "Enumerated every active listing in the three cities from IDX city pages, applied " +
+      "the hard criteria to structured MLS fields, then re-read each survivor's record from " +
+      'MetroListPRO and required price, beds, full baths, acreage and pool to match.',
+    inventoryScanned: all.length,
+    passedBedsBathsPrice: candidates.length,
+    verifiedActiveMatches: listings.length,
+    pendingMatches: pending.length,
+    mlsVerifiedOn: prior.source ? prior.source.mlsVerifiedOn : null,
+  },
+  dataQuality: {
+    verifiedActiveListings: listings.length,
+    note: [
+      `${all.length} active listings scanned across the three cities; ${candidates.length} cleared ` +
+      `beds, baths and price and had their MLS field table read directly.`,
+      demoted.length
+        ? `Status disagreement${demoted.length === 1 ? '' : 's'} this run — the IDX feed called ` +
+          `${demoted.length} listing${demoted.length === 1 ? '' : 's'} Active that Redfin reports ` +
+          `in escrow: ${demoted.join('; ')}. Shown as pending.`
+        : 'No status disagreement between the IDX feed and the Redfin cross-check this run.',
+      pendingIdxOk ? null : 'Pending cross-check was unavailable this run; escrowed listings may show as Active.',
+      activeIdxOk ? null : 'Departure cross-check was unavailable this run; a relisted property may be reported as sold.',
+    ].filter(Boolean).join(' '),
+  },
   listings,
   pending,
   nearMisses: near.slice(0, 14),

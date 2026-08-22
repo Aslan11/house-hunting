@@ -54,6 +54,7 @@ with ThreadPoolExecutor(max_workers=5) as ex:
     res = list(ex.map(verify, rows))
 json.dump(res, open("verified.json", "w"), indent=1)
 
+clean = 0
 for v, r in zip(res, rows):
     ok = []
     ok.append("price" if v.get("mlPrice") == r["price"] else f"PRICE {v.get('mlPrice')} vs {r['price']}")
@@ -63,5 +64,25 @@ for v, r in zip(res, rows):
     a1, a2 = v.get("mlAcres"), r["acres"]
     ok.append("acres" if a1 and abs(float(a1) - a2) < 0.05 else f"ACRES {a1} vs {a2}")
     ok.append("pool" if v.get("mlPool") == "Yes" else f"POOL {v.get('mlPool')}")
+    if all(x in ("price", "beds", "baths", "acres", "pool") for x in ok):
+        clean += 1
     print(f'{r["address"][:24]:24} MLS{r["mls"]} ml_status={v.get("mlStatus")} '
           f'cb_status={r["status"]} | {" ".join(ok)}')
+
+# Stamp the verification date into listings.json. The page states that every match was
+# re-read from MetroListPRO, and scrape.js cannot make that claim because it never talks
+# to MetroListPRO — so the date is written here, by the step that actually did the work.
+# Skip step 2 and the page now shows an older date instead of an unearned one.
+if clean == len(rows) and rows:
+    today = subprocess.run(["date", "-u", "+%Y-%m-%d"], capture_output=True,
+                           text=True).stdout.strip()
+    d = json.load(open("listings.json"))
+    d.setdefault("source", {})["mlsVerifiedOn"] = today
+    d["source"]["mlsVerifiedCount"] = len(rows)
+    json.dump(d, open("listings.json", "w"), indent=2)
+    print(f"\nAll {clean} records agreed with the MLS of record. "
+          f"Stamped source.mlsVerifiedOn = {today}.")
+else:
+    print(f"\n{len(rows) - clean} of {len(rows)} records disagreed with the MLS of record — "
+          f"NOT stamping a verification date. Per the verification gate the MLS wins; put the "
+          f"disagreement on the card.", file=sys.stderr)

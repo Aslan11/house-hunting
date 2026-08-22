@@ -30,6 +30,14 @@ nonetheless **not safe as the source of the board**, because it is silently inco
 search returned 12 listings for 95667 against the IDX feed's 220, and it missed an active tracked
 match (1315 Arrowbee Dr). Use Redfin to contradict a status, never to establish the inventory.
 
+A 2026-08-22 sweep run as an independent check pulled 19 listings across the three cities at 4bd /
+3ba / 2.5ac / $1.5M and found the same six pool matches the IDX board carried — useful corroboration,
+and still not enumeration: 19 against the feed's 299. Two Redfin quirks worth knowing if you run one
+of these again: `/city/<id>/…` URLs redirect by id, and a wrong id silently serves a **different
+city** (17151 is San Francisco, not Shingle Springs) — `/zipcode/<zip>/…` has no such failure mode.
+And under load Redfin answers **202 with a stub body** rather than 429, so treat a short body as
+retryable and back off; the sweep took several minutes for this reason.
+
 Two hosts do serve real, current El Dorado County data and are what the pipeline runs on:
 
 1. **`www.coldwellbankerhomes.com`** — an IDX site carrying the **MetroList** feed. City pages embed
@@ -118,6 +126,37 @@ The general rule: **anything in `listings.json` that describes a run rather than
 rewritten every run, not spread forward.** Today that is `lastRun`, `previousRun`, `source`,
 `dataQuality` and `runSummary`.
 
+### The same carry-forward, two keys over
+
+The rule above was written but only `runSummary` was fixed. `source` and `dataQuality` were still
+built as `{ ...prior.source, … }` and `{ ...prior.dataQuality, … }`, so every key the spread didn't
+happen to overwrite stayed frozen. By 2026-08-22 `source` carried `scanned: 301` and
+`verifiedMatches: 10` from a sweep that had since been superseded by `inventoryScanned: 299` and
+`verifiedActiveMatches: 6` — two pairs of keys for the same two facts, disagreeing — and
+`dataQuality.note` still described a status disagreement on 1988 Cold Springs Rd that MetroList had
+long since resolved.
+
+Both are now constructed literally in `scrape.js` from that run's own counters, with no spread. The
+duplicate `scanned`/`verifiedMatches` keys are gone. If you add a field that describes the run, add
+it there and give it a value every time.
+
+### A verification claim nothing had tested
+
+`build.js` rendered a flat "All N agreed" in the *Verify* row of "How this list is built", with no
+date and no input from the step that does the verifying. `scrape.js` never contacts MetroListPRO, so
+on any run where step 2 was skipped the page still asserted a check that had not happened — and
+`source.mlsVerifiedOn` sat at 2026-08-17 while the page implied today.
+
+The date is now written by the code that earns it: `verify.py` stamps `source.mlsVerifiedOn` and
+`mlsVerifiedCount` into `listings.json`, and **only when every record read back clean**. `build.js`
+compares that date against `lastRun` and, when they differ, says the board was re-enumerated but not
+re-verified, naming the date it last was. A skipped step 2 is now visible on the page instead of
+being papered over.
+
+The general form of this one: **a page that makes a claim about process should render it from the
+artefact that process leaves behind, never from a hardcoded sentence.** A hardcoded sentence cannot
+tell the difference between a check that passed and a check that never ran.
+
 ## Photos
 
 Photos are hotlinked from `m.cbhomes.com`, pulled off each detail page in document order:
@@ -180,7 +219,10 @@ Step 2 prints one line per property; every field must read back clean (`price be
 pool`). Anything else is a disagreement, and per the verification gate the MLS of record wins and
 the disagreement belongs on the card.
 
-`verify.py` reads `matches.json` and writes `verified.json`; both are intermediates and gitignored.
+`verify.py` reads `matches.json` and writes `verified.json` — both intermediates, both gitignored —
+and, when **every** record reads back clean, stamps `source.mlsVerifiedOn` / `mlsVerifiedCount` into
+`listings.json`. That stamp is what `build.js` renders, so the order matters: run step 2 before step
+3, or the page will correctly report that the board was re-enumerated but not re-verified.
 
 ## Files
 
