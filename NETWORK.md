@@ -1,45 +1,52 @@
-# Network state
+# Network reality for this tracker
 
-**As of 2026-08-23, outbound HTTPS is open** and this tracker reads live listing data directly. The
-proxy reports `"selective": false` with an empty `recentRelayFailures`, and `https://example.com/`
-returns 200. The workarounds this file used to describe (Gmail listing alerts, a paid data API,
-per-domain allowlisting) are no longer needed.
-
-Confirm at the start of a run:
+Superseded as of **2026-08-15**. Outbound HTTPS now works — the egress gateway is open and
+`recentRelayFailures` is empty:
 
 ```bash
 curl -sS "$HTTPS_PROXY/__agentproxy/status" | python3 -m json.tool
-curl -sS -o /dev/null -w "%{http_code}\n" https://www.redfin.com/
 ```
 
-## What each site does
+What blocks listing data now is **site-side bot defence**, not the proxy. Distinguish the two: a
+gateway denial shows up in `recentRelayFailures`; a site block does not.
 
-| Host | Behaviour |
-|---|---|
-| `www.redfin.com` | **Works.** Serves full search and detail payloads. The source this tracker uses. |
-| `ssl.cdn-redfin.com` | **Works.** Listing photos hotlink fine. |
-| `www.realtor.com` | Reachable, but answers `429` — rate-limited at the site. |
-| `www.zillow.com` | Reachable, but answers `403` — bot-blocked at the site, not at the proxy. |
+## Host status, measured 2026-08-15
 
-Distinguish a proxy denial from a site block by source: a gateway denial adds an entry to
-`recentRelayFailures` in the proxy status; a site block does not, and returns a body.
+| Host | Result | Usable |
+|---|---|---|
+| `www.coldwellbankerhomes.com` | 200, correct city, full MetroList IDX data | **Yes — primary** |
+| `www.metrolistpro.com` | 200, official MetroList MLS records by MLS number | **Yes — verification** |
+| `m.cbhomes.com` | 200 on `GET` (rejects `HEAD`) | **Yes — photos** |
+| `www.redfin.com` | 200, full GIS payload on `/zipcode/<zip>` | **Yes — cross-check only** |
+| `www.zillow.com`, `www.homes.com`, `www.movoto.com`, `www.remax.com`, `www.har.com` | 403 | No |
+| `www.realtor.com` | 429 | No |
+| `www.redfin.com/stingray/*` | 403 (CloudFront) | No |
+| `www.century21.com` | 200 but client-rendered shell, no data in HTML | No |
 
-## Redfin throttling
+Both usable hosts require a browser `User-Agent`. The default agent string is blocked.
 
-Redfin does not hard-block, it throttles: after a burst it answers **HTTP 202 with a zero-length
-body**. That is the single most important failure mode to get right, because a 202 on a detail page
-looks like a missing listing.
+The Redfin row was corrected on **2026-08-23**. The "decoy page for another state" was real but
+self-inflicted: `/city/<id>/…` resolves by numeric id, and a guessed id serves a complete,
+valid-looking page for a different city (17151 is San Francisco, not Shingle Springs). HTTP 200 on a
+wrong id looks exactly like success. `/zipcode/<zip>` has no such failure mode and returns the full
+GIS search payload — good enough to enumerate as a cross-check, though the board still comes from
+the IDX feed. Either way, **assert the expected city appears in the returned HTML** before trusting
+a page.
 
-- A 202/empty response is **never** evidence that a listing is gone. Retry it.
-- `scripts/fetch.sh` backs off 6s → 12s → 24s → 48s and reports any URL it could not get.
-- Roughly 4s between requests keeps a run clean; batches of ~20 detail pages go through fine.
+Redfin also answers **202 with a stub body** under load rather than 429. A short body is retryable;
+back off and try again, and never read a 202 as a missing listing.
 
-## If Redfin ever closes
+## Headless browser
 
-Fallbacks in order of reliability:
+Chromium in this container has **no outbound network at all** — even `https://example.com` fails
+with `ERR_CONNECTION_RESET`, with or without `--proxy-server`. Use it for layout checks only; verify
+remote URLs with `curl`, which honours `HTTPS_PROXY`.
 
-1. Zillow/Redfin **saved-search email alerts** to the connected Gmail — authoritative, carries
-   status, price cuts and photo URLs, and needs no network access at all. `ingest.js` accepts
-   pasted portal results.
-2. An agent-run **MLS/IDX client portal** with email alerts — same, plus fuller MLS data.
-3. A licensed **data API key** (SimplyRETS, Bridge Interactive, a RapidAPI provider).
+## If the usable hosts start blocking
+
+Fall back to paths that don't fight bot defences:
+
+1. A Zillow/Redfin **saved search with email alerts** into the connected Gmail — carries current
+   status, price cuts and image URLs, needs no network change.
+2. An agent-run **MLS/IDX client portal** with email alerts.
+3. A licensed **data API key** (SimplyRETS, Bridge Interactive, RapidAPI).
