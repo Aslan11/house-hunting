@@ -100,6 +100,9 @@ const slug = (r) =>
 const store = JSON.parse(fs.readFileSync(STORE, 'utf8'));
 const today = new Date().toISOString().slice(0, 10);
 const byId = new Map(store.listings.map((l) => [l.id, l]));
+// Minimums come from listings.json so the two stay in step when the brief changes.
+const minBeds  = parseFloat(store.criteria.beds)  || 4;
+const minBaths = parseFloat(store.criteria.baths) || 3;
 
 const added = [], repriced = [], dupes = [], skipped = [];
 
@@ -123,14 +126,14 @@ for (const b of blocks(raw)) {
       sqft: r.sqft ?? null, acres: r.acres ?? null,
       pool: r.pool, poolDetail: r.pool ? 'Pool' : 'No pool',
       photos: r.photos, gallery: r.url || null,
-      status: 'match', firstSeen: today, lastSeen: today,
-      notes: 'Ingested from a pasted search result — status taken from the live portal listing.',
+      status: 'match', isNew: true, firstSeen: today, lastSeen: today,
+      blurb: 'Ingested from a pasted search result — status taken from the live portal listing.',
       url: r.url || null,
     };
     const fails = [];
-    if (rec.beds  != null && rec.beds  < 5)   fails.push(`${rec.beds}BR`);
-    if (rec.baths != null && rec.baths < 3)   fails.push(`${rec.baths}BA`);
-    if (rec.acres != null && rec.acres < 2.5) fails.push(`${rec.acres}ac`);
+    if (rec.beds  != null && rec.beds  < minBeds) fails.push(`${rec.beds}BR`);
+    if (rec.baths != null && rec.baths < minBaths) fails.push(`${rec.baths}BA`);
+    if (rec.acres != null && rec.acres < store.criteria.minAcres) fails.push(`${rec.acres}ac`);
     if (rec.currentPrice > store.criteria.maxPrice) fails.push('over budget');
     if (!rec.pool) fails.push('no pool');
     if (fails.length) {

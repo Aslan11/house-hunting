@@ -1,166 +1,682 @@
 {
-  "_comment": "Canonical listing store. IMPORTANT: statuses reflect VERIFICATION state, not desirability. Nothing may be promoted to status 'match' until its active-on-market status has been confirmed against a live source (see README 'Verification gate'). Search-engine snippets are NOT a valid source of listing status - they index sold listings with 'For Sale' in the title for years.",
+  "_comment": "Canonical listing store. Every entry under `listings` has been verified Active against the property's own Redfin detail page, reading the MetroList MLS payload scoped to that property's propertyId. See README 'Verification gate'.",
   "criteria": {
-    "beds": "5+",
+    "beds": "4+",
     "baths": "3+",
     "pool": true,
-    "cities": ["Shingle Springs, CA", "Rescue, CA", "Placerville, CA"],
+    "cities": [
+      "Shingle Springs, CA",
+      "Rescue, CA",
+      "Placerville, CA"
+    ],
     "minAcres": 2.5,
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-07-26",
+  "lastRun": "2026-08-23",
+  "previousRun": "2026-07-26",
+  "criteriaChange": "Bedroom minimum moved from 5+ to 4+ this run, per the standing search brief. Prior runs used 5+.",
+  "search": {
+    "method": "Redfin ZIP-level GIS search payloads for 95667 / 95682 / 95672 (plus adjacent 95619 / 95623 / 95664 / 95726 as a coverage check), filtered to city in {Placerville, Shingle Springs, Rescue}, then every surviving candidate's own detail page read for the MLS 'Pool Information' amenity group.",
+    "activeListingsScanned": 427,
+    "metCoreCriteria": 19,
+    "withPool": 7,
+    "resultSetComplete": true,
+    "note": "Each ZIP query returned fewer rows than Redfin's 350-row page cap, so no result set was truncated."
+  },
   "dataQuality": {
-    "verifiedActiveListings": 0,
-    "note": "The 2026-07-26 run reported 4 properties as matches. User confirmed all were off market. Root cause: listing status was inferred from search-result text rather than a live listing page, which no reachable tool can load from this environment. No property below is confirmed active."
+    "verifiedActiveListings": 7,
+    "note": "Network egress to listing sites is open as of this run, so the failure mode behind the 2026-07-26 run (status inferred from search-engine snippets) no longer applies. Every listing below was read from its own live listing page, and the parser asserts the MLS payload's propertyId matches the page requested before trusting any field \u2014 the specific guard against the comparable-property mix-up that corrupted the first run."
   },
   "listings": [
     {
-      "id": "1601-velvet-horn-ln-rescue",
-      "address": "1601 Velvet Horn Ln",
-      "city": "Rescue",
-      "zip": "95672",
-      "mls": "226060031",
-      "currentPrice": 1100000,
-      "priceHistory": [{ "date": "2026-07-26", "price": 1100000 }],
-      "beds": 3,
-      "baths": 3,
-      "sqft": 2672,
-      "acres": 5,
+      "id": "1315-arrowbee-dr-placerville",
+      "address": "1315 Arrowbee Dr",
+      "city": "Placerville",
+      "zip": "95667",
+      "mls": "226085035",
+      "currentPrice": 969000,
+      "priceHistory": [
+        {
+          "date": "2026-08-23",
+          "price": 969000
+        }
+      ],
+      "beds": 4,
+      "baths": 3.0,
+      "sqft": 2780,
+      "acres": 5.0,
+      "yearBuilt": 1971,
       "pool": true,
-      "poolDetail": "Sports pool with water slide",
-      "photos": [],
-      "gallery": "https://www.zillow.com/homedetails/1601-Velvet-Horn-Ln-Rescue-CA-95672/18612559_zpid/",
-      "status": "active-fails-criteria",
-      "badge": "Active — but 3BR",
-      "firstSeen": "2026-07-26",
-      "lastSeen": "2026-07-26",
-      "notes": "The only property this run that a source described as Active in 2026 (listed by eXp Realty, MLS 226060031). But it is 3bd/3ba, 2,672 sqft - fails the 5BR/3BA minimum. Last sold Aug 2023 for $1,050,000. CORRECTION: the earlier run listed this address as 5bd/5ba at $1,250,000 under MLS 226032589; that was a conflation of two different properties and was wrong.",
-      "url": "https://www.zillow.com/homedetails/1601-Velvet-Horn-Ln-Rescue-CA-95672/18612559_zpid/"
+      "poolDetail": "Pool \u2014 Built-In, Gunite Construction",
+      "poolFeatures": [
+        "Built-In",
+        "Gunite Construction"
+      ],
+      "spa": false,
+      "lotFeatures": "Auto Sprinkler F&R, Shape Irregular",
+      "otherStructures": "Pergola, Shed(s), Outbuilding",
+      "agent": "Kristina Agustin",
+      "broker": "Vista Sotheby's International Realty",
+      "daysOnMarket": 17,
+      "photos": [
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/035/genMid.226085035_0.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/035/genMid.226085035_1_0.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/035/genMid.226085035_2_0.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/035/genMid.226085035_3_0.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/035/genMid.226085035_4_0.jpg"
+      ],
+      "photoCount": 62,
+      "gallery": "https://www.redfin.com/CA/Placerville/1315-Arrowbee-Dr-95667/home/167350790",
+      "url": "https://www.redfin.com/CA/Placerville/1315-Arrowbee-Dr-95667/home/167350790",
+      "status": "match",
+      "isNew": true,
+      "firstSeen": "2026-08-23",
+      "lastSeen": "2026-08-23",
+      "verifiedActive": true,
+      "verification": {
+        "source": "Redfin listing detail page (MetroList MLS feed, dataSourceId 77)",
+        "mlsStatus": "Active",
+        "scopedToSubjectProperty": true,
+        "checkedOn": "2026-08-23"
+      },
+      "blurb": "Single-story mini ranch behind a gated entrance at the end of a paved drive, with a permitted ADU. Vaulted ceilings, picture windows, granite-and-stainless kitchen with a large island. Built-in gunite pool.",
+      "caveat": null
     },
     {
-      "id": "4100-black-oak-dr-shingle-springs",
-      "address": "4100 Black Oak Dr",
+      "id": "2565-stagecoach-rd-placerville",
+      "address": "2565 Stagecoach Rd",
+      "city": "Placerville",
+      "zip": "95667",
+      "mls": "226059973",
+      "currentPrice": 975000,
+      "priceHistory": [
+        {
+          "date": "2026-08-23",
+          "price": 975000
+        }
+      ],
+      "beds": 5,
+      "baths": 4.0,
+      "sqft": 3885,
+      "acres": 5.05,
+      "yearBuilt": 1995,
+      "pool": true,
+      "poolDetail": "Pool \u2014 Built-In, Pool Sweep, Fenced, Gunite Construction",
+      "poolFeatures": [
+        "Built-In",
+        "Pool Sweep",
+        "Fenced",
+        "Gunite Construction"
+      ],
+      "spa": false,
+      "lotFeatures": "Pond Seasonal, Gated Community",
+      "otherStructures": "Pergola, Shed(s)",
+      "agent": "Brenda Sims",
+      "broker": "Coldwell Banker Realty",
+      "daysOnMarket": 32,
+      "photos": [
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/973/genMid.226059973_0.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/973/genMid.226059973_1_0.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/973/genMid.226059973_2_0.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/973/genMid.226059973_3_0.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/973/genMid.226059973_4_0.jpg"
+      ],
+      "photoCount": 42,
+      "gallery": "https://www.redfin.com/CA/Placerville/2565-Stagecoach-Rd-95667/home/167376488",
+      "url": "https://www.redfin.com/CA/Placerville/2565-Stagecoach-Rd-95667/home/167376488",
+      "status": "match",
+      "isNew": true,
+      "firstSeen": "2026-08-23",
+      "lastSeen": "2026-08-23",
+      "verifiedActive": true,
+      "verification": {
+        "source": "Redfin listing detail page (MetroList MLS feed, dataSourceId 77)",
+        "mlsStatus": "Active",
+        "scopedToSubjectProperty": true,
+        "checkedOn": "2026-08-23"
+      },
+      "blurb": "Custom estate in the gated Greenstone Country community \u2014 5\u20136 bedrooms, 4-car garage plus a detached 2-car carport, upstairs primary suite with balcony and fireplace. Fenced gunite pool, seasonal pond, mature oaks and rock outcroppings.",
+      "caveat": null
+    },
+    {
+      "id": "3720-four-springs-dr-rescue",
+      "address": "3720 Four Springs Dr",
+      "city": "Rescue",
+      "zip": "95672",
+      "mls": "226083791",
+      "currentPrice": 1175000,
+      "priceHistory": [
+        {
+          "date": "2026-08-23",
+          "price": 1175000
+        }
+      ],
+      "beds": 4,
+      "baths": 3.0,
+      "sqft": 2506,
+      "acres": 5.86,
+      "yearBuilt": 1989,
+      "pool": true,
+      "poolDetail": "Pool \u2014 Built-In, On Lot, Pool Sweep, Gunite Construction",
+      "poolFeatures": [
+        "Built-In",
+        "On Lot",
+        "Pool Sweep",
+        "Gunite Construction"
+      ],
+      "spa": false,
+      "lotFeatures": "Auto Sprinkler F&R, Cul-De-Sac, Dead End, Secluded, Garden, Landscape Back, Landscape Front",
+      "otherStructures": "Shed(s), Storage, Kennel/Dog Run, Outbuilding",
+      "agent": "Anna Boyd",
+      "broker": "eXp Realty of Northern California, Inc.",
+      "daysOnMarket": 52,
+      "photos": [
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/791/genMid.226083791_1.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/791/genMid.226083791_1_1.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/791/genMid.226083791_2_0.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/791/genMid.226083791_3_0.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/791/genMid.226083791_4_0.jpg"
+      ],
+      "photoCount": 34,
+      "gallery": "https://www.redfin.com/CA/Rescue/3720-Four-Springs-Dr-95672/home/167348607",
+      "url": "https://www.redfin.com/CA/Rescue/3720-Four-Springs-Dr-95672/home/167348607",
+      "status": "match",
+      "isNew": true,
+      "firstSeen": "2026-08-23",
+      "lastSeen": "2026-08-23",
+      "verifiedActive": true,
+      "verification": {
+        "source": "Redfin listing detail page (MetroList MLS feed, dataSourceId 77)",
+        "mlsStatus": "Active",
+        "scopedToSubjectProperty": true,
+        "checkedOn": "2026-08-23"
+      },
+      "blurb": "End-of-road privacy on a cul-de-sac in a park-like setting. Two-story home with one bedroom down, formal dining, plus a ~750 sq ft entertainment suite (game room, extra room and bath) above the detached 3-car garage. Built-in gunite pool.",
+      "caveat": null
+    },
+    {
+      "id": "5551-saddlehorn-rd-shingle-springs",
+      "address": "5551 Saddlehorn Rd",
       "city": "Shingle Springs",
       "zip": "95682",
-      "mls": "225006994",
+      "mls": "226083864",
+      "currentPrice": 1200000,
+      "priceHistory": [
+        {
+          "date": "2026-08-23",
+          "price": 1200000
+        }
+      ],
+      "beds": 4,
+      "baths": 3.0,
+      "sqft": 3400,
+      "acres": 10.11,
+      "yearBuilt": 1988,
+      "pool": true,
+      "poolDetail": "Pool \u2014 Built-In + spa",
+      "poolFeatures": [
+        "Built-In"
+      ],
+      "spa": true,
+      "lotFeatures": "Auto Sprinkler F&R",
+      "otherStructures": "Gazebo, Shed(s), Outbuilding",
+      "agent": "Helene Cornevin",
+      "broker": "RE/MAX Gold El Dorado Hills",
+      "daysOnMarket": 51,
+      "photos": [
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/864/genMid.226083864_1.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/864/genMid.226083864_1_1.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/864/genMid.226083864_2_1.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/864/genMid.226083864_3_1.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/864/genMid.226083864_4_1.jpg"
+      ],
+      "photoCount": 48,
+      "gallery": "https://www.redfin.com/CA/Shingle-Springs/5551-Saddlehorn-Rd-95682/home/167337440",
+      "url": "https://www.redfin.com/CA/Shingle-Springs/5551-Saddlehorn-Rd-95682/home/167337440",
+      "status": "match",
+      "isNew": true,
+      "firstSeen": "2026-08-23",
+      "lastSeen": "2026-08-23",
+      "verifiedActive": true,
+      "verification": {
+        "source": "Redfin listing detail page (MetroList MLS feed, dataSourceId 77)",
+        "mlsStatus": "Active",
+        "scopedToSubjectProperty": true,
+        "checkedOn": "2026-08-23"
+      },
+      "blurb": "Updated 10-acre retreat minutes from town \u2014 quartz-and-stainless kitchen, soaring ceilings with a woodstove, upstairs game room with wet bar, spa-style primary shower with dual vanities. Built-in pool plus built-in spa. Leased solar.",
+      "caveat": "Solar is leased, not owned \u2014 the payment transfers with the property."
+    },
+    {
+      "id": "1781-springvale-rd-placerville",
+      "address": "1781 Springvale Rd",
+      "city": "Placerville",
+      "zip": "95667",
+      "mls": "226100125",
       "currentPrice": 1250000,
-      "priceHistory": [{ "date": "2026-07-26", "price": 1250000 }],
-      "beds": 5,
-      "baths": 6,
-      "sqft": 5188,
-      "acres": 5,
+      "priceHistory": [
+        {
+          "date": "2026-08-23",
+          "price": 1250000
+        }
+      ],
+      "beds": 4,
+      "baths": 4.0,
+      "sqft": 2025,
+      "acres": 10.27,
+      "yearBuilt": 1930,
       "pool": true,
-      "poolDetail": "Hand-carved rock saltwater pool",
-      "photos": [],
-      "gallery": "https://www.redfin.com/CA/Shingle-Springs/4100-Black-Oak-Dr-95682/home/167321227",
-      "status": "off-market",
-      "firstSeen": "2026-07-26",
-      "lastSeen": "2026-07-26",
-      "notes": "MLS 225006994 is a 2025 listing number; user confirms off market. Gated North Buckeye Rancheros, owned 10.8kW solar, roof 2023. Kept on file only so a genuine relist gets flagged.",
-      "url": "https://www.redfin.com/CA/Shingle-Springs/4100-Black-Oak-Dr-95682/home/167321227"
+      "poolDetail": "150,000-gallon pool with adjacent pool bathroom",
+      "poolFeatures": [],
+      "spa": false,
+      "lotFeatures": "Shape Regular",
+      "otherStructures": "",
+      "agent": "Amir Cackovic",
+      "broker": "eXp Realty of California Inc.",
+      "daysOnMarket": 16,
+      "photos": [
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/125/genMid.226100125_0.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/125/genMid.226100125_1_0.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/125/genMid.226100125_2_0.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/125/genMid.226100125_3_0.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/125/genMid.226100125_4_0.jpg"
+      ],
+      "photoCount": 83,
+      "gallery": "https://www.redfin.com/CA/Placerville/1781-Springvale-Rd-95667/home/167348318",
+      "url": "https://www.redfin.com/CA/Placerville/1781-Springvale-Rd-95667/home/167348318",
+      "status": "match",
+      "isNew": true,
+      "firstSeen": "2026-08-23",
+      "lastSeen": "2026-08-23",
+      "verifiedActive": true,
+      "verification": {
+        "source": "Redfin listing detail page (MetroList MLS feed, dataSourceId 77)",
+        "mlsStatus": "Active",
+        "scopedToSubjectProperty": true,
+        "checkedOn": "2026-08-23"
+      },
+      "blurb": "Three permitted residences on 10 fully remodeled acres \u2014 main house (3bd/2ba), ADU (1bd/1ba), and a studio pool house with bath. The centrepiece is a 150,000-gallon pool, among the largest residential pools in the county. Marketed as an event-venue / short-term-rental play.",
+      "caveat": "Bedroom count is spread across three separate structures, not one 4-bedroom house \u2014 the main home is 3bd/2ba. Worth a look if a compound suits you; not if you want four bedrooms under one roof."
     },
     {
-      "id": "5856-fernwood-dr-shingle-springs",
-      "address": "5856 Fernwood Dr",
+      "id": "4071-voyager-way-shingle-springs",
+      "address": "4071 Voyager Way",
       "city": "Shingle Springs",
       "zip": "95682",
-      "mls": "225000829",
-      "currentPrice": 1490000,
-      "priceHistory": [{ "date": "2026-07-26", "price": 1490000 }],
+      "mls": "226082753",
+      "currentPrice": 1299000,
+      "priceHistory": [
+        {
+          "date": "2026-08-23",
+          "price": 1299000
+        }
+      ],
+      "beds": 4,
+      "baths": 3.0,
+      "sqft": 3132,
+      "acres": 5.03,
+      "yearBuilt": 2003,
+      "pool": true,
+      "poolDetail": "Pool \u2014 Built-In, Salt Water + spa",
+      "poolFeatures": [
+        "Built-In",
+        "Salt Water"
+      ],
+      "spa": true,
+      "lotFeatures": "Private",
+      "otherStructures": "Workshop",
+      "agent": "Melissa Roybal",
+      "broker": "Gateway Properties",
+      "daysOnMarket": 10,
+      "photos": [
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/753/genMid.226082753_0.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/753/genMid.226082753_1_0.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/753/genMid.226082753_2_0.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/753/genMid.226082753_3_0.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/753/genMid.226082753_4_0.jpg"
+      ],
+      "photoCount": 89,
+      "gallery": "https://www.redfin.com/CA/Shingle-Springs/4071-Voyager-Way-95682/home/167337588",
+      "url": "https://www.redfin.com/CA/Shingle-Springs/4071-Voyager-Way-95682/home/167337588",
+      "status": "match",
+      "isNew": true,
+      "firstSeen": "2026-08-23",
+      "lastSeen": "2026-08-23",
+      "verifiedActive": true,
+      "verification": {
+        "source": "Redfin listing detail page (MetroList MLS feed, dataSourceId 77)",
+        "mlsStatus": "Active",
+        "scopedToSubjectProperty": true,
+        "checkedOn": "2026-08-23"
+      },
+      "blurb": "Single-story custom home on ~5 private acres with sweeping hillside views and a 4-car garage. Infinity-edge saltwater pool and spa with travertine surround, outdoor shower and pool bathroom. Chef's kitchen.",
+      "caveat": null
+    },
+    {
+      "id": "6881-sagittarius-dr-placerville",
+      "address": "6881 Sagittarius Dr",
+      "city": "Placerville",
+      "zip": "95667",
+      "mls": "226064449",
+      "currentPrice": 1489000,
+      "priceHistory": [
+        {
+          "date": "2026-08-23",
+          "price": 1489000
+        }
+      ],
+      "beds": 4,
+      "baths": 4.0,
+      "sqft": 5351,
+      "acres": 40.0,
+      "yearBuilt": 2005,
+      "pool": true,
+      "poolDetail": "Pool \u2014 Built-In, On Lot, Pool House, Pool Sweep, Salt Water, Other",
+      "poolFeatures": [
+        "Built-In",
+        "On Lot",
+        "Pool House",
+        "Pool Sweep",
+        "Salt Water",
+        "Other"
+      ],
+      "spa": false,
+      "lotFeatures": "Private, Secluded, Garden, Landscape Back, Landscape Front, Landscape Misc, Low Maintenance",
+      "otherStructures": "Second Garage, Shed(s), Storage, Workshop, Other",
+      "agent": "Kristen Haus",
+      "broker": "Real Broker Technologies",
+      "daysOnMarket": 68,
+      "photos": [
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/449/genMid.226064449_2.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/449/genMid.226064449_1_2.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/449/genMid.226064449_2_2.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/449/genMid.226064449_3_2.jpg",
+        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/449/genMid.226064449_4_2.jpg"
+      ],
+      "photoCount": 73,
+      "gallery": "https://www.redfin.com/CA/Placerville/6881-Sagittarius-Rd-95667/home/167310935",
+      "url": "https://www.redfin.com/CA/Placerville/6881-Sagittarius-Rd-95667/home/167310935",
+      "status": "match",
+      "isNew": true,
+      "firstSeen": "2026-08-23",
+      "lastSeen": "2026-08-23",
+      "verifiedActive": true,
+      "verification": {
+        "source": "Redfin listing detail page (MetroList MLS feed, dataSourceId 77)",
+        "mlsStatus": "Active",
+        "scopedToSubjectProperty": true,
+        "checkedOn": "2026-08-23"
+      },
+      "blurb": "Built as the builder's own residence: a European Country-inspired estate on 40 acres with panoramic Sierra foothill views, soaring ceilings and walls of windows. Saltwater pool with a dedicated pool house; second garage, workshop and storage structures.",
+      "caveat": "Top of budget at $1.489M, with essentially no room left for negotiation upward."
+    }
+  ],
+  "checkedNoPool": [
+    {
+      "address": "7991 S Shingle Rd",
+      "city": "Shingle Springs",
+      "mls": "226067744",
+      "price": 1250000,
+      "beds": 4,
+      "baths": 3.0,
+      "acres": 21.15,
+      "status": "Active",
+      "reason": "No pool",
+      "url": "https://www.redfin.com/CA/Shingle-Springs/7991-S-Shingle-Rd-95682/home/104338455",
+      "checkedOn": "2026-08-23"
+    },
+    {
+      "address": "1200 W El Largo Dr",
+      "city": "Placerville",
+      "mls": "226053498",
+      "price": 1200000,
       "beds": 5,
-      "baths": 4,
-      "sqft": 4596,
-      "acres": 10,
-      "pool": true,
-      "poolDetail": "Pool and spa",
-      "photos": [],
-      "gallery": "https://www.remax.com/ca/shingle-springs/home-details/5856-fernwood-dr-shingle-springs-ca-95682/13419556434900242713",
-      "status": "off-market",
-      "firstSeen": "2026-07-26",
-      "lastSeen": "2026-07-26",
-      "notes": "MLS 225000829 is a 2025 listing number; a source showed it sold for $1,400,000 in June 2025. User confirms off market.",
-      "url": "https://www.remax.com/ca/shingle-springs/home-details/5856-fernwood-dr-shingle-springs-ca-95682/13419556434900242713"
+      "baths": 5.0,
+      "acres": 5.02,
+      "status": "Active",
+      "reason": "No pool",
+      "url": "https://www.redfin.com/CA/Placerville/1200-W-El-Largo-Dr-95667/home/167350966",
+      "checkedOn": "2026-08-23"
     },
     {
-      "id": "1527-velvet-horn-ln-rescue",
-      "address": "1527 Velvet Horn Ln",
-      "city": "Rescue",
-      "zip": "95672",
-      "mls": null,
-      "currentPrice": null,
-      "priceHistory": [],
-      "beds": 6,
+      "address": "3430 Old Ditch Dr",
+      "city": "Placerville",
+      "mls": "226089905",
+      "price": 1175000,
+      "beds": 4,
+      "baths": 4.0,
+      "acres": 5.12,
+      "status": "Active",
+      "reason": "No pool",
+      "url": "https://www.redfin.com/CA/Placerville/3430-Old-Ditch-Dr-95667/home/167344730",
+      "checkedOn": "2026-08-23"
+    },
+    {
+      "address": "4810 Robledo Dr",
+      "city": "Placerville",
+      "mls": "226083409",
+      "price": 1049900,
+      "beds": 5,
       "baths": 4.5,
-      "sqft": 3892,
-      "acres": 5,
-      "pool": true,
-      "poolDetail": "Pool and spa",
-      "photos": [],
-      "gallery": "https://www.tophap.com/homes/details/1527-VELVET-HORN-LN-RESCUE-CA-95672/157323206",
-      "status": "off-market",
-      "firstSeen": "2026-07-26",
-      "lastSeen": "2026-07-26",
-      "notes": "The ~$942K figure reported earlier was an automated valuation estimate, never a list price. No MLS number and no evidence it was ever listed. English Tudor, stables, riding arena.",
-      "url": "https://www.tophap.com/homes/details/1527-VELVET-HORN-LN-RESCUE-CA-95672/157323206"
+      "acres": 5.0,
+      "status": "Active",
+      "reason": "No pool",
+      "url": "https://www.redfin.com/CA/Placerville/4810-Robledo-Dr-95667/home/167346243",
+      "checkedOn": "2026-08-23"
     },
     {
-      "id": "5400-horizon-ct-placerville",
+      "address": "5681 Honeycomb Ln",
+      "city": "Shingle Springs",
+      "mls": "226068369",
+      "price": 950000,
+      "beds": 4,
+      "baths": 4.5,
+      "acres": 5.0,
+      "status": "Active",
+      "reason": "No pool",
+      "url": "https://www.redfin.com/CA/Shingle-Springs/5681-Honeycomb-Ln-95682/home/167337569",
+      "checkedOn": "2026-08-23"
+    },
+    {
+      "address": "4661 Holm Rd",
+      "city": "Placerville",
+      "mls": "226083194",
+      "price": 935000,
+      "beds": 4,
+      "baths": 4.5,
+      "acres": 5.12,
+      "status": "Active",
+      "reason": "No pool",
+      "url": "https://www.redfin.com/CA/Placerville/4661-Holm-Rd-95667/home/167346015",
+      "checkedOn": "2026-08-23"
+    },
+    {
+      "address": "5025 Eco Ridge Rd",
+      "city": "Placerville",
+      "mls": "226072037",
+      "price": 799999,
+      "beds": 4,
+      "baths": 3.0,
+      "acres": 4.83,
+      "status": "Active",
+      "reason": "No pool (spa/hot tub only)",
+      "url": "https://www.redfin.com/CA/Placerville/5025-Eco-Ridge-Rd-95667/home/167327877",
+      "checkedOn": "2026-08-23"
+    },
+    {
+      "address": "4181 Thunderbird Ln",
+      "city": "Rescue",
+      "mls": "226064393",
+      "price": 799000,
+      "beds": 4,
+      "baths": 3.5,
+      "acres": 10.0,
+      "status": "Active",
+      "reason": "No pool",
+      "url": "https://www.redfin.com/CA/Rescue/4181-Thunderbird-Ln-95672/home/167320616",
+      "checkedOn": "2026-08-23"
+    },
+    {
+      "address": "5000 Reservation Rd",
+      "city": "Placerville",
+      "mls": "226077234",
+      "price": 799000,
+      "beds": 4,
+      "baths": 4.5,
+      "acres": 5.0,
+      "status": "Active",
+      "reason": "No pool",
+      "url": "https://www.redfin.com/CA/Placerville/5000-Reservation-Rd-95667/home/167376731",
+      "checkedOn": "2026-08-23"
+    },
+    {
+      "address": "6560 Agape Ct",
+      "city": "Placerville",
+      "mls": "226070903",
+      "price": 649000,
+      "beds": 4,
+      "baths": 3.0,
+      "acres": 5.02,
+      "status": "Active",
+      "reason": "No pool",
+      "url": "https://www.redfin.com/CA/Placerville/6560-Agape-Ct-95667/home/167310966",
+      "checkedOn": "2026-08-23"
+    },
+    {
+      "address": "4351 Rossler Rd",
+      "city": "Placerville",
+      "mls": "226097299",
+      "price": 595000,
+      "beds": 4,
+      "baths": 3.0,
+      "acres": 10.0,
+      "status": "Active",
+      "reason": "No pool",
+      "url": "https://www.redfin.com/CA/Placerville/4351-Rossler-Rd-95667/home/167351229",
+      "checkedOn": "2026-08-23"
+    },
+    {
+      "address": "6287 Oak Hill Rd",
+      "city": "Placerville",
+      "mls": "226063059",
+      "price": 574900,
+      "beds": 4,
+      "baths": 3.0,
+      "acres": 10.0,
+      "status": "Active",
+      "reason": "No pool",
+      "url": "https://www.redfin.com/CA/Placerville/6287-Oak-Hill-Rd-95667/home/167310937",
+      "checkedOn": "2026-08-23"
+    }
+  ],
+  "dropped": [
+    {
       "address": "5400 Horizon Ct",
       "city": "Placerville",
-      "zip": "95667",
       "mls": "221136905",
-      "currentPrice": 998999,
-      "priceHistory": [{ "date": "2026-07-26", "price": 998999 }],
-      "beds": 5,
-      "baths": 3.5,
-      "sqft": 4576,
-      "acres": 10,
-      "pool": false,
-      "poolDetail": "No pool — koi pond",
-      "photos": [],
-      "gallery": "https://www.redfin.com/CA/Placerville/5400-Horizon-Ct-95667/home/167312343",
-      "status": "off-market",
-      "firstSeen": "2026-07-26",
-      "lastSeen": "2026-07-26",
-      "notes": "MLS 221136905 is a 2021 listing number, and a source shows it sold for $942,000 in March 2022. The $998,999 'current' price was a stale cached listing. Also had no pool.",
-      "url": "https://www.redfin.com/CA/Placerville/5400-Horizon-Ct-95667/home/167312343"
+      "reason": "Closed \u2014 sold for $942,000",
+      "confirmedOn": "2026-08-23",
+      "source": "Redfin detail page reports status Closed"
     },
     {
-      "id": "4280-leisure-ln-placerville",
-      "address": "4280 Leisure Ln",
+      "address": "4100 Black Oak Dr",
+      "city": "Shingle Springs",
+      "mls": "221098153",
+      "reason": "Closed \u2014 last sale $1,050,000",
+      "confirmedOn": "2026-08-23",
+      "source": "Redfin detail page reports status Closed"
+    },
+    {
+      "address": "4280 E Leisure Ln",
       "city": "Placerville",
-      "zip": "95667",
-      "mls": "225153794",
-      "currentPrice": 1173000,
-      "priceHistory": [{ "date": "2026-07-26", "price": 1173000 }],
-      "beds": 5,
-      "baths": 3,
-      "sqft": 3672,
-      "acres": 5.6,
-      "pool": false,
-      "poolDetail": "No pool — pond",
-      "photos": [],
-      "gallery": "https://www.redfin.com/CA/Placerville/4280-Leisure-Ln-95667/home/167327580",
-      "status": "off-market",
-      "firstSeen": "2026-07-26",
-      "lastSeen": "2026-07-26",
-      "notes": "2025 listing number; Trulia also carries a 2023 MLS (223062885) for the same address. No pool regardless.",
-      "url": "https://www.redfin.com/CA/Placerville/4280-Leisure-Ln-95667/home/167327580"
+      "mls": "20077993",
+      "reason": "Closed \u2014 sold for $700,000; also had no pool",
+      "confirmedOn": "2026-08-23",
+      "source": "Redfin detail page reports status Closed"
+    },
+    {
+      "address": "5856 Fernwood Dr",
+      "city": "Shingle Springs",
+      "mls": "225000829",
+      "reason": "Off market \u2014 absent from the live active-listing feed for 95682",
+      "confirmedOn": "2026-08-23",
+      "source": "Not present in Redfin's active result set for the ZIP"
+    },
+    {
+      "address": "1527 Velvet Horn Ln",
+      "city": "Rescue",
+      "mls": null,
+      "reason": "Never listed \u2014 the earlier figure was an automated valuation, not a list price",
+      "confirmedOn": "2026-08-23",
+      "source": "Not present in Redfin's active result set for the ZIP"
+    },
+    {
+      "address": "1601 Velvet Horn Ln",
+      "city": "Rescue",
+      "mls": "226060031",
+      "reason": "Still active at $1,100,000 but 3bd/3ba \u2014 under the 4-bedroom minimum",
+      "confirmedOn": "2026-08-23",
+      "source": "Redfin active feed, 95672"
     }
   ],
   "rejected": [
-    { "address": "5135 Bryant Rd, Shingle Springs", "price": 1690000, "reason": "Over budget; status unverified" },
-    { "address": "1900 Deer Valley Rd, Rescue", "price": 1200000, "reason": "3bd/2ba, no pool" },
-    { "address": "Howard Dr, Rescue (5.94 acres)", "price": 2275000, "reason": "Over budget" },
-    { "address": "3359 Saint Ives Ct, Shingle Springs", "price": 2199500, "reason": "Over budget, only 4bd" },
-    { "address": "765 Sierra View Ct, Shingle Springs", "price": 3499999, "reason": "Far over budget" },
-    { "address": "5037 Milton Ranch Rd, Shingle Springs", "price": 4388888, "reason": "Far over budget" },
-    { "address": "5040 Milton Ranch Rd, Shingle Springs", "reason": "Not for sale — sold 2019 for $1.4M" },
-    { "address": "5457 Bryant Rd, Shingle Springs", "reason": "Not for sale — sold 2020 for $1,405,000" },
-    { "address": "4661 Holm Rd, Placerville", "price": 1200000, "reason": "3bd/3ba — under bedroom minimum" },
-    { "address": "2800 La Paz Rd, Placerville", "price": 995000, "reason": "4bd/2ba — under both minimums" },
-    { "address": "2931 Texas Hill Rd, Placerville", "reason": "4bd/2.5ba — under both minimums" },
-    { "address": "4370 Hillwood Dr, Shingle Springs", "price": 699000, "reason": "0.25 acres" }
+    {
+      "address": "5135 Bryant Rd, Shingle Springs",
+      "price": 1690000,
+      "reason": "Over budget; status unverified"
+    },
+    {
+      "address": "1900 Deer Valley Rd, Rescue",
+      "price": 1200000,
+      "reason": "3bd/2ba, no pool"
+    },
+    {
+      "address": "Howard Dr, Rescue (5.94 acres)",
+      "price": 2275000,
+      "reason": "Over budget"
+    },
+    {
+      "address": "3359 Saint Ives Ct, Shingle Springs",
+      "price": 2199500,
+      "reason": "Over budget, only 4bd"
+    },
+    {
+      "address": "765 Sierra View Ct, Shingle Springs",
+      "price": 3499999,
+      "reason": "Far over budget"
+    },
+    {
+      "address": "5037 Milton Ranch Rd, Shingle Springs",
+      "price": 4388888,
+      "reason": "Far over budget"
+    },
+    {
+      "address": "5040 Milton Ranch Rd, Shingle Springs",
+      "reason": "Not for sale \u2014 sold 2019 for $1.4M"
+    },
+    {
+      "address": "5457 Bryant Rd, Shingle Springs",
+      "reason": "Not for sale \u2014 sold 2020 for $1,405,000"
+    },
+    {
+      "address": "4661 Holm Rd, Placerville",
+      "price": 1200000,
+      "reason": "3bd/3ba \u2014 under bedroom minimum"
+    },
+    {
+      "address": "2800 La Paz Rd, Placerville",
+      "price": 995000,
+      "reason": "4bd/2ba \u2014 under both minimums"
+    },
+    {
+      "address": "2931 Texas Hill Rd, Placerville",
+      "reason": "4bd/2.5ba \u2014 under both minimums"
+    },
+    {
+      "address": "4370 Hillwood Dr, Shingle Springs",
+      "price": 699000,
+      "reason": "0.25 acres"
+    }
   ]
 }
