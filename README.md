@@ -38,6 +38,35 @@ city** (17151 is San Francisco, not Shingle Springs) — `/zipcode/<zip>/…` ha
 And under load Redfin answers **202 with a stub body** rather than 429, so treat a short body as
 retryable and back off; the sweep took several minutes for this reason.
 
+### Why the earlier Redfin sweeps came back thin
+
+The 2026-08-23 run traced the "silently incomplete" problem to the URL, not to Redfin. The
+`/filter/…` path is the culprit: those pages render a nearly empty result set, which is why a sweep
+returned 12 listings for 95667 and missed a tracked match. **A bare `/zipcode/<zip>` page does
+not.** It embeds the full GIS search payload — every active listing in the region with beds, baths,
+price, lot size, MLS number and status — inside `te.InitialContext`. That path returned 238 rows for
+95667, 152 for 95682 and 37 for 95672 (321 in the three target cities after filtering on the `city`
+field, against the IDX feed's 298), and found the same six pool matches and the same twelve
+pool-less near-misses the board carried.
+
+So Redfin *can* enumerate, via `scripts/parse_search.py`. It still is not the board: the IDX feed
+plus MetroListPRO remains the source of record, and the gate is unchanged. But a full second
+enumeration is cheap and it earns its keep — this one caught a stale price the IDX feed was
+carrying (below).
+
+Each query is capped at **350 rows**, and a payload that comes back at the cap is silently truncated;
+`parse_search.py` warns when that happens. Treat a result set at the cap as incomplete.
+
+### Pool-less rows carry unverified prices
+
+`verify.py` only reads matches and pendings, so everything in `poolless` and `nearMisses` carries
+whatever the IDX feed said, with no MLS confirmation. On 2026-08-23 the Redfin sweep flagged 6287
+Oak Hill Rd at $574,900 where the board said $599,000; MetroList confirmed $574,900, so the board
+had been carrying a stale price. It only mattered a little — the property has no pool and was never
+a candidate — but a pool-less listing is exactly what a price cut could turn into a near-miss worth
+a second look, so the number should be right. Either widen the verify step or keep running the
+Redfin sweep as the cross-check.
+
 Two hosts do serve real, current El Dorado County data and are what the pipeline runs on:
 
 1. **`www.coldwellbankerhomes.com`** — an IDX site carrying the **MetroList** feed. City pages embed
@@ -83,6 +112,24 @@ status was inferred from search-engine snippets. Search engines keep sold listin
    properties: one search this run attributed 1234 Rising Hill's 2.69-acre lot to 6881 Sagittarius,
    which actually sits on 40 acres.
 5. Prefer under-reporting. An empty result is useful; a fabricated match is not.
+
+### When a listing contradicts itself
+
+Rule 2 covers two sources disagreeing. 2026-08-23 turned up the harder case: a single listing
+disagreeing with *itself*. 1781 Springvale Rd (MLS 226100125, Placerville, $1.25M, 10.27 acres) is
+recorded `Has a Pool: No` by both MetroList and the IDX feed, while its own MLS remarks describe
+"an extraordinary 150,000-gallon swimming pool, one of the largest residential pools in the county"
+with an adjacent pool bathroom and a studio pool house.
+
+The structured field wins, so it is not on the board. But the resolution is not to silently drop it:
+it sits in **Near misses** with the contradiction spelled out, because a human can settle it with one
+phone call and the script cannot. Two things make the field plausibly wrong rather than the copy:
+it is a `RI` (residential income) listing, a property type where amenity fields are often left
+unset, and its bed count — 4 across three separate structures, the main house being 3bd/2ba — means
+it would need a judgement call from the reader anyway.
+
+Generalising: **a structured field that contradicts the listing's own remarks is a flag, not a
+verdict.** Filter on the field, then surface the conflict rather than resolving it quietly.
 
 ### Half baths
 
@@ -215,6 +262,18 @@ node -e 'const d=require("./listings.json");require("fs").writeFileSync("matches
 node build.js                                     # 3. render index.html
 ```
 
+Optional but cheap, and it caught a stale price on 2026-08-23 — an independent enumeration to
+cross-check the board:
+
+```bash
+scripts/fetch.sh search                                  # ZIP pages -> work/
+python3 scripts/parse_search.py work/rf_9566*.html work/rf_956*.html > work/all.json
+```
+
+Filter `all.json` on `city` (never on the ZIP fetched — Redfin spills nearby towns into the result),
+then compare the surviving set against `listings.json`. A property Redfin has that the board does
+not, or a price that disagrees, is worth a MetroListPRO read before publishing.
+
 Step 2 prints one line per property; every field must read back clean (`price beds baths acres
 pool`). Anything else is a disagreement, and per the verification gate the MLS of record wins and
 the disagreement belongs on the card.
@@ -232,6 +291,12 @@ and, when **every** record reads back clean, stamps `source.mlsVerifiedOn` / `ml
 - **`crosscheck.js`** / **`mls-status.js`** — the Redfin second opinion `scrape.js` calls to catch
   listings the IDX feed still reports Active after they have gone into escrow.
 - **`build.js`** — renders `index.html` from `listings.json`. No dependencies: `node build.js`.
+- **`scripts/fetch.sh`** / **`scripts/parse_search.py`** / **`scripts/parse_detail.py`** — the
+  independent Redfin enumeration described above, run as a cross-check rather than as the board.
+  `fetch.sh search` pulls the ZIP pages, `parse_search.py` flattens the GIS payload, and
+  `parse_detail.py` reads the MLS amenity table off a listing page — asserting the `propertyId` in
+  each API blob matches the page requested, because a Redfin detail page also embeds comparable and
+  nearby-home payloads and a loose regex will happily return a neighbour's pool status.
 - **`ingest.js`** — merges listings pasted from a portal results page, applying the dedupe rules.
   Kept as a manual fallback; the scrape path above supersedes it.
 - **`index.html`** — generated. Don't hand-edit; edit the JSON and rebuild.

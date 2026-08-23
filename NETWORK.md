@@ -17,7 +17,7 @@ gateway denial shows up in `recentRelayFailures`; a site block does not.
 | `www.coldwellbankerhomes.com` | 200, correct city, full MetroList IDX data | **Yes — primary** |
 | `www.metrolistpro.com` | 200, official MetroList MLS records by MLS number | **Yes — verification** |
 | `m.cbhomes.com` | 200 on `GET` (rejects `HEAD`) | **Yes — photos** |
-| `www.redfin.com` | 200 but **serves a decoy page for an unrelated state** | No — actively misleading |
+| `www.redfin.com` | 200, full GIS payload on `/zipcode/<zip>` | **Yes — cross-check only** |
 | `www.zillow.com`, `www.homes.com`, `www.movoto.com`, `www.remax.com`, `www.har.com` | 403 | No |
 | `www.realtor.com` | 429 | No |
 | `www.redfin.com/stingray/*` | 403 (CloudFront) | No |
@@ -25,9 +25,16 @@ gateway denial shows up in `recentRelayFailures`; a site block does not.
 
 Both usable hosts require a browser `User-Agent`. The default agent string is blocked.
 
-The Redfin result is the one to watch out for: it returns HTTP 200 with a **complete, valid-looking
-page for a different city and state**. Any scraper that trusts the status code will silently ingest
-listings from the wrong place. Always assert the city appears in the returned HTML.
+The Redfin row was corrected on **2026-08-23**. The "decoy page for another state" was real but
+self-inflicted: `/city/<id>/…` resolves by numeric id, and a guessed id serves a complete,
+valid-looking page for a different city (17151 is San Francisco, not Shingle Springs). HTTP 200 on a
+wrong id looks exactly like success. `/zipcode/<zip>` has no such failure mode and returns the full
+GIS search payload — good enough to enumerate as a cross-check, though the board still comes from
+the IDX feed. Either way, **assert the expected city appears in the returned HTML** before trusting
+a page.
+
+Redfin also answers **202 with a stub body** under load rather than 429. A short body is retryable;
+back off and try again, and never read a 202 as a missing listing.
 
 ## Headless browser
 
