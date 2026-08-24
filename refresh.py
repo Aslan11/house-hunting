@@ -224,7 +224,16 @@ for r in shortlist:
 
 
 def passes(r):
-    return ((r["beds"] or 0) >= MIN_BEDS and (r["baths"] or 0) >= MIN_BATHS and r["pool"]
+    """Hard criteria. The bath test is on FULL baths only.
+
+    The IDX card's bath count rounds "2 full + 1 half" up to 3, so testing
+    r["baths"] lets a 2-full-bath property through as a match -- which is what
+    happened to 1234 Rising Hill W Rd on the 2026-08-24 sweep. Where the detail
+    page carries no full-bath count, fall back to the card value and let the
+    MetroListPRO check downstream settle it.
+    """
+    full = r["fullBaths"] if r["fullBaths"] is not None else r["baths"]
+    return ((r["beds"] or 0) >= MIN_BEDS and (full or 0) >= MIN_BATHS and r["pool"]
             and (r["acres"] or 0) >= MIN_ACRES and (r["price"] or 9e9) <= MAX_PRICE)
 
 
