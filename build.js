@@ -129,6 +129,9 @@ const heldPending = pendingList.filter((l) => !l.isNew);
 const dropped = data.dropped || [];
 const nearMiss = data.nearMisses || [];
 const priceMoves = (data.runSummary && data.runSummary.priceChanges) || [];
+// A property crossing between the active board and the pending list counts as movement.
+// Without this the banner reports "Nothing moved" on a run where the active count fell.
+const statusMoves = (data.runSummary && data.runSummary.statusChanges) || [];
 
 const cheapest = activeList.length ? Math.min(...activeList.map((l) => l.currentPrice)) : null;
 const mostLand = activeList.length ? Math.max(...activeList.map((l) => l.acres)) : null;
@@ -312,9 +315,16 @@ const html = `<!DOCTYPE html>
 
 <div class="banner">
   <h3>What changed this run</h3>
-  ${fresh.length || priceMoves.length || dropped.length ? `<ul>
+  ${fresh.length || priceMoves.length || dropped.length || statusMoves.length ? `<ul>
     ${fresh.length ? `<li><strong>${fresh.length} new ${fresh.length === 1 ? 'listing' : 'listings'}</strong> meeting every hard criterion — see the top section.</li>` : ''}
     ${priceMoves.length ? `<li><strong>${priceMoves.length} price ${priceMoves.length === 1 ? 'change' : 'changes'}</strong> on properties already tracked.</li>` : ''}
+    ${statusMoves.map((s) => (s.to === 'pending'
+      ? `<li><strong>${esc(s.address)}, ${esc(s.city)} has gone under contract.</strong> It was on
+         the active board last run and is now Sale Pending on the MLS of record. Still worth
+         watching — pending sales do fall through — but it is no longer available to offer on.</li>`
+      : `<li><strong>${esc(s.address)}, ${esc(s.city)} is back on the active board.</strong> It was
+         Sale Pending last run and the MLS of record now reports it For Sale again — the deal
+         appears to have fallen through.</li>`)).join('\n    ')}
     ${dropped.length ? `<li><strong>${dropped.length} previously tracked ${dropped.length === 1 ? 'property' : 'properties'} removed</strong> — no longer on the market. Listed at the bottom.</li>` : ''}
   </ul>` : `<p><strong>Nothing moved.</strong> No new listings, no price changes, and nothing left
   the board since ${esc(data.previousRun)}. ${verifiedToday

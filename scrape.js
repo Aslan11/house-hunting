@@ -588,16 +588,46 @@ const nChg = listings.filter((l) => (l.priceHistory || []).length > 1 &&
 const movedToday = (l) => (l.priceHistory || []).length > 1 &&
   l.priceHistory.at(-1).date === TODAY &&
   l.priceHistory.at(-1).price !== l.priceHistory.at(-2).price;
+
+/* A property crossing between the active board and the pending list is news, and until
+   2026-08-25 nothing recorded it: `new`, `priceChanges`, `dropped` and `relisted` all
+   stayed empty when 2565 Stagecoach Rd went into escrow, so build.js printed "Nothing
+   moved" on a run where the active count fell from 6 to 5. Going pending is the most
+   actionable thing that can happen to a property someone is watching — it is the moment
+   they have hours, not days — so compare each property's section against the prior run
+   and report the crossing explicitly. */
+const priorSection = new Map();
+for (const l of prior.listings || []) priorSection.set(l.mls || l.address, 'active');
+for (const l of prior.pending || []) priorSection.set(l.mls || l.address, 'pending');
+const sectionNow = (l) => (l.status === 'pending' ? 'pending' : 'active');
+const statusChanges = listings.concat(pending)
+  .filter((l) => !l.newThisRun)
+  .map((l) => {
+    const was = priorSection.get(l.mls || l.address);
+    const now = sectionNow(l);
+    return was && was !== now
+      ? { address: l.address, city: l.city, mls: l.mls, from: was, to: now }
+      : null;
+  })
+  .filter(Boolean);
+const changedToday = (l) => statusChanges.some((s) => (s.mls || s.address) === (l.mls || l.address));
+
 out.runSummary = {
   new: listings.filter((l) => l.newThisRun).map((l) => `${l.address}, ${l.city}`),
   priceChanges: listings.concat(pending).filter(movedToday).map((l) => ({
     address: l.address, city: l.city,
     from: l.priceHistory.at(-2).price, to: l.priceHistory.at(-1).price,
   })),
+  statusChanges,
   relisted: relisted.filter((r) => r.rescuedThisRun).map((r) => `${r.address}, ${r.city}`),
   dropped: dropped.map((d) => d.address),
-  unchanged: listings.filter((l) => !l.newThisRun && !movedToday(l)).length,
+  unchanged: listings.filter((l) => !l.newThisRun && !movedToday(l) && !changedToday(l)).length,
 };
+
+if (statusChanges.length) {
+  process.stderr.write(`\n${statusChanges.length} status change(s) since the last run:\n` +
+    statusChanges.map((s) => `  - ${s.address}, ${s.city}: ${s.from} -> ${s.to}\n`).join(''));
+}
 
 /* Never let a demotion be silent — it is the difference between reporting 7 matches
    and 6, and on 2026-08-03 it was the difference between reporting a new match and

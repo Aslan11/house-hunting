@@ -173,6 +173,26 @@ The general rule: **anything in `listings.json` that describes a run rather than
 rewritten every run, not spread forward.** Today that is `lastRun`, `previousRun`, `source`,
 `dataQuality` and `runSummary`.
 
+### A run summary with no category for the thing that happened
+
+`runSummary` tracked four kinds of movement — `new`, `priceChanges`, `dropped`, `relisted` — and a
+property going into escrow is none of them. On 2026-08-25 2565 Stagecoach Rd moved from the active
+board to the pending list: all four arrays were legitimately empty, so `build.js` published
+**"Nothing moved"** on a run where the active count fell from 6 to 5 and the headline stat above the
+banner already said `5`. The page contradicted itself.
+
+Note the difference from the two bugs above: nothing was stale and nothing was carried forward. The
+summary was correctly recomputed and correctly empty. The gap was in the *vocabulary* — there was no
+category for a property crossing between sections, so a real event had nowhere to be recorded.
+
+`scrape.js` now diffs each property's section against the prior run and writes `statusChanges`
+(`{address, city, mls, from, to}`), which `build.js` renders in the banner in both directions —
+under contract, and back on the market after a deal falls through. Going pending is the most
+actionable thing that can happen to a property someone is watching, so it must never be silent.
+
+The general rule: **when a summary reports "nothing happened", check that it has a category for
+everything that can happen.** An empty array is only good news if something would have filled it.
+
 ### The same carry-forward, two keys over
 
 The rule above was written but only `runSummary` was fixed. `source` and `dataQuality` were still
