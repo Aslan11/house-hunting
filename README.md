@@ -77,6 +77,37 @@ Two hosts do serve real, current El Dorado County data and are what the pipeline
    Only the MLS number in the URL matters, so any record resolves directly:
    `https://www.metrolistpro.com/homes/2/6/x/<MLS>`
 
+### MetroListPRO can also enumerate
+
+The 2026-08-26 run found that MetroListPRO is not only a per-MLS lookup. It serves **server-rendered
+city indexes** listing every record in a city, which makes it the one source that can both enumerate
+*and* speak for the MLS of record. Redfin and homefinder.com cannot do the first; the IDX feed is a
+republisher, not the source, for the second.
+
+```
+# every ACTIVE record in a city
+https://www.metrolistpro.com/lbc/2/<cityId>/6/193/<City-Name>-Real-Estate-For-Sale
+# every PENDING record in a city
+https://www.metrolistpro.com/lbc/2/<cityId>/6/193/<City-Name>-Real-Estate-Pending-Sale?pending=1
+```
+
+City IDs for the target area: **Shingle Springs 873, Rescue 765, Placerville 720** (El Dorado County
+is `193`; the county-level index at `/cbc/2/6/193/...` links every city). Each page is a flat list of
+`/homes/2/6/<SLUG>/<MLS>` links with no pagination — the whole city is on one page. Slugs beginning
+`0-` are vacant land and can be skipped.
+
+On 2026-08-26 this returned **358 active + 63 pending** records across the three cities against the
+IDX feed's **296 active**, so the feed is meaningfully narrower than the MLS. Pulling all 284 records
+the IDX sweep hadn't covered turned up **zero** additional matches, which is the strongest
+completeness check this tracker has run — stronger than the Redfin cross-sweep, because it is the
+MLS of record rather than another republisher. Detail pages carry the same field table used for
+verification (`Status`, `Lot Size in Acres`, `Has a Pool`, `Bathrooms: <full> | <half>`) plus MLS
+photo URLs on `mediarem.metrolist.net`, which hotlink cleanly.
+
+Worth doing when a run reports thin inventory or no movement, at ~350 fetches and a few minutes at 8
+concurrent. Record the result under `dataQuality.independentEnumeration` and `build.js` will put a
+"Cross-enumerate" row on the page.
+
 A third source is available if either of the above breaks: **`www.homefinder.com`** serves MetroList
 records through the Move/realtor.com pipeline, embedded as JSON in `<script id="__NEXT_DATA__">`
 (`source.name === "MetroList"`, with `list_price`, `description.beds`, `baths_consolidated`,

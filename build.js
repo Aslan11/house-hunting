@@ -165,6 +165,8 @@ const poollessRows = poolless.map((r) => `
 // claim on the page matches the work actually done.
 const verifiedOn = data.source && data.source.mlsVerifiedOn;
 const verifiedToday = verifiedOn === data.lastRun;
+// Optional second enumeration straight from the MLS of record. Present only on runs that did one.
+const indep = (data.dataQuality || {}).independentEnumeration;
 
 const rejectedRows = (data.rejected || []).map((r) => `
     <tr><td>${esc(r.address)}</td><td>${r.price ? money(r.price) : '—'}</td><td>${esc(r.reason)}</td></tr>`).join('');
@@ -415,6 +417,12 @@ failure mode is now closed off.</p>
       ${verifiedToday
         ? `All ${data.source.mlsVerifiedCount || listings.length} agreed, checked ${esc(verifiedOn)}.`
         : `<strong>Last confirmed ${esc(verifiedOn || 'never')}</strong>, not on this run — treat the listings below as verified as of that date.`}</td></tr>
+    ${indep ? `<tr><td><strong>Cross-enumerate</strong></td><td>The three cities were listed again straight from
+      <strong>MetroListPRO's own city indexes</strong> — ${indep.activeRecords} active and ${indep.pendingRecords} pending MLS
+      records, a wider net than the IDX feed. Every one of the ${indep.recordsPulledBeyondIdxSweep} records the IDX sweep
+      hadn't already covered was pulled and filtered; ${indep.additionalMatchesFound === 0
+        ? 'none of them qualified, so this board is complete against the MLS of record, not just against the feed'
+        : `${indep.additionalMatchesFound} qualified and were added`}. Checked ${esc(indep.ranOn)}.</td></tr>` : ''}
     <tr><td><strong>Resolve</strong></td><td>Where sources disagree, the MLS of record wins and the disagreement is printed on the card rather than hidden.</td></tr>
   </tbody>
 </table>

@@ -13,34 +13,34 @@
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-08-25",
-  "previousRun": "2026-08-24",
+  "lastRun": "2026-08-26",
+  "previousRun": "2026-08-25",
   "source": {
     "name": "Coldwell Banker IDX (MetroList feed), verified against MetroListPRO (MetroList MLS)",
     "method": "Enumerated every active listing in the three cities from IDX city pages, applied the hard criteria to structured MLS fields, then re-read each survivor's record from MetroListPRO and required price, beds, full baths, acreage and pool to match.",
-    "inventoryScanned": 294,
-    "passedBedsBathsPrice": 35,
+    "inventoryScanned": 296,
+    "passedBedsBathsPrice": 34,
     "verifiedActiveMatches": 5,
     "pendingMatches": 3,
-    "mlsVerifiedOn": "2026-08-25",
+    "mlsVerifiedOn": "2026-08-26",
     "mlsVerifiedCount": 8
   },
   "dataQuality": {
     "verifiedActiveListings": 5,
-    "note": "294 active listings scanned across the three cities; 35 cleared beds, baths and price and had their MLS field table read directly. Status disagreement this run \u2014 the IDX feed called 1 listing Active that Redfin reports in escrow: 1988 Cold Springs Rd, Placerville (Redfin: Pending, MLS 226033527). Shown as pending."
+    "note": "296 active listings scanned across the three cities from the IDX feed; 34 cleared beds, baths and price and had their MLS field table read directly, and all 8 board properties were re-read from MetroListPRO. Separately, this run enumerated the three cities directly from MetroListPRO's own city indexes \u2014 358 active plus 63 pending MLS records, a wider set than the IDX feed's 296 \u2014 and pulled every one of the 284 records the IDX sweep had not already covered. None of them met the criteria, so the board below is complete against the MLS of record, not merely against the IDX feed. The 1988 Cold Springs Rd status disagreement carried since 2026-08-15 is now settled at the source: MetroListPRO reports it Pending (MLS 226033527), matching Redfin and overriding the IDX feed.",
+    "independentEnumeration": {
+      "source": "MetroListPRO city indexes (/lbc/2/<cityId>/6/193/<City>-Real-Estate-For-Sale)",
+      "activeRecords": 358,
+      "pendingRecords": 63,
+      "recordsPulledBeyondIdxSweep": 284,
+      "additionalMatchesFound": 0,
+      "ranOn": "2026-08-26"
+    }
   },
   "runSummary": {
     "new": [],
     "priceChanges": [],
-    "statusChanges": [
-      {
-        "address": "2565 Stagecoach Rd",
-        "city": "Placerville",
-        "mls": "226059973",
-        "from": "active",
-        "to": "pending"
-      }
-    ],
+    "statusChanges": [],
     "relisted": [],
     "dropped": [],
     "unchanged": 5
@@ -86,7 +86,7 @@
       "summary": "Crafted as the builder's own residence, this extraordinary European Country-inspired estate was designed without compromise. From its commanding setting on 40 acres with sweeping Sierra foothill views and timeless architectural details, every aspect of the property reflects quality and enduring elegance. From the moment you arrive, the home makes a striking impression, thoughtfully designed to fra",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-08-25",
+      "lastSeen": "2026-08-26",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -122,7 +122,7 @@
       "lat": 38.6092,
       "lng": -120.9405,
       "photos": [
-        "https://m.cbhomes.com/p/371/226082753/174d2448488d4C7/full.webp",
+        "https://m1.cbhomes.com/p/371/226082753/174d2448488d4C7/full.webp",
         "https://m1.cbhomes.com/p/371/226082753/50843B5EC3D94bd/full.webp",
         "https://m.cbhomes.com/p/371/226082753/11e01b187E1144B/full.webp",
         "https://m1.cbhomes.com/p/371/226082753/9cdf364E011e4f4/full.webp",
@@ -135,7 +135,7 @@
       "summary": "Escape the hustle and bustle and discover your own private retreat in Shingle Springs. Set on approximately 5 private acres with sweeping hillside views, this single-story custom home offers over 3,000 sq. ft. of thoughtfully designed living space with 4 bedrooms, 3 full baths and an impressive 4-car garage.    The outdoor setting is where this property truly shines. A stunning infinity-edge saltw",
       "notes": "",
       "firstSeen": "2026-08-13",
-      "lastSeen": "2026-08-25",
+      "lastSeen": "2026-08-26",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -184,7 +184,7 @@
       "summary": "Just minutes from town yet worlds away, this 10 acre sanctuary delivers the ultimate retreat lifestyle. Step inside to discover a beautifully updated home with 4 bedrooms, 3 baths, and an inviting upstairs game room complete with a wet bar  perfect for gatherings. The renovated kitchen shines with quartz counters, stainless appliances, and beautiful white cabinetry, flowing seamlessly into the fam",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-08-25",
+      "lastSeen": "2026-08-26",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -215,7 +215,7 @@
       "sewer": "Septic System",
       "propertyType": "Single Family",
       "mlsStatus": "Active",
-      "flag": "Price Reduced",
+      "flag": null,
       "listedOn": "2026-07-02",
       "lat": 38.7176,
       "lng": -121.0157,
@@ -233,7 +233,7 @@
       "summary": "Sought-after area. Minutes from shopping, schools. Country living at its finest. Don't miss the approx. 750SF ultimate entertainment hub: game room plus extra room & bath situated above the detached three-car garage. Connected to the main house by a breeze-catching walkway, this private extra space makes a perfect teen hangout or man cave.  Situated in a serene, park-like setting, this property of",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-08-25",
+      "lastSeen": "2026-08-26",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -286,7 +286,7 @@
       "summary": "Welcome to this charming mini ranch with an ADU, tucked behind a gated entrance at the end of a paved driveway, offering privacy, versatility, and lovely views in a peaceful country setting. The single-story ranch home design welcomes you into a light-filled living room where vaulted ceilings and expansive picture windows showcase the scenery beyond. The updated kitchen features granite countertop",
       "notes": "",
       "firstSeen": "2026-08-07",
-      "lastSeen": "2026-08-25",
+      "lastSeen": "2026-08-26",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -324,7 +324,7 @@
       "lat": 38.7314,
       "lng": -120.99,
       "photos": [
-        "https://m.cbhomes.com/p/371/226087456/9E02f6e2aE934D6/full.webp",
+        "https://m1.cbhomes.com/p/371/226087456/9E02f6e2aE934D6/full.webp",
         "https://m1.cbhomes.com/p/371/226087456/aAEE71820A394FA/full.webp",
         "https://m.cbhomes.com/p/371/226087456/44c37c7f4cb24b0/full.webp",
         "https://m1.cbhomes.com/p/371/226087456/dB966bbCDcd546c/full.webp",
@@ -345,7 +345,7 @@
           "price": 1289000
         }
       ],
-      "lastSeen": "2026-08-25"
+      "lastSeen": "2026-08-26"
     },
     {
       "id": "2565-stagecoach-rd-placerville",
@@ -395,7 +395,7 @@
           "price": 975000
         }
       ],
-      "lastSeen": "2026-08-25"
+      "lastSeen": "2026-08-26"
     },
     {
       "id": "1988-cold-springs-rd-placerville",
@@ -445,7 +445,7 @@
           "price": 850000
         }
       ],
-      "lastSeen": "2026-08-25"
+      "lastSeen": "2026-08-26"
     }
   ],
   "poolless": [
