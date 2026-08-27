@@ -162,6 +162,34 @@ it would need a judgement call from the reader anyway.
 Generalising: **a structured field that contradicts the listing's own remarks is a flag, not a
 verdict.** Filter on the field, then surface the conflict rather than resolving it quietly.
 
+### "Not found" is not "does not match"
+
+`verify.py` was all-or-nothing: any record that didn't read back clean suppressed the verification
+stamp for every other record. On 2026-08-27 that fired on a listing published the same day —
+3538 Wildwood Ln, MLS 226107286, one day on market. MetroListPRO answers `404 Listing #226107286
+Not Found`, and its Placerville active index (259 records) doesn't carry it either, so the absence is
+consistent across both of that site's surfaces. The MLS simply hasn't ingested it yet.
+
+The old code counted that as a disagreement, which had two consequences, both wrong. The page would
+have said *"Last confirmed 2026-08-26, not on this run"* — discarding the eight records that had just
+been re-read clean. And it would have given a brand-new listing the same signal as a genuine
+contradiction, which is the signal reserved for a listing the MLS actively refutes.
+
+The two now have separate paths. A "Not Found" body is recorded as `source.mlsAwaitingIndex` and a
+per-card `statusNote`; a field mismatch still vetoes the stamp as before. So the stamp reflects the
+records that were checked, and the caveat lands on the one card it applies to instead of on the whole
+board. `verify.py` clears the note once the record does get indexed, so it can't outlive its cause.
+
+An unverifiable listing is not dropped, but it does not get to look as solid as the rest. This one
+was carried because a second independent source agreed on every hard criterion: Redfin returns the
+same MLS number, price, bed and full-bath count and a 5.00-acre lot, plus the MLS amenity table
+(`POOL_PRIVATE_YN: Yes`, Gunite) and captioned pool photos. That is two sources agreeing with the
+third pending, and the card says exactly that.
+
+The general rule: **absence of a record and contradiction by a record are different findings, and a
+gate that collapses them will either hide new inventory or discredit good data.** When a check can't
+run, say which check and on which item — don't downgrade everything it would have covered.
+
 ### Half baths
 
 MetroList reports baths as `full | half`. Some sites render `2 | 1` as "3 baths", which will

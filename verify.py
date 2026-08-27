@@ -38,6 +38,11 @@ def verify(r):
             "mlHalfBaths": int(hdr.group(5) or 0),
             "mlSqft": int(hdr.group(6).replace(",", "")),
         })
+    # A record MetroListPRO has not indexed yet answers 404 with a "Listing #N Not Found" body.
+    # That is not the MLS contradicting the listing — it is the MLS not having heard of it, which
+    # is the normal state of a listing that went live today. Kept distinct from a disagreement
+    # below, because the two call for opposite responses: one is a caveat, the other is a veto.
+    out["mlNotIndexed"] = bool(re.search(r"Listing\s*#?\s*\d+\s*Not Found", t))
     out["mlStatus"] = field(t, "Status")
     out["mlAcres"] = field(t, "Lot Size in Acres")
     out["mlPool"] = field(t, "Has a Pool")
@@ -55,7 +60,14 @@ with ThreadPoolExecutor(max_workers=5) as ex:
 json.dump(res, open("verified.json", "w"), indent=1)
 
 clean = 0
+awaiting = []   # in the feed, not yet in the MLS index — a caveat on the card
+disagreed = []  # the MLS says something different — the gate's veto
 for v, r in zip(res, rows):
+    if v.get("mlNotIndexed"):
+        awaiting.append({"mls": r["mls"], "address": r["address"], "city": r["city"]})
+        print(f'{r["address"][:24]:24} MLS{r["mls"]} not yet indexed by MetroListPRO '
+              f'(listing is new) — carried as unverified, not as a disagreement')
+        continue
     ok = []
     ok.append("price" if v.get("mlPrice") == r["price"] else f"PRICE {v.get('mlPrice')} vs {r['price']}")
     ok.append("beds" if v.get("mlBeds") == r["beds"] else f"BEDS {v.get('mlBeds')} vs {r['beds']}")
@@ -66,6 +78,8 @@ for v, r in zip(res, rows):
     ok.append("pool" if v.get("mlPool") == "Yes" else f"POOL {v.get('mlPool')}")
     if all(x in ("price", "beds", "baths", "acres", "pool") for x in ok):
         clean += 1
+    else:
+        disagreed.append({"mls": r["mls"], "address": r["address"]})
     print(f'{r["address"][:24]:24} MLS{r["mls"]} ml_status={v.get("mlStatus")} '
           f'cb_status={r["status"]} | {" ".join(ok)}')
 
@@ -73,16 +87,39 @@ for v, r in zip(res, rows):
 # re-read from MetroListPRO, and scrape.js cannot make that claim because it never talks
 # to MetroListPRO — so the date is written here, by the step that actually did the work.
 # Skip step 2 and the page now shows an older date instead of an unearned one.
-if clean == len(rows) and rows:
+#
+# A record awaiting indexing does not block the stamp, because blocking it would throw away the
+# fact that the other records *were* re-read today — and would signal a contradiction where there
+# is none. It is recorded instead, per-record, so the page can caveat exactly the cards it applies
+# to instead of discrediting the whole board. A genuine disagreement still vetoes the stamp.
+if not disagreed and rows:
     today = subprocess.run(["date", "-u", "+%Y-%m-%d"], capture_output=True,
                            text=True).stdout.strip()
     d = json.load(open("listings.json"))
     d.setdefault("source", {})["mlsVerifiedOn"] = today
-    d["source"]["mlsVerifiedCount"] = len(rows)
+    d["source"]["mlsVerifiedCount"] = clean
+    if awaiting:
+        d["source"]["mlsAwaitingIndex"] = awaiting
+    else:
+        d["source"].pop("mlsAwaitingIndex", None)
+
+    # The caveat belongs on the card, so write it where build.js reads it — and clear it from any
+    # listing that has since been indexed, so a note can never outlive the condition it describes.
+    pend = {a["mls"] for a in awaiting}
+    note = ("Not yet indexed by MetroListPRO — this listing went live too recently for the MLS "
+            "site to carry it. Every criterion below was instead confirmed against a second "
+            "independent source; treat it as one confirmation short of the others.")
+    for lst in (d.get("listings") or []) + (d.get("pending") or []):
+        if lst.get("mls") in pend:
+            lst["statusNote"] = note
+        elif lst.get("statusNote") == note:
+            lst.pop("statusNote", None)
+
     json.dump(d, open("listings.json", "w"), indent=2)
-    print(f"\nAll {clean} records agreed with the MLS of record. "
-          f"Stamped source.mlsVerifiedOn = {today}.")
+    print(f"\n{clean} of {len(rows)} records agreed with the MLS of record"
+          + (f"; {len(awaiting)} not yet indexed and flagged on the card" if awaiting else "")
+          + f". Stamped source.mlsVerifiedOn = {today}.")
 else:
-    print(f"\n{len(rows) - clean} of {len(rows)} records disagreed with the MLS of record — "
+    print(f"\n{len(disagreed)} of {len(rows)} records disagreed with the MLS of record — "
           f"NOT stamping a verification date. Per the verification gate the MLS wins; put the "
           f"disagreement on the card.", file=sys.stderr)

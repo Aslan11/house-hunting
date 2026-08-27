@@ -13,32 +13,33 @@
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-08-26",
-  "previousRun": "2026-08-25",
+  "lastRun": "2026-08-27",
+  "previousRun": "2026-08-26",
   "source": {
     "name": "Coldwell Banker IDX (MetroList feed), verified against MetroListPRO (MetroList MLS)",
     "method": "Enumerated every active listing in the three cities from IDX city pages, applied the hard criteria to structured MLS fields, then re-read each survivor's record from MetroListPRO and required price, beds, full baths, acreage and pool to match.",
     "inventoryScanned": 296,
     "passedBedsBathsPrice": 34,
-    "verifiedActiveMatches": 5,
+    "verifiedActiveMatches": 6,
     "pendingMatches": 3,
-    "mlsVerifiedOn": "2026-08-26",
-    "mlsVerifiedCount": 8
+    "mlsVerifiedOn": "2026-08-27",
+    "mlsVerifiedCount": 8,
+    "mlsAwaitingIndex": [
+      {
+        "mls": "226107286",
+        "address": "3538 Wildwood Ln",
+        "city": "Placerville"
+      }
+    ]
   },
   "dataQuality": {
-    "verifiedActiveListings": 5,
-    "note": "296 active listings scanned across the three cities from the IDX feed; 34 cleared beds, baths and price and had their MLS field table read directly, and all 8 board properties were re-read from MetroListPRO. Separately, this run enumerated the three cities directly from MetroListPRO's own city indexes \u2014 358 active plus 63 pending MLS records, a wider set than the IDX feed's 296 \u2014 and pulled every one of the 284 records the IDX sweep had not already covered. None of them met the criteria, so the board below is complete against the MLS of record, not merely against the IDX feed. The 1988 Cold Springs Rd status disagreement carried since 2026-08-15 is now settled at the source: MetroListPRO reports it Pending (MLS 226033527), matching Redfin and overriding the IDX feed.",
-    "independentEnumeration": {
-      "source": "MetroListPRO city indexes (/lbc/2/<cityId>/6/193/<City>-Real-Estate-For-Sale)",
-      "activeRecords": 358,
-      "pendingRecords": 63,
-      "recordsPulledBeyondIdxSweep": 284,
-      "additionalMatchesFound": 0,
-      "ranOn": "2026-08-26"
-    }
+    "verifiedActiveListings": 6,
+    "note": "296 active listings scanned across the three cities; 34 cleared beds, baths and price and had their MLS field table read directly. Status disagreement this run — the IDX feed called 1 listing Active that Redfin reports in escrow: 1988 Cold Springs Rd, Placerville (Redfin: Pending, MLS 226033527). Shown as pending. The one new listing this run, 3538 Wildwood Ln, went live the same day and MetroListPRO has not indexed it yet, so it could not clear the usual MLS-of-record read. It was cross-checked independently against Redfin instead, which returns the same MLS number, price, bed and full-bath count and 5.00-acre lot, and carries the MLS amenity table with POOL_PRIVATE_YN Yes plus captioned pool photos. Two independent sources agree on every hard criterion; the third is pending ingestion, and the card says so."
   },
   "runSummary": {
-    "new": [],
+    "new": [
+      "3538 Wildwood Ln, Placerville"
+    ],
     "priceChanges": [],
     "statusChanges": [],
     "relisted": [],
@@ -73,7 +74,7 @@
       "lat": 38.6274,
       "lng": -120.8029,
       "photos": [
-        "https://m.cbhomes.com/p/371/226064449/d1EFFADd18624f4/full.webp",
+        "https://m1.cbhomes.com/p/371/226064449/d1EFFADd18624f4/full.webp",
         "https://m1.cbhomes.com/p/371/226064449/A4DAD1CE3D25422/full.webp",
         "https://m.cbhomes.com/p/371/226064449/A89aB686728049c/full.webp",
         "https://m1.cbhomes.com/p/371/226064449/baC1d4b8Cd63425/full.webp",
@@ -86,7 +87,7 @@
       "summary": "Crafted as the builder's own residence, this extraordinary European Country-inspired estate was designed without compromise. From its commanding setting on 40 acres with sweeping Sierra foothill views and timeless architectural details, every aspect of the property reflects quality and enduring elegance. From the moment you arrive, the home makes a striking impression, thoughtfully designed to fra",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-08-26",
+      "lastSeen": "2026-08-27",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -135,7 +136,7 @@
       "summary": "Escape the hustle and bustle and discover your own private retreat in Shingle Springs. Set on approximately 5 private acres with sweeping hillside views, this single-story custom home offers over 3,000 sq. ft. of thoughtfully designed living space with 4 bedrooms, 3 full baths and an impressive 4-car garage.    The outdoor setting is where this property truly shines. A stunning infinity-edge saltw",
       "notes": "",
       "firstSeen": "2026-08-13",
-      "lastSeen": "2026-08-26",
+      "lastSeen": "2026-08-27",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -184,7 +185,7 @@
       "summary": "Just minutes from town yet worlds away, this 10 acre sanctuary delivers the ultimate retreat lifestyle. Step inside to discover a beautifully updated home with 4 bedrooms, 3 baths, and an inviting upstairs game room complete with a wet bar  perfect for gatherings. The renovated kitchen shines with quartz counters, stainless appliances, and beautiful white cabinetry, flowing seamlessly into the fam",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-08-26",
+      "lastSeen": "2026-08-27",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -233,7 +234,7 @@
       "summary": "Sought-after area. Minutes from shopping, schools. Country living at its finest. Don't miss the approx. 750SF ultimate entertainment hub: game room plus extra room & bath situated above the detached three-car garage. Connected to the main house by a breeze-catching walkway, this private extra space makes a perfect teen hangout or man cave.  Situated in a serene, park-like setting, this property of",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-08-26",
+      "lastSeen": "2026-08-27",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -286,7 +287,7 @@
       "summary": "Welcome to this charming mini ranch with an ADU, tucked behind a gated entrance at the end of a paved driveway, offering privacy, versatility, and lovely views in a peaceful country setting. The single-story ranch home design welcomes you into a light-filled living room where vaulted ceilings and expansive picture windows showcase the scenery beyond. The updated kitchen features granite countertop",
       "notes": "",
       "firstSeen": "2026-08-07",
-      "lastSeen": "2026-08-26",
+      "lastSeen": "2026-08-27",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -294,6 +295,56 @@
           "price": 969000
         }
       ]
+    },
+    {
+      "id": "3538-wildwood-ln-placerville",
+      "address": "3538 Wildwood Ln",
+      "city": "Placerville",
+      "zip": "95667",
+      "mls": "226107286",
+      "currentPrice": 949000,
+      "beds": 4,
+      "baths": 3,
+      "fullBaths": 3,
+      "partialBaths": null,
+      "sqft": null,
+      "acres": 5,
+      "pool": true,
+      "poolDetail": "Gunite Construction, Pool Sweep, Pool Cover, On Lot, Built-In",
+      "yearBuilt": "1962",
+      "garageSpaces": "2",
+      "view": "Woods, Hills",
+      "water": "Well, Storage Tank, Public",
+      "sewer": "Septic System",
+      "propertyType": "Single Family",
+      "mlsStatus": "Active",
+      "flag": null,
+      "listedOn": "2026-08-27",
+      "lat": 38.7133,
+      "lng": -120.8959,
+      "photos": [
+        "https://m1.cbhomes.com/p/73/226107286/433b190543004Ac/full.webp",
+        "https://m1.cbhomes.com/p/73/226107286/be5F757AaCE4446/full.webp",
+        "https://m.cbhomes.com/p/73/226107286/7F45DE845c0F4a8/full.webp",
+        "https://m1.cbhomes.com/p/73/226107286/C9bF82ED0846417/full.webp",
+        "https://m.cbhomes.com/p/73/226107286/bfEB92bEB3104C9/full.webp",
+        "https://m1.cbhomes.com/p/73/226107286/B7f6774BD6E14c9/full.webp"
+      ],
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/3538-wildwood-ln/pid_73278772/",
+      "gallery": "https://www.coldwellbankerhomes.com/ca/placerville/3538-wildwood-ln/pid_73278772/",
+      "status": "match",
+      "summary": "Welcome to a property that doesn't ask you to choose between a home, a retreat, and country living - you get all three. Set among the Placerville foothills, 3538 Wildwood Lane is a place to swim, garden, gather and spread out. The two-story main home offers a private ground-level guest suite with its own entrance and full bath, plus a two-car garage and full basement access. Upstairs, the living s",
+      "notes": "",
+      "firstSeen": "2026-08-27",
+      "lastSeen": "2026-08-27",
+      "newThisRun": true,
+      "priceHistory": [
+        {
+          "date": "2026-08-27",
+          "price": 949000
+        }
+      ],
+      "statusNote": "Not yet indexed by MetroListPRO — this listing went live too recently for the MLS site to carry it. Every criterion below was instead confirmed against a second independent source; treat it as one confirmation short of the others."
     }
   ],
   "pending": [
@@ -324,7 +375,7 @@
       "lat": 38.7314,
       "lng": -120.99,
       "photos": [
-        "https://m1.cbhomes.com/p/371/226087456/9E02f6e2aE934D6/full.webp",
+        "https://m.cbhomes.com/p/371/226087456/9E02f6e2aE934D6/full.webp",
         "https://m1.cbhomes.com/p/371/226087456/aAEE71820A394FA/full.webp",
         "https://m.cbhomes.com/p/371/226087456/44c37c7f4cb24b0/full.webp",
         "https://m1.cbhomes.com/p/371/226087456/dB966bbCDcd546c/full.webp",
@@ -345,7 +396,7 @@
           "price": 1289000
         }
       ],
-      "lastSeen": "2026-08-26"
+      "lastSeen": "2026-08-27"
     },
     {
       "id": "2565-stagecoach-rd-placerville",
@@ -374,7 +425,7 @@
       "lat": 38.7323,
       "lng": -120.907,
       "photos": [
-        "https://m1.cbhomes.com/p/371/226059973/6e688FC8324a4f7/full.webp",
+        "https://m.cbhomes.com/p/371/226059973/6e688FC8324a4f7/full.webp",
         "https://m1.cbhomes.com/p/371/226059973/d4C3c39b87F14Fd/full.webp",
         "https://m.cbhomes.com/p/371/226059973/93a16D8E4b14403/full.webp",
         "https://m1.cbhomes.com/p/371/226059973/5E1e2918Ce29427/full.webp",
@@ -395,7 +446,7 @@
           "price": 975000
         }
       ],
-      "lastSeen": "2026-08-26"
+      "lastSeen": "2026-08-27"
     },
     {
       "id": "1988-cold-springs-rd-placerville",
@@ -424,7 +475,7 @@
       "lat": 38.7387,
       "lng": -120.8572,
       "photos": [
-        "https://m.cbhomes.com/p/371/226033527/67D4c74cf6314cC/full.webp",
+        "https://m1.cbhomes.com/p/371/226033527/67D4c74cf6314cC/full.webp",
         "https://m1.cbhomes.com/p/371/226033527/4049C87686094d6/full.webp",
         "https://m.cbhomes.com/p/371/226033527/41c104a8B1034E8/full.webp",
         "https://m1.cbhomes.com/p/371/226033527/Fa9cc4d98cD6489/full.webp",
@@ -445,7 +496,7 @@
           "price": 850000
         }
       ],
-      "lastSeen": "2026-08-26"
+      "lastSeen": "2026-08-27"
     }
   ],
   "poolless": [
@@ -699,7 +750,7 @@
     {
       "address": "2805 Aquamarine Cir",
       "city": "Rescue",
-      "price": 699000,
+      "price": 674000,
       "beds": 4,
       "baths": 3,
       "acres": 0.2052,
@@ -717,6 +768,17 @@
       "pool": true,
       "url": "https://www.coldwellbankerhomes.com/ca/placerville/1635-country-club-dr/pid_70089379/",
       "missing": "only 0.61 acres"
+    },
+    {
+      "address": "2120 Bear Rock Rd",
+      "city": "Placerville",
+      "price": 1250000,
+      "beds": 4,
+      "baths": 3.5,
+      "acres": 5.61,
+      "pool": false,
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/2120-bear-rock-rd/pid_73282677/",
+      "missing": "no pool"
     },
     {
       "address": "7991 S Shingle Rd",
@@ -827,17 +889,6 @@
       "pool": false,
       "url": "https://www.coldwellbankerhomes.com/ca/placerville/6560-agape-ct/pid_71736013/",
       "missing": "no pool"
-    },
-    {
-      "address": "4351 Rossler Rd",
-      "city": "Placerville",
-      "price": 595000,
-      "beds": 4,
-      "baths": 3,
-      "acres": 10,
-      "pool": false,
-      "url": "https://www.coldwellbankerhomes.com/ca/placerville/4351-rossler-rd/pid_72839847/",
-      "missing": "no pool"
     }
   ],
   "dropped": [],
@@ -845,12 +896,12 @@
     {
       "address": "1781 Springvale Rd, Placerville",
       "price": 1250000,
-      "reason": "Tracked as a relist after dropping from $1.5M. Resolved this run against MetroListPRO (MLS 226100125): Property Subtype is Triplex \u2014 multi-unit residential income, 10.27 acres, no pool. Fails the pool requirement and is not a single-family home. Retired from tracking."
+      "reason": "Tracked as a relist after dropping from $1.5M. Resolved this run against MetroListPRO (MLS 226100125): Property Subtype is Triplex — multi-unit residential income, 10.27 acres, no pool. Fails the pool requirement and is not a single-family home. Retired from tracking."
     },
     {
       "address": "1601 Velvet Horn Ln, Rescue",
       "price": 1100000,
-      "reason": "Still actively listed at $1,100,000 (no price change since last run), 5 acres with a sports pool and slide \u2014 but 3 bd / 3 ba, under the 4BR minimum."
+      "reason": "Still actively listed at $1,100,000 (no price change since last run), 5 acres with a sports pool and slide — but 3 bd / 3 ba, under the 4BR minimum."
     },
     {
       "address": "5135 Bryant Rd, Shingle Springs",
@@ -884,20 +935,20 @@
     },
     {
       "address": "5040 Milton Ranch Rd, Shingle Springs",
-      "reason": "Not for sale \u2014 sold 2019 for $1.4M"
+      "reason": "Not for sale — sold 2019 for $1.4M"
     },
     {
       "address": "5457 Bryant Rd, Shingle Springs",
-      "reason": "Not for sale \u2014 sold 2020 for $1,405,000"
+      "reason": "Not for sale — sold 2020 for $1,405,000"
     },
     {
       "address": "2800 La Paz Rd, Placerville",
       "price": 995000,
-      "reason": "4bd/2ba \u2014 under both minimums"
+      "reason": "4bd/2ba — under both minimums"
     },
     {
       "address": "2931 Texas Hill Rd, Placerville",
-      "reason": "4bd/2.5ba \u2014 under both minimums"
+      "reason": "4bd/2.5ba — under both minimums"
     },
     {
       "address": "4370 Hillwood Dr, Shingle Springs",

@@ -165,6 +165,9 @@ const poollessRows = poolless.map((r) => `
 // claim on the page matches the work actually done.
 const verifiedOn = data.source && data.source.mlsVerifiedOn;
 const verifiedToday = verifiedOn === data.lastRun;
+// Records the MLS site had not indexed when verify.py ran. Recorded rather than treated as a
+// disagreement — see verify.py — so the caveat lands on those cards instead of the whole board.
+const awaitingIndex = (data.source && data.source.mlsAwaitingIndex) || [];
 // Optional second enumeration straight from the MLS of record. Present only on runs that did one.
 const indep = (data.dataQuality || {}).independentEnumeration;
 
@@ -415,7 +418,13 @@ failure mode is now closed off.</p>
     <tr><td><strong>Filter</strong></td><td>Hard criteria applied to structured MLS fields, never to prose: ${data.source ? data.source.passedBedsBathsPrice : '—'} cleared beds/baths/price, then acreage and pool narrowed it to ${listings.length}.</td></tr>
     <tr><td><strong>Verify</strong></td><td>Each survivor is re-read from <strong>MetroListPRO</strong>, the official MetroList MLS site, and price, beds, full baths, acreage and pool must match.
       ${verifiedToday
-        ? `All ${data.source.mlsVerifiedCount || listings.length} agreed, checked ${esc(verifiedOn)}.`
+        ? `${data.source.mlsVerifiedCount || listings.length} agreed, checked ${esc(verifiedOn)}.${
+            awaitingIndex.length
+              ? ` ${awaitingIndex.length === 1 ? 'One listing is' : `${awaitingIndex.length} listings are`} too new for
+                  MetroListPRO to have indexed — ${awaitingIndex.map((a) => `<strong>${esc(a.address)}</strong>`).join(', ')}
+                  — and ${awaitingIndex.length === 1 ? 'is' : 'are'} carried on a second independent source until the MLS
+                  catches up. That is a missing confirmation, not a contradiction; the card says so.`
+              : ''}`
         : `<strong>Last confirmed ${esc(verifiedOn || 'never')}</strong>, not on this run — treat the listings below as verified as of that date.`}</td></tr>
     ${indep ? `<tr><td><strong>Cross-enumerate</strong></td><td>The three cities were listed again straight from
       <strong>MetroListPRO's own city indexes</strong> — ${indep.activeRecords} active and ${indep.pendingRecords} pending MLS
