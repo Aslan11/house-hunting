@@ -283,13 +283,61 @@ The general form of this one: **a page that makes a claim about process should r
 artefact that process leaves behind, never from a hardcoded sentence.** A hardcoded sentence cannot
 tell the difference between a check that passed and a check that never ran.
 
+### The last section still riding the carry-forward
+
+The rule above was applied to `runSummary`, then to `source` and `dataQuality`. `poolless` was
+missed, and it was the one that mattered most, because it is the only section whose rows carry
+MLS-confirmed fields. `scrape.js` never wrote the key at all, so `{...prior}` had been serving the
+same thirteen rows since whichever run last built them by hand.
+
+On 2026-08-28 it showed **4661 Holm Rd at $935,000**, with an `mlsPrice` of $935,000 beside it
+implying the MLS had confirmed that number. The IDX feed said $899,900 and a MetroListPRO read
+agreed — a $35,100 cut the board had been carrying stale, on exactly the section the "pool-less rows
+carry unverified prices" note above is about. The same frozen list still carried **2730 Golden Fawn
+Trail**, which had since **closed**: its IDX detail page reads `Status: Closed` and MetroListPRO
+answers 404 for MLS 226091151.
+
+`scrape.js` now rebuilds `poolless` in the candidate loop from that run's own detail reads, for
+Active *and* Pending listings, so a poolless property going into escrow shows in its status column
+instead of dropping out silently. The MLS-confirmed fields (`mlsPrice`, `mlsPool`, `reason`) are
+carried forward **only while the price they were read against still holds**; once the price moves
+they are dropped rather than left to vouch for a number that no longer exists.
+
+Two things generalise. First: the carry-forward rule needs a list, not a memory — the fields that
+describe a run are `lastRun`, `previousRun`, `source`, `dataQuality`, `runSummary`, and every
+derived section (`nearMisses`, `poolless`). Second, and sharper: **a stale value is worse when it
+travels with a provenance stamp.** A stale price is a wrong number; a stale price next to `mlsPrice`
+is a wrong number wearing a badge that says it was checked. When a fact goes stale, its confirmation
+has to go with it.
+
+While fixing it, the same shape turned up in prose: `build.js` ended the section's note with a
+hardcoded "check the status column, one is already pending" — true when written, and silently wrong
+the moment the count changed. It is rendered from the data now.
+
 ## Photos
 
 Photos are hotlinked from `m.cbhomes.com`, pulled off each detail page in document order:
 
 ```
-https://m.cbhomes.com/p/371/<MLS>/<hash>/pdl23tp.webp    # large, ~20-45 per listing
+https://m.cbhomes.com/p/371/<MLS>/<hash>/<rendition>.webp    # ~20-45 photos per listing
 ```
+
+The JSON-LD hands over `full.webp`. Renditions worth knowing, because the choice is worth ~7 MB:
+
+| Rendition | Size | Notes |
+|---|---|---|
+| `original` | 1500x1125 | 4:3, 170-450 KB |
+| `full` | ~1486x1111 | 4:3, 74-375 KB — what the feed gives |
+| `m23cc` | 600x400 | 3:2, **centre-cropped** — what the cards use, ~50 KB |
+| `s23cc` | 308x205 | 3:2 centre-cropped thumbnail |
+| `pdl23tp` / `pdm23tp` / `pds23tp` | 3:2 | **Padded**, not cropped — white bars under `object-fit:cover` |
+
+The card's photo box is 3:2 and ~340 CSS px wide, so `full` was shipping roughly four times the
+pixels it could show: six per card across nine cards came to **9.4 MB**, against **2.0 MB** for
+`m23cc`, which needs no cropping at render time because it is already the right shape. `scrape.js`
+rewrites `full.webp` to `m23cc.webp` and leaves any URL that doesn't match that shape alone. All 54
+photos on the 2026-08-28 board had the rendition; if one ever doesn't, the card's `onerror` handler
+uncovers the "View photos" link behind it rather than leaving a hole.
 
 - The CDN **rejects `HEAD`** — a `404` from `curl -I` means nothing. Verify with a `GET`.
 - This container's headless Chromium has no outbound egress (even `example.com` fails), so a local

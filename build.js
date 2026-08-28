@@ -152,6 +152,9 @@ const nearRows = nearMiss.map((n) => `
         <td>${n.beds} bd / ${n.baths ?? n.fullBaths ?? '—'} ba</td><td>${esc(n.missing || n.reason || '')}</td></tr>`).join('');
 
 const poolless = data.poolless || [];
+// Rendered from the data rather than asserted in prose: the count of pending rows here
+// changes run to run, and a hardcoded "one is already pending" goes wrong the moment it does.
+const poollessPending = poolless.filter((r) => /pending/i.test(r.status || '')).length;
 const poollessRows = poolless.map((r) => `
     <tr><td><a href="${esc(r.url)}" rel="noopener">${esc(r.address)}</a>, ${esc(r.city)}</td>
         <td>${money(r.price)}</td><td>${esc(r.acres)} ac</td>
@@ -386,8 +389,7 @@ ${poolless.length ? `<h2>Right land, no pool <span class="count">(${poolless.len
 <p class="sectnote">The pool is the binding constraint on this search, not the budget — so these are
 worth a look. Each one is <strong>on the market now</strong> and clears bedrooms, full baths, acreage
 and price; MetroList simply records no pool. On this much land a pool is an addable feature, and
-several of these sit far enough under $1.5M to fund one. Sorted by acreage; check the status column,
-one is already pending.</p>
+several of these sit far enough under $1.5M to fund one. Sorted by acreage${poollessPending ? `; ${poollessPending === 1 ? 'one is' : `${poollessPending} are`} already under contract, so check the status column` : ''}.</p>
 <div class="tablewrap">
 <table>
   <thead><tr><th>Property</th><th>Price</th><th>Land</th><th>Size</th><th>Sqft</th><th>Status</th></tr></thead>

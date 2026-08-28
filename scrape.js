@@ -139,7 +139,15 @@ function detail(url) {
       if (!(Array.isArray(node['@type']) && node['@type'].includes('RealEstateListing'))) continue;
       out.description = node.description || '';
       out.datePosted = node.datePosted;
-      out.images = Array.isArray(node.image) ? node.image : (node.image ? [node.image] : []);
+      const imgs = Array.isArray(node.image) ? node.image : (node.image ? [node.image] : []);
+      /* The JSON-LD gives `full.webp` — the ~1486px original, 74-375 KB each. Six of those
+         per card put 9.4 MB on a page whose photo boxes are ~340 CSS px wide. `m23cc` is the
+         same image at 600x400, already centre-cropped to the 3:2 the card uses, and totals
+         2.0 MB across the board. Take it when the URL has the shape to rewrite, and leave any
+         other URL alone rather than guessing at a rendition that may not exist. Note the
+         *other* family, `pdl23tp` / `pdm23tp` / `pds23tp`: those are PADDED to 3:2 rather than
+         cropped, so under `object-fit:cover` they render with white bars. Use `*cc`, not `*tp`. */
+      out.images = imgs.map((u) => u.replace(/\/full\.webp$/, '/m23cc.webp'));
       out.price = (node.offers || {}).price;
       for (const a of (node.mainEntity || {}).amenityFeature || []) {
         if (a.name != null) out.amenities[a.name] = a.value;
@@ -454,7 +462,16 @@ try {
 
 const demoted = [];
 
-const matches = [], pending = [], near = [];
+const matches = [], pending = [], near = [], poolless = [];
+/* `poolless` was the last section still carried forward by the `...prior` spread: scrape.js
+   never wrote it, so it froze at whatever an earlier run left behind. On 2026-08-28 it still
+   showed 4661 Holm Rd at $935,000 with an `mlsPrice` to match, three runs after the IDX feed
+   and MetroListPRO both moved to $899,900 — the same section of the board that the README's
+   "pool-less rows carry unverified prices" note is about. Rebuilt from this run's own detail
+   reads now. The MLS-confirmed fields are only carried forward while the price they were
+   read against still holds; once it moves they are dropped rather than left to describe a
+   number that no longer exists. */
+const priorPoolless = new Map((prior.poolless || []).map((p) => [p.mls || p.address, p]));
 /** id -> why it fell out of the match list, for properties still on the market. */
 const stillListed = new Map();
 candidates.forEach((r, i) => {
@@ -513,6 +530,23 @@ candidates.forEach((r, i) => {
         missing: missing[0] });
     }
   }
+
+  /* Right land, right house, no pool — the section above the near misses. Collected for
+     any listing still on the market, Active or Pending, so a poolless property going into
+     escrow shows in its status column instead of vanishing. */
+  if (!d.pool && bigEnough && bathsOk && (realStatus === 'Active' || realStatus === 'Pending')) {
+    const was = priorPoolless.get(rec.mls) || priorPoolless.get(rec.address);
+    const priceHeld = was && was.mlsPrice === rec.currentPrice;
+    poolless.push({
+      address: rec.address, city: rec.city, price: rec.currentPrice,
+      beds: rec.beds, baths: rec.baths, fullBaths: rec.fullBaths, halfBaths: rec.partialBaths,
+      acres: rec.acres, sqft: rec.sqft, mls: rec.mls, url: rec.url,
+      status: realStatus === 'Pending' ? 'Pending' : 'For Sale',
+      reason: priceHeld ? was.reason : 'IDX field table records no pool',
+      mlsUrl: `https://www.metrolistpro.com/homes/2/6/x/${rec.mls}`,
+      ...(priceHeld ? { mlsPrice: was.mlsPrice, mlsPool: was.mlsPool } : {}),
+    });
+  }
   process.stderr.write(`  ${i + 1}/${candidates.length} ${r.name.slice(0, 42).padEnd(42)} ` +
     `acres=${d.acres} pool=${d.pool} status=${d.realStatus}\n`);
   sleep(800);
@@ -521,6 +555,7 @@ candidates.forEach((r, i) => {
 matches.sort((a, b) => b.currentPrice - a.currentPrice);
 pending.sort((a, b) => b.currentPrice - a.currentPrice);
 near.sort((a, b) => (a.missing === 'no pool') - (b.missing === 'no pool') || b.price - a.price);
+poolless.sort((a, b) => b.acres - a.acres || b.price - a.price);
 
 const pendingIds = new Set(pending.map((p) => p.id));
 const { listings, dropped, relisted } =
@@ -568,6 +603,7 @@ const out = {
   listings,
   pending,
   nearMisses: near.slice(0, 14),
+  poolless,
   dropped: dropped.length ? dropped : [],
   relisted: relisted.length ? relisted : [],
   rejected: prior.rejected || [],
