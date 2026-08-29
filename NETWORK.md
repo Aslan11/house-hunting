@@ -1,56 +1,52 @@
-# Network notes
+# Network reality for this tracker
 
-**Status as of 2026-08-29: outbound HTTPS is open.** The egress gateway no longer denies listing
-sites — `example.com` returns 200, `recentRelayFailures` stays empty, and requests reach their
-destinations. The earlier blanket 403 from the local proxy is gone.
-
-Verify at any time:
+Superseded as of **2026-08-15**. Outbound HTTPS now works — the egress gateway is open and
+`recentRelayFailures` is empty:
 
 ```bash
-curl -sS "$HTTPS_PROXY/__agentproxy/status" | python3 -m json.tool   # recentRelayFailures
-curl -sS -o /dev/null -w "%{http_code}\n" https://example.com/       # 200 = egress open
+curl -sS "$HTTPS_PROXY/__agentproxy/status" | python3 -m json.tool
 ```
 
-## What still blocks, and what doesn't
+What blocks listing data now is **site-side bot defence**, not the proxy. Distinguish the two: a
+gateway denial shows up in `recentRelayFailures`; a site block does not.
 
-Egress being open is not the same as the sites serving us. The portals block datacenter IP ranges
-on their own, which is what this container runs on. Measured directly:
+## Host status, measured 2026-08-15
 
-| Host | Code | Notes |
+| Host | Result | Usable |
 |---|---|---|
-| `www.zillow.com` | 403 | Bot block |
-| `www.trulia.com` | 403 | Same company, same block |
-| `www.homes.com` | 403 | |
-| `www.movoto.com` | 403 | |
-| `www.point2homes.com`, `www.land.com`, `www.landwatch.com` | 403 | |
-| `www.redfin.com` | 302 root / **403** | CloudFront blocks every search and `stingray` API path, so the CSV export is unreachable |
-| `www.realtor.com` | 429 | Rate-limited before any content |
-| `www.remax.com` | 405 | |
-| **`www.coldwellbankerhomes.com`** | **200** | **Serves. This is the tracker's source.** |
-| `www.metrolistpro.com` | 200 | The MLS itself; public search needs a session, unused |
-| `www.compass.com` | 200 | Unused — CB already covers the inventory |
-| `www.century21.com` | 301 | Redirects; unused |
-| `m.cbhomes.com`, `m1.cbhomes.com` | 200 | Photo CDN, `full.webp` verified 128 KB |
+| `www.coldwellbankerhomes.com` | 200, correct city, full MetroList IDX data | **Yes — primary** |
+| `www.metrolistpro.com` | 200, official MetroList MLS records by MLS number | **Yes — verification** |
+| `m.cbhomes.com` | 200 on `GET` (rejects `HEAD`) | **Yes — photos** |
+| `www.redfin.com` | 200, full GIS payload on `/zipcode/<zip>` | **Yes — cross-check only** |
+| `www.zillow.com`, `www.homes.com`, `www.movoto.com`, `www.remax.com`, `www.har.com` | 403 | No |
+| `www.realtor.com` | 429 | No |
+| `www.redfin.com/stingray/*` | 403 (CloudFront) | No |
+| `www.century21.com` | 200 but client-rendered shell, no data in HTML | No |
 
-Distinguishing a gateway denial from a site block: a gateway denial adds an entry to
-`recentRelayFailures` in the proxy status; a site block does not, and returns an HTML body (the
-CloudFront "Request blocked." page, in Redfin's case).
+Both usable hosts require a browser `User-Agent`. The default agent string is blocked.
 
-## Why Coldwell Banker is the right source anyway
+The Redfin row was corrected on **2026-08-23**. The "decoy page for another state" was real but
+self-inflicted: `/city/<id>/…` resolves by numeric id, and a guessed id serves a complete,
+valid-looking page for a different city (17151 is San Francisco, not Shingle Springs). HTTP 200 on a
+wrong id looks exactly like success. `/zipcode/<zip>` has no such failure mode and returns the full
+GIS search payload — good enough to enumerate as a cross-check, though the board still comes from
+the IDX feed. Either way, **assert the expected city appears in the returned HTML** before trusting
+a page.
 
-It is an IDX mirror of **MetroList**, the actual MLS for El Dorado County, so it carries the same
-inventory as the portals. Better, each detail page embeds JSON-LD at
-`@graph[0].mainEntity.amenityFeature` with the complete MLS amenity table — `Lot Size (Acres)`,
-`Pool`, `Pool Description`, `Horse Property`, `Water`, `Sewer`, `Year Built` — which is exactly
-what the criteria need and what portal result cards omit. Full-resolution photo URLs come from
-the same block. Nothing needs to be parsed out of rendered HTML beyond the result cards.
+Redfin also answers **202 with a stub body** under load rather than 429. A short body is retryable;
+back off and try again, and never read a 202 as a missing listing.
 
-`scrape.py` implements this. It is stdlib + curl, caches every page under `.cache/` (gitignored),
-and retries with backoff.
+## Headless browser
 
-## Known limitation
+Chromium in this container has **no outbound network at all** — even `https://example.com` fails
+with `ERR_CONNECTION_RESET`, with or without `--proxy-server`. Use it for layout checks only; verify
+remote URLs with `curl`, which honours `HTTPS_PROXY`.
 
-The container cannot load images from `cbhomes.com` — the proxy drops those tunnels
-(`ws_closed_mid_exchange`), so a headless render here shows empty photo frames. The URLs
-themselves are fine (verified 200 via curl), and the **viewer's** browser is not behind this
-proxy, so photos display normally on the published page.
+## If the usable hosts start blocking
+
+Fall back to paths that don't fight bot defences:
+
+1. A Zillow/Redfin **saved search with email alerts** into the connected Gmail — carries current
+   status, price cuts and image URLs, needs no network change.
+2. An agent-run **MLS/IDX client portal** with email alerts.
+3. A licensed **data API key** (SimplyRETS, Bridge Interactive, RapidAPI).
