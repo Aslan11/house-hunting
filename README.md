@@ -410,6 +410,26 @@ and, when **every** record reads back clean, stamps `source.mlsVerifiedOn` / `ml
 `listings.json`. That stamp is what `build.js` renders, so the order matters: run step 2 before step
 3, or the page will correctly report that the board was re-enumerated but not re-verified.
 
+### Do not refresh with `refresh.py`
+
+`refresh.py` is an older, parallel composer that reads plausibly and is wrong in four silent ways.
+The 2026-08-29 run tried it before checking the documented order, and it produced a board that
+rendered perfectly while stating the wrong thing:
+
+1. It treats a MetroListPRO "Not Found" as "the MLS says not active" and drops the listing. That
+   run it would have dropped **3538 Wildwood Ln** — an active, verified match — for the sole reason
+   that the MLS site has not indexed a listing this new. The section above exists precisely because
+   absence and contradiction are different findings; `verify.py` gets this right and `refresh.py`
+   does not.
+2. It never writes `pending`, so the previous run's escrow list is republished as if re-checked.
+3. It never writes `runSummary` or `poolless`, so the "What changed this run" banner and the
+   pool-less table keep the previous run's numbers.
+4. It writes `nearMisses` as a dict where `build.js` reads an array, silently emptying that table.
+
+It now refuses to run without `--i-know-this-is-superseded`. The general lesson is the same one the
+verification gate encodes: **a pipeline that fails silently is worse than one that fails loudly**,
+and a second composer that has to be kept in step with the first will drift.
+
 ## Files
 
 - **`listings.json`** — canonical data. Single source of truth.
@@ -424,6 +444,7 @@ and, when **every** record reads back clean, stamps `source.mlsVerifiedOn` / `ml
   `parse_detail.py` reads the MLS amenity table off a listing page — asserting the `propertyId` in
   each API blob matches the page requested, because a Redfin detail page also embeds comparable and
   nearby-home payloads and a loose regex will happily return a neighbour's pool status.
+- **`refresh.py`** — superseded composer, guarded so it can't be run by accident. See above.
 - **`ingest.js`** — merges listings pasted from a portal results page, applying the dedupe rules.
   Kept as a manual fallback; the scrape path above supersedes it.
 - **`index.html`** — generated. Don't hand-edit; edit the JSON and rebuild.

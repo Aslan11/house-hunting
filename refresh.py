@@ -1,8 +1,32 @@
 #!/usr/bin/env python3
 """
-Refresh listings.json from live MLS-backed data, then run `node build.js`.
+SUPERSEDED — do not run this to refresh the board. Use the pipeline in README
+"Running a refresh": `node scrape.js` -> `python3 verify.py` -> `node build.js`.
 
-    python3 refresh.py [--no-cache]
+Kept for its detail-page JSON-LD parsing, which is still correct and still worth
+reading. It is guarded below because running it corrupts listings.json in four ways
+that are all silent — the page renders cleanly and states the wrong thing. Found on
+2026-08-29 by running it against that day's inventory:
+
+  1. It collapses "the MLS has not indexed this listing yet" into "the MLS says it is
+     not active", and drops the listing. On 2026-08-29 that would have dropped 3538
+     Wildwood Ln, a live Active listing, purely because MetroListPRO answers 404 for
+     a record too new to be indexed. README "'Not found' is not 'does not match'"
+     exists because of this exact failure; verify.py handles it correctly.
+  2. It never writes `pending`, so yesterday's escrow list is carried forward verbatim
+     and published as if re-checked.
+  3. It never writes `runSummary` or `poolless`, so the "What changed this run" banner
+     and the pool-less table keep the previous run's numbers.
+  4. It writes `nearMisses` as a dict, while build.js reads it as an array — the near
+     miss table silently empties.
+
+scrape.js does all of this correctly and additionally cross-checks status against
+Redfin. Fixing this file would mean maintaining a second composer that has to stay in
+step with the first; the guard is the cheaper answer.
+
+Original pipeline notes follow.
+
+    python3 refresh.py --i-know-this-is-superseded [--no-cache]
 
 Pipeline
 --------
@@ -24,6 +48,16 @@ Pipeline
    priceHistory when the price moved, flag newcomers with isNew.
 """
 import re, json, time, subprocess, sys, os, datetime
+
+if "--i-know-this-is-superseded" not in sys.argv:
+    sys.exit(
+        "refresh.py is superseded and writing listings.json with it corrupts the board "
+        "silently — see the module docstring for the four ways.\n"
+        "To refresh, run instead:\n"
+        "  node scrape.js\n"
+        "  node -e '...' && python3 verify.py     # see README 'Running a refresh'\n"
+        "  node build.js\n"
+        "If you really mean to run this, pass --i-know-this-is-superseded.")
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CACHE = os.path.join(HERE, ".cache")
