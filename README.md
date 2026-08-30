@@ -339,6 +339,19 @@ rewrites `full.webp` to `m23cc.webp` and leaves any URL that doesn't match that 
 photos on the 2026-08-28 board had the rendition; if one ever doesn't, the card's `onerror` handler
 uncovers the "View photos" link behind it rather than leaving a hole.
 
+### Pin the CDN host, or every diff is noise
+
+The feed serves the same photo from `m.cbhomes.com` and `m1.cbhomes.com` at random — byte-identical,
+verified by checksum on 2026-08-30. Taking whichever host the feed happened to hand over meant a
+dozen photo URLs were rewritten on *every* run, so a "nothing moved" run still produced a 30-line
+diff and the CDN churn sat in the same commit as any real change. `scrape.js` now normalises
+`m<n>.cbhomes.com` to `m.cbhomes.com`, and the 2026-08-30 run's diff went to zero lines outside the
+date stamps.
+
+Worth generalising, because this repo's whole review model is reading the run diff: **a value that
+changes on its own is noise, and noise in a diff is not free — it is cover for a real change nobody
+looks at twice.** Normalise anything that varies without meaning.
+
 - The CDN **rejects `HEAD`** — a `404` from `curl -I` means nothing. Verify with a `GET`.
 - This container's headless Chromium has no outbound egress (even `example.com` fails), so a local
   browser render will show every image broken. That is a container limitation, not a page bug.

@@ -146,8 +146,14 @@ function detail(url) {
          2.0 MB across the board. Take it when the URL has the shape to rewrite, and leave any
          other URL alone rather than guessing at a rendition that may not exist. Note the
          *other* family, `pdl23tp` / `pdm23tp` / `pds23tp`: those are PADDED to 3:2 rather than
-         cropped, so under `object-fit:cover` they render with white bars. Use `*cc`, not `*tp`. */
-      out.images = imgs.map((u) => u.replace(/\/full\.webp$/, '/m23cc.webp'));
+         cropped, so under `object-fit:cover` they render with white bars. Use `*cc`, not `*tp`.
+
+         The host is also pinned to `m.cbhomes.com`. The feed round-robins the same image across
+         `m.` and `m1.` — byte-identical, verified — so leaving it as served rewrote a dozen photo
+         URLs on every run and buried the real changes in a diff of pure CDN noise. A run's diff
+         should show what moved on the market, not which cache node answered. */
+      out.images = imgs.map((u) => u.replace(/\/full\.webp$/, '/m23cc.webp')
+                                    .replace(/^https:\/\/m\d+\.cbhomes\.com\//, 'https://m.cbhomes.com/'));
       out.price = (node.offers || {}).price;
       for (const a of (node.mainEntity || {}).amenityFeature || []) {
         if (a.name != null) out.amenities[a.name] = a.value;
