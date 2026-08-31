@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """Independently verify each match against MetroListPRO, the official MetroList MLS search site."""
 import re, json, subprocess, sys
+from datetime import date
 from concurrent.futures import ThreadPoolExecutor
+
+TODAY = subprocess.run(["date", "-u", "+%Y-%m-%d"], capture_output=True, text=True).stdout.strip()
 
 UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
@@ -55,6 +58,10 @@ def verify(r):
 
 
 rows = json.load(open("matches.json"))
+# Read once, before anything writes: this is where a record already awaiting indexing carries
+# the date it started waiting.
+prior_awaiting = {a["mls"]: a for a in
+                  (json.load(open("listings.json")).get("source", {}).get("mlsAwaitingIndex") or [])}
 with ThreadPoolExecutor(max_workers=5) as ex:
     res = list(ex.map(verify, rows))
 json.dump(res, open("verified.json", "w"), indent=1)
@@ -64,9 +71,17 @@ awaiting = []   # in the feed, not yet in the MLS index — a caveat on the card
 disagreed = []  # the MLS says something different — the gate's veto
 for v, r in zip(res, rows):
     if v.get("mlNotIndexed"):
-        awaiting.append({"mls": r["mls"], "address": r["address"], "city": r["city"]})
+        # Carry the date this record was FIRST seen unindexed, so the card can say how long it
+        # has been waiting. "Too new for the MLS to carry" is a fair description on day one and a
+        # progressively worse one after that — a record still missing after a week is more likely
+        # withdrawn or mis-keyed than newly published, and the page should not keep asserting
+        # newness on its behalf. Tracking the date is what lets the claim expire on its own.
+        since = prior_awaiting.get(r["mls"], {}).get("since") or TODAY
+        days = (date.fromisoformat(TODAY) - date.fromisoformat(since)).days
+        awaiting.append({"mls": r["mls"], "address": r["address"], "city": r["city"],
+                         "since": since, "days": days})
         print(f'{r["address"][:24]:24} MLS{r["mls"]} not yet indexed by MetroListPRO '
-              f'(listing is new) — carried as unverified, not as a disagreement')
+              f'({days}d since first seen unindexed) — carried as unverified, not as a disagreement')
         continue
     ok = []
     ok.append("price" if v.get("mlPrice") == r["price"] else f"PRICE {v.get('mlPrice')} vs {r['price']}")
@@ -105,14 +120,26 @@ if not disagreed and rows:
 
     # The caveat belongs on the card, so write it where build.js reads it — and clear it from any
     # listing that has since been indexed, so a note can never outlive the condition it describes.
-    pend = {a["mls"] for a in awaiting}
-    note = ("Not yet indexed by MetroListPRO — this listing went live too recently for the MLS "
-            "site to carry it. Every criterion below was instead confirmed against a second "
-            "independent source; treat it as one confirmation short of the others.")
+    pend = {a["mls"]: a for a in awaiting}
+
+    def note_for(a):
+        # Below a week, "too new to be indexed" is the ordinary explanation. Past that it stops
+        # being a good one, so the note says what is observed rather than continuing to assert a
+        # cause it can no longer support.
+        if a["days"] < 7:
+            why = ("this listing went live too recently for the MLS site to carry it")
+        else:
+            why = (f"it has been missing from the MLS site since {a['since']} "
+                   f"({a['days']} days), which is longer than indexing normally takes — worth "
+                   f"a call to the listing agent to confirm it is still on the market")
+        return ("Not yet indexed by MetroListPRO — " + why + ". Every criterion below was "
+                "instead confirmed against a second independent source; treat it as one "
+                "confirmation short of the others.")
+
     for lst in (d.get("listings") or []) + (d.get("pending") or []):
         if lst.get("mls") in pend:
-            lst["statusNote"] = note
-        elif lst.get("statusNote") == note:
+            lst["statusNote"] = note_for(pend[lst["mls"]])
+        elif str(lst.get("statusNote", "")).startswith("Not yet indexed by MetroListPRO"):
             lst.pop("statusNote", None)
 
     json.dump(d, open("listings.json", "w"), indent=2)

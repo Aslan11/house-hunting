@@ -5,3 +5,4 @@ scan-results.json
 node_modules/
 matches.json
 verified.json
+mls-enumeration.json

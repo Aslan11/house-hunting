@@ -105,8 +105,47 @@ verification (`Status`, `Lot Size in Acres`, `Has a Pool`, `Bathrooms: <full> | 
 photo URLs on `mediarem.metrolist.net`, which hotlink cleanly.
 
 Worth doing when a run reports thin inventory or no movement, at ~350 fetches and a few minutes at 8
-concurrent. Record the result under `dataQuality.independentEnumeration` and `build.js` will put a
-"Cross-enumerate" row on the page.
+concurrent. It is scripted as **`mls-enumerate.py`** since 2026-08-31 — `--stamp` records the result
+under `dataQuality.independentEnumeration` and `build.js` puts a "Cross-enumerate" row on the page.
+
+#### "Unreadable" has to mean the parser failed, and nothing else
+
+The first version of `mls-enumerate.py` reported **122 of 387 records unreadable** — 31% of the MLS
+— and still printed its match list as though the sweep had covered the three cities. It had not, and
+a completeness check that cannot say what it missed is worth very little: the whole point of this
+sweep is to prove no house slipped through, and a third of the records were in a bucket labelled
+"don't know".
+
+None of the 122 was a house. Broken down, they were **91 land parcels**, **23 commercial listings**
+and **8 multi-unit residential** records. Land and commercial pages carry no bed/bath header at all,
+so the single-family header regex found nothing and the record fell through to the error bucket.
+
+Two parsing details caused it, both worth knowing before touching this file:
+
+- **The `0-` slug rule only catches some land.** `0-HAWK-TRAIL/…` is obviously a parcel, but plenty
+  of land carries a street number — `10 Big Oak Court` is 9.8 acres of dirt. Type has to be read
+  from the page, not guessed from the URL.
+- **The header's `Type:` and the field table's `Property Type:` disagree by design.** The header
+  says `Lots / Land` and `Commercial`; the field table says the MLS codes `LL` and `COM`. Matching
+  only the readable spelling classified every one of them as unreadable, because `field()` finds
+  `Property Type:` first and it wins. `classify()` now checks both spellings.
+- **The unit table does not always start at "Unit 1".** Two records begin at `Unit 2` / `Unit 3`,
+  so an anchored `Unit 1 Features:` regex missed them; it matches any index now, and falls back to
+  the `RI` code and the header's "Multi-Unit Residential".
+
+After the fix: 265 houses read field by field, 114 land/commercial and 8 multi-unit excluded **by
+type**, **0 unreadable** — and the same 8 records the board already carried, 0 new. That is a real
+completeness statement; the first one was not.
+
+Multi-unit records are excluded rather than dropped: they state beds per unit, so the filter cannot
+see a whole-home bed count. Any that clear the lot, price and pool tests are printed as
+"needs a human read" instead of being silently discarded — the 1781 Springvale Rd case above is
+exactly this shape.
+
+The general rule, and it is the same one the verification gate encodes one level up: **an error
+bucket that collects normal cases stops being an error signal.** If a category can be recognised,
+recognise it — "excluded because it is a parking lot" and "I could not read this page" must never
+share a counter.
 
 A third source is available if either of the above breaks: **`www.homefinder.com`** serves MetroList
 records through the Move/realtor.com pipeline, embedded as JSON in `<script id="__NEXT_DATA__">`
@@ -189,6 +228,24 @@ third pending, and the card says exactly that.
 The general rule: **absence of a record and contradiction by a record are different findings, and a
 gate that collapses them will either hide new inventory or discredit good data.** When a check can't
 run, say which check and on which item — don't downgrade everything it would have covered.
+
+#### An excuse with no expiry date
+
+"Too new for the MLS to have indexed it" is a fair reading on day one. 3538 Wildwood Ln was still
+unindexed on 2026-08-31, five days after listing, and the card was still saying the listing had
+"gone live too recently" — a claim that gets weaker every day it repeats while looking exactly as
+confident as it did on day one.
+
+`verify.py` now records `since` (the date a record was first seen unindexed) alongside each entry in
+`source.mlsAwaitingIndex` and carries it across runs. Under a week the note reads as before. Past a
+week it stops asserting a cause it can no longer support and says what is actually observed —
+missing since date X, longer than indexing normally takes, worth a call to the listing agent. A
+record absent for that long is likelier withdrawn or mis-keyed than newly published, and that is a
+different thing for a reader to act on.
+
+Generalising: **a caveat that explains away a gap needs a clock on it.** Any note of the form "this
+will resolve itself shortly" should be written so it expires on its own, because the case where it
+stops being true is precisely the case worth surfacing.
 
 ### Half baths
 
@@ -402,8 +459,18 @@ node -e 'const d=require("./listings.json");require("fs").writeFileSync("matches
 node build.js                                     # 3. render index.html
 ```
 
-Optional but cheap, and it caught a stale price on 2026-08-23 — an independent enumeration to
-cross-check the board:
+Then, on any run reporting no movement, the completeness check — every MLS record in the three
+cities, straight from the MLS of record, filtered independently of the IDX feed:
+
+```bash
+python3 mls-enumerate.py --stamp                  # 4. cross-enumerate; run before step 3
+```
+
+It stamps nothing if any page failed to parse, so a partial sweep cannot publish a completeness
+claim. Run it before `build.js` if you want the "Cross-enumerate" row on the page.
+
+Also available, and it caught a stale price on 2026-08-23 — a Redfin enumeration as a second
+cross-check:
 
 ```bash
 scripts/fetch.sh search                                  # ZIP pages -> work/
@@ -457,6 +524,9 @@ and a second composer that has to be kept in step with the first will drift.
   `parse_detail.py` reads the MLS amenity table off a listing page — asserting the `propertyId` in
   each API blob matches the page requested, because a Redfin detail page also embeds comparable and
   nearby-home payloads and a loose regex will happily return a neighbour's pool status.
+- **`mls-enumerate.py`** — independent second enumeration from MetroListPRO's own city indexes, the
+  only source that both enumerates and speaks for the MLS of record. Writes `mls-enumeration.json`;
+  `--stamp` records the result under `dataQuality.independentEnumeration`. Never touches the board.
 - **`refresh.py`** — superseded composer, guarded so it can't be run by accident. See above.
 - **`ingest.js`** — merges listings pasted from a portal results page, applying the dedupe rules.
   Kept as a manual fallback; the scrape path above supersedes it.
