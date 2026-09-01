@@ -247,6 +247,38 @@ Generalising: **a caveat that explains away a gap needs a clock on it.** Any not
 will resolve itself shortly" should be written so it expires on its own, because the case where it
 stops being true is precisely the case worth surfacing.
 
+#### …and the clock has to be wound by something that outlives the run
+
+The clock above was fitted on 2026-08-31 and could never have struck. `verify.py` reads the previous
+`since` out of `listings.json` — but it runs as step 2, *after* `scrape.js` has already rewritten
+that file, and `scrape.js` builds `source` literally with no spread precisely because of the
+carry-forward rule three sections up. `mlsAwaitingIndex` was not in the rebuilt object, so
+`prior_awaiting` was empty on every run, `since` fell back to `TODAY`, and 3538 Wildwood Ln reported
+**0 days unindexed** on 2026-09-01 — its sixth consecutive day missing from the MLS. The `days < 7`
+branch was unreachable code: the note could repeat forever while the counter under it stayed at
+zero.
+
+`scrape.js` now carries `mlsAwaitingIndex` forward alongside `mlsVerifiedOn`, and the same run then
+reported the true **5 days**. Restoring the baseline value by hand and re-running step 2 was enough
+to confirm the whole path, because `verify.py` recomputes `days` from `since` every time.
+
+Note what makes this the exception to the rebuild-every-run rule rather than a violation of it.
+`since` looks like run metadata — it lives in `source`, it is written by the pipeline, it is a date.
+It is not: it is a clock on **one property**, the same kind of fact as `firstSeen` on a listing, and
+those have always been carried. The rule's real subject is *values that describe the run that just
+happened*, and `inventoryScanned` is one while `since` is not.
+
+Two things generalise, and the second is the sharper one:
+
+- **A carried value read after the thing that rebuilds it is not carried at all.** Two rules that
+  are each correct in isolation — "rebuild what describes a run", "carry the clock across runs" —
+  cancelled out because of step order. When state has to survive a run, check *which* artefact the
+  reader sees, at the point in the sequence it reads it.
+- **A counter that resets is worse than no counter**, because the expiry it feeds looks like it is
+  working. Nothing failed loudly here: the note rendered, the pipeline reported success, the page
+  read as confident on day six as on day one. Any threshold on an accumulating value deserves one
+  check that it can actually be crossed — if no run can reach the branch, the branch is decoration.
+
 ### Half baths
 
 MetroList reports baths as `full | half`. Some sites render `2 | 1` as "3 baths", which will

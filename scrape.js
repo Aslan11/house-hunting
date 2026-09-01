@@ -591,6 +591,15 @@ const out = {
     verifiedActiveMatches: listings.length,
     pendingMatches: pending.length,
     mlsVerifiedOn: prior.source ? prior.source.mlsVerifiedOn : null,
+    /* Carried forward for the same reason as `mlsVerifiedOn`, and it is the exception that
+       proves the rebuild-every-run rule: `since` is not a fact about this run, it is a clock
+       on one property — the date that listing was FIRST seen missing from the MLS index.
+       Rebuilding `source` without it reset every clock to today on every run, so a record
+       stuck unindexed for a week kept reporting "0d" and the "gone live too recently" caveat
+       could never expire, which is exactly the failure the README's clock rule was added to
+       stop. verify.py rewrites this array wholesale and drops records that have since been
+       indexed, so carrying it cannot make the note outlive its cause. */
+    mlsAwaitingIndex: prior.source ? prior.source.mlsAwaitingIndex : undefined,
   },
   dataQuality: {
     verifiedActiveListings: listings.length,
