@@ -13,37 +13,37 @@
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-09-01",
-  "previousRun": "2026-08-31",
+  "lastRun": "2026-09-02",
+  "previousRun": "2026-09-01",
   "source": {
     "name": "Coldwell Banker IDX (MetroList feed), verified against MetroListPRO (MetroList MLS)",
     "method": "Enumerated every active listing in the three cities from IDX city pages, applied the hard criteria to structured MLS fields, then re-read each survivor's record from MetroListPRO and required price, beds, full baths, acreage and pool to match.",
-    "inventoryScanned": 291,
-    "passedBedsBathsPrice": 34,
+    "inventoryScanned": 294,
+    "passedBedsBathsPrice": 59,
     "verifiedActiveMatches": 6,
-    "pendingMatches": 3,
-    "mlsVerifiedOn": "2026-09-01",
-    "mlsVerifiedCount": 8,
+    "pendingMatches": 2,
+    "mlsVerifiedOn": "2026-09-02",
     "mlsAwaitingIndex": [
       {
         "mls": "226107286",
         "address": "3538 Wildwood Ln",
         "city": "Placerville",
         "since": "2026-08-27",
-        "days": 5
+        "days": 6
       }
-    ]
+    ],
+    "mlsVerifiedCount": 7
   },
   "dataQuality": {
     "verifiedActiveListings": 6,
-    "note": "291 active listings scanned across the three cities; 34 cleared beds, baths and price and had their MLS field table read directly. Status disagreement this run \u2014 the IDX feed called 1 listing Active that Redfin reports in escrow: 1988 Cold Springs Rd, Placerville (Redfin: Pending, MLS 226033527). Shown as pending.",
+    "note": "294 active listings scanned across the three cities; 59 cleared beds, baths and price and had their MLS field table read directly. Status disagreement this run \u2014 the IDX feed called 1 listing Active that Redfin reports in escrow: 1988 Cold Springs Rd, Placerville (Redfin: Pending, MLS 226033527). Shown as pending.",
     "independentEnumeration": {
-      "ranOn": "2026-09-01",
+      "ranOn": "2026-09-02",
       "source": "MetroListPRO city indexes (the MLS of record)",
-      "activeRecords": 327,
-      "pendingRecords": 56,
-      "recordsPulledBeyondIdxSweep": 383,
-      "singleFamilyRead": 261,
+      "activeRecords": 328,
+      "pendingRecords": 59,
+      "recordsPulledBeyondIdxSweep": 387,
+      "singleFamilyRead": 265,
       "excludedByType": 122,
       "additionalMatchesFound": 0
     }
@@ -53,7 +53,9 @@
     "priceChanges": [],
     "statusChanges": [],
     "relisted": [],
-    "dropped": [],
+    "dropped": [
+      "3565 Farview Ct, Rescue"
+    ],
     "unchanged": 6
   },
   "listings": [
@@ -97,7 +99,7 @@
       "summary": "Crafted as the builder's own residence, this extraordinary European Country-inspired estate was designed without compromise. From its commanding setting on 40 acres with sweeping Sierra foothill views and timeless architectural details, every aspect of the property reflects quality and enduring elegance. From the moment you arrive, the home makes a striking impression, thoughtfully designed to fra",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-09-01",
+      "lastSeen": "2026-09-02",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -146,7 +148,7 @@
       "summary": "Escape the hustle and bustle and discover your own private retreat in Shingle Springs. Set on approximately 5 private acres with sweeping hillside views, this single-story custom home offers over 3,000 sq. ft. of thoughtfully designed living space with 4 bedrooms, 3 full baths and an impressive 4-car garage.    The outdoor setting is where this property truly shines. A stunning infinity-edge saltw",
       "notes": "",
       "firstSeen": "2026-08-13",
-      "lastSeen": "2026-09-01",
+      "lastSeen": "2026-09-02",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -195,7 +197,7 @@
       "summary": "Just minutes from town yet worlds away, this 10 acre sanctuary delivers the ultimate retreat lifestyle. Step inside to discover a beautifully updated home with 4 bedrooms, 3 baths, and an inviting upstairs game room complete with a wet bar  perfect for gatherings. The renovated kitchen shines with quartz counters, stainless appliances, and beautiful white cabinetry, flowing seamlessly into the fam",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-09-01",
+      "lastSeen": "2026-09-02",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -244,7 +246,7 @@
       "summary": "Sought-after area. Minutes from shopping, schools. Country living at its finest. Don't miss the approx. 750SF ultimate entertainment hub: game room plus extra room & bath situated above the detached three-car garage. Connected to the main house by a breeze-catching walkway, this private extra space makes a perfect teen hangout or man cave.  Situated in a serene, park-like setting, this property of",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-09-01",
+      "lastSeen": "2026-09-02",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -297,7 +299,7 @@
       "summary": "Welcome to this charming mini ranch with an ADU, tucked behind a gated entrance at the end of a paved driveway, offering privacy, versatility, and lovely views in a peaceful country setting. The single-story ranch home design welcomes you into a light-filled living room where vaulted ceilings and expansive picture windows showcase the scenery beyond. The updated kitchen features granite countertop",
       "notes": "",
       "firstSeen": "2026-08-07",
-      "lastSeen": "2026-09-01",
+      "lastSeen": "2026-09-02",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -346,7 +348,7 @@
       "summary": "Welcome to a property that doesn't ask you to choose between a home, a retreat, and country living - you get all three. Set among the Placerville foothills, 3538 Wildwood Lane is a place to swim, garden, gather and spread out. The two-story main home offers a private ground-level guest suite with its own entrance and full bath, plus a two-car garage and full basement access. Upstairs, the living s",
       "notes": "",
       "firstSeen": "2026-08-27",
-      "lastSeen": "2026-09-01",
+      "lastSeen": "2026-09-02",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -358,56 +360,6 @@
     }
   ],
   "pending": [
-    {
-      "id": "3565-farview-ct-rescue",
-      "address": "3565 Farview Ct",
-      "city": "Rescue",
-      "zip": "95672",
-      "mls": "226087456",
-      "currentPrice": 1289000,
-      "beds": 4,
-      "baths": 4,
-      "fullBaths": 4,
-      "partialBaths": null,
-      "sqft": 3227,
-      "acres": 9.64,
-      "pool": true,
-      "poolDetail": "Built-In, On Lot, Pool House, Solar Heat",
-      "yearBuilt": "1993",
-      "garageSpaces": "3",
-      "view": "Panoramic, City Lights, Valley, Hills, Water, Lake, Woods, Mountains",
-      "water": "Well",
-      "sewer": "Septic System, Private Sewer",
-      "propertyType": "Single Family",
-      "mlsStatus": "Pending",
-      "flag": null,
-      "listedOn": "2026-07-16",
-      "lat": 38.7314,
-      "lng": -120.99,
-      "photos": [
-        "https://m.cbhomes.com/p/371/226087456/9E02f6e2aE934D6/m23cc.webp",
-        "https://m.cbhomes.com/p/371/226087456/aAEE71820A394FA/m23cc.webp",
-        "https://m.cbhomes.com/p/371/226087456/44c37c7f4cb24b0/m23cc.webp",
-        "https://m.cbhomes.com/p/371/226087456/dB966bbCDcd546c/m23cc.webp",
-        "https://m.cbhomes.com/p/371/226087456/82A28bdb4473408/m23cc.webp",
-        "https://m.cbhomes.com/p/371/226087456/209417eB6a81453/m23cc.webp"
-      ],
-      "url": "https://www.coldwellbankerhomes.com/ca/rescue/3565-farview-ct/pid_72531546/",
-      "gallery": "https://www.coldwellbankerhomes.com/ca/rescue/3565-farview-ct/pid_72531546/",
-      "status": "pending",
-      "summary": "Perched at the end of a private court on its own private road, this fully remodeled custom hilltop estate offers breathtaking 360-degree panoramic views stretching across Folsom Lake, Bass Lake, the Sutter Buttes, Sierras and sparkling city lights. Designed to embrace its spectacular surroundings, every room showcases incredible vistas through windows and private sliding glass doors. This exceptio",
-      "notes": "Meets every criterion but is under contract (Sale Pending). Kept on file in case the deal falls through.",
-      "newThisRun": false,
-      "firstSeen": "2026-08-09",
-      "pendingSince": "2026-08-16",
-      "priceHistory": [
-        {
-          "date": "2026-08-09",
-          "price": 1289000
-        }
-      ],
-      "lastSeen": "2026-09-01"
-    },
     {
       "id": "2565-stagecoach-rd-placerville",
       "address": "2565 Stagecoach Rd",
@@ -456,7 +408,7 @@
           "price": 975000
         }
       ],
-      "lastSeen": "2026-09-01"
+      "lastSeen": "2026-09-02"
     },
     {
       "id": "1988-cold-springs-rd-placerville",
@@ -506,7 +458,7 @@
           "price": 850000
         }
       ],
-      "lastSeen": "2026-09-01"
+      "lastSeen": "2026-09-02"
     }
   ],
   "poolless": [
@@ -579,6 +531,22 @@
       "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226063059",
       "mlsPrice": 574900,
       "mlsPool": "No"
+    },
+    {
+      "address": "1300 Large Oak Dr",
+      "city": "Placerville",
+      "price": 1199000,
+      "beds": 4,
+      "baths": 4,
+      "fullBaths": 4,
+      "halfBaths": null,
+      "acres": 6.72,
+      "sqft": 4870,
+      "mls": "226109915",
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/1300-large-oak-dr/pid_73377437/",
+      "status": "For Sale",
+      "reason": "IDX field table records no pool",
+      "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226109915"
     },
     {
       "address": "3430 Old Ditch Dr",
@@ -736,6 +704,17 @@
       "missing": "only 1.76 acres"
     },
     {
+      "address": "1234 Rising Hill W Rd",
+      "city": "Placerville",
+      "price": 685000,
+      "beds": 4,
+      "baths": 2.5,
+      "acres": 2.66,
+      "pool": true,
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/1234-rising-hill-w-rd/pid_72120077/",
+      "missing": "only 2 full baths (+ 1 half)"
+    },
+    {
       "address": "2805 Aquamarine Cir",
       "city": "Rescue",
       "price": 674000,
@@ -777,6 +756,17 @@
       "acres": 5.02,
       "pool": false,
       "url": "https://www.coldwellbankerhomes.com/ca/placerville/1200-w-el-largo-dr/pid_70987213/",
+      "missing": "no pool"
+    },
+    {
+      "address": "1300 Large Oak Dr",
+      "city": "Placerville",
+      "price": 1199000,
+      "beds": 4,
+      "baths": 4,
+      "acres": 6.72,
+      "pool": false,
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/1300-large-oak-dr/pid_73377437/",
       "missing": "no pool"
     },
     {
@@ -855,31 +845,16 @@
       "pool": false,
       "url": "https://www.coldwellbankerhomes.com/ca/rescue/4181-thunderbird-ln/pid_71478521/",
       "missing": "no pool"
-    },
-    {
-      "address": "6560 Agape Ct",
-      "city": "Placerville",
-      "price": 649000,
-      "beds": 4,
-      "baths": 3,
-      "acres": 5.02,
-      "pool": false,
-      "url": "https://www.coldwellbankerhomes.com/ca/placerville/6560-agape-ct/pid_71736013/",
-      "missing": "no pool"
-    },
-    {
-      "address": "4351 Rossler Rd",
-      "city": "Placerville",
-      "price": 595000,
-      "beds": 4,
-      "baths": 3,
-      "acres": 10,
-      "pool": false,
-      "url": "https://www.coldwellbankerhomes.com/ca/placerville/4351-rossler-rd/pid_73286699/",
-      "missing": "no pool"
     }
   ],
-  "dropped": [],
+  "dropped": [
+    {
+      "address": "3565 Farview Ct, Rescue",
+      "priorPrice": 1289000,
+      "reason": "Was under contract since 2026-08-16 and has now left the active, pending and IDX feeds \u2014 the sale most likely closed.",
+      "droppedOn": "2026-09-02"
+    }
+  ],
   "rejected": [
     {
       "address": "1781 Springvale Rd, Placerville",

@@ -419,11 +419,21 @@ const all = [...byId.values()].filter((r) => Object.values(CITY_SLUGS).includes(
  * is present, but a card missing that field falls back to the total so the listing survives to the
  * detail stage, which reads the authoritative MLS field table. Cheap to over-admit here; a listing
  * dropped at this stage is never looked at again.
+ *
+ * "Never looked at again" is why this admits one-half-bath-short listings too. The near-miss branch
+ * below can record `only N baths`, but that line was unreachable: a listing failing the full-bath
+ * minimum was cut here, so it never reached the stage that classifies near misses. The README has
+ * said since 2026-08-15 that 1234 Rising Hill W Rd (2 full + 1 half, pool, 2.66 ac, $685K) sits in
+ * Near misses; it sat nowhere, and it is the cheapest pool-on-acreage listing in the three towns —
+ * exactly the trade-off a reader should get to make. Admitting `full >= MIN_BATHS - 1` when the
+ * rounded total still clears the bar costs a handful of detail fetches and cannot reach the board:
+ * `bathsOk` below is unchanged, so a half bath still never counts toward a match or a poolless row.
  */
 const candidates = all.filter((r) => {
   const b = +r.beds, p = +r.price;
   const full = +r.fullBaths, total = +r.baths;
-  const bathsOk = Number.isFinite(full) ? full >= MIN_BATHS
+  const bathsOk = Number.isFinite(full)
+                ? full >= MIN_BATHS || (full >= MIN_BATHS - 1 && total >= MIN_BATHS)
                 : Number.isFinite(total) ? total >= MIN_BATHS
                 : true;
   return b >= MIN_BEDS && bathsOk && p <= C.maxPrice;
@@ -528,7 +538,11 @@ candidates.forEach((r, i) => {
     const missing = [];
     if (!d.pool) missing.push('no pool');
     if (!bigEnough) missing.push(d.acres != null ? `only ${d.acres} acres` : 'lot size unknown');
-    if (!bathsOk) missing.push(`only ${rec.baths} baths`);
+    // Name the full-bath count, not the rounded total. "only 3 baths" on a 2-full + 1-half house
+    // reads as a listing that meets the bar, which is the confusion the half-bath rule exists to stop.
+    if (!bathsOk) missing.push(rec.fullBaths != null
+      ? `only ${rec.fullBaths} full baths${rec.partialBaths ? ` (+ ${rec.partialBaths} half)` : ''}`
+      : `only ${rec.baths} baths`);
     stillListed.set(rec.id, missing.join(', '));
     if (missing.length === 1) {
       near.push({ address: r.street, city: r.city, price: Math.round(+r.price),

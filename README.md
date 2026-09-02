@@ -154,7 +154,23 @@ records through the Move/realtor.com pipeline, embedded as JSON in `<script id="
 same as Redfin's: it renders roughly 40 listings per city and ignores path filters and pagination, so
 it can confirm or contradict a known listing but must never be used to enumerate inventory.
 
-Both need a normal browser `User-Agent`; the default agent string gets blocked.
+A fourth, found on 2026-09-02 and the best of the fallbacks: **`www.exprealty.com`**. City pages at
+`/<city>-ca-real-estate` (`?page=N`, 26 per page) carry the whole result set in
+`<script id="__NEXT_DATA__">` under `props.pageProps.props.listings`, one flat object per listing
+with `mls`, `price`, `bedrooms`, `bathrooms`, `standardStatus`, `on_market_date` and — the useful
+part — **`pool` as a structured boolean on the search card**, which no other source gives without a
+detail fetch. A sweep of the three cities returned 306 records against the IDX feed's 294 that day,
+and agreed with the board on every hard field for all seven MLS-verified matches.
+
+Two limits. It lists **active records only**, so absence there means "active or gone", never
+"pending" — 2565 Stagecoach Rd was missing from the city sweep and its detail page carried
+`standardStatus: 10`, matching the board's Pending. And its index has holes: 1988 Cold Springs Rd
+(MLS 226033527) was absent from both the sweep and its own address URL, which answered
+`missingAddress`, while the IDX feed, MetroListPRO and Zillow all carried it. So it corroborates
+well and enumerates *nearly* — treat a gap there as an indexing gap, not a status change, and
+confirm against MetroListPRO before acting on it.
+
+All of these need a normal browser `User-Agent`; the default agent string gets blocked.
 
 ```bash
 UA="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 \
@@ -285,6 +301,34 @@ MetroList reports baths as `full | half`. Some sites render `2 | 1` as "3 baths"
 silently pass a 3-bath filter with a 2.5-bath house. **Filter on `Full Bathrooms` only.** This
 dropped 1234 Rising Hill W Rd (2 full + 1 half) from the 2026-08-15 matches; it is listed under
 "Near misses" instead.
+
+#### …except it wasn't, for two and a half weeks
+
+That last sentence was false from the day it was written until 2026-09-02. The near-miss branch in
+`scrape.js` has always had a `only N baths` case, but it lives in the loop over **candidates**, and
+the card-level filter above it cut anything under the full-bath minimum. A listing failing on baths
+was dropped one stage before the stage that would have recorded it as a near miss. The line was
+unreachable, so 1234 Rising Hill W Rd — pool, 2.66 acres, $685,000, the **cheapest pool-on-acreage
+listing in the three towns** — appeared nowhere on the page at all.
+
+The card filter now admits `full >= MIN_BATHS - 1` when the rounded total still clears the bar, so a
+one-half-bath-short listing reaches the detail stage and lands in Near misses. The match test is
+untouched: `bathsOk` still requires full baths, so a half bath cannot reach the board or the
+pool-less section. Cost is about 25 extra detail fetches a run (34 candidates → 59).
+
+The near-miss text names full baths now too. "only 3 baths" on a 2-full-plus-1-half house describes
+a house that meets the minimum, which is the exact confusion the half-bath rule exists to prevent;
+it reads `only 2 full baths (+ 1 half)`.
+
+Two things generalise:
+
+- **A filter that excludes is also a filter that hides.** Every stage that drops a record decides
+  what the later stages are allowed to say about it. When an early cut is the enforcement of a
+  criterion, ask what still needs to *report* on the thing being cut — the exclusion rule and the
+  explanation rule need different, wider, gates.
+- **A README sentence is not a test.** This one asserted a page state confidently for eighteen runs
+  while the page never had it. Where the docs claim a property is on the page, the cheapest possible
+  check is to look for it there.
 
 ### A criterion that silently matched nothing
 
