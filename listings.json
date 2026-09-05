@@ -13,37 +13,37 @@
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-09-03",
-  "previousRun": "2026-09-02",
+  "lastRun": "2026-09-05",
+  "previousRun": "2026-09-03",
   "source": {
     "name": "Coldwell Banker IDX (MetroList feed), verified against MetroListPRO (MetroList MLS)",
     "method": "Enumerated every active listing in the three cities from IDX city pages, applied the hard criteria to structured MLS fields, then re-read each survivor's record from MetroListPRO and required price, beds, full baths, acreage and pool to match.",
-    "inventoryScanned": 294,
-    "passedBedsBathsPrice": 60,
+    "inventoryScanned": 292,
+    "passedBedsBathsPrice": 59,
     "verifiedActiveMatches": 6,
-    "pendingMatches": 2,
-    "mlsVerifiedOn": "2026-09-03",
+    "pendingMatches": 1,
+    "mlsVerifiedOn": "2026-09-05",
     "mlsAwaitingIndex": [
       {
         "mls": "226107286",
         "address": "3538 Wildwood Ln",
         "city": "Placerville",
         "since": "2026-08-27",
-        "days": 7
+        "days": 9
       }
     ],
-    "mlsVerifiedCount": 7
+    "mlsVerifiedCount": 6
   },
   "dataQuality": {
     "verifiedActiveListings": 6,
-    "note": "294 active listings scanned across the three cities; 60 cleared beds, baths and price and had their MLS field table read directly. Status disagreement this run \u2014 the IDX feed called 1 listing Active that Redfin reports in escrow: 1988 Cold Springs Rd, Placerville (Redfin: Pending, MLS 226033527). Shown as pending.",
+    "note": "292 active listings scanned across the three cities; 59 cleared beds, baths and price and had their MLS field table read directly. No status disagreement between the IDX feed and the Redfin cross-check this run.",
     "independentEnumeration": {
-      "ranOn": "2026-09-03",
+      "ranOn": "2026-09-05",
       "source": "MetroListPRO city indexes (the MLS of record)",
-      "activeRecords": 328,
-      "pendingRecords": 58,
-      "recordsPulledBeyondIdxSweep": 386,
-      "singleFamilyRead": 263,
+      "activeRecords": 329,
+      "pendingRecords": 60,
+      "recordsPulledBeyondIdxSweep": 389,
+      "singleFamilyRead": 266,
       "excludedByType": 123,
       "additionalMatchesFound": 0
     }
@@ -53,7 +53,9 @@
     "priceChanges": [],
     "statusChanges": [],
     "relisted": [],
-    "dropped": [],
+    "dropped": [
+      "1988 Cold Springs Rd, Placerville"
+    ],
     "unchanged": 6
   },
   "listings": [
@@ -97,7 +99,7 @@
       "summary": "Crafted as the builder's own residence, this extraordinary European Country-inspired estate was designed without compromise. From its commanding setting on 40 acres with sweeping Sierra foothill views and timeless architectural details, every aspect of the property reflects quality and enduring elegance. From the moment you arrive, the home makes a striking impression, thoughtfully designed to fra",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-09-03",
+      "lastSeen": "2026-09-05",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -146,7 +148,7 @@
       "summary": "Escape the hustle and bustle and discover your own private retreat in Shingle Springs. Set on approximately 5 private acres with sweeping hillside views, this single-story custom home offers over 3,000 sq. ft. of thoughtfully designed living space with 4 bedrooms, 3 full baths and an impressive 4-car garage.    The outdoor setting is where this property truly shines. A stunning infinity-edge saltw",
       "notes": "",
       "firstSeen": "2026-08-13",
-      "lastSeen": "2026-09-03",
+      "lastSeen": "2026-09-05",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -195,7 +197,7 @@
       "summary": "Just minutes from town yet worlds away, this 10 acre sanctuary delivers the ultimate retreat lifestyle. Step inside to discover a beautifully updated home with 4 bedrooms, 3 baths, and an inviting upstairs game room complete with a wet bar  perfect for gatherings. The renovated kitchen shines with quartz counters, stainless appliances, and beautiful white cabinetry, flowing seamlessly into the fam",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-09-03",
+      "lastSeen": "2026-09-05",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -244,7 +246,7 @@
       "summary": "Sought-after area. Minutes from shopping, schools. Country living at its finest. Don't miss the approx. 750SF ultimate entertainment hub: game room plus extra room & bath situated above the detached three-car garage. Connected to the main house by a breeze-catching walkway, this private extra space makes a perfect teen hangout or man cave.  Situated in a serene, park-like setting, this property of",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-09-03",
+      "lastSeen": "2026-09-05",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -297,7 +299,7 @@
       "summary": "Welcome to this charming mini ranch with an ADU, tucked behind a gated entrance at the end of a paved driveway, offering privacy, versatility, and lovely views in a peaceful country setting. The single-story ranch home design welcomes you into a light-filled living room where vaulted ceilings and expansive picture windows showcase the scenery beyond. The updated kitchen features granite countertop",
       "notes": "",
       "firstSeen": "2026-08-07",
-      "lastSeen": "2026-09-03",
+      "lastSeen": "2026-09-05",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -346,7 +348,7 @@
       "summary": "Welcome to a property that doesn't ask you to choose between a home, a retreat, and country living - you get all three. Set among the Placerville foothills, 3538 Wildwood Lane is a place to swim, garden, gather and spread out. The two-story main home offers a private ground-level guest suite with its own entrance and full bath, plus a two-car garage and full basement access. Upstairs, the living s",
       "notes": "",
       "firstSeen": "2026-08-27",
-      "lastSeen": "2026-09-03",
+      "lastSeen": "2026-09-05",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -354,7 +356,7 @@
           "price": 949000
         }
       ],
-      "statusNote": "Not yet indexed by MetroListPRO \u2014 it has been missing from the MLS site since 2026-08-27 (7 days), which is longer than indexing normally takes \u2014 worth a call to the listing agent to confirm it is still on the market. Every criterion below was instead confirmed against a second independent source; treat it as one confirmation short of the others."
+      "statusNote": "Not yet indexed by MetroListPRO \u2014 it has been missing from the MLS site since 2026-08-27 (9 days), which is longer than indexing normally takes \u2014 worth a call to the listing agent to confirm it is still on the market. Every criterion below was instead confirmed against a second independent source; treat it as one confirmation short of the others."
     }
   ],
   "pending": [
@@ -406,57 +408,7 @@
           "price": 975000
         }
       ],
-      "lastSeen": "2026-09-03"
-    },
-    {
-      "id": "1988-cold-springs-rd-placerville",
-      "address": "1988 Cold Springs Rd",
-      "city": "Placerville",
-      "zip": "95667",
-      "mls": "226033527",
-      "currentPrice": 850000,
-      "beds": 4,
-      "baths": 3,
-      "fullBaths": 3,
-      "partialBaths": null,
-      "sqft": 2909,
-      "acres": 2.73,
-      "pool": true,
-      "poolDetail": "Built-In, Pool Cover, Pool/Spa Combo",
-      "yearBuilt": "2011",
-      "garageSpaces": "2",
-      "view": "Pasture, Hills, Water",
-      "water": "Public",
-      "sewer": "Septic System",
-      "propertyType": "Single Family",
-      "mlsStatus": "Pending",
-      "flag": null,
-      "listedOn": "2026-03-20",
-      "lat": 38.7387,
-      "lng": -120.8572,
-      "photos": [
-        "https://m.cbhomes.com/p/371/226033527/67D4c74cf6314cC/m23cc.webp",
-        "https://m.cbhomes.com/p/371/226033527/4049C87686094d6/m23cc.webp",
-        "https://m.cbhomes.com/p/371/226033527/41c104a8B1034E8/m23cc.webp",
-        "https://m.cbhomes.com/p/371/226033527/Fa9cc4d98cD6489/m23cc.webp",
-        "https://m.cbhomes.com/p/371/226033527/bB59eEbBBd1542A/m23cc.webp",
-        "https://m.cbhomes.com/p/371/226033527/a5CB0cEf9eFF434/m23cc.webp"
-      ],
-      "url": "https://www.coldwellbankerhomes.com/ca/placerville/1988-cold-springs-rd/pid_70227860/",
-      "gallery": "https://www.coldwellbankerhomes.com/ca/placerville/1988-cold-springs-rd/pid_70227860/",
-      "status": "pending",
-      "summary": "Beautiful farmhouse-inspired home featuring a stunning built-in pool & spa, offering the perfect blend of convenience & peaceful country living just minutes from town. This spacious property includes 4 bedrooms, 3 full bathrooms, a dedicated office or possible 5th bedroom, 2-car garage plus a detached garage/workshop, and sits on 2.73 usable acres with a year-round stream. The open-concept kitchen",
-      "notes": "Meets every criterion but is under contract (Sale Pending). Kept on file in case the deal falls through.",
-      "newThisRun": false,
-      "firstSeen": "2026-08-02",
-      "pendingSince": "2026-08-16",
-      "priceHistory": [
-        {
-          "date": "2026-08-04",
-          "price": 850000
-        }
-      ],
-      "lastSeen": "2026-09-03"
+      "lastSeen": "2026-09-05"
     }
   ],
   "poolless": [
@@ -861,7 +813,14 @@
       "missing": "no pool"
     }
   ],
-  "dropped": [],
+  "dropped": [
+    {
+      "address": "1988 Cold Springs Rd, Placerville",
+      "priorPrice": 850000,
+      "reason": "Was under contract since 2026-08-16 and has now left the active, pending and IDX feeds \u2014 the sale most likely closed.",
+      "droppedOn": "2026-09-05"
+    }
+  ],
   "rejected": [
     {
       "address": "1781 Springvale Rd, Placerville",
