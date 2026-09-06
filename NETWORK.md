@@ -20,7 +20,8 @@ gateway denial shows up in `recentRelayFailures`; a site block does not.
 | `www.redfin.com` | 200, full GIS payload on `/zipcode/<zip>` | **Yes — cross-check only** |
 | `www.zillow.com`, `www.homes.com`, `www.movoto.com`, `www.remax.com`, `www.har.com` | 403 | No |
 | `www.realtor.com` | 429 | No |
-| `www.redfin.com/stingray/*` | 403 (CloudFront) | No |
+| `www.redfin.com/stingray/api/gis-csv` | 200, CSV export of a region's listings | **Yes — cross-check** |
+| `www.redfin.com/stingray/do/location-autocomplete` | 403 (CloudFront) | No |
 | `www.century21.com` | 200 but client-rendered shell, no data in HTML | No |
 
 Both usable hosts require a browser `User-Agent`. The default agent string is blocked.
@@ -35,6 +36,42 @@ a page.
 
 Redfin also answers **202 with a stub body** under load rather than 429. A short body is retryable;
 back off and try again, and never read a 202 as a missing listing.
+
+## `stingray/*` is not blocked as a whole — corrected 2026-09-06
+
+The row above used to read `www.redfin.com/stingray/* | 403 (CloudFront) | No`, generalising from a
+single blocked path. It is per-endpoint: `do/location-autocomplete` is CloudFront-blocked,
+`api/gis-csv` is not, and the latter returns a clean CSV of a region's listings — no HTML parsing.
+
+```bash
+curl -sS -A "$UA" -H "Referer: https://www.redfin.com/zipcode/95682" \
+  "https://www.redfin.com/stingray/api/gis-csv?al=1&num_homes=350&ord=redfin-recommended-asc\
+&page_number=1&region_id=39806&region_type=2&sf=1,2,3,5,6,7&status=9&uipt=1,2,3,4,7,8&v=8"
+```
+
+`region_id` is Redfin's **internal** region id, not the ZIP. Passing the ZIP returns HTTP 200 with a
+full, valid-looking CSV of listings **in another state** — the same silent-wrong-region failure the
+`/city/<id>/` path has. Scrape the id, and assert the city column before trusting a row:
+
+```bash
+curl -sSL -A "$UA" https://www.redfin.com/zipcode/95682 | grep -oE 'region_id=[0-9]+'
+```
+
+Current ids: **95682 → 39806**, **95672 → 39796**, **95667 → 39791**. The CSV footer states that
+some MLS listings are excluded from the download, so this stays a cross-check and never the board.
+A 2026-09-06 sweep this way returned 291 active listings in the three cities and found the same six
+pool matches — the same corroboration `scripts/parse_search.py` gives, with less parsing.
+
+One thing it did add: **3538 Wildwood Ln, which MetroListPRO still has not indexed** (10 days), read
+`For sale` on its live Redfin page, MLS 226107286, 10 days on market, at the board's $949,000. When
+`verify.py` carries a match as unverified-because-unindexed, this is a cheap second opinion.
+
+The listing page also carries a status banner that discriminates correctly — `For sale` vs
+`Off Market`, validated on 2026-09-06 against two known-sold properties — and structured pool
+fields (`"hasPrivatePool"`, plus the MLS `Pool Information` amenity group). Unescape the embedded
+JSON (`\"` → `"`) before matching. Beware **spa-only** records: 5025 Eco Ridge Rd carries
+`Spa/Hot Tub Personal` with no pool, and prose is no guide either — listing descriptions mention
+neighbours' pools, nearby pool contractors and "room for a future pool".
 
 ## Headless browser
 
