@@ -57,6 +57,48 @@ carrying (below).
 Each query is capped at **350 rows**, and a payload that comes back at the cap is silently truncated;
 `parse_search.py` warns when that happens. Treat a result set at the cap as incomplete.
 
+#### A cleaner route than parsing the page: `gis-csv`
+
+The 2026-09-07 run found that the same GIS payload is served **as CSV**, which removes the HTML
+parsing step entirely:
+
+```
+https://www.redfin.com/stingray/api/gis-csv?al=1&max_price=1500000&min_beds=4
+  &num_homes=350&ord=redfin-recommended-asc&page_number=1
+  &region_id=<ID>&region_type=2&sf=1,2,3,5,6,7&status=9&uipt=1,2,3,4,5,6,7,8&v=8
+```
+
+`status=9` is active-only and `region_type=2` is a ZIP. Region IDs for the target ZIPs:
+**95682 = 39806, 95672 = 39796, 95667 = 39791**. Send a browser `User-Agent` and a `Referer` of the
+matching `https://www.redfin.com/zipcode/<ZIP>` page. Columns include address, city, price, beds,
+baths, sqft, lot size, status, MLS number, days on market and the listing URL.
+
+Three things to know before using it:
+
+- **Get region IDs from `/zipcode/<ZIP>`**, which embeds `regionId=<N>`. The `location-autocomplete`
+  API is CloudFront-blocked (403), and `/city/<id>/…` IDs are not guessable — a wrong one silently
+  serves a different city, the same decoy failure the section above warns about.
+- **Never filter lot size server-side.** A listing with an empty `LOT SIZE` is dropped silently.
+  Filter locally (`LOT SIZE` is square feet; divide by 43,560) and check the empty ones by hand. On
+  2026-09-07 one row came back with no lot size and had to be read individually.
+- **The CSV has no pool column**, so each survivor's listing page still has to be opened. Read
+  `POOL_PRIVATE_YN` from the `"Pool Information"` amenity group and cross-check it against Redfin's
+  own `hasPrivatePool` flag; they agreed on all 23 candidates that run.
+
+**Do not grep a Redfin listing page for "pool".** The page embeds marketing copy for similar and
+nearby homes, and that text bleeds across properties: on 2026-09-07 a 150,000-gallon-pool
+description belonging to 1781 Springvale Rd appeared on the page for 4773 Jacarah Rd, and Cameron
+Park and Loomis listings appeared in the `listingRemarks` of Placerville homes. Free text produced a
+false positive on nearly every listing; the structured field produced none. For the subject
+property's own description use the JSON-LD block (`"@type":["Product","RealEstateListing"]`) or the
+`<meta name="description">` tag, and match photos by MLS number in the filename
+(`genMid.<MLS>_<i>_<j>.jpg`) — the same `propertyId` discipline `parse_detail.py` already applies.
+
+That run scanned 414 rows, narrowed to 23 candidates, and returned the same six pool matches the
+board carried — including **3538 Wildwood Ln**, which MetroListPRO still has not indexed, so this is
+the second source that card's note depends on. Under load Redfin answers **202 with an empty body**
+rather than 429; back off a few seconds and retry rather than treating it as a failure.
+
 ### Pool-less rows carry unverified prices
 
 `verify.py` only reads matches and pendings, so everything in `poolless` and `nearMisses` carries

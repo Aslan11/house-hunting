@@ -173,6 +173,10 @@ const verifiedToday = verifiedOn === data.lastRun;
 const awaitingIndex = (data.source && data.source.mlsAwaitingIndex) || [];
 // Optional second enumeration straight from the MLS of record. Present only on runs that did one.
 const indep = (data.dataQuality || {}).independentEnumeration;
+// Optional third source: a Redfin sweep run independently of both the IDX feed and MetroListPRO.
+// scrape.js rebuilds dataQuality wholesale, so this key only survives when the check was stamped
+// after it — which is what keeps the row honest: it renders on the runs that actually ran one.
+const rfx = (data.dataQuality || {}).redfinCrossCheck;
 
 const rejectedRows = (data.rejected || []).map((r) => `
     <tr><td>${esc(r.address)}</td><td>${r.price ? money(r.price) : '—'}</td><td>${esc(r.reason)}</td></tr>`).join('');
@@ -435,6 +439,15 @@ failure mode is now closed off.</p>
       as land, commercial or multi-unit` : ''}; ${indep.additionalMatchesFound === 0
         ? 'none qualified beyond what is already on the board, so this board is complete against the MLS of record, not just against the feed'
         : `${indep.additionalMatchesFound} qualified and were added`}. Checked ${esc(indep.ranOn)}.</td></tr>` : ''}
+    ${rfx ? `<tr><td><strong>Third source</strong></td><td>A <strong>Redfin</strong> sweep run independently of both
+      the feed and the MLS &mdash; ${rfx.rowsScanned} ${esc(rfx.scope || 'active listings')}, narrowed to
+      ${rfx.candidatesAfterFilters} candidates, each one's pool read from the structured MLS field
+      <code>POOL_PRIVATE_YN</code> rather than from page text. It returned the same
+      ${rfx.poolConfirmed} pool matches and ${rfx.additionalMatchesFound === 0
+        ? 'nothing the board was missing'
+        : `${rfx.additionalMatchesFound} the board was missing`}.${rfx.confirmedUnindexedListing
+        ? ` It is also what independently confirms <strong>${esc(rfx.confirmedUnindexedListing)}</strong>,
+            the one match MetroListPRO has not indexed.` : ''} Checked ${esc(rfx.ranOn)}.</td></tr>` : ''}
     <tr><td><strong>Resolve</strong></td><td>Where sources disagree, the MLS of record wins and the disagreement is printed on the card rather than hidden.</td></tr>
   </tbody>
 </table>
