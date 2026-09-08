@@ -13,59 +13,55 @@
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-09-07",
-  "previousRun": "2026-09-06",
+  "lastRun": "2026-09-08",
+  "previousRun": "2026-09-07",
   "source": {
     "name": "Coldwell Banker IDX (MetroList feed), verified against MetroListPRO (MetroList MLS)",
     "method": "Enumerated every active listing in the three cities from IDX city pages, applied the hard criteria to structured MLS fields, then re-read each survivor's record from MetroListPRO and required price, beds, full baths, acreage and pool to match.",
-    "inventoryScanned": 292,
+    "inventoryScanned": 293,
     "passedBedsBathsPrice": 58,
-    "verifiedActiveMatches": 6,
-    "pendingMatches": 1,
-    "mlsVerifiedOn": "2026-09-07",
-    "mlsAwaitingIndex": [
+    "verifiedActiveMatches": 5,
+    "pendingMatches": 2,
+    "mlsVerifiedOn": "2026-09-08",
+    "mlsVerifiedCount": 6,
+    "mlsForeignSource": [
       {
         "mls": "226107286",
         "address": "3538 Wildwood Ln",
         "city": "Placerville",
-        "since": "2026-08-27",
-        "days": 11
+        "source": "BAREIS"
       }
-    ],
-    "mlsVerifiedCount": 6
+    ]
   },
   "dataQuality": {
-    "verifiedActiveListings": 6,
-    "note": "292 active listings scanned across the three cities; 58 cleared beds, baths and price and had their MLS field table read directly. No status disagreement between the IDX feed and the Redfin cross-check this run.",
+    "verifiedActiveListings": 5,
+    "note": "293 active listings scanned across the three cities; 58 cleared beds, baths and price and had their MLS field table read directly. Status disagreement this run \u2014 the IDX feed called 1 listing Active that Redfin reports in escrow: 1315 Arrowbee Dr, Placerville (Redfin: Pending, MLS 226085035). Shown as pending.",
     "independentEnumeration": {
-      "ranOn": "2026-09-07",
+      "ranOn": "2026-09-08",
       "source": "MetroListPRO city indexes (the MLS of record)",
-      "activeRecords": 329,
-      "pendingRecords": 59,
-      "recordsPulledBeyondIdxSweep": 388,
-      "singleFamilyRead": 266,
+      "activeRecords": 330,
+      "pendingRecords": 60,
+      "recordsPulledBeyondIdxSweep": 390,
+      "singleFamilyRead": 268,
       "excludedByType": 122,
       "additionalMatchesFound": 0
-    },
-    "redfinCrossCheck": {
-      "ranOn": "2026-09-07",
-      "route": "Redfin gis-csv active export, one call per ZIP (region_type=2; 95682=39806, 95672=39796, 95667=39791)",
-      "scope": "active listings at 4+ beds and at most $1,500,000 in ZIPs 95682, 95672 and 95667",
-      "rowsScanned": 414,
-      "candidatesAfterFilters": 23,
-      "poolConfirmed": 6,
-      "additionalMatchesFound": 0,
-      "confirmedUnindexedListing": "3538 Wildwood Ln",
-      "note": "Third independent source, run separately from the IDX feed and MetroListPRO. Pool read from the structured MLS field POOL_PRIVATE_YN and cross-checked against Redfin's own hasPrivatePool flag; the two agreed on all 23 candidates. It returned the same six pool matches the board carries. It also confirmed 3538 Wildwood Ln active at $949,000 with a pool - the one match MetroListPRO has still not indexed - which is the second source that card's note relies on. The only extra candidate it surfaced was 1781 Springvale Rd, already retired to 'rejected' because MetroListPRO reports it a triplex with no pool; free-text pool copy on that page comes from neighbouring listings, so it was not readmitted."
     }
   },
   "runSummary": {
     "new": [],
     "priceChanges": [],
-    "statusChanges": [],
+    "statusChanges": [
+      {
+        "address": "1315 Arrowbee Dr",
+        "city": "Placerville",
+        "mls": "226085035",
+        "from": "active",
+        "to": "pending"
+      }
+    ],
     "relisted": [],
     "dropped": [],
-    "unchanged": 6
+    "unchanged": 5
   },
   "listings": [
     {
@@ -90,6 +86,7 @@
       "sewer": "Septic System",
       "propertyType": "Single Family",
       "mlsStatus": "Active",
+      "mlsSource": "METROLIST_Cali",
       "flag": null,
       "listedOn": "2026-06-16",
       "lat": 38.6274,
@@ -108,7 +105,7 @@
       "summary": "Crafted as the builder's own residence, this extraordinary European Country-inspired estate was designed without compromise. From its commanding setting on 40 acres with sweeping Sierra foothill views and timeless architectural details, every aspect of the property reflects quality and enduring elegance. From the moment you arrive, the home makes a striking impression, thoughtfully designed to fra",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-09-07",
+      "lastSeen": "2026-09-08",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -139,6 +136,7 @@
       "sewer": "Septic System",
       "propertyType": "Single Family",
       "mlsStatus": "Active",
+      "mlsSource": "METROLIST_Cali",
       "flag": null,
       "listedOn": "2026-08-13",
       "lat": 38.6092,
@@ -157,7 +155,7 @@
       "summary": "Escape the hustle and bustle and discover your own private retreat in Shingle Springs. Set on approximately 5 private acres with sweeping hillside views, this single-story custom home offers over 3,000 sq. ft. of thoughtfully designed living space with 4 bedrooms, 3 full baths and an impressive 4-car garage.    The outdoor setting is where this property truly shines. A stunning infinity-edge saltw",
       "notes": "",
       "firstSeen": "2026-08-13",
-      "lastSeen": "2026-09-07",
+      "lastSeen": "2026-09-08",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -188,6 +186,7 @@
       "sewer": "Septic System",
       "propertyType": "Single Family",
       "mlsStatus": "Active",
+      "mlsSource": "METROLIST_Cali",
       "flag": null,
       "listedOn": "2026-07-03",
       "lat": 38.6025,
@@ -206,7 +205,7 @@
       "summary": "Just minutes from town yet worlds away, this 10 acre sanctuary delivers the ultimate retreat lifestyle. Step inside to discover a beautifully updated home with 4 bedrooms, 3 baths, and an inviting upstairs game room complete with a wet bar  perfect for gatherings. The renovated kitchen shines with quartz counters, stainless appliances, and beautiful white cabinetry, flowing seamlessly into the fam",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-09-07",
+      "lastSeen": "2026-09-08",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -237,6 +236,7 @@
       "sewer": "Septic System",
       "propertyType": "Single Family",
       "mlsStatus": "Active",
+      "mlsSource": "METROLIST_Cali",
       "flag": null,
       "listedOn": "2026-07-02",
       "lat": 38.7176,
@@ -255,7 +255,7 @@
       "summary": "Sought-after area. Minutes from shopping, schools. Country living at its finest. Don't miss the approx. 750SF ultimate entertainment hub: game room plus extra room & bath situated above the detached three-car garage. Connected to the main house by a breeze-catching walkway, this private extra space makes a perfect teen hangout or man cave.  Situated in a serene, park-like setting, this property of",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-09-07",
+      "lastSeen": "2026-09-08",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -265,55 +265,6 @@
         {
           "date": "2026-08-19",
           "price": 1175000
-        }
-      ]
-    },
-    {
-      "id": "1315-arrowbee-dr-placerville",
-      "address": "1315 Arrowbee Dr",
-      "city": "Placerville",
-      "zip": "95667",
-      "mls": "226085035",
-      "currentPrice": 969000,
-      "beds": 4,
-      "baths": 3,
-      "fullBaths": 3,
-      "partialBaths": null,
-      "sqft": 2780,
-      "acres": 5,
-      "pool": true,
-      "poolDetail": "Built-In, Gunite Construction",
-      "yearBuilt": "1971",
-      "garageSpaces": "2",
-      "view": "Pasture",
-      "water": "Public",
-      "sewer": "Septic System",
-      "propertyType": "Multi-Family",
-      "mlsStatus": "Active",
-      "flag": null,
-      "listedOn": "2026-08-06",
-      "lat": 38.785,
-      "lng": -120.9315,
-      "photos": [
-        "https://m.cbhomes.com/p/371/226085035/0A1b20073C4D4FD/m23cc.webp",
-        "https://m.cbhomes.com/p/371/226085035/5Dc482F1fC9A4c0/m23cc.webp",
-        "https://m.cbhomes.com/p/371/226085035/A096416DC394486/m23cc.webp",
-        "https://m.cbhomes.com/p/371/226085035/43bD407F2161411/m23cc.webp",
-        "https://m.cbhomes.com/p/371/226085035/596e6049253f498/m23cc.webp",
-        "https://m.cbhomes.com/p/371/226085035/09dD7B42eBd84b8/m23cc.webp"
-      ],
-      "url": "https://www.coldwellbankerhomes.com/ca/placerville/1315-arrowbee-dr/pid_72934505/",
-      "gallery": "https://www.coldwellbankerhomes.com/ca/placerville/1315-arrowbee-dr/pid_72934505/",
-      "status": "match",
-      "summary": "Welcome to this charming mini ranch with an ADU, tucked behind a gated entrance at the end of a paved driveway, offering privacy, versatility, and lovely views in a peaceful country setting. The single-story ranch home design welcomes you into a light-filled living room where vaulted ceilings and expansive picture windows showcase the scenery beyond. The updated kitchen features granite countertop",
-      "notes": "",
-      "firstSeen": "2026-08-07",
-      "lastSeen": "2026-09-07",
-      "newThisRun": false,
-      "priceHistory": [
-        {
-          "date": "2026-08-07",
-          "price": 969000
         }
       ]
     },
@@ -339,6 +290,7 @@
       "sewer": "Septic System",
       "propertyType": "Single Family",
       "mlsStatus": "Active",
+      "mlsSource": "BAREIS",
       "flag": null,
       "listedOn": "2026-08-27",
       "lat": 38.7133,
@@ -357,7 +309,7 @@
       "summary": "Welcome to a property that doesn't ask you to choose between a home, a retreat, and country living - you get all three. Set among the Placerville foothills, 3538 Wildwood Lane is a place to swim, garden, gather and spread out. The two-story main home offers a private ground-level guest suite with its own entrance and full bath, plus a two-car garage and full basement access. Upstairs, the living s",
       "notes": "",
       "firstSeen": "2026-08-27",
-      "lastSeen": "2026-09-07",
+      "lastSeen": "2026-09-08",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -365,7 +317,23 @@
           "price": 949000
         }
       ],
-      "statusNote": "Not yet indexed by MetroListPRO \u2014 it has been missing from the MLS site since 2026-08-27 (11 days), which is longer than indexing normally takes \u2014 worth a call to the listing agent to confirm it is still on the market. Every criterion below was instead confirmed against a second independent source; treat it as one confirmation short of the others."
+      "secondSource": {
+        "name": "Redfin MLS field table",
+        "checkedOn": "2026-09-08",
+        "url": "https://www.redfin.com/CA/Placerville/3538-Wildwood-Ln-95667/home/167376612",
+        "confirmed": [
+          "mls",
+          "price",
+          "beds",
+          "fullBaths",
+          "acres",
+          "pool"
+        ],
+        "disagreed": [],
+        "status": "Active",
+        "activeThere": true,
+        "poolFeatures": "Gunite Construction, Pool Sweep, Pool Cover, On Lot, Built-In"
+      }
     }
   ],
   "pending": [
@@ -391,6 +359,7 @@
       "sewer": "Septic System, Septic Connected, Septic Pump",
       "propertyType": "Single Family",
       "mlsStatus": "Pending",
+      "mlsSource": "METROLIST_Cali",
       "flag": null,
       "listedOn": "2026-07-22",
       "lat": 38.7323,
@@ -417,7 +386,58 @@
           "price": 975000
         }
       ],
-      "lastSeen": "2026-09-07"
+      "lastSeen": "2026-09-08"
+    },
+    {
+      "id": "1315-arrowbee-dr-placerville",
+      "address": "1315 Arrowbee Dr",
+      "city": "Placerville",
+      "zip": "95667",
+      "mls": "226085035",
+      "currentPrice": 969000,
+      "beds": 4,
+      "baths": 3,
+      "fullBaths": 3,
+      "partialBaths": null,
+      "sqft": 2780,
+      "acres": 5,
+      "pool": true,
+      "poolDetail": "Built-In, Gunite Construction",
+      "yearBuilt": "1971",
+      "garageSpaces": "2",
+      "view": "Pasture",
+      "water": "Public",
+      "sewer": "Septic System",
+      "propertyType": "Multi-Family",
+      "mlsStatus": "Pending",
+      "mlsSource": "METROLIST_Cali",
+      "flag": null,
+      "listedOn": "2026-08-06",
+      "lat": 38.785,
+      "lng": -120.9315,
+      "photos": [
+        "https://m.cbhomes.com/p/371/226085035/0A1b20073C4D4FD/m23cc.webp",
+        "https://m.cbhomes.com/p/371/226085035/5Dc482F1fC9A4c0/m23cc.webp",
+        "https://m.cbhomes.com/p/371/226085035/A096416DC394486/m23cc.webp",
+        "https://m.cbhomes.com/p/371/226085035/43bD407F2161411/m23cc.webp",
+        "https://m.cbhomes.com/p/371/226085035/596e6049253f498/m23cc.webp",
+        "https://m.cbhomes.com/p/371/226085035/09dD7B42eBd84b8/m23cc.webp"
+      ],
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/1315-arrowbee-dr/pid_72934505/",
+      "gallery": "https://www.coldwellbankerhomes.com/ca/placerville/1315-arrowbee-dr/pid_72934505/",
+      "status": "pending",
+      "summary": "Welcome to this charming mini ranch with an ADU, tucked behind a gated entrance at the end of a paved driveway, offering privacy, versatility, and lovely views in a peaceful country setting. The single-story ranch home design welcomes you into a light-filled living room where vaulted ceilings and expansive picture windows showcase the scenery beyond. The updated kitchen features granite countertop",
+      "notes": "Meets every criterion but is under contract (Sale Pending). Kept on file in case the deal falls through.",
+      "newThisRun": false,
+      "firstSeen": "2026-09-08",
+      "pendingSince": "2026-09-08",
+      "priceHistory": [
+        {
+          "date": "2026-09-08",
+          "price": 969000
+        }
+      ],
+      "lastSeen": "2026-09-08"
     }
   ],
   "poolless": [

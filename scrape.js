@@ -165,6 +165,14 @@ function detail(url) {
   out.realStatus = st ? st[1].trim() : null;
   const ty = html.match(/<li><strong>Type:\s*<\/strong>\s*([^<]+)<\/li>/);
   out.propertyType = ty ? ty[1].trim() : null;
+  /* Which MLS the record originates in. The IDX site carries several feeds, and a listing
+     sourced from anything other than MetroList can never be looked up on MetroListPRO —
+     `verify.py` needs to know that so it reports "different MLS", not "awaiting index".
+     3538 Wildwood Ln (Placerville, Source: BAREIS) sat in the awaiting-index bucket for
+     twelve days on that confusion, telling the reader to call the agent about a listing
+     that was never going to appear. */
+  const src = html.match(/<li><strong>Source:\s*<\/strong>\s*([^<]+)<\/li>/);
+  out.mlsSource = src ? src[1].trim() : null;
   const bd = html.match(/property-status-indicator-text">([^<]+)</);
   out.badge = bd ? bd[1].replace(/&nbsp;/g, ' ').trim() : null;
   const mls = html.match(/&quot;MLSNumber&quot;:&quot;([^&]+)&quot;/) || html.match(/"MLSNumber"\s*:\s*"([^"]+)"/);
@@ -503,7 +511,7 @@ candidates.forEach((r, i) => {
     acres: d.acres, pool: true, poolDetail: am['Pool Description'] || 'Pool',
     yearBuilt: am['Year Built'] || null, garageSpaces: am['Garage Spaces'] || null,
     view: am['Property View'] || null, water: am.Water || null, sewer: am.Sewer || null,
-    propertyType: d.propertyType, mlsStatus: d.realStatus,
+    propertyType: d.propertyType, mlsStatus: d.realStatus, mlsSource: d.mlsSource,
     flag: d.badge && d.badge !== 'Sale Pending' ? d.badge : null,
     listedOn: (d.datePosted || '').slice(0, 10) || null,
     lat: r.lat, lng: r.lng, photos: d.images.slice(0, 6),

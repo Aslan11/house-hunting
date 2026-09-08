@@ -66,10 +66,31 @@ with ThreadPoolExecutor(max_workers=5) as ex:
     res = list(ex.map(verify, rows))
 json.dump(res, open("verified.json", "w"), indent=1)
 
+def metrolist_sourced(r):
+    """Is this record even MetroList's to carry?
+
+    The IDX site republishes several MLSs. A listing whose `Source` is another one will answer
+    404 on MetroListPRO forever, because MetroList never had it — that is not an indexing delay
+    and no amount of waiting resolves it. Treated as "awaiting index" it produced a note that
+    told the reader a listing had been missing for twelve days and to call the agent about it,
+    when the record was exactly where it belonged, in a different MLS. An unknown source stays
+    in the awaiting bucket: absence of the field is not evidence of a foreign feed.
+    """
+    src = (r.get("mlsSource") or "").strip()
+    return not src or "metrolist" in src.lower()
+
+
 clean = 0
 awaiting = []   # in the feed, not yet in the MLS index — a caveat on the card
+foreign = []    # in a different MLS entirely — MetroListPRO can never confirm it
 disagreed = []  # the MLS says something different — the gate's veto
 for v, r in zip(res, rows):
+    if v.get("mlNotIndexed") and not metrolist_sourced(r):
+        foreign.append({"mls": r["mls"], "address": r["address"], "city": r["city"],
+                        "source": r["mlsSource"].strip()})
+        print(f'{r["address"][:24]:24} MLS{r["mls"]} listed in {r["mlsSource"].strip()}, not '
+              f'MetroList — MetroListPRO cannot confirm it; verified against other sources')
+        continue
     if v.get("mlNotIndexed"):
         # Carry the date this record was FIRST seen unindexed, so the card can say how long it
         # has been waiting. "Too new for the MLS to carry" is a fair description on day one and a
@@ -117,10 +138,15 @@ if not disagreed and rows:
         d["source"]["mlsAwaitingIndex"] = awaiting
     else:
         d["source"].pop("mlsAwaitingIndex", None)
+    if foreign:
+        d["source"]["mlsForeignSource"] = foreign
+    else:
+        d["source"].pop("mlsForeignSource", None)
 
     # The caveat belongs on the card, so write it where build.js reads it — and clear it from any
     # listing that has since been indexed, so a note can never outlive the condition it describes.
     pend = {a["mls"]: a for a in awaiting}
+    alien = {a["mls"]: a for a in foreign}
 
     def note_for(a):
         # Below a week, "too new to be indexed" is the ordinary explanation. Past that it stops
@@ -136,15 +162,24 @@ if not disagreed and rows:
                 "instead confirmed against a second independent source; treat it as one "
                 "confirmation short of the others.")
 
+    # The foreign-MLS note is NOT written here. It has to state what the second source actually
+    # confirmed, and that stamp is written by `foreign-verify.py`, which runs after this script —
+    # a note composed now would describe the previous run's evidence, the exact one-step staleness
+    # this file's own history is a catalogue of. `build.js` composes it at render time, when both
+    # `mlsForeignSource` and each listing's `secondSource` are on disk.
     for lst in (d.get("listings") or []) + (d.get("pending") or []):
         if lst.get("mls") in pend:
             lst["statusNote"] = note_for(pend[lst["mls"]])
-        elif str(lst.get("statusNote", "")).startswith("Not yet indexed by MetroListPRO"):
+        elif str(lst.get("statusNote", "")).startswith(("Not yet indexed by MetroListPRO",
+                                                        "Listed in ")):
             lst.pop("statusNote", None)
+        if lst.get("mls") not in alien:
+            lst.pop("secondSource", None)
 
     json.dump(d, open("listings.json", "w"), indent=2)
     print(f"\n{clean} of {len(rows)} records agreed with the MLS of record"
           + (f"; {len(awaiting)} not yet indexed and flagged on the card" if awaiting else "")
+          + (f"; {len(foreign)} in another MLS and unverifiable here" if foreign else "")
           + f". Stamped source.mlsVerifiedOn = {today}.")
 else:
     print(f"\n{len(disagreed)} of {len(rows)} records disagreed with the MLS of record — "

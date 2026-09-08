@@ -78,8 +78,45 @@ function facts(l) {
   return f.join('');
 }
 
+/* The card note for a listing the MLS of record structurally cannot cover — it belongs to a
+   different MLS, so MetroListPRO answers 404 forever and no waiting closes the gap.
+
+   Composed here rather than stamped by verify.py because it has to state what the second source
+   actually confirmed, and that stamp (`secondSource`) is written by foreign-verify.py, which runs
+   after verify.py. A note written one step early describes the previous run's evidence. With no
+   stamp at all the note says the confirmation is outstanding: on a listing that cannot be checked
+   against the MLS of record, an unearned "a second source agrees" is the only thing between the
+   reader and a single unverified feed. */
+const FIELD_LABELS = { mls: 'MLS number', price: 'price', beds: 'beds',
+  fullBaths: 'full baths', acres: 'lot size', pool: 'pool' };
+
+function foreignNote(l) {
+  const entry = foreignMls.find((a) => a.mls === l.mls);
+  if (!entry) return null;
+  const head = `Listed in ${entry.source}, not MetroList — so MetroListPRO, the site this tracker `
+    + `verifies against, has no record of it and never will. That is a gap in the checking route, `
+    + `not a doubt about the listing`;
+  const ss = l.secondSource;
+  if (!ss) {
+    return `${head}, but the second confirmation is still outstanding: only the IDX feed has been `
+      + `read. Treat it as single-sourced until that is closed.`;
+  }
+  const label = (f) => FIELD_LABELS[f] || f;
+  const ok = (ss.confirmed || []).map(label);
+  const bad = (ss.disagreed || []).map(label);
+  let note = `${head}. The IDX feed and ${ss.name || 'a second source'} were read independently on `
+    + `${ss.checkedOn} and agree on ${ok.length ? ok.join(', ') : 'nothing'}`;
+  note += ss.status ? ` — it reads ${ss.status} there too.` : '.';
+  if (bad.length) {
+    note += ` They disagree on ${bad.join(', ')} — per the verification gate that disagreement is `
+      + `printed rather than resolved; settle it with the listing agent.`;
+  }
+  return note;
+}
+
 function card(l) {
   const pending = l.status === 'pending';
+  const statusNote = l.statusNote || foreignNote(l);
   const tags = [];
   if (l.isNew) tags.push(`<span class="tag new">New this run</span>`);
   tags.push(pending
@@ -98,7 +135,7 @@ function card(l) {
       <div class="facts">${facts(l)}</div>
       <p class="pooldetail">${esc(l.poolDetail)}</p>
       <p class="note">${esc(l.summary)}</p>
-      ${l.statusNote ? `<p class="flagnote">${esc(l.statusNote)}</p>` : ''}
+      ${statusNote ? `<p class="flagnote">${esc(statusNote)}</p>` : ''}
       <dl class="micro">
         ${perAcre ? `<div><dt>Per acre</dt><dd>${money(perAcre)}</dd></div>` : ''}
         <div><dt>Water</dt><dd>${esc(l.water || '—')}</dd></div>
@@ -171,6 +208,9 @@ const verifiedToday = verifiedOn === data.lastRun;
 // Records the MLS site had not indexed when verify.py ran. Recorded rather than treated as a
 // disagreement — see verify.py — so the caveat lands on those cards instead of the whole board.
 const awaitingIndex = (data.source && data.source.mlsAwaitingIndex) || [];
+// Records the MLS of record will never carry, because they belong to a different MLS. Distinct
+// from awaitingIndex: waiting resolves that one and cannot resolve this one.
+const foreignMls = (data.source && data.source.mlsForeignSource) || [];
 // Optional second enumeration straight from the MLS of record. Present only on runs that did one.
 const indep = (data.dataQuality || {}).independentEnumeration;
 // Optional third source: a Redfin sweep run independently of both the IDX feed and MetroListPRO.
@@ -430,6 +470,12 @@ failure mode is now closed off.</p>
                   MetroListPRO to have indexed — ${awaitingIndex.map((a) => `<strong>${esc(a.address)}</strong>`).join(', ')}
                   — and ${awaitingIndex.length === 1 ? 'is' : 'are'} carried on a second independent source until the MLS
                   catches up. That is a missing confirmation, not a contradiction; the card says so.`
+              : ''}${
+            foreignMls.length
+              ? ` ${foreignMls.length === 1 ? 'One listing is' : `${foreignMls.length} listings are`} carried by a
+                  different MLS — ${foreignMls.map((a) => `<strong>${esc(a.address)}</strong> (${esc(a.source)})`).join(', ')}
+                  — so MetroListPRO has no record of ${foreignMls.length === 1 ? 'it' : 'them'} and never will.
+                  ${foreignMls.length === 1 ? 'It is' : 'They are'} confirmed against the IDX feed and Redfin instead.`
               : ''}`
         : `<strong>Last confirmed ${esc(verifiedOn || 'never')}</strong>, not on this run — treat the listings below as verified as of that date.`}</td></tr>
     ${indep ? `<tr><td><strong>Cross-enumerate</strong></td><td>The three cities were listed again straight from

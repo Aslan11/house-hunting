@@ -230,7 +230,10 @@ status was inferred from search-engine snippets. Search engines keep sold listin
 "For Sale" in the title for years. The rules that follow still stand:
 
 1. A listing may only be presented as a match once price, beds, full baths, acreage and pool have
-   been confirmed against **MetroListPRO**. The IDX feed alone is not sufficient.
+   been confirmed against **MetroListPRO**. The IDX feed alone is not sufficient. The one standing
+   exception is a listing carried by a *different* MLS, which MetroListPRO cannot hold a record of
+   at all — it needs two other independent sources agreeing, and the card must name the MLS it
+   actually belongs to. See "A 404 that no amount of waiting will fix" below.
 2. Where two sources disagree, **the MLS of record wins**, and the disagreement gets printed on the
    card rather than quietly resolved. The 2026-08-15 run hit exactly one: 1988 Cold Springs Rd read
    Active on the IDX and Pending on MetroList. It is shown as Pending.
@@ -336,6 +339,31 @@ Two things generalise, and the second is the sharper one:
   working. Nothing failed loudly here: the note rendered, the pipeline reported success, the page
   read as confident on day six as on day one. Any threshold on an accumulating value deserves one
   check that it can actually be crossed — if no run can reach the branch, the branch is decoration.
+
+#### A 404 that no amount of waiting will fix
+
+The expiry fired on 2026-09-08, twelve days in, and the note it produced was worse than the one it
+replaced: *missing from the MLS site since 2026-08-27, longer than indexing normally takes, worth a
+call to the listing agent to confirm it is still on the market.* Every clause was true and the
+conclusion was wrong. **3538 Wildwood Ln is not a MetroList listing.** Its IDX detail page reads
+`Source: BAREIS`, and Redfin's `gis-csv` row for MLS 226107286 says `BAREIS` in the source column
+too. MetroListPRO answers 404 because MetroList never had the record — not because anything is late.
+No amount of waiting resolves that, and the reader was being sent to phone an agent about a listing
+sitting exactly where it belongs, in another MLS.
+
+The IDX site republishes several feeds; `Source` says which, and nothing in the pipeline had ever
+read it. `scrape.js` now captures it as `mlsSource`, the `matches.json` step passes it through, and
+`verify.py` splits the 404s into two buckets: unknown or MetroList source stays `mlsAwaitingIndex`
+with its clock, a different MLS becomes `mlsForeignSource` with **no clock**, because there is
+nothing to wait for. The card and the *Verify* row say which MLS carries it and that confirmation
+comes from the IDX feed and Redfin instead.
+
+The sharper lesson, and it is the third correction to this same note: **an expiry answers "how long
+has this lasted", never "why".** Three runs in a row fitted better and better instrumentation to the
+waiting — record the date, carry it across runs, escalate the wording past a week — while nobody
+checked the premise that the record was in that MLS at all. A timer on a wrong explanation makes the
+wrong explanation more insistent, on a schedule. When a caveat is about to escalate, re-derive its
+cause before sharpening its wording: the escalation is evidence the original reading was wrong.
 
 ### Half baths
 
@@ -573,9 +601,17 @@ node scrape.js                                    # 1. enumerate + filter + Redf
 node -e 'const d=require("./listings.json");require("fs").writeFileSync("matches.json",
   JSON.stringify([...d.listings,...(d.pending||[])].map(l=>({address:l.address,city:l.city,
   mls:l.mls,price:l.currentPrice,beds:l.beds,fullBaths:l.fullBaths,acres:l.acres,
-  status:l.status}))))' && python3 verify.py     # 2. confirm each one against the MLS of record
+  status:l.status,mlsSource:l.mlsSource}))))' && python3 verify.py   # 2. confirm against the MLS
+python3 foreign-verify.py                         # 2b. second source for other-MLS listings
 node build.js                                     # 3. render index.html
 ```
+
+Step 2b only does work when step 2 put something in `source.mlsForeignSource` — a listing carried
+by an MLS that is not MetroList, which MetroListPRO can never confirm. It reads that listing's
+Redfin MLS field table and stamps what agreed onto the card as `secondSource`. **It must run after
+step 2 and before step 3**: `verify.py` deliberately does not write the note (it would describe the
+previous run's evidence), and `build.js` composes it from the stamp at render time. Skip 2b and the
+card correctly says the second confirmation is outstanding rather than claiming one.
 
 Then, on any run reporting no movement, the completeness check — every MLS record in the three
 cities, straight from the MLS of record, filtered independently of the IDX feed:
@@ -633,6 +669,11 @@ and a second composer that has to be kept in step with the first will drift.
 - **`listings.json`** — canonical data. Single source of truth.
 - **`scrape.js`** — refreshes `listings.json` from the IDX feed; handles dedupe, price history, drops.
 - **`verify.py`** — independent MetroListPRO confirmation of every match and pending listing.
+- **`foreign-verify.py`** — the second source for listings MetroListPRO structurally cannot cover,
+  because another MLS carries them. Reads the Redfin MLS field table through `parse_detail.py`'s
+  subject-scope gate and stamps `secondSource` on the listing; resolves the Redfin URL by MLS
+  number through the ZIP's CSV feed rather than guessing it from the address, because Redfin's
+  slug does not always match the MLS street name.
 - **`crosscheck.js`** / **`mls-status.js`** — the Redfin second opinion `scrape.js` calls to catch
   listings the IDX feed still reports Active after they have gone into escrow.
 - **`build.js`** — renders `index.html` from `listings.json`. No dependencies: `node build.js`.
