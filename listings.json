@@ -13,16 +13,16 @@
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-09-08",
-  "previousRun": "2026-09-07",
+  "lastRun": "2026-09-09",
+  "previousRun": "2026-09-08",
   "source": {
     "name": "Coldwell Banker IDX (MetroList feed), verified against MetroListPRO (MetroList MLS)",
     "method": "Enumerated every active listing in the three cities from IDX city pages, applied the hard criteria to structured MLS fields, then re-read each survivor's record from MetroListPRO and required price, beds, full baths, acreage and pool to match.",
     "inventoryScanned": 293,
-    "passedBedsBathsPrice": 58,
+    "passedBedsBathsPrice": 59,
     "verifiedActiveMatches": 5,
     "pendingMatches": 2,
-    "mlsVerifiedOn": "2026-09-08",
+    "mlsVerifiedOn": "2026-09-09",
     "mlsVerifiedCount": 6,
     "mlsForeignSource": [
       {
@@ -35,14 +35,14 @@
   },
   "dataQuality": {
     "verifiedActiveListings": 5,
-    "note": "293 active listings scanned across the three cities; 58 cleared beds, baths and price and had their MLS field table read directly. Status disagreement this run \u2014 the IDX feed called 1 listing Active that Redfin reports in escrow: 1315 Arrowbee Dr, Placerville (Redfin: Pending, MLS 226085035). Shown as pending.",
+    "note": "293 active listings scanned across the three cities; 59 cleared beds, baths and price and had their MLS field table read directly. No status disagreement between the IDX feed and the Redfin cross-check this run.",
     "independentEnumeration": {
-      "ranOn": "2026-09-08",
+      "ranOn": "2026-09-09",
       "source": "MetroListPRO city indexes (the MLS of record)",
-      "activeRecords": 330,
-      "pendingRecords": 60,
-      "recordsPulledBeyondIdxSweep": 390,
-      "singleFamilyRead": 268,
+      "activeRecords": 328,
+      "pendingRecords": 61,
+      "recordsPulledBeyondIdxSweep": 389,
+      "singleFamilyRead": 267,
       "excludedByType": 122,
       "additionalMatchesFound": 0
     }
@@ -50,15 +50,7 @@
   "runSummary": {
     "new": [],
     "priceChanges": [],
-    "statusChanges": [
-      {
-        "address": "1315 Arrowbee Dr",
-        "city": "Placerville",
-        "mls": "226085035",
-        "from": "active",
-        "to": "pending"
-      }
-    ],
+    "statusChanges": [],
     "relisted": [],
     "dropped": [],
     "unchanged": 5
@@ -105,7 +97,7 @@
       "summary": "Crafted as the builder's own residence, this extraordinary European Country-inspired estate was designed without compromise. From its commanding setting on 40 acres with sweeping Sierra foothill views and timeless architectural details, every aspect of the property reflects quality and enduring elegance. From the moment you arrive, the home makes a striking impression, thoughtfully designed to fra",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-09-08",
+      "lastSeen": "2026-09-09",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -155,7 +147,7 @@
       "summary": "Escape the hustle and bustle and discover your own private retreat in Shingle Springs. Set on approximately 5 private acres with sweeping hillside views, this single-story custom home offers over 3,000 sq. ft. of thoughtfully designed living space with 4 bedrooms, 3 full baths and an impressive 4-car garage.    The outdoor setting is where this property truly shines. A stunning infinity-edge saltw",
       "notes": "",
       "firstSeen": "2026-08-13",
-      "lastSeen": "2026-09-08",
+      "lastSeen": "2026-09-09",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -205,7 +197,7 @@
       "summary": "Just minutes from town yet worlds away, this 10 acre sanctuary delivers the ultimate retreat lifestyle. Step inside to discover a beautifully updated home with 4 bedrooms, 3 baths, and an inviting upstairs game room complete with a wet bar  perfect for gatherings. The renovated kitchen shines with quartz counters, stainless appliances, and beautiful white cabinetry, flowing seamlessly into the fam",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-09-08",
+      "lastSeen": "2026-09-09",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -255,7 +247,7 @@
       "summary": "Sought-after area. Minutes from shopping, schools. Country living at its finest. Don't miss the approx. 750SF ultimate entertainment hub: game room plus extra room & bath situated above the detached three-car garage. Connected to the main house by a breeze-catching walkway, this private extra space makes a perfect teen hangout or man cave.  Situated in a serene, park-like setting, this property of",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-09-08",
+      "lastSeen": "2026-09-09",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -309,7 +301,7 @@
       "summary": "Welcome to a property that doesn't ask you to choose between a home, a retreat, and country living - you get all three. Set among the Placerville foothills, 3538 Wildwood Lane is a place to swim, garden, gather and spread out. The two-story main home offers a private ground-level guest suite with its own entrance and full bath, plus a two-car garage and full basement access. Upstairs, the living s",
       "notes": "",
       "firstSeen": "2026-08-27",
-      "lastSeen": "2026-09-08",
+      "lastSeen": "2026-09-09",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -319,7 +311,7 @@
       ],
       "secondSource": {
         "name": "Redfin MLS field table",
-        "checkedOn": "2026-09-08",
+        "checkedOn": "2026-09-09",
         "url": "https://www.redfin.com/CA/Placerville/3538-Wildwood-Ln-95667/home/167376612",
         "confirmed": [
           "mls",
@@ -386,7 +378,7 @@
           "price": 975000
         }
       ],
-      "lastSeen": "2026-09-08"
+      "lastSeen": "2026-09-09"
     },
     {
       "id": "1315-arrowbee-dr-placerville",
@@ -437,7 +429,7 @@
           "price": 969000
         }
       ],
-      "lastSeen": "2026-09-08"
+      "lastSeen": "2026-09-09"
     }
   ],
   "poolless": [
