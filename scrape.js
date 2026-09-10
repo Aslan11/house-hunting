@@ -685,6 +685,37 @@ const statusChanges = listings.concat(pending)
   .filter(Boolean);
 const changedToday = (l) => statusChanges.some((s) => (s.mls || s.address) === (l.mls || l.address));
 
+/* The status-change gap one section up, one table over. `runSummary` only ever described the
+   board, so on 2026-09-10 all five arrays were legitimately empty and the banner published
+   "Nothing moved" over a run where the pool-less table gained 2500 Hwy 50 (12.4 acres, 4bd/4fba,
+   $1,115,000), cut two prices and lost 5000 Reservation Rd from the market. That table is not
+   decoration — it is the "right land, right house, add a pool" list, and a new 12-acre entry
+   $385k under the ceiling is exactly the kind of thing someone checks this page for.
+   The same rule as before applies: a summary that says nothing happened needs a category for
+   everything that can happen, and these rows can move without any board listing moving. */
+const poollessKey = (p) => p.mls || p.address;
+const poollessNow = new Map(poolless.map((p) => [poollessKey(p), p]));
+const poollessChanges = {
+  added: poolless
+    .filter((p) => !priorPoolless.has(poollessKey(p)) && !priorPoolless.has(p.address))
+    .map((p) => ({ address: p.address, city: p.city, price: p.price, acres: p.acres,
+      beds: p.beds, fullBaths: p.fullBaths, url: p.url })),
+  priceChanges: poolless
+    .map((p) => {
+      const was = priorPoolless.get(poollessKey(p)) || priorPoolless.get(p.address);
+      return was && was.price !== p.price
+        ? { address: p.address, city: p.city, from: was.price, to: p.price } : null;
+    })
+    .filter(Boolean),
+  // A row leaving this table means it is no longer an active or pending listing that clears
+  // beds, baths, price and lot size — sold, withdrawn, or repriced out of the band. The table
+  // is rebuilt from live detail reads, so absence is the only signal available; say that
+  // rather than asserting a cause the run did not establish.
+  gone: (prior.poolless || [])
+    .filter((p) => !poollessNow.has(poollessKey(p)) && !poollessNow.has(p.address))
+    .map((p) => ({ address: p.address, city: p.city, price: p.price })),
+};
+
 out.runSummary = {
   new: listings.filter((l) => l.newThisRun).map((l) => `${l.address}, ${l.city}`),
   priceChanges: listings.concat(pending).filter(movedToday).map((l) => ({
@@ -694,6 +725,7 @@ out.runSummary = {
   statusChanges,
   relisted: relisted.filter((r) => r.rescuedThisRun).map((r) => `${r.address}, ${r.city}`),
   dropped: dropped.map((d) => d.address),
+  poollessChanges,
   unchanged: listings.filter((l) => !l.newThisRun && !movedToday(l) && !changedToday(l)).length,
 };
 

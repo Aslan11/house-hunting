@@ -169,6 +169,27 @@ const priceMoves = (data.runSummary && data.runSummary.priceChanges) || [];
 // A property crossing between the active board and the pending list counts as movement.
 // Without this the banner reports "Nothing moved" on a run where the active count fell.
 const statusMoves = (data.runSummary && data.runSummary.statusChanges) || [];
+// The pool-less table moves independently of the board — a house with the right land, beds and
+// baths but no pool never touches `listings`. Before this, a run where that table gained a row,
+// cut two prices and lost one to the market still printed "Nothing moved".
+const pl = (data.runSummary && data.runSummary.poollessChanges) || {};
+const plAdded = pl.added || [], plPriced = pl.priceChanges || [], plGone = pl.gone || [];
+const poollessMoved = plAdded.length + plPriced.length + plGone.length;
+// Shown in both banner branches, so it is built once. Phrased to keep the distinction the
+// whole page rests on: these are not matches, they are the add-a-pool list.
+const poollessItems = [
+  ...plAdded.map((p) => `<strong>${esc(p.address)}, ${esc(p.city)}</strong> — ${money(p.price)},
+     ${esc(p.acres)} acres, ${p.beds} bd / ${p.fullBaths} full ba, no pool`),
+  ...plPriced.map((p) => `<strong>${esc(p.address)}, ${esc(p.city)}</strong> —
+     ${money(p.from)} → ${money(p.to)}`),
+  ...plGone.map((p) => `<strong>${esc(p.address)}, ${esc(p.city)}</strong> — off the table
+     (last ${money(p.price)}); no longer an active or pending listing clearing the other criteria`),
+];
+const poollessSummary = poollessMoved ? `${[
+  plAdded.length ? `${plAdded.length} added` : '',
+  plPriced.length ? `${plPriced.length} price ${plPriced.length === 1 ? 'change' : 'changes'}` : '',
+  plGone.length ? `${plGone.length} removed` : '',
+].filter(Boolean).join(', ')}` : '';
 
 const cheapest = activeList.length ? Math.min(...activeList.map((l) => l.currentPrice)) : null;
 const mostLand = activeList.length ? Math.max(...activeList.map((l) => l.acres)) : null;
@@ -326,6 +347,7 @@ const html = `<!DOCTYPE html>
     border-radius:10px;padding:16px 18px;margin:26px 0 8px;font-size:.92rem}
   .banner h3{margin:0 0 6px;font-size:1rem}
   .banner p{margin:0;color:var(--muted)}
+  .banner p + p{margin-top:8px}
   .banner ul{margin:8px 0 0;padding-left:20px;color:var(--muted)}
 
   .tablewrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:12px}
@@ -378,13 +400,19 @@ const html = `<!DOCTYPE html>
          Sale Pending last run and the MLS of record now reports it For Sale again — the deal
          appears to have fallen through.</li>`)).join('\n    ')}
     ${dropped.length ? `<li><strong>${dropped.length} previously tracked ${dropped.length === 1 ? 'property' : 'properties'} removed</strong> — no longer on the market. Listed at the bottom.</li>` : ''}
-  </ul>` : `<p><strong>Nothing moved.</strong> No new listings, no price changes, and nothing left
-  the board since ${esc(data.previousRun)}. ${verifiedToday
+    ${poollessMoved ? `<li><strong>Pool-less table:</strong> ${esc(poollessSummary)} — see
+      &ldquo;Right land, right house, no pool&rdquo; below.</li>` : ''}
+  </ul>` : `<p><strong>Nothing moved on the board.</strong> No new matches, no price changes, and
+  nothing left the board since ${esc(data.previousRun)}. ${verifiedToday
     ? `All ${activeList.length} active matches and ${pendingList.length} pending were re-verified
        against the MLS of record today and are unchanged — same prices, same status. The board below
        is current, not stale.`
     : `The board was re-enumerated from the IDX feed today; the last field-by-field check against
-       the MLS of record was ${esc(verifiedOn || 'never run')}.`}</p>`}
+       the MLS of record was ${esc(verifiedOn || 'never run')}.`}</p>
+  ${poollessMoved ? `<p><strong>The pool-less list did move</strong>
+    (${esc(poollessSummary)}) — properties with the right land, beds and baths but no pool:</p>
+  <ul>${poollessItems.map((i) => `\n    <li>${i}</li>`).join('')}
+  </ul>` : ''}`}
 </div>
 
 ${fresh.length ? `<h2>New this run <span class="count">(${fresh.length})</span></h2>

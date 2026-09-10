@@ -13,16 +13,16 @@
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-09-09",
-  "previousRun": "2026-09-08",
+  "lastRun": "2026-09-10",
+  "previousRun": "2026-09-09",
   "source": {
     "name": "Coldwell Banker IDX (MetroList feed), verified against MetroListPRO (MetroList MLS)",
     "method": "Enumerated every active listing in the three cities from IDX city pages, applied the hard criteria to structured MLS fields, then re-read each survivor's record from MetroListPRO and required price, beds, full baths, acreage and pool to match.",
-    "inventoryScanned": 293,
-    "passedBedsBathsPrice": 59,
+    "inventoryScanned": 290,
+    "passedBedsBathsPrice": 58,
     "verifiedActiveMatches": 5,
     "pendingMatches": 2,
-    "mlsVerifiedOn": "2026-09-09",
+    "mlsVerifiedOn": "2026-09-10",
     "mlsVerifiedCount": 6,
     "mlsForeignSource": [
       {
@@ -35,14 +35,14 @@
   },
   "dataQuality": {
     "verifiedActiveListings": 5,
-    "note": "293 active listings scanned across the three cities; 59 cleared beds, baths and price and had their MLS field table read directly. No status disagreement between the IDX feed and the Redfin cross-check this run.",
+    "note": "290 active listings scanned across the three cities; 58 cleared beds, baths and price and had their MLS field table read directly. No status disagreement between the IDX feed and the Redfin cross-check this run.",
     "independentEnumeration": {
-      "ranOn": "2026-09-09",
+      "ranOn": "2026-09-10",
       "source": "MetroListPRO city indexes (the MLS of record)",
-      "activeRecords": 328,
-      "pendingRecords": 61,
-      "recordsPulledBeyondIdxSweep": 389,
-      "singleFamilyRead": 267,
+      "activeRecords": 329,
+      "pendingRecords": 59,
+      "recordsPulledBeyondIdxSweep": 388,
+      "singleFamilyRead": 266,
       "excludedByType": 122,
       "additionalMatchesFound": 0
     }
@@ -53,6 +53,34 @@
     "statusChanges": [],
     "relisted": [],
     "dropped": [],
+    "poollessChanges": {
+      "added": [
+        {
+          "address": "2500 Hwy 50",
+          "city": "Placerville",
+          "price": 1115000,
+          "acres": 12.4,
+          "beds": 4,
+          "fullBaths": 4,
+          "url": "https://www.coldwellbankerhomes.com/ca/placerville/2500-hwy-50/pid_73603201/"
+        }
+      ],
+      "priceChanges": [
+        {
+          "address": "4181 Thunderbird Ln",
+          "city": "Rescue",
+          "from": 799000,
+          "to": 749000
+        }
+      ],
+      "gone": [
+        {
+          "address": "5000 Reservation Rd",
+          "city": "Placerville",
+          "price": 799000
+        }
+      ]
+    },
     "unchanged": 5
   },
   "listings": [
@@ -97,7 +125,7 @@
       "summary": "Crafted as the builder's own residence, this extraordinary European Country-inspired estate was designed without compromise. From its commanding setting on 40 acres with sweeping Sierra foothill views and timeless architectural details, every aspect of the property reflects quality and enduring elegance. From the moment you arrive, the home makes a striking impression, thoughtfully designed to fra",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-09-09",
+      "lastSeen": "2026-09-10",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -147,7 +175,7 @@
       "summary": "Escape the hustle and bustle and discover your own private retreat in Shingle Springs. Set on approximately 5 private acres with sweeping hillside views, this single-story custom home offers over 3,000 sq. ft. of thoughtfully designed living space with 4 bedrooms, 3 full baths and an impressive 4-car garage.    The outdoor setting is where this property truly shines. A stunning infinity-edge saltw",
       "notes": "",
       "firstSeen": "2026-08-13",
-      "lastSeen": "2026-09-09",
+      "lastSeen": "2026-09-10",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -197,7 +225,7 @@
       "summary": "Just minutes from town yet worlds away, this 10 acre sanctuary delivers the ultimate retreat lifestyle. Step inside to discover a beautifully updated home with 4 bedrooms, 3 baths, and an inviting upstairs game room complete with a wet bar  perfect for gatherings. The renovated kitchen shines with quartz counters, stainless appliances, and beautiful white cabinetry, flowing seamlessly into the fam",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-09-09",
+      "lastSeen": "2026-09-10",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -247,7 +275,7 @@
       "summary": "Sought-after area. Minutes from shopping, schools. Country living at its finest. Don't miss the approx. 750SF ultimate entertainment hub: game room plus extra room & bath situated above the detached three-car garage. Connected to the main house by a breeze-catching walkway, this private extra space makes a perfect teen hangout or man cave.  Situated in a serene, park-like setting, this property of",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-09-09",
+      "lastSeen": "2026-09-10",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -301,7 +329,7 @@
       "summary": "Welcome to a property that doesn't ask you to choose between a home, a retreat, and country living - you get all three. Set among the Placerville foothills, 3538 Wildwood Lane is a place to swim, garden, gather and spread out. The two-story main home offers a private ground-level guest suite with its own entrance and full bath, plus a two-car garage and full basement access. Upstairs, the living s",
       "notes": "",
       "firstSeen": "2026-08-27",
-      "lastSeen": "2026-09-09",
+      "lastSeen": "2026-09-10",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -311,7 +339,7 @@
       ],
       "secondSource": {
         "name": "Redfin MLS field table",
-        "checkedOn": "2026-09-09",
+        "checkedOn": "2026-09-10",
         "url": "https://www.redfin.com/CA/Placerville/3538-Wildwood-Ln-95667/home/167376612",
         "confirmed": [
           "mls",
@@ -378,7 +406,7 @@
           "price": 975000
         }
       ],
-      "lastSeen": "2026-09-09"
+      "lastSeen": "2026-09-10"
     },
     {
       "id": "1315-arrowbee-dr-placerville",
@@ -429,7 +457,7 @@
           "price": 969000
         }
       ],
-      "lastSeen": "2026-09-09"
+      "lastSeen": "2026-09-10"
     }
   ],
   "poolless": [
@@ -452,9 +480,25 @@
       "mlsPool": "No"
     },
     {
+      "address": "2500 Hwy 50",
+      "city": "Placerville",
+      "price": 1115000,
+      "beds": 4,
+      "baths": 4,
+      "fullBaths": 4,
+      "halfBaths": null,
+      "acres": 12.4,
+      "sqft": 2498,
+      "mls": "226113066",
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/2500-hwy-50/pid_73603201/",
+      "status": "For Sale",
+      "reason": "IDX field table records no pool",
+      "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226113066"
+    },
+    {
       "address": "4181 Thunderbird Ln",
       "city": "Rescue",
-      "price": 799000,
+      "price": 749000,
       "beds": 4,
       "baths": 3.5,
       "fullBaths": 3,
@@ -464,10 +508,8 @@
       "mls": "226064393",
       "url": "https://www.coldwellbankerhomes.com/ca/rescue/4181-thunderbird-ln/pid_71478521/",
       "status": "For Sale",
-      "reason": "MetroList records no pool",
-      "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226064393",
-      "mlsPrice": 799000,
-      "mlsPool": "No"
+      "reason": "IDX field table records no pool",
+      "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226064393"
     },
     {
       "address": "4351 Rossler Rd",
@@ -642,24 +684,6 @@
       "mlsPool": "No"
     },
     {
-      "address": "5000 Reservation Rd",
-      "city": "Placerville",
-      "price": 799000,
-      "beds": 4,
-      "baths": 4.5,
-      "fullBaths": 4,
-      "halfBaths": 1,
-      "acres": 5,
-      "sqft": 3752,
-      "mls": "226077234",
-      "url": "https://www.coldwellbankerhomes.com/ca/placerville/5000-reservation-rd/pid_72035132/",
-      "status": "For Sale",
-      "reason": "MetroList records no pool",
-      "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226077234",
-      "mlsPrice": 799000,
-      "mlsPool": "No"
-    },
-    {
       "address": "5025 Eco Ridge Rd",
       "city": "Placerville",
       "price": 799999,
@@ -704,7 +728,7 @@
     {
       "address": "2805 Aquamarine Cir",
       "city": "Rescue",
-      "price": 674000,
+      "price": 650000,
       "beds": 4,
       "baths": 3,
       "acres": 0.2052,
@@ -779,6 +803,17 @@
       "missing": "no pool"
     },
     {
+      "address": "2500 Hwy 50",
+      "city": "Placerville",
+      "price": 1115000,
+      "beds": 4,
+      "baths": 4,
+      "acres": 12.4,
+      "pool": false,
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/2500-hwy-50/pid_73603201/",
+      "missing": "no pool"
+    },
+    {
       "address": "4810 Robledo Dr",
       "city": "Placerville",
       "price": 1049900,
@@ -820,17 +855,6 @@
       "acres": 4.83,
       "pool": false,
       "url": "https://www.coldwellbankerhomes.com/ca/placerville/5025-eco-ridge-rd/pid_71882550/",
-      "missing": "no pool"
-    },
-    {
-      "address": "5000 Reservation Rd",
-      "city": "Placerville",
-      "price": 799000,
-      "beds": 4,
-      "baths": 4.5,
-      "acres": 5,
-      "pool": false,
-      "url": "https://www.coldwellbankerhomes.com/ca/placerville/5000-reservation-rd/pid_72035132/",
       "missing": "no pool"
     }
   ],

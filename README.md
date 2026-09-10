@@ -455,6 +455,39 @@ actionable thing that can happen to a property someone is watching, so it must n
 The general rule: **when a summary reports "nothing happened", check that it has a category for
 everything that can happen.** An empty array is only good news if something would have filled it.
 
+### …and the same gap, one table over
+
+The rule above got a category for a property crossing between the active board and the pending list.
+It did not get one for the section *next* to the board. `runSummary` has only ever described
+`listings` and `pending`, so on 2026-09-10 all five arrays were correctly empty and the banner
+published **"Nothing moved"** on a run where the pool-less table gained **2500 Hwy 50** (Placerville,
+12.4 acres, 4bd/4 full ba, $1,115,000), cut 4181 Thunderbird Ln from $799,000 to $749,000, and lost
+**5000 Reservation Rd** from the market. (The near-miss table moved the same run — 2805 Aquamarine
+Cir $674,000 → $650,000 — and is still not covered; it is a 0.2-acre lot, so nothing there can reach
+the board on a price move alone. `poolless` is the section where a change is actionable.)
+
+That table is not a footnote. It is the "right land, right house, add a pool" list, and the page's own
+copy tells the reader several of its rows sit far enough under the ceiling to fund a pool. A new
+12-acre entry $385,000 below budget is precisely what someone opens this page to find. A pool-less
+listing can never touch `listings`, so every one of its movements was invisible to the summary by
+construction.
+
+`scrape.js` now diffs `poolless` against the prior run into `runSummary.poollessChanges`
+(`added` / `priceChanges` / `gone`), and `build.js` renders it in both banner branches — as one line
+in the list when the board also moved, and as a named sub-list under "Nothing moved **on the board**"
+when it didn't. The wording keeps the distinction the page rests on: these are not matches.
+
+`gone` says only that the row is no longer an active or pending listing clearing the other criteria.
+The table is rebuilt from live detail reads, so absence is the only signal available — sold,
+withdrawn and repriced-out are indistinguishable from here, and the note says that rather than
+picking one.
+
+The general rule is the one from the section above, and it needed restating because fixing it once
+did not fix it: **"nothing happened" is a claim about everything the page shows, not about the part
+the summary happens to iterate.** Each time this bug has appeared, the arrays were correct and empty
+and the vocabulary was short one word. When a new section is added to the page, ask what its movement
+would be called before asking how to render it.
+
 ### The same carry-forward, two keys over
 
 The rule above was written but only `runSummary` was fixed. `source` and `dataQuality` were still
