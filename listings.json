@@ -13,16 +13,16 @@
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-09-10",
-  "previousRun": "2026-09-09",
+  "lastRun": "2026-09-11",
+  "previousRun": "2026-09-10",
   "source": {
     "name": "Coldwell Banker IDX (MetroList feed), verified against MetroListPRO (MetroList MLS)",
     "method": "Enumerated every active listing in the three cities from IDX city pages, applied the hard criteria to structured MLS fields, then re-read each survivor's record from MetroListPRO and required price, beds, full baths, acreage and pool to match.",
-    "inventoryScanned": 290,
+    "inventoryScanned": 293,
     "passedBedsBathsPrice": 58,
     "verifiedActiveMatches": 5,
     "pendingMatches": 2,
-    "mlsVerifiedOn": "2026-09-10",
+    "mlsVerifiedOn": "2026-09-11",
     "mlsVerifiedCount": 6,
     "mlsForeignSource": [
       {
@@ -35,53 +35,37 @@
   },
   "dataQuality": {
     "verifiedActiveListings": 5,
-    "note": "290 active listings scanned across the three cities; 58 cleared beds, baths and price and had their MLS field table read directly. No status disagreement between the IDX feed and the Redfin cross-check this run.",
+    "note": "293 active listings scanned across the three cities; 58 cleared beds, baths and price and had their MLS field table read directly. No status disagreement between the IDX feed and the Redfin cross-check this run.",
     "independentEnumeration": {
-      "ranOn": "2026-09-10",
+      "ranOn": "2026-09-11",
       "source": "MetroListPRO city indexes (the MLS of record)",
       "activeRecords": 329,
-      "pendingRecords": 59,
-      "recordsPulledBeyondIdxSweep": 388,
-      "singleFamilyRead": 266,
+      "pendingRecords": 60,
+      "recordsPulledBeyondIdxSweep": 389,
+      "singleFamilyRead": 267,
       "excludedByType": 122,
       "additionalMatchesFound": 0
     }
   },
   "runSummary": {
     "new": [],
-    "priceChanges": [],
+    "priceChanges": [
+      {
+        "address": "6881 Sagittarius Dr",
+        "city": "Placerville",
+        "from": 1489000,
+        "to": 1389000
+      }
+    ],
     "statusChanges": [],
     "relisted": [],
     "dropped": [],
     "poollessChanges": {
-      "added": [
-        {
-          "address": "2500 Hwy 50",
-          "city": "Placerville",
-          "price": 1115000,
-          "acres": 12.4,
-          "beds": 4,
-          "fullBaths": 4,
-          "url": "https://www.coldwellbankerhomes.com/ca/placerville/2500-hwy-50/pid_73603201/"
-        }
-      ],
-      "priceChanges": [
-        {
-          "address": "4181 Thunderbird Ln",
-          "city": "Rescue",
-          "from": 799000,
-          "to": 749000
-        }
-      ],
-      "gone": [
-        {
-          "address": "5000 Reservation Rd",
-          "city": "Placerville",
-          "price": 799000
-        }
-      ]
+      "added": [],
+      "priceChanges": [],
+      "gone": []
     },
-    "unchanged": 5
+    "unchanged": 4
   },
   "listings": [
     {
@@ -90,7 +74,7 @@
       "city": "Placerville",
       "zip": "95667",
       "mls": "226064449",
-      "currentPrice": 1489000,
+      "currentPrice": 1389000,
       "beds": 4,
       "baths": 4,
       "fullBaths": 4,
@@ -107,7 +91,7 @@
       "propertyType": "Single Family",
       "mlsStatus": "Active",
       "mlsSource": "METROLIST_Cali",
-      "flag": null,
+      "flag": "Price Reduced",
       "listedOn": "2026-06-16",
       "lat": 38.6274,
       "lng": -120.8029,
@@ -125,12 +109,16 @@
       "summary": "Crafted as the builder's own residence, this extraordinary European Country-inspired estate was designed without compromise. From its commanding setting on 40 acres with sweeping Sierra foothill views and timeless architectural details, every aspect of the property reflects quality and enduring elegance. From the moment you arrive, the home makes a striking impression, thoughtfully designed to fra",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-09-10",
+      "lastSeen": "2026-09-11",
       "newThisRun": false,
       "priceHistory": [
         {
           "date": "2026-07-26",
           "price": 1489000
+        },
+        {
+          "date": "2026-09-11",
+          "price": 1389000
         }
       ]
     },
@@ -175,7 +163,7 @@
       "summary": "Escape the hustle and bustle and discover your own private retreat in Shingle Springs. Set on approximately 5 private acres with sweeping hillside views, this single-story custom home offers over 3,000 sq. ft. of thoughtfully designed living space with 4 bedrooms, 3 full baths and an impressive 4-car garage.    The outdoor setting is where this property truly shines. A stunning infinity-edge saltw",
       "notes": "",
       "firstSeen": "2026-08-13",
-      "lastSeen": "2026-09-10",
+      "lastSeen": "2026-09-11",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -225,7 +213,7 @@
       "summary": "Just minutes from town yet worlds away, this 10 acre sanctuary delivers the ultimate retreat lifestyle. Step inside to discover a beautifully updated home with 4 bedrooms, 3 baths, and an inviting upstairs game room complete with a wet bar  perfect for gatherings. The renovated kitchen shines with quartz counters, stainless appliances, and beautiful white cabinetry, flowing seamlessly into the fam",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-09-10",
+      "lastSeen": "2026-09-11",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -275,7 +263,7 @@
       "summary": "Sought-after area. Minutes from shopping, schools. Country living at its finest. Don't miss the approx. 750SF ultimate entertainment hub: game room plus extra room & bath situated above the detached three-car garage. Connected to the main house by a breeze-catching walkway, this private extra space makes a perfect teen hangout or man cave.  Situated in a serene, park-like setting, this property of",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-09-10",
+      "lastSeen": "2026-09-11",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -329,7 +317,7 @@
       "summary": "Welcome to a property that doesn't ask you to choose between a home, a retreat, and country living - you get all three. Set among the Placerville foothills, 3538 Wildwood Lane is a place to swim, garden, gather and spread out. The two-story main home offers a private ground-level guest suite with its own entrance and full bath, plus a two-car garage and full basement access. Upstairs, the living s",
       "notes": "",
       "firstSeen": "2026-08-27",
-      "lastSeen": "2026-09-10",
+      "lastSeen": "2026-09-11",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -339,7 +327,7 @@
       ],
       "secondSource": {
         "name": "Redfin MLS field table",
-        "checkedOn": "2026-09-10",
+        "checkedOn": "2026-09-11",
         "url": "https://www.redfin.com/CA/Placerville/3538-Wildwood-Ln-95667/home/167376612",
         "confirmed": [
           "mls",
@@ -406,7 +394,7 @@
           "price": 975000
         }
       ],
-      "lastSeen": "2026-09-10"
+      "lastSeen": "2026-09-11"
     },
     {
       "id": "1315-arrowbee-dr-placerville",
@@ -457,7 +445,7 @@
           "price": 969000
         }
       ],
-      "lastSeen": "2026-09-10"
+      "lastSeen": "2026-09-11"
     }
   ],
   "poolless": [

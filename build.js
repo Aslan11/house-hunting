@@ -391,7 +391,14 @@ const html = `<!DOCTYPE html>
   <h3>What changed this run</h3>
   ${fresh.length || priceMoves.length || dropped.length || statusMoves.length ? `<ul>
     ${fresh.length ? `<li><strong>${fresh.length} new ${fresh.length === 1 ? 'listing' : 'listings'}</strong> meeting every hard criterion — see the top section.</li>` : ''}
-    ${priceMoves.length ? `<li><strong>${priceMoves.length} price ${priceMoves.length === 1 ? 'change' : 'changes'}</strong> on properties already tracked.</li>` : ''}
+    ${priceMoves.map((p) => {
+      const down = p.to < p.from;
+      const delta = Math.abs(p.to - p.from);
+      const pct = Math.round((delta / p.from) * 1000) / 10;
+      return `<li><strong>${esc(p.address)}, ${esc(p.city)} ${down ? 'cut' : 'raised'} its price by
+        ${money(delta)}</strong> (${pct}%), ${money(p.from)} &rarr; ${money(p.to)}. It was already on
+        the board, so it is listed with the standing matches below rather than as a new find.</li>`;
+    }).join('\n    ')}
     ${statusMoves.map((s) => (s.to === 'pending'
       ? `<li><strong>${esc(s.address)}, ${esc(s.city)} has gone under contract.</strong> It was on
          the active board last run and is now Sale Pending on the MLS of record. Still worth
