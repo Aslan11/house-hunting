@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Independently verify each match against MetroListPRO, the official MetroList MLS search site."""
-import re, json, subprocess, sys
+import re, json, subprocess, sys, time
 from datetime import date
 from concurrent.futures import ThreadPoolExecutor
 
@@ -10,15 +10,40 @@ UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
 
 
+ATTEMPTS = 3
+
+
 def text_of(url):
-    h = subprocess.run(["curl", "-sSL", "-m", "45", "-A", UA, url],
-                       capture_output=True, text=True, errors="replace").stdout
-    t = re.sub(r"<script.*?</script>", " ", h, flags=re.S)
-    t = re.sub(r"<style.*?</style>", " ", t, flags=re.S)
-    title = (re.findall(r"<title>([^<]*)</title>", h) or [""])[0]
-    t = re.sub(r"<[^>]+>", " ", t)
-    t = re.sub(r"&nbsp;", " ", t)
-    return title, re.sub(r"\s+", " ", t)
+    """Fetch a MetroListPRO page, keeping "could not fetch" distinct from "fetched".
+
+    The transport result matters as much as the body. A transient curl failure — this host sees
+    both timeouts and resets against metrolistpro.com — returns an empty body, and an empty body
+    parses as every field absent, which fell through the comparison below as the MLS contradicting
+    all five criteria at once. On 2026-09-12 that vetoed the stamp for the entire board over one
+    record the site served correctly on the very next attempt.
+
+    So a failed fetch is now reported as a failed fetch. Returns (title, text, error): error is
+    None when the page was genuinely served, and a short description otherwise. HTTP 404 counts as
+    served — it is how the site says a listing is not indexed, which is a real answer.
+    """
+    err = "not attempted"
+    for attempt in range(ATTEMPTS):
+        p = subprocess.run(["curl", "-sSL", "-m", "45", "-A", UA, "-w", "\n%{http_code}", url],
+                           capture_output=True, text=True, errors="replace")
+        h, _, code = p.stdout.rpartition("\n")
+        code = code.strip()
+        if p.returncode == 0 and code in ("200", "404"):
+            t = re.sub(r"<script.*?</script>", " ", h, flags=re.S)
+            t = re.sub(r"<style.*?</style>", " ", t, flags=re.S)
+            title = (re.findall(r"<title>([^<]*)</title>", h) or [""])[0]
+            t = re.sub(r"<[^>]+>", " ", t)
+            t = re.sub(r"&nbsp;", " ", t)
+            return title, re.sub(r"\s+", " ", t), None
+        err = (f"HTTP {code}" if code and code != "000" else
+               f"connection failed (curl exit {p.returncode})")
+        if attempt + 1 < ATTEMPTS:
+            time.sleep(3 * (attempt + 1))
+    return "", "", f"{err} after {ATTEMPTS} attempts"
 
 
 def field(t, name, pat=r"([^:]+?)(?=\s+[A-Z][A-Za-z./ ]{2,}:|$)"):
@@ -28,7 +53,11 @@ def field(t, name, pat=r"([^:]+?)(?=\s+[A-Z][A-Za-z./ ]{2,}:|$)"):
 
 def verify(r):
     url = f"https://www.metrolistpro.com/homes/2/6/x/{r['mls']}"
-    title, t = text_of(url)
+    title, t, fetch_err = text_of(url)
+    if fetch_err:
+        # Nothing below can be read off a page that never arrived, and guessing would turn a
+        # transport fault into a fabricated MLS opinion. Report the fault and stop.
+        return {"mls": r["mls"], "address": r["address"], "mlUrl": url, "mlFetchError": fetch_err}
     hdr = re.search(r"\$([\d,]+)\s*\(([^)]*)\)\s*Bedrooms:\s*(\d+)\s*Bathrooms:\s*(\d+)(?:\s*\|\s*(\d+))?"
                     r"\s*Sq\. Ft\.:\s*([\d,]+)", t)
     out = {"mls": r["mls"], "address": r["address"], "mlUrl": url, "mlTitle": title}
@@ -81,10 +110,23 @@ def metrolist_sourced(r):
 
 
 clean = 0
-awaiting = []   # in the feed, not yet in the MLS index — a caveat on the card
-foreign = []    # in a different MLS entirely — MetroListPRO can never confirm it
-disagreed = []  # the MLS says something different — the gate's veto
+awaiting = []     # in the feed, not yet in the MLS index — a caveat on the card
+foreign = []      # in a different MLS entirely — MetroListPRO can never confirm it
+unreachable = []  # the check could not run — neither a confirmation nor a contradiction
+disagreed = []    # the MLS says something different — the gate's veto
 for v, r in zip(res, rows):
+    if v.get("mlFetchError"):
+        # The fourth distinct outcome of this gate, after clean / absent / contradicted: the
+        # check did not run at all. It earns no confirmation and casts no doubt on the record,
+        # so it neither counts toward `clean` nor vetoes the stamp for records that were read.
+        # The caveat goes on the one card it applies to, per the rule the two buckets above
+        # already follow — when a check can't run, say which check and on which item.
+        unreachable.append({"mls": r["mls"], "address": r["address"], "city": r["city"],
+                            "error": v["mlFetchError"]})
+        print(f'{r["address"][:24]:24} MLS{r["mls"]} MetroListPRO unreachable '
+              f'({v["mlFetchError"]}) — check did not run; carried unverified this run',
+              file=sys.stderr)
+        continue
     if v.get("mlNotIndexed") and not metrolist_sourced(r):
         foreign.append({"mls": r["mls"], "address": r["address"], "city": r["city"],
                         "source": r["mlsSource"].strip()})
@@ -132,8 +174,14 @@ if not disagreed and rows:
     today = subprocess.run(["date", "-u", "+%Y-%m-%d"], capture_output=True,
                            text=True).stdout.strip()
     d = json.load(open("listings.json"))
-    d.setdefault("source", {})["mlsVerifiedOn"] = today
-    d["source"]["mlsVerifiedCount"] = clean
+    d.setdefault("source", {})
+    # A run that read nothing has nothing to date. If every record was unreachable the date must
+    # keep its old value, so the page renders "last confirmed <earlier date>, not on this run"
+    # rather than today's date over a check that never happened. Records genuinely read clean
+    # still earn the stamp even when some of their neighbours could not be reached.
+    if clean or not unreachable:
+        d["source"]["mlsVerifiedOn"] = today
+        d["source"]["mlsVerifiedCount"] = clean
     if awaiting:
         d["source"]["mlsAwaitingIndex"] = awaiting
     else:
@@ -142,11 +190,16 @@ if not disagreed and rows:
         d["source"]["mlsForeignSource"] = foreign
     else:
         d["source"].pop("mlsForeignSource", None)
+    if unreachable:
+        d["source"]["mlsUnreachable"] = unreachable
+    else:
+        d["source"].pop("mlsUnreachable", None)
 
     # The caveat belongs on the card, so write it where build.js reads it — and clear it from any
     # listing that has since been indexed, so a note can never outlive the condition it describes.
     pend = {a["mls"]: a for a in awaiting}
     alien = {a["mls"]: a for a in foreign}
+    unread = {a["mls"]: a for a in unreachable}
 
     def note_for(a):
         # Below a week, "too new to be indexed" is the ordinary explanation. Past that it stops
@@ -170,7 +223,14 @@ if not disagreed and rows:
     for lst in (d.get("listings") or []) + (d.get("pending") or []):
         if lst.get("mls") in pend:
             lst["statusNote"] = note_for(pend[lst["mls"]])
+        elif lst.get("mls") in unread:
+            lst["statusNote"] = (
+                "MetroListPRO could not be reached for this record on this run "
+                f"({unread[lst['mls']]['error']}), so the MLS re-read did not happen. The IDX "
+                "feed still carries it as below; the figures are one confirmation short of the "
+                "other cards until the next run reads it.")
         elif str(lst.get("statusNote", "")).startswith(("Not yet indexed by MetroListPRO",
+                                                        "MetroListPRO could not be reached",
                                                         "Listed in ")):
             lst.pop("statusNote", None)
         if lst.get("mls") not in alien:
@@ -180,7 +240,9 @@ if not disagreed and rows:
     print(f"\n{clean} of {len(rows)} records agreed with the MLS of record"
           + (f"; {len(awaiting)} not yet indexed and flagged on the card" if awaiting else "")
           + (f"; {len(foreign)} in another MLS and unverifiable here" if foreign else "")
-          + f". Stamped source.mlsVerifiedOn = {today}.")
+          + (f"; {len(unreachable)} unreachable, so unchecked this run" if unreachable else "")
+          + (f". Stamped source.mlsVerifiedOn = {today}." if clean or not unreachable else
+             ". Nothing was read, so the verification date is left where it was."))
 else:
     print(f"\n{len(disagreed)} of {len(rows)} records disagreed with the MLS of record — "
           f"NOT stamping a verification date. Per the verification gate the MLS wins; put the "

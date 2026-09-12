@@ -365,6 +365,52 @@ checked the premise that the record was in that MLS at all. A timer on a wrong e
 wrong explanation more insistent, on a schedule. When a caveat is about to escalate, re-derive its
 cause before sharpening its wording: the escalation is evidence the original reading was wrong.
 
+#### A check that never ran, reported as a contradiction
+
+The three buckets above — clean, absent, contradicted — were still missing the case where the
+**check itself fails**. `verify.py`'s `text_of` shelled out to `curl` and read only its stdout,
+ignoring both the exit status and the HTTP code. A timeout or a reset therefore returned an empty
+string, an empty string parses as every field absent, and the comparison rendered that as
+
+```
+5551 Saddlehorn Rd  MLS226083864 ml_status=None | PRICE None vs 1200000 BEDS None vs 4 …
+```
+
+which is the exact shape of a listing the MLS refutes on all five criteria. On 2026-09-12 it
+vetoed the stamp for the whole board — discarding four records that had just read back clean —
+over one record MetroListPRO served correctly, at 200 with the right price, on a manual retry
+seconds later. This host sees intermittent timeouts against `metrolistpro.com`; two of the three
+hosts probed at the start of that run returned `000` once and `200` immediately after.
+
+`text_of` now returns an explicit `(title, text, error)` and retries three times with backoff,
+treating only `200` and `404` as answers — `404` because that is how the site *says* a record is
+not indexed, which is real information. A record that still cannot be fetched goes into a fourth
+bucket, `source.mlsUnreachable`, which:
+
+- earns **no** confirmation (it is not counted in `mlsVerifiedCount`),
+- casts **no** doubt on the record (it does not veto the stamp for records that were read),
+- puts the caveat on that one card, saying the re-read did not happen and the figures are one
+  confirmation short, and
+- leaves `mlsVerifiedOn` untouched when *every* record was unreachable, so the page falls back to
+  "last confirmed <earlier date>, not on this run" instead of dating a check that never ran.
+
+Fixing that exposed a second unearned claim one line over in `build.js`:
+`mlsVerifiedCount || listings.length`. Zero is a real count — a run where every survivor sits in a
+foreign MLS or was unreachable confirms nothing — and `||` turned precisely that case into
+"5 agreed". It now tests for a number instead.
+
+The lesson is a sharper form of the one two sections up. That one said absence and contradiction
+are different findings. This one adds the third: **"I could not look" is not "I looked and saw
+nothing", and neither is "I looked and saw something else."** A verifier that reads a transport
+fault as evidence about the subject will report its own outage as the world's news — and it will
+do so in the most alarming direction available, because a blank response fails every comparison at
+once. Any check that crosses a network needs the failure to be a distinct return value, never the
+absence of a value.
+
+And per the standing rule about branches that cannot be reached: both new paths were exercised
+before publishing, by pointing `HTTPS_PROXY` at a dead port and confirming the bucket filled, the
+date held at its previous value, and the page rendered the caveat.
+
 ### Half baths
 
 MetroList reports baths as `full | half`. Some sites render `2 | 1` as "3 baths", which will

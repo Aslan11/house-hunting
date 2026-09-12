@@ -232,6 +232,10 @@ const awaitingIndex = (data.source && data.source.mlsAwaitingIndex) || [];
 // Records the MLS of record will never carry, because they belong to a different MLS. Distinct
 // from awaitingIndex: waiting resolves that one and cannot resolve this one.
 const foreignMls = (data.source && data.source.mlsForeignSource) || [];
+// Records whose MLS re-read could not be attempted, because the MLS site did not answer. A third
+// kind of gap again: waiting fixes awaitingIndex, nothing fixes foreignMls, and this one is fixed
+// by the next run. It must never read as a confirmation, and it is not a contradiction either.
+const unreachable = (data.source && data.source.mlsUnreachable) || [];
 // Optional second enumeration straight from the MLS of record. Present only on runs that did one.
 const indep = (data.dataQuality || {}).independentEnumeration;
 // Optional third source: a Redfin sweep run independently of both the IDX feed and MetroListPRO.
@@ -499,7 +503,12 @@ failure mode is now closed off.</p>
     <tr><td><strong>Filter</strong></td><td>Hard criteria applied to structured MLS fields, never to prose: ${data.source ? data.source.passedBedsBathsPrice : '—'} cleared beds/baths/price, then acreage and pool narrowed it to ${listings.length}.</td></tr>
     <tr><td><strong>Verify</strong></td><td>Each survivor is re-read from <strong>MetroListPRO</strong>, the official MetroList MLS site, and price, beds, full baths, acreage and pool must match.
       ${verifiedToday
-        ? `${data.source.mlsVerifiedCount || listings.length} agreed, checked ${esc(verifiedOn)}.${
+        ? `${/* Never fall back to listings.length here. verify.py counts the records that actually
+               read back clean, and 0 is a real count — a run where every survivor was in a foreign
+               MLS or unreachable confirms nothing. The old `|| listings.length` turned exactly that
+               case into "5 agreed", which is the unearned claim this whole section exists to stop. */
+            typeof (data.source || {}).mlsVerifiedCount === 'number'
+              ? data.source.mlsVerifiedCount : listings.length} agreed, checked ${esc(verifiedOn)}.${
             awaitingIndex.length
               ? ` ${awaitingIndex.length === 1 ? 'One listing is' : `${awaitingIndex.length} listings are`} too new for
                   MetroListPRO to have indexed — ${awaitingIndex.map((a) => `<strong>${esc(a.address)}</strong>`).join(', ')}
@@ -511,6 +520,12 @@ failure mode is now closed off.</p>
                   different MLS — ${foreignMls.map((a) => `<strong>${esc(a.address)}</strong> (${esc(a.source)})`).join(', ')}
                   — so MetroListPRO has no record of ${foreignMls.length === 1 ? 'it' : 'them'} and never will.
                   ${foreignMls.length === 1 ? 'It is' : 'They are'} confirmed against the IDX feed and Redfin instead.`
+              : ''}${
+            unreachable.length
+              ? ` MetroListPRO did not answer for ${unreachable.length === 1 ? '' : `${unreachable.length} records — `}${unreachable.map((a) => `<strong>${esc(a.address)}</strong>`).join(', ')}${unreachable.length === 1 ? ' —' : ''}
+                  so ${unreachable.length === 1 ? 'that re-read' : 'those re-reads'} did not happen this run.
+                  ${unreachable.length === 1 ? 'That card carries' : 'Those cards carry'} the IDX figures unconfirmed
+                  and ${unreachable.length === 1 ? 'says' : 'say'} so; it is a check that could not run, not a disagreement.`
               : ''}`
         : `<strong>Last confirmed ${esc(verifiedOn || 'never')}</strong>, not on this run — treat the listings below as verified as of that date.`}</td></tr>
     ${indep ? `<tr><td><strong>Cross-enumerate</strong></td><td>The three cities were listed again straight from
