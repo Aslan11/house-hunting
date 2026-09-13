@@ -596,6 +596,34 @@ While fixing it, the same shape turned up in prose: `build.js` ended the section
 hardcoded "check the status column, one is already pending" — true when written, and silently wrong
 the moment the count changed. It is rendered from the data now.
 
+### A drop record with a one-run memory
+
+**Open — found 2026-09-13, not yet fixed.** Dedupe rule 3 has always said a dropped property is
+recorded "so a stale copy resurfacing later isn't mistaken for a new find". The code does not do
+that. `dropped` is rebuilt empty every run — correctly, by the carry-forward rule, since "Removed
+**this run**" is a statement about the run — but nothing else remembers the property either:
+`merge()` seeds `priorById` from `pending`, `relisted` and `listings`, and never from `dropped`. So
+the record lives for exactly one run and then leaves the file entirely. On 2026-09-13 that dropped
+2565 Stagecoach Rd, reported removed the day before, with nothing left behind.
+
+This is the same shape as the two buckets above — `relisted` and `pending` were each seeded into
+that map after a property vanished through the gap — and it is the last bucket still outside it. The
+difference is that those two held *live* inventory, so the loss showed up as a property disappearing
+mid-hunt. This one holds dead inventory, so the failure is quieter and later: a house that sold in
+September and comes back on the market in March is announced as a new find, in the section the
+reader trusts to mean "this wasn't here before".
+
+Not fixed on the run that found it, deliberately. The fix is a cumulative ledger (`everSeen`, or
+seeding `priorById` from a retained archive) so a return lands in `relisted` instead of `new` — and
+that changes what the page's headline number means. Per the standing rule about branches that cannot
+be reached: nothing relisted on 2026-09-13, so the new path could not have been exercised before
+publishing, and an untested change to the definition of "new" is worse than a documented gap.
+
+The narrower lesson, since this is the third bucket to fall through the same hole: **"rebuild what
+describes a run" and "remember what happened" are not in conflict, but they need different homes.**
+Each time this has come up, the run-scoped array was right to be cleared and the mistake was
+assuming it was also the memory. A bucket that is both a report and a record is neither for long.
+
 ## Photos
 
 Photos are hotlinked from `m.cbhomes.com`, pulled off each detail page in document order:
@@ -663,7 +691,11 @@ Then compare against `baseline.json` before reporting anything.
 2. Exception: a price different from `currentPrice` *is* worth reporting. Append to `priceHistory`
    and update `currentPrice`; the card renders the delta automatically.
 3. Sold or withdrawn properties move to `dropped` and off the board — the page shows them in
-   "Removed this run" so a stale copy resurfacing later isn't mistaken for a new find.
+   "Removed this run". Note what that does **not** do: `dropped` is a run-scoped bucket, rebuilt
+   empty every run like `runSummary`, and `merge()` seeds its prior map from `listings`, `pending`
+   and `relisted` only. So the record survives exactly one run, and a property that comes back
+   months later is reported as a new find rather than a return. See "A drop record with a one-run
+   memory" below.
 4. Anything in `rejected` stays rejected unless a price change or criteria change brings it back.
    When the criteria change, re-read the stored reasons: several were written against the old 5+
    bedroom rule and had to be corrected.
