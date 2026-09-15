@@ -99,6 +99,25 @@ board carried — including **3538 Wildwood Ln**, which MetroListPRO still has n
 the second source that card's note depends on. Under load Redfin answers **202 with an empty body**
 rather than 429; back off a few seconds and retry rather than treating it as a failure.
 
+##### One county call instead of three ZIP calls
+
+The 2026-09-15 run found that `gis-csv` takes a **county** region the same way it takes a ZIP:
+`region_type=5`, `region_id=311` is El Dorado County, and it covers all three target cities plus
+their neighbours in a single request. `num_beds`, `num_baths` and `max_price` are honoured
+server-side; **`min_lot_size` is accepted and silently ignored**, which is the same trap the ZIP
+section warns about, so keep filtering acreage locally either way.
+
+Two cautions. The 350-row cap still applies and `page_number` does **not** paginate past it — an
+unfiltered county pull returns 350 identical rows on every page, so a county call is only safe with
+the bed/bath/price filters narrow enough to come back under the cap (at 4bd / 3ba / $1.5M it
+returned 177). And it is still Redfin, so it stays a cross-check: that run's 177 rows filtered to
+30 in the three cities, 19 of those at 2.5+ acres, and 6 with a pool — the five on the board plus
+**1781 Springvale Rd**, which is the false positive the "do not grep for pool" rule above predicts.
+Its MLS pool fields are blank, the 150,000-gallon-pool copy came from bleed-through marketing text,
+and MetroListPRO records it as a **Triplex with no pool** (already retired in `rejected`). The
+structured field was blank and the prose was wrong; the MLS of record settled it, exactly as the
+gate requires.
+
 ### Pool-less rows carry unverified prices
 
 `verify.py` only reads matches and pendings, so everything in `poolless` and `nearMisses` carries
