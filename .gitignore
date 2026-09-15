@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.cache/
+scan-results.json
+node_modules/
+matches.json
+verified.json
+mls-enumeration.json
+work/
