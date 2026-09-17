@@ -236,6 +236,41 @@ const foreignMls = (data.source && data.source.mlsForeignSource) || [];
 // kind of gap again: waiting fixes awaitingIndex, nothing fixes foreignMls, and this one is fixed
 // by the next run. It must never read as a confirmation, and it is not a contradiction either.
 const unreachable = (data.source && data.source.mlsUnreachable) || [];
+
+/* The three gaps above are all reasons the MLS of record did not sign off on a particular listing,
+   and each already lands a caveat on that listing's own card. A section heading that says every
+   property below it is "confirmed Active on MetroList" sits one altitude above those cards and
+   quietly re-asserts what they disclaim — the same failure the verification gate exists to catch,
+   moved up a level: the claim is broader than the check that was run. So the headings count the
+   exceptions out loud and point at the cards that carry the detail. */
+function mlsClaimGaps(list) {
+  const gapped = [...foreignMls, ...unreachable, ...awaitingIndex];
+  return list.filter((l) => gapped.some((a) => a.mls === l.mls));
+}
+
+function mlsClaimCaveat(list) {
+  const out = mlsClaimGaps(list);
+  if (!out.length) return '';
+  const names = out.map((l) => `<strong>${esc(l.address)}</strong>`).join(', ');
+  return out.length === 1
+    ? ` One exception — ${names} — is not MetroList's to confirm; its card says what was read instead.`
+    : ` ${out.length} exceptions — ${names} — are not MetroList's to confirm; their cards say what
+       was read instead.`;
+}
+
+/* "All of them" is wrong when one was never eligible for the check, so the subject of the claim is
+   counted against what the MLS of record actually answered for. Returns the subject phrase and its
+   number, because the two call sites need different verbs ("are confirmed", "have been checked"). */
+function mlsClaimSubject(list) {
+  const covered = list.length - mlsClaimGaps(list).length;
+  if (covered === list.length) {
+    return list.length === 1 ? { text: 'It', plural: false } : { text: 'All', plural: true };
+  }
+  if (covered === 0) return { text: 'None', plural: false };
+  if (covered === 1) return { text: `One of the ${list.length}`, plural: false };
+  return { text: `${covered} of the ${list.length}`, plural: true };
+}
+
 // Optional second enumeration straight from the MLS of record. Present only on runs that did one.
 const indep = (data.dataQuality || {}).independentEnumeration;
 // Optional third source: a Redfin sweep run independently of both the IDX feed and MetroListPRO.
@@ -428,14 +463,18 @@ const html = `<!DOCTYPE html>
 
 ${fresh.length ? `<h2>New this run <span class="count">(${fresh.length})</span></h2>
 <p class="sectnote">Every one of these clears 4+ bedrooms, 3+ full baths, a pool, 2.5+ acres and the
-$1.5M ceiling, and each has been checked field-by-field against its MetroList MLS record. Sale-pending
-properties are included but marked — worth a call, since pendings do fall through.</p>
+$1.5M ceiling. ${mlsClaimSubject(fresh).text} ${mlsClaimSubject(fresh).plural ? 'have' : 'has'} been
+checked field-by-field against ${mlsClaimSubject(fresh).plural ? 'their' : 'its'} MetroList MLS
+record.${mlsClaimCaveat(fresh)} Sale-pending properties are included but marked — worth a call,
+since pendings do fall through.</p>
 <div class="grid">${fresh.map(card).join('\n')}
 </div>` : ''}
 
 ${heldActive.length ? `<h2>Still active from earlier runs <span class="count">(${heldActive.length})</span></h2>
-<p class="sectnote">Already on the board last run and still confirmed <strong>Active</strong> on
-MetroList as of ${esc(data.lastRun)}. Any price movement since it was first seen is shown on the card.</p>
+<p class="sectnote">Already on the board last run and re-checked today.
+${mlsClaimSubject(heldActive).text} ${mlsClaimSubject(heldActive).plural ? 'are' : 'is'} confirmed
+<strong>Active</strong> on MetroList as of ${esc(data.lastRun)}.${mlsClaimCaveat(heldActive)} Any
+price movement since it was first seen is shown on the card.</p>
 <div class="grid">${heldActive.map(card).join('\n')}
 </div>` : ''}
 

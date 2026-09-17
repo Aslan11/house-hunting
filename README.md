@@ -643,6 +643,34 @@ describes a run" and "remember what happened" are not in conflict, but they need
 Each time this has come up, the run-scoped array was right to be cleared and the mistake was
 assuming it was also the memory. A bucket that is both a report and a record is neither for long.
 
+### A caveat the card carried and the heading above it denied
+
+**Fixed 2026-09-17.** The foreign-MLS machinery above works: `verify.py` records that 3538 Wildwood
+Ln is a BAREIS listing MetroListPRO can never confirm, `foreign-verify.py` reads a second source,
+and `foreignNote()` prints all of that on the card. The "How this list is built" table said it too.
+But the heading directly above the card read *"Already on the board last run and still confirmed
+**Active** on MetroList as of 2026-09-17"* — over a set of five, one of which MetroList had never
+been asked about and never could be.
+
+Nothing was mis-verified and no field was wrong. The defect is one of altitude: the check ran on
+four properties and the sentence introducing all five claimed it for all five. A reader who takes
+the section header at face value — which is what a section header is for — is told something no
+check performed, and the card's own disclaimer two inches below reads as a footnote rather than a
+correction. The "New this run" note had the same blanket phrasing and would have failed the same way
+the first time a foreign-MLS listing landed there.
+
+The fix is `mlsClaimGaps()` / `mlsClaimSubject()` / `mlsClaimCaveat()` in `build.js`: both headings
+now count their own exceptions — foreign-MLS, unreachable, and awaiting-index alike, since all three
+are reasons the MLS of record did not sign off — and name them. The section now reads "4 of the 5
+are confirmed Active on MetroList … One exception — 3538 Wildwood Ln — is not MetroList's to
+confirm; its card says what was read instead."
+
+The general lesson, and it is the verification gate one level up: **a per-item caveat does not
+survive a summary written over the items.** Every aggregate sentence on the page — headings, counts,
+the methodology table — is a claim in its own right, and it has to be generated from the same
+records the per-item caveats come from, not written once against the case where nothing is
+exceptional. Grep for a blanket "every"/"each"/"all" in `build.js` before adding one.
+
 ## Photos
 
 Photos are hotlinked from `m.cbhomes.com`, pulled off each detail page in document order:
