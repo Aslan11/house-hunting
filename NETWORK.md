@@ -1,8 +1,17 @@
-# Network config needed for this tracker
+# Network config for this tracker
 
-The container that runs this tracker denies outbound HTTPS to every listing site. The denial is
-at the egress gateway, not at the destination — a `CONNECT www.zillow.com:443` gets `403 Forbidden`
-from the local proxy, so no packet ever reaches Zillow.
+> **Status 2026-09-19 — largely resolved.** Egress is now open. `www.redfin.com`,
+> `ssl.cdn-redfin.com` and `www.coldwellbankerhomes.com` all return 200, which is enough to run the
+> whole pipeline; see the reachability table in `README.md`. Zillow (403), Trulia (403),
+> Homes.com (403), Movoto (403) and Realtor.com (429) still refuse, but those are the *sites*
+> bot-blocking, not the gateway — the responses carry HTML bodies and produce no
+> `recentRelayFailures` entry. The rest of this file is kept for the case where egress regresses.
+
+## Historical: when egress was closed
+
+The container that ran this tracker denied outbound HTTPS to every listing site. The denial was
+at the egress gateway, not at the destination — a `CONNECT www.zillow.com:443` got `403 Forbidden`
+from the local proxy, so no packet ever reached Zillow.
 
 Verify at any time with:
 
