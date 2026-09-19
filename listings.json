@@ -1,8 +1,8 @@
 {
-  "_comment": "Canonical listing store. Statuses reflect VERIFICATION state, not desirability. A listing may only be status 'match' when its active status was read from a live listing page (see README 'Verification gate'). Search-engine snippets are NOT a valid source of listing status.",
+  "_comment": "Canonical listing store. A property is only status 'match' when MetroListPRO -- the official MetroList MLS site -- reports it For Sale with price, beds, full baths, acreage and pool all agreeing. Half baths never count toward the bath minimum; the IDX card rounds '2 full + 1 half' up to 3 and must not be trusted for that field. See README 'Verification gate'.",
   "criteria": {
     "beds": "4+",
-    "baths": "3+",
+    "fullBaths": "3+ (half baths excluded)",
     "pool": true,
     "cities": [
       "Shingle Springs, CA",
@@ -14,159 +14,106 @@
     "maxPrice": 1500000
   },
   "lastRun": "2026-09-19",
-  "previousRun": "2026-07-26",
+  "previousRun": "2026-09-18",
+  "source": {
+    "name": "Coldwell Banker IDX (MetroList feed), verified against MetroListPRO (MetroList MLS)",
+    "method": "Enumerated every active listing in the three cities from IDX city pages, applied the hard criteria to structured MLS fields, then re-read each survivor's record from MetroListPRO and required price, beds, full baths, acreage and pool to match.",
+    "inventoryScanned": 303,
+    "passedBedsBathsPrice": 58,
+    "verifiedActiveMatches": 5,
+    "pendingMatches": 1,
+    "mlsVerifiedOn": "2026-09-19",
+    "mlsVerifiedCount": 5,
+    "mlsForeignSource": [
+      {
+        "mls": "226107286",
+        "address": "3538 Wildwood Ln",
+        "city": "Placerville",
+        "source": "BAREIS"
+      }
+    ]
+  },
   "dataQuality": {
     "verifiedActiveListings": 5,
-    "source": "Redfin live listing pages (www.redfin.com), reachable from this environment as of 2026-09-19. Each match below was read off its own detail page: 'For Sale' status, MLS number, beds, baths, lot size in square feet, and an explicit 'Has Private Pool: Yes' amenity record. Three of the five were independently re-confirmed as active, at the same price and bed/bath count, against Coldwell Banker's MetroList IDX feed (coldwellbankerhomes.com).",
-    "coverage": "Every active single-family listing in Shingle Springs, Rescue and Placerville meeting 4+ bd / 3+ ba / <= $1.5M was enumerated (37 cards in 95682, 24 in 95672, 21 in 95667) and each in-city result was opened individually to read lot size and pool status. The lot-size filter was deliberately dropped for this sweep so that listings with missing acreage data could not hide. 19 homes cleared beds/baths/acreage/price; 5 of those have a pool.",
-    "note": "The 2026-07-26 run reported 4 properties as matches and all 4 were off market, because status was inferred from search-result text. That failure mode is now closed: status comes from the live listing page, not from a search snippet."
-  },
-  "runLog": [
-    {
-      "date": "2026-09-19",
-      "new": 5,
-      "priceChanges": 1,
-      "dropped": 6,
-      "note": "First run with live listing-page access. All 5 matches are new. 6 unverifiable records from the 2026-07-26 run were dropped after confirming none appear in current active inventory. Bedroom minimum relaxed from 5+ to 4+ per the updated brief."
-    },
-    {
-      "date": "2026-07-26",
-      "new": 0,
-      "priceChanges": 0,
-      "dropped": 0,
-      "note": "No verified results; 4 reported matches were retracted."
+    "note": "303 active listings scanned across the three cities; 58 cleared beds, baths and price and had their MLS field table read directly. No status disagreement between the IDX feed and the Redfin cross-check this run.",
+    "independentEnumeration": {
+      "ranOn": "2026-09-19",
+      "source": "MetroListPRO city indexes (the MLS of record)",
+      "activeRecords": 337,
+      "pendingRecords": 59,
+      "recordsPulledBeyondIdxSweep": 396,
+      "singleFamilyRead": 278,
+      "excludedByType": 118,
+      "additionalMatchesFound": 0
     }
-  ],
+  },
+  "runSummary": {
+    "new": [],
+    "priceChanges": [],
+    "statusChanges": [],
+    "relisted": [],
+    "dropped": [],
+    "poollessChanges": {
+      "added": [],
+      "priceChanges": [],
+      "gone": []
+    },
+    "unchanged": 5
+  },
   "listings": [
     {
-      "id": "3538-wildwood-ln-placerville",
-      "address": "3538 Wildwood Ln",
+      "id": "6881-sagittarius-dr-placerville",
+      "address": "6881 Sagittarius Dr",
       "city": "Placerville",
       "zip": "95667",
-      "mls": "226107286",
-      "currentPrice": 889000,
+      "mls": "226064449",
+      "currentPrice": 1389000,
+      "beds": 4,
+      "baths": 4,
+      "fullBaths": 4,
+      "partialBaths": null,
+      "sqft": 5351,
+      "acres": 40,
+      "pool": true,
+      "poolDetail": "Built-In, On Lot, Pool House, Pool Sweep, Salt Water, Other",
+      "yearBuilt": "2005",
+      "garageSpaces": "3",
+      "view": "Panoramic, Ridge, Other, Mountains",
+      "water": "Well",
+      "sewer": "Septic System",
+      "propertyType": "Single Family",
+      "mlsStatus": "Active",
+      "mlsSource": "METROLIST_Cali",
+      "flag": null,
+      "listedOn": "2026-06-16",
+      "lat": 38.6274,
+      "lng": -120.8029,
+      "photos": [
+        "https://m.cbhomes.com/p/371/226064449/d1EFFADd18624f4/m23cc.webp",
+        "https://m.cbhomes.com/p/371/226064449/A4DAD1CE3D25422/m23cc.webp",
+        "https://m.cbhomes.com/p/371/226064449/A89aB686728049c/m23cc.webp",
+        "https://m.cbhomes.com/p/371/226064449/baC1d4b8Cd63425/m23cc.webp",
+        "https://m.cbhomes.com/p/371/226064449/d475Cc42E60C4e6/m23cc.webp",
+        "https://m.cbhomes.com/p/371/226064449/DfCc19f787db472/m23cc.webp"
+      ],
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/6881-sagittarius-dr/pid_72017706/",
+      "gallery": "https://www.coldwellbankerhomes.com/ca/placerville/6881-sagittarius-dr/pid_72017706/",
+      "status": "match",
+      "summary": "Crafted as the builder's own residence, this extraordinary European Country-inspired estate was designed without compromise. From its commanding setting on 40 acres with sweeping Sierra foothill views and timeless architectural details, every aspect of the property reflects quality and enduring elegance. From the moment you arrive, the home makes a striking impression, thoughtfully designed to fra",
+      "notes": "",
+      "firstSeen": "2026-07-26",
+      "lastSeen": "2026-09-19",
+      "newThisRun": false,
       "priceHistory": [
         {
-          "date": "2026-08-27",
-          "price": 949000,
-          "event": "Listed"
+          "date": "2026-07-26",
+          "price": 1489000
         },
         {
-          "date": "2026-09-16",
-          "price": 889000,
-          "event": "Price changed"
+          "date": "2026-09-11",
+          "price": 1389000
         }
-      ],
-      "beds": 4,
-      "baths": 3,
-      "sqft": 2155,
-      "acres": 5,
-      "yearBuilt": 1962,
-      "pool": true,
-      "poolDetail": "Built-in gunite pool + cover & sweep",
-      "poolFeatures": [
-        "Gunite Construction",
-        "Built-In",
-        "On Lot",
-        "Pool Sweep",
-        "Pool Cover"
-      ],
-      "broker": "Guide Real Estate",
-      "listedOn": "2026-08-27",
-      "daysOnMarket": 23,
-      "photos": [
-        "https://ssl.cdn-redfin.com/photo/27/mbpaddedwide/286/genMid.226107286_0.jpg"
-      ],
-      "gallery": "https://www.redfin.com/CA/Placerville/3538-Wildwood-Ln-95667/home/167376612",
-      "url": "https://www.redfin.com/CA/Placerville/3538-Wildwood-Ln-95667/home/167376612",
-      "status": "match",
-      "isNew": true,
-      "firstSeen": "2026-09-19",
-      "lastSeen": "2026-09-19",
-      "blurb": "Cheapest pool property on the list and the only one that has already moved on price \u2014 <strong>cut $60,000 on 16 Sep, three days before this run</strong>. Two-storey main house on 5 acres with a ground-level guest suite that has its own entrance and full bath, plus a full basement and two-car garage. The trade-off is size: at 2,155 sq ft it is by far the smallest house here, and at 1962 it is the oldest. Priced at $413/sq ft against $949,000 asked three weeks ago.",
-      "notes": "Verified active on Redfin 2026-09-19. Pool confirmed via MLS amenity record (Has Private Pool: Yes). Price history read from the listing's own event table: Listed 2026-08-27 at $949,000, price changed 2026-09-16 to $889,000. A web-search snippet still reports the old $949,000 figure - the live page is authoritative."
-    },
-    {
-      "id": "3720-four-springs-dr-rescue",
-      "address": "3720 Four Springs Dr",
-      "city": "Rescue",
-      "zip": "95672",
-      "mls": "226083791",
-      "currentPrice": 1175000,
-      "priceHistory": [
-        {
-          "date": "2026-07-02",
-          "price": 1175000,
-          "event": "Listed"
-        }
-      ],
-      "beds": 4,
-      "baths": 3,
-      "sqft": 2506,
-      "acres": 5.86,
-      "yearBuilt": 1989,
-      "pool": true,
-      "poolDetail": "Built-in gunite pool",
-      "poolFeatures": [
-        "Built-In",
-        "Gunite Construction",
-        "On Lot",
-        "Pool Sweep"
-      ],
-      "broker": "eXp Realty of Northern California, Inc.",
-      "listedOn": "2026-07-02",
-      "daysOnMarket": 79,
-      "photos": [
-        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/791/genMid.226083791_1.jpg"
-      ],
-      "gallery": "https://www.redfin.com/CA/Rescue/3720-Four-Springs-Dr-95672/home/167348607",
-      "url": "https://www.redfin.com/CA/Rescue/3720-Four-Springs-Dr-95672/home/167348607",
-      "status": "match",
-      "isNew": true,
-      "firstSeen": "2026-09-19",
-      "lastSeen": "2026-09-19",
-      "blurb": "The only Rescue property that qualifies. End-of-road position on 5.86 park-like acres, with roughly 750 sq ft of finished space above a detached three-car garage \u2014 game room plus an extra room and bath \u2014 connected to the main house by a covered walkway. That annexe is what makes a 2,506 sq ft house workable. 79 days on market with no price move yet, which is the longest unreduced run on this list.",
-      "notes": "Verified active on Redfin 2026-09-19 and independently re-confirmed against Coldwell Banker's MetroList IDX: MLS 226083791, 4 bed / 3 bath, $1,175,000, IsActive true. Pool confirmed via MLS amenity record."
-    },
-    {
-      "id": "5551-saddlehorn-rd-shingle-springs",
-      "address": "5551 Saddlehorn Rd",
-      "city": "Shingle Springs",
-      "zip": "95682",
-      "mls": "226083864",
-      "currentPrice": 1200000,
-      "priceHistory": [
-        {
-          "date": "2026-07-03",
-          "price": 1200000,
-          "event": "Listed"
-        }
-      ],
-      "beds": 4,
-      "baths": 3,
-      "sqft": 3400,
-      "acres": 10.11,
-      "yearBuilt": 1988,
-      "pool": true,
-      "poolDetail": "Built-in pool + spa",
-      "poolFeatures": [
-        "Built-In",
-        "Spa"
-      ],
-      "broker": "RE/MAX Gold El Dorado Hills",
-      "listedOn": "2026-07-03",
-      "daysOnMarket": 78,
-      "photos": [
-        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/864/genMid.226083864_1.jpg"
-      ],
-      "gallery": "https://www.redfin.com/CA/Shingle-Springs/5551-Saddlehorn-Rd-95682/home/167337440",
-      "url": "https://www.redfin.com/CA/Shingle-Springs/5551-Saddlehorn-Rd-95682/home/167337440",
-      "status": "match",
-      "isNew": true,
-      "firstSeen": "2026-09-19",
-      "lastSeen": "2026-09-19",
-      "blurb": "Best balance on the list: 10.11 acres, 3,400 sq ft, pool and spa, at $353/sq ft. Renovated kitchen with quartz counters and stainless appliances opening to a family room with soaring ceilings and a woodstove, plus an upstairs game room with a wet bar. Minutes from town but fully private. 78 days on market without a reduction \u2014 and the most-viewed listing here (1,298 Redfin views), so interest exists without a deal yet.",
-      "notes": "Verified active on Redfin 2026-09-19 and independently re-confirmed against Coldwell Banker's MetroList IDX: MLS 226083864, 4 bed / 3 bath, $1,200,000, IsActive true. Pool and spa confirmed via MLS amenity record."
+      ]
     },
     {
       "id": "4071-voyager-way-shingle-springs",
@@ -175,295 +122,708 @@
       "zip": "95682",
       "mls": "226082753",
       "currentPrice": 1299000,
+      "beds": 4,
+      "baths": 3,
+      "fullBaths": 3,
+      "partialBaths": null,
+      "sqft": 3132,
+      "acres": 5.03,
+      "pool": true,
+      "poolDetail": "Built-In, Salt Water",
+      "yearBuilt": "2003",
+      "garageSpaces": "4",
+      "view": "Panoramic, Forest, Valley, Hills",
+      "water": "Well",
+      "sewer": "Septic System",
+      "propertyType": "Single Family",
+      "mlsStatus": "Active",
+      "mlsSource": "METROLIST_Cali",
+      "flag": null,
+      "listedOn": "2026-08-13",
+      "lat": 38.6092,
+      "lng": -120.9405,
+      "photos": [
+        "https://m.cbhomes.com/p/371/226082753/174d2448488d4C7/m23cc.webp",
+        "https://m.cbhomes.com/p/371/226082753/50843B5EC3D94bd/m23cc.webp",
+        "https://m.cbhomes.com/p/371/226082753/11e01b187E1144B/m23cc.webp",
+        "https://m.cbhomes.com/p/371/226082753/9cdf364E011e4f4/m23cc.webp",
+        "https://m.cbhomes.com/p/371/226082753/5EcCf88500cF441/m23cc.webp",
+        "https://m.cbhomes.com/p/371/226082753/b4Cbc88b251b422/m23cc.webp"
+      ],
+      "url": "https://www.coldwellbankerhomes.com/ca/shingle-springs/4071-voyager-way/pid_73037949/",
+      "gallery": "https://www.coldwellbankerhomes.com/ca/shingle-springs/4071-voyager-way/pid_73037949/",
+      "status": "match",
+      "summary": "Escape the hustle and bustle and discover your own private retreat in Shingle Springs. Set on approximately 5 private acres with sweeping hillside views, this single-story custom home offers over 3,000 sq. ft. of thoughtfully designed living space with 4 bedrooms, 3 full baths and an impressive 4-car garage.    The outdoor setting is where this property truly shines. A stunning infinity-edge saltw",
+      "notes": "",
+      "firstSeen": "2026-08-13",
+      "lastSeen": "2026-09-19",
+      "newThisRun": false,
       "priceHistory": [
         {
           "date": "2026-08-13",
-          "price": 1299000,
-          "event": "Listed"
+          "price": 1299000
         }
-      ],
+      ]
+    },
+    {
+      "id": "5551-saddlehorn-rd-shingle-springs",
+      "address": "5551 Saddlehorn Rd",
+      "city": "Shingle Springs",
+      "zip": "95682",
+      "mls": "226083864",
+      "currentPrice": 1200000,
       "beds": 4,
       "baths": 3,
-      "sqft": 3132,
-      "acres": 5.03,
-      "yearBuilt": 2003,
+      "fullBaths": 3,
+      "partialBaths": null,
+      "sqft": 3400,
+      "acres": 10.11,
       "pool": true,
-      "poolDetail": "Infinity-edge saltwater pool + spa",
-      "poolFeatures": [
-        "Built-In",
-        "Salt Water",
-        "Spa"
-      ],
-      "broker": "Gateway Properties",
-      "listedOn": "2026-08-13",
-      "daysOnMarket": 37,
+      "poolDetail": "Built-In",
+      "yearBuilt": "1988",
+      "garageSpaces": "3",
+      "view": null,
+      "water": "Well",
+      "sewer": "Septic System",
+      "propertyType": "Single Family",
+      "mlsStatus": "Active",
+      "mlsSource": "METROLIST_Cali",
+      "flag": null,
+      "listedOn": "2026-07-03",
+      "lat": 38.6025,
+      "lng": -120.9874,
       "photos": [
-        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/753/genMid.226082753_1.jpg"
+        "https://m.cbhomes.com/p/371/226083864/245D9C20c9f74Ec/m23cc.webp",
+        "https://m.cbhomes.com/p/371/226083864/881f2d640421423/m23cc.webp",
+        "https://m.cbhomes.com/p/371/226083864/762EbF4a2F284A1/m23cc.webp",
+        "https://m.cbhomes.com/p/371/226083864/BA8E193B566b4d5/m23cc.webp",
+        "https://m.cbhomes.com/p/371/226083864/5BB5D4722f84410/m23cc.webp",
+        "https://m.cbhomes.com/p/371/226083864/A7bb3FBB35924D2/m23cc.webp"
       ],
-      "gallery": "https://www.redfin.com/CA/Shingle-Springs/4071-Voyager-Way-95682/home/167337588",
-      "url": "https://www.redfin.com/CA/Shingle-Springs/4071-Voyager-Way-95682/home/167337588",
+      "url": "https://www.coldwellbankerhomes.com/ca/shingle-springs/5551-saddlehorn-rd/pid_72318162/",
+      "gallery": "https://www.coldwellbankerhomes.com/ca/shingle-springs/5551-saddlehorn-rd/pid_72318162/",
       "status": "match",
-      "isNew": true,
-      "firstSeen": "2026-09-19",
+      "summary": "Just minutes from town yet worlds away, this 10 acre sanctuary delivers the ultimate retreat lifestyle. Step inside to discover a beautifully updated home with 4 bedrooms, 3 baths, and an inviting upstairs game room complete with a wet bar  perfect for gatherings. The renovated kitchen shines with quartz counters, stainless appliances, and beautiful white cabinetry, flowing seamlessly into the fam",
+      "notes": "",
+      "firstSeen": "2026-07-26",
       "lastSeen": "2026-09-19",
-      "blurb": "The nicest pool of the five: an infinity-edge saltwater pool and spa set to overlook the hillside. Single-storey custom build from 2003 \u2014 the newest house on the list \u2014 3,132 sq ft on about 5 private acres, with a four-car garage. Single level and 23 years newer than the Wildwood Lane house, which is most of what the extra $410,000 buys.",
-      "notes": "Verified active on Redfin 2026-09-19 and independently re-confirmed against Coldwell Banker's MetroList IDX: MLS 226082753, 4 bed / 3 bath, $1,299,000, IsActive true. Pool and spa confirmed via MLS amenity record."
-    },
-    {
-      "id": "6881-sagittarius-dr-placerville",
-      "address": "6881 Sagittarius Dr",
-      "city": "Placerville",
-      "zip": "95667",
-      "mls": "226064449",
-      "currentPrice": 1389000,
+      "newThisRun": false,
       "priceHistory": [
         {
-          "date": "2026-06-17",
-          "price": 1389000,
-          "event": "Listed"
+          "date": "2026-07-26",
+          "price": 1200000
+        }
+      ]
+    },
+    {
+      "id": "3720-four-springs-dr-rescue",
+      "address": "3720 Four Springs Dr",
+      "city": "Rescue",
+      "zip": "95672",
+      "mls": "226083791",
+      "currentPrice": 1175000,
+      "beds": 4,
+      "baths": 3,
+      "fullBaths": 3,
+      "partialBaths": null,
+      "sqft": 2506,
+      "acres": 5.86,
+      "pool": true,
+      "poolDetail": "Built-In, On Lot, Pool Sweep, Gunite Construction",
+      "yearBuilt": "1989",
+      "garageSpaces": "3",
+      "view": "City Lights, Pasture, Hills, Woods",
+      "water": "Well",
+      "sewer": "Septic System",
+      "propertyType": "Single Family",
+      "mlsStatus": "Active",
+      "mlsSource": "METROLIST_Cali",
+      "flag": null,
+      "listedOn": "2026-07-02",
+      "lat": 38.7176,
+      "lng": -121.0157,
+      "photos": [
+        "https://m.cbhomes.com/p/371/226083791/edAee246F02340d/m23cc.webp",
+        "https://m.cbhomes.com/p/371/226083791/F5ACA996aC1C400/m23cc.webp",
+        "https://m.cbhomes.com/p/371/226083791/26b1693C05Ad41d/m23cc.webp",
+        "https://m.cbhomes.com/p/371/226083791/B26472A278f54cA/m23cc.webp",
+        "https://m.cbhomes.com/p/371/226083791/AAA3F5FD3Da745C/m23cc.webp",
+        "https://m.cbhomes.com/p/371/226083791/c1F68F3987C3486/m23cc.webp"
+      ],
+      "url": "https://www.coldwellbankerhomes.com/ca/rescue/3720-four-springs-dr/pid_72298813/",
+      "gallery": "https://www.coldwellbankerhomes.com/ca/rescue/3720-four-springs-dr/pid_72298813/",
+      "status": "match",
+      "summary": "Sought-after area. Minutes from shopping, schools. Country living at its finest. Don't miss the approx. 750SF ultimate entertainment hub: game room plus extra room & bath situated above the detached three-car garage. Connected to the main house by a breeze-catching walkway, this private extra space makes a perfect teen hangout or man cave.  Situated in a serene, park-like setting, this property of",
+      "notes": "",
+      "firstSeen": "2026-07-26",
+      "lastSeen": "2026-09-19",
+      "newThisRun": false,
+      "priceHistory": [
+        {
+          "date": "2026-07-26",
+          "price": 1199900
+        },
+        {
+          "date": "2026-08-19",
+          "price": 1175000
+        }
+      ]
+    },
+    {
+      "id": "3538-wildwood-ln-placerville",
+      "address": "3538 Wildwood Ln",
+      "city": "Placerville",
+      "zip": "95667",
+      "mls": "226107286",
+      "currentPrice": 889000,
+      "beds": 4,
+      "baths": 3,
+      "fullBaths": 3,
+      "partialBaths": null,
+      "sqft": null,
+      "acres": 5,
+      "pool": true,
+      "poolDetail": "Gunite Construction, Pool Sweep, Pool Cover, On Lot, Built-In",
+      "yearBuilt": "1962",
+      "garageSpaces": "2",
+      "view": "Woods, Hills",
+      "water": "Well, Storage Tank, Public",
+      "sewer": "Septic System",
+      "propertyType": "Single Family",
+      "mlsStatus": "Active",
+      "mlsSource": "BAREIS",
+      "flag": "Price Reduced",
+      "listedOn": "2026-08-27",
+      "lat": 38.7133,
+      "lng": -120.8959,
+      "photos": [
+        "https://m.cbhomes.com/p/73/226107286/433b190543004Ac/m23cc.webp",
+        "https://m.cbhomes.com/p/73/226107286/dF36bA9eE4f740D/m23cc.webp",
+        "https://m.cbhomes.com/p/73/226107286/7F45DE845c0F4a8/m23cc.webp",
+        "https://m.cbhomes.com/p/73/226107286/C9bF82ED0846417/m23cc.webp",
+        "https://m.cbhomes.com/p/73/226107286/bfEB92bEB3104C9/m23cc.webp",
+        "https://m.cbhomes.com/p/73/226107286/B7f6774BD6E14c9/m23cc.webp"
+      ],
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/3538-wildwood-ln/pid_73278772/",
+      "gallery": "https://www.coldwellbankerhomes.com/ca/placerville/3538-wildwood-ln/pid_73278772/",
+      "status": "match",
+      "summary": "Welcome to a property that doesn't ask you to choose between a home, a retreat, and country living - you get all three. Set among the Placerville foothills, 3538 Wildwood Lane is a place to swim, garden, gather and spread out. The two-story main home offers a private ground-level guest suite with its own entrance and full bath, plus a two-car garage and full basement access. Upstairs, the living s",
+      "notes": "",
+      "firstSeen": "2026-08-27",
+      "lastSeen": "2026-09-19",
+      "newThisRun": false,
+      "priceHistory": [
+        {
+          "date": "2026-08-27",
+          "price": 949000
+        },
+        {
+          "date": "2026-09-17",
+          "price": 889000
         }
       ],
+      "secondSource": {
+        "name": "Redfin MLS field table",
+        "checkedOn": "2026-09-19",
+        "url": "https://www.redfin.com/CA/Placerville/3538-Wildwood-Ln-95667/home/167376612",
+        "confirmed": [
+          "mls",
+          "price",
+          "beds",
+          "fullBaths",
+          "acres",
+          "pool"
+        ],
+        "disagreed": [],
+        "status": "Active",
+        "activeThere": true,
+        "poolFeatures": "Gunite Construction, Pool Sweep, Pool Cover, On Lot, Built-In"
+      }
+    }
+  ],
+  "pending": [
+    {
+      "id": "1315-arrowbee-dr-placerville",
+      "address": "1315 Arrowbee Dr",
+      "city": "Placerville",
+      "zip": "95667",
+      "mls": "226085035",
+      "currentPrice": 969000,
+      "beds": 4,
+      "baths": 3,
+      "fullBaths": 3,
+      "partialBaths": null,
+      "sqft": 2780,
+      "acres": 5,
+      "pool": true,
+      "poolDetail": "Built-In, Gunite Construction",
+      "yearBuilt": "1971",
+      "garageSpaces": "2",
+      "view": "Pasture",
+      "water": "Public",
+      "sewer": "Septic System",
+      "propertyType": "Multi-Family",
+      "mlsStatus": "Pending",
+      "mlsSource": "METROLIST_Cali",
+      "flag": null,
+      "listedOn": "2026-08-06",
+      "lat": 38.785,
+      "lng": -120.9315,
+      "photos": [
+        "https://m.cbhomes.com/p/371/226085035/0A1b20073C4D4FD/m23cc.webp",
+        "https://m.cbhomes.com/p/371/226085035/5Dc482F1fC9A4c0/m23cc.webp",
+        "https://m.cbhomes.com/p/371/226085035/A096416DC394486/m23cc.webp",
+        "https://m.cbhomes.com/p/371/226085035/43bD407F2161411/m23cc.webp",
+        "https://m.cbhomes.com/p/371/226085035/596e6049253f498/m23cc.webp",
+        "https://m.cbhomes.com/p/371/226085035/09dD7B42eBd84b8/m23cc.webp"
+      ],
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/1315-arrowbee-dr/pid_72934505/",
+      "gallery": "https://www.coldwellbankerhomes.com/ca/placerville/1315-arrowbee-dr/pid_72934505/",
+      "status": "pending",
+      "summary": "Welcome to this charming mini ranch with an ADU, tucked behind a gated entrance at the end of a paved driveway, offering privacy, versatility, and lovely views in a peaceful country setting. The single-story ranch home design welcomes you into a light-filled living room where vaulted ceilings and expansive picture windows showcase the scenery beyond. The updated kitchen features granite countertop",
+      "notes": "Meets every criterion but is under contract (Sale Pending). Kept on file in case the deal falls through.",
+      "newThisRun": false,
+      "firstSeen": "2026-09-08",
+      "pendingSince": "2026-09-08",
+      "priceHistory": [
+        {
+          "date": "2026-09-08",
+          "price": 969000
+        }
+      ],
+      "lastSeen": "2026-09-19"
+    }
+  ],
+  "poolless": [
+    {
+      "address": "7991 S Shingle Rd",
+      "city": "Shingle Springs",
+      "price": 1250000,
+      "beds": 4,
+      "baths": 3,
+      "fullBaths": 3,
+      "halfBaths": null,
+      "acres": 21.15,
+      "sqft": 2808,
+      "mls": "226067744",
+      "url": "https://www.coldwellbankerhomes.com/ca/shingle-springs/7991-s-shingle-rd/pid_72631444/",
+      "status": "For Sale",
+      "reason": "MetroList records no pool",
+      "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226067744",
+      "mlsPrice": 1250000,
+      "mlsPool": "No"
+    },
+    {
+      "address": "2500 Hwy 50",
+      "city": "Placerville",
+      "price": 1115000,
       "beds": 4,
       "baths": 4,
-      "sqft": 5351,
-      "acres": 40,
-      "yearBuilt": 2005,
+      "fullBaths": 4,
+      "halfBaths": null,
+      "acres": 12.4,
+      "sqft": 2498,
+      "mls": "226113066",
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/2500-hwy-50/pid_73603201/",
+      "status": "For Sale",
+      "reason": "IDX field table records no pool",
+      "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226113066"
+    },
+    {
+      "address": "4181 Thunderbird Ln",
+      "city": "Rescue",
+      "price": 749000,
+      "beds": 4,
+      "baths": 3.5,
+      "fullBaths": 3,
+      "halfBaths": 1,
+      "acres": 10,
+      "sqft": 3294,
+      "mls": "226064393",
+      "url": "https://www.coldwellbankerhomes.com/ca/rescue/4181-thunderbird-ln/pid_71478521/",
+      "status": "For Sale",
+      "reason": "IDX field table records no pool",
+      "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226064393"
+    },
+    {
+      "address": "4351 Rossler Rd",
+      "city": "Placerville",
+      "price": 595000,
+      "beds": 4,
+      "baths": 3,
+      "fullBaths": 3,
+      "halfBaths": null,
+      "acres": 10,
+      "sqft": 2300,
+      "mls": "226108112",
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/4351-rossler-rd/pid_73286699/",
+      "status": "For Sale",
+      "reason": "IDX field table records no pool",
+      "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226108112"
+    },
+    {
+      "address": "6287 Oak Hill Rd",
+      "city": "Placerville",
+      "price": 574900,
+      "beds": 4,
+      "baths": 3,
+      "fullBaths": 3,
+      "halfBaths": null,
+      "acres": 10,
+      "sqft": 4516,
+      "mls": "226063059",
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/6287-oak-hill-rd/pid_71429392/",
+      "status": "Pending",
+      "reason": "MetroList records no pool",
+      "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226063059",
+      "mlsPrice": 574900,
+      "mlsPool": "No"
+    },
+    {
+      "address": "1300 Large Oak Dr",
+      "city": "Placerville",
+      "price": 1199000,
+      "beds": 4,
+      "baths": 4,
+      "fullBaths": 4,
+      "halfBaths": null,
+      "acres": 6.72,
+      "sqft": 4870,
+      "mls": "226109915",
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/1300-large-oak-dr/pid_73377437/",
+      "status": "For Sale",
+      "reason": "IDX field table records no pool",
+      "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226109915"
+    },
+    {
+      "address": "3430 Old Ditch Dr",
+      "city": "Placerville",
+      "price": 1175000,
+      "beds": 4,
+      "baths": 4,
+      "fullBaths": 4,
+      "halfBaths": null,
+      "acres": 5.12,
+      "sqft": 4563,
+      "mls": "226089905",
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/3430-old-ditch-dr/pid_72911450/",
+      "status": "For Sale",
+      "reason": "MetroList records no pool",
+      "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226089905",
+      "mlsPrice": 1175000,
+      "mlsPool": "No"
+    },
+    {
+      "address": "4661 Holm Rd",
+      "city": "Placerville",
+      "price": 899900,
+      "beds": 4,
+      "baths": 4.5,
+      "fullBaths": 4,
+      "halfBaths": 1,
+      "acres": 5.12,
+      "sqft": 4525,
+      "mls": "226083194",
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/4661-holm-rd/pid_72562836/",
+      "status": "For Sale",
+      "reason": "IDX field table records no pool",
+      "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226083194"
+    },
+    {
+      "address": "1200 W El Largo Dr",
+      "city": "Placerville",
+      "price": 1200000,
+      "beds": 5,
+      "baths": 5,
+      "fullBaths": 5,
+      "halfBaths": null,
+      "acres": 5.02,
+      "sqft": 3700,
+      "mls": "226053498",
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/1200-w-el-largo-dr/pid_70987213/",
+      "status": "For Sale",
+      "reason": "MetroList records no pool",
+      "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226053498",
+      "mlsPrice": 1200000,
+      "mlsPool": "No"
+    },
+    {
+      "address": "6560 Agape Ct",
+      "city": "Placerville",
+      "price": 649000,
+      "beds": 4,
+      "baths": 3,
+      "fullBaths": 3,
+      "halfBaths": null,
+      "acres": 5.02,
+      "sqft": 2562,
+      "mls": "226070903",
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/6560-agape-ct/pid_71736013/",
+      "status": "For Sale",
+      "reason": "MetroList records no pool",
+      "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226070903",
+      "mlsPrice": 649000,
+      "mlsPool": "No"
+    },
+    {
+      "address": "3900 Loma Dr",
+      "city": "Shingle Springs",
+      "price": 1400000,
+      "beds": 4,
+      "baths": 3,
+      "fullBaths": 3,
+      "halfBaths": null,
+      "acres": 5,
+      "sqft": 2790,
+      "mls": "226110486",
+      "url": "https://www.coldwellbankerhomes.com/ca/shingle-springs/3900-loma-dr/pid_73390886/",
+      "status": "For Sale",
+      "reason": "IDX field table records no pool",
+      "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226110486"
+    },
+    {
+      "address": "4810 Robledo Dr",
+      "city": "Placerville",
+      "price": 1049900,
+      "beds": 5,
+      "baths": 4.5,
+      "fullBaths": 4,
+      "halfBaths": 1,
+      "acres": 5,
+      "sqft": 4313,
+      "mls": "226083409",
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/4810-robledo-dr/pid_72301750/",
+      "status": "For Sale",
+      "reason": "MetroList records no pool",
+      "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226083409",
+      "mlsPrice": 1049900,
+      "mlsPool": "No"
+    },
+    {
+      "address": "5681 Honeycomb Ln",
+      "city": "Shingle Springs",
+      "price": 950000,
+      "beds": 4,
+      "baths": 4.5,
+      "fullBaths": 4,
+      "halfBaths": 1,
+      "acres": 5,
+      "sqft": 3210,
+      "mls": "226068369",
+      "url": "https://www.coldwellbankerhomes.com/ca/shingle-springs/5681-honeycomb-ln/pid_72996839/",
+      "status": "For Sale",
+      "reason": "MetroList records no pool",
+      "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226068369",
+      "mlsPrice": 950000,
+      "mlsPool": "No"
+    },
+    {
+      "address": "4830 Creekside Dr",
+      "city": "Shingle Springs",
+      "price": 699000,
+      "beds": 4,
+      "baths": 3,
+      "fullBaths": 3,
+      "halfBaths": null,
+      "acres": 4.95,
+      "sqft": 1849,
+      "mls": "226116434",
+      "url": "https://www.coldwellbankerhomes.com/ca/shingle-springs/4830-creekside-dr/pid_73766441/",
+      "status": "For Sale",
+      "reason": "IDX field table records no pool",
+      "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226116434"
+    },
+    {
+      "address": "5025 Eco Ridge Rd",
+      "city": "Placerville",
+      "price": 799999,
+      "beds": 4,
+      "baths": 3,
+      "fullBaths": 3,
+      "halfBaths": null,
+      "acres": 4.83,
+      "sqft": 3089,
+      "mls": "226072037",
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/5025-eco-ridge-rd/pid_71882550/",
+      "status": "For Sale",
+      "reason": "MetroList records no pool",
+      "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226072037",
+      "mlsPrice": 799999,
+      "mlsPool": "No"
+    }
+  ],
+  "nearMisses": [
+    {
+      "address": "3291 Texas Hill Rd",
+      "city": "Placerville",
+      "price": 1350000,
+      "beds": 4,
+      "baths": 4,
+      "acres": 1.76,
       "pool": true,
-      "poolDetail": "Saltwater pool with pool house",
-      "poolFeatures": [
-        "Built-In",
-        "Salt Water",
-        "Pool House",
-        "On Lot",
-        "Pool Sweep"
-      ],
-      "broker": "Real Broker Technologies",
-      "listedOn": "2026-06-17",
-      "daysOnMarket": 94,
-      "photos": [
-        "https://ssl.cdn-redfin.com/photo/77/mbpaddedwide/449/genMid.226064449_3.jpg"
-      ],
-      "gallery": "https://www.redfin.com/CA/Placerville/6881-Sagittarius-Rd-95667/home/167310935",
-      "url": "https://www.redfin.com/CA/Placerville/6881-Sagittarius-Rd-95667/home/167310935",
-      "status": "match",
-      "isNew": true,
-      "firstSeen": "2026-09-19",
-      "lastSeen": "2026-09-19",
-      "blurb": "The outlier, and the one that most rewards the 5-acre preference: <strong>40 acres</strong>, four times the next largest parcel. Built in 2005 as the builder's own residence \u2014 a European Country-inspired estate, 5,351 sq ft with sweeping Sierra foothill views, and a saltwater pool with its own pool house. At $260/sq ft it is the cheapest per square foot of the five despite the highest asking price. 94 days on market with no reduction, which on a property this specific is not surprising, but it does suggest room to negotiate.",
-      "notes": "Verified active on Redfin 2026-09-19. Pool and pool house confirmed via MLS amenity record. Note the Redfin URL slug reads 'Sagittarius-Rd' while the listing address is 'Sagittarius Dr'; same property, MLS 226064449. Not found in the Coldwell Banker IDX pages fetched, so this one rests on the Redfin live page alone."
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/3291-texas-hill-rd/pid_71568712/",
+      "missing": "only 1.76 acres"
+    },
+    {
+      "address": "1234 Rising Hill W Rd",
+      "city": "Placerville",
+      "price": 685000,
+      "beds": 4,
+      "baths": 2.5,
+      "acres": 2.66,
+      "pool": true,
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/1234-rising-hill-w-rd/pid_72120077/",
+      "missing": "only 2 full baths (+ 1 half)"
+    },
+    {
+      "address": "2805 Aquamarine Cir",
+      "city": "Rescue",
+      "price": 650000,
+      "beds": 4,
+      "baths": 3,
+      "acres": 0.2052,
+      "pool": true,
+      "url": "https://www.coldwellbankerhomes.com/ca/rescue/2805-aquamarine-circle/pid_71532329/",
+      "missing": "only 0.2052 acres"
+    },
+    {
+      "address": "1635 Country Club Dr",
+      "city": "Placerville",
+      "price": 614999,
+      "beds": 4,
+      "baths": 3,
+      "acres": 0.61,
+      "pool": true,
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/1635-country-club-dr/pid_70089379/",
+      "missing": "only 0.61 acres"
+    },
+    {
+      "address": "3900 Loma Dr",
+      "city": "Shingle Springs",
+      "price": 1400000,
+      "beds": 4,
+      "baths": 3,
+      "acres": 5,
+      "pool": false,
+      "url": "https://www.coldwellbankerhomes.com/ca/shingle-springs/3900-loma-dr/pid_73390886/",
+      "missing": "no pool"
+    },
+    {
+      "address": "7991 S Shingle Rd",
+      "city": "Shingle Springs",
+      "price": 1250000,
+      "beds": 4,
+      "baths": 3,
+      "acres": 21.15,
+      "pool": false,
+      "url": "https://www.coldwellbankerhomes.com/ca/shingle-springs/7991-s-shingle-rd/pid_72631444/",
+      "missing": "no pool"
+    },
+    {
+      "address": "1200 W El Largo Dr",
+      "city": "Placerville",
+      "price": 1200000,
+      "beds": 5,
+      "baths": 5,
+      "acres": 5.02,
+      "pool": false,
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/1200-w-el-largo-dr/pid_70987213/",
+      "missing": "no pool"
+    },
+    {
+      "address": "1300 Large Oak Dr",
+      "city": "Placerville",
+      "price": 1199000,
+      "beds": 4,
+      "baths": 4,
+      "acres": 6.72,
+      "pool": false,
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/1300-large-oak-dr/pid_73377437/",
+      "missing": "no pool"
+    },
+    {
+      "address": "3430 Old Ditch Dr",
+      "city": "Placerville",
+      "price": 1175000,
+      "beds": 4,
+      "baths": 4,
+      "acres": 5.12,
+      "pool": false,
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/3430-old-ditch-dr/pid_72911450/",
+      "missing": "no pool"
+    },
+    {
+      "address": "2500 Hwy 50",
+      "city": "Placerville",
+      "price": 1115000,
+      "beds": 4,
+      "baths": 4,
+      "acres": 12.4,
+      "pool": false,
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/2500-hwy-50/pid_73603201/",
+      "missing": "no pool"
+    },
+    {
+      "address": "4810 Robledo Dr",
+      "city": "Placerville",
+      "price": 1049900,
+      "beds": 5,
+      "baths": 4.5,
+      "acres": 5,
+      "pool": false,
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/4810-robledo-dr/pid_72301750/",
+      "missing": "no pool"
+    },
+    {
+      "address": "5681 Honeycomb Ln",
+      "city": "Shingle Springs",
+      "price": 950000,
+      "beds": 4,
+      "baths": 4.5,
+      "acres": 5,
+      "pool": false,
+      "url": "https://www.coldwellbankerhomes.com/ca/shingle-springs/5681-honeycomb-ln/pid_72996839/",
+      "missing": "no pool"
+    },
+    {
+      "address": "4661 Holm Rd",
+      "city": "Placerville",
+      "price": 899900,
+      "beds": 4,
+      "baths": 4.5,
+      "acres": 5.12,
+      "pool": false,
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/4661-holm-rd/pid_72562836/",
+      "missing": "no pool"
+    },
+    {
+      "address": "5025 Eco Ridge Rd",
+      "city": "Placerville",
+      "price": 799999,
+      "beds": 4,
+      "baths": 3,
+      "acres": 4.83,
+      "pool": false,
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/5025-eco-ridge-rd/pid_71882550/",
+      "missing": "no pool"
     }
   ],
-  "nearMisses": {
-    "_comment": "Active listings that clear 4+ bd, 3+ ba, 2.5+ acres and <= $1.5M in the three target cities but have NO pool. Kept because they show where the market sits and because a pool is addable; not presented as matches.",
-    "asOf": "2026-09-19",
-    "items": [
-      {
-        "address": "4351 Rossler Rd",
-        "city": "Placerville",
-        "price": 595000,
-        "beds": 4,
-        "baths": 3,
-        "sqft": 2300,
-        "acres": 10,
-        "url": "https://www.redfin.com/CA/Placerville/4351-Rossler-Rd-95667/home/167351229",
-        "mls": "226108112"
-      },
-      {
-        "address": "6560 Agape Ct",
-        "city": "Placerville",
-        "price": 649000,
-        "beds": 4,
-        "baths": 3,
-        "sqft": 2562,
-        "acres": 5.02,
-        "url": "https://www.redfin.com/CA/Placerville/6560-Agape-Ct-95667/home/167310966",
-        "mls": "226070903"
-      },
-      {
-        "address": "4830 Creekside Dr",
-        "city": "Shingle Springs",
-        "price": 699000,
-        "beds": 4,
-        "baths": 3,
-        "sqft": 1849,
-        "acres": 4.95,
-        "url": "https://www.redfin.com/CA/Shingle-Springs/4830-Creekside-Dr-95682/home/167341123",
-        "mls": "226116434"
-      },
-      {
-        "address": "4181 Thunderbird Ln",
-        "city": "Rescue",
-        "price": 749000,
-        "beds": 4,
-        "baths": 3.5,
-        "sqft": 3294,
-        "acres": 10,
-        "url": "https://www.redfin.com/CA/Rescue/4181-Thunderbird-Ln-95672/home/167320616",
-        "mls": "226064393"
-      },
-      {
-        "address": "5025 Eco Ridge Rd",
-        "city": "Placerville",
-        "price": 799999,
-        "beds": 4,
-        "baths": 3,
-        "sqft": 3089,
-        "acres": 4.83,
-        "url": "https://www.redfin.com/CA/Placerville/5025-Eco-Ridge-Rd-95667/home/167327877",
-        "mls": "226072037"
-      },
-      {
-        "address": "4661 Holm Rd",
-        "city": "Placerville",
-        "price": 899900,
-        "beds": 4,
-        "baths": 4.5,
-        "sqft": 4525,
-        "acres": 5.12,
-        "url": "https://www.redfin.com/CA/Placerville/4661-Holm-Rd-95667/home/167346015",
-        "mls": "226083194"
-      },
-      {
-        "address": "5681 Honeycomb Ln",
-        "city": "Shingle Springs",
-        "price": 950000,
-        "beds": 4,
-        "baths": 4.5,
-        "sqft": 3210,
-        "acres": 5,
-        "url": "https://www.redfin.com/CA/Shingle-Springs/5681-Honeycomb-Ln-95682/home/167337569",
-        "mls": "226068369"
-      },
-      {
-        "address": "4810 Robledo Dr",
-        "city": "Placerville",
-        "price": 1049900,
-        "beds": 5,
-        "baths": 4.5,
-        "sqft": 4313,
-        "acres": 5,
-        "url": "https://www.redfin.com/CA/Placerville/4810-Robledo-Dr-95667/home/167346243",
-        "mls": "226083409"
-      },
-      {
-        "address": "2500 Highway 50",
-        "city": "Placerville",
-        "price": 1115000,
-        "beds": 4,
-        "baths": 4,
-        "sqft": 2498,
-        "acres": 12.4,
-        "url": "https://www.redfin.com/CA/Placerville/2500-Highway-50-95667/home/22362853",
-        "mls": "226113066"
-      },
-      {
-        "address": "3430 Old Ditch Dr",
-        "city": "Placerville",
-        "price": 1175000,
-        "beds": 4,
-        "baths": 4,
-        "sqft": 4563,
-        "acres": 5.12,
-        "url": "https://www.redfin.com/CA/Placerville/3430-Old-Ditch-Dr-95667/home/167344730",
-        "mls": "226089905"
-      },
-      {
-        "address": "1300 Large Oak Dr",
-        "city": "Placerville",
-        "price": 1199000,
-        "beds": 4,
-        "baths": 4,
-        "sqft": 4870,
-        "acres": 6.72,
-        "url": "https://www.redfin.com/CA/Placerville/1300-Large-Oak-Dr-95667/home/167350735",
-        "mls": "226109915"
-      },
-      {
-        "address": "1200 W El Largo Dr",
-        "city": "Placerville",
-        "price": 1200000,
-        "beds": 5,
-        "baths": 5,
-        "sqft": 3700,
-        "acres": 5.02,
-        "url": "https://www.redfin.com/CA/Placerville/1200-W-El-Largo-Dr-95667/home/167350966",
-        "mls": "226053498"
-      },
-      {
-        "address": "7991 S Shingle Rd",
-        "city": "Shingle Springs",
-        "price": 1250000,
-        "beds": 4,
-        "baths": 3,
-        "sqft": 2808,
-        "acres": 21.15,
-        "url": "https://www.redfin.com/CA/Shingle-Springs/7991-S-Shingle-Rd-95682/home/104338455",
-        "mls": "226067744"
-      },
-      {
-        "address": "3900 Loma Dr",
-        "city": "Shingle Springs",
-        "price": 1400000,
-        "beds": 4,
-        "baths": 3,
-        "sqft": 2790,
-        "acres": 5,
-        "url": "https://www.redfin.com/CA/Shingle-Springs/3900-Loma-Dr-95682/home/167321831",
-        "mls": "226110486"
-      }
-    ]
-  },
-  "droppedThisRun": [
-    {
-      "address": "1601 Velvet Horn Ln, Rescue",
-      "reason": "Not in current active inventory. Was 3bd/3ba anyway \u2014 under the bath/bed brief."
-    },
-    {
-      "address": "4100 Black Oak Dr, Shingle Springs",
-      "reason": "Not in current active inventory; 2025 MLS number, user previously confirmed off market."
-    },
-    {
-      "address": "5856 Fernwood Dr, Shingle Springs",
-      "reason": "Not in current active inventory; sold June 2025 for $1,400,000."
-    },
-    {
-      "address": "1527 Velvet Horn Ln, Rescue",
-      "reason": "Not in current active inventory; never evidenced as listed \u2014 the earlier figure was an automated valuation estimate."
-    },
-    {
-      "address": "5400 Horizon Ct, Placerville",
-      "reason": "Not in current active inventory; sold March 2022. Also had no pool."
-    },
-    {
-      "address": "4280 Leisure Ln, Placerville",
-      "reason": "Not in current active inventory; Redfin shows last sale April 2021. Also had no pool."
-    }
-  ],
+  "dropped": [],
   "rejected": [
     {
-      "address": "3291 Texas Hill Rd, Placerville",
-      "price": 1350000,
-      "reason": "Has a pool and is active, but 1.76 acres \u2014 under the 2.5 acre minimum"
+      "address": "1781 Springvale Rd, Placerville",
+      "price": 1250000,
+      "reason": "Tracked as a relist after dropping from $1.5M. Resolved this run against MetroListPRO (MLS 226100125): Property Subtype is Triplex \u2014 multi-unit residential income, 10.27 acres, no pool. Fails the pool requirement and is not a single-family home. Retired from tracking."
     },
     {
-      "address": "1635 Country Club Dr, Placerville",
-      "price": 614999,
-      "reason": "Pool, but 0.61 acres"
-    },
-    {
-      "address": "2805 Aquamarine Cir, Rescue",
-      "price": 650000,
-      "reason": "Pool, but 0.21 acres"
-    },
-    {
-      "address": "3505 Lambeth Dr, Rescue",
+      "address": "1601 Velvet Horn Ln, Rescue",
       "price": 1100000,
-      "reason": "5bd/3ba but 0.5 acres and no pool"
+      "reason": "Still actively listed at $1,100,000 (no price change since last run), 5 acres with a sports pool and slide \u2014 but 3 bd / 3 ba, under the 4BR minimum."
     },
     {
       "address": "5135 Bryant Rd, Shingle Springs",
       "price": 1690000,
-      "reason": "Over budget"
+      "reason": "Over budget; status unverified"
     },
     {
       "address": "1900 Deer Valley Rd, Rescue",
@@ -478,7 +838,7 @@
     {
       "address": "3359 Saint Ives Ct, Shingle Springs",
       "price": 2199500,
-      "reason": "Over budget"
+      "reason": "Over budget, only 4bd"
     },
     {
       "address": "765 Sierra View Ct, Shingle Springs",
@@ -491,18 +851,27 @@
       "reason": "Far over budget"
     },
     {
+      "address": "5040 Milton Ranch Rd, Shingle Springs",
+      "reason": "Not for sale \u2014 sold 2019 for $1.4M"
+    },
+    {
+      "address": "5457 Bryant Rd, Shingle Springs",
+      "reason": "Not for sale \u2014 sold 2020 for $1,405,000"
+    },
+    {
       "address": "2800 La Paz Rd, Placerville",
       "price": 995000,
-      "reason": "4bd/2ba \u2014 under the bath minimum"
+      "reason": "4bd/2ba \u2014 under both minimums"
     },
     {
       "address": "2931 Texas Hill Rd, Placerville",
-      "reason": "4bd/2.5ba \u2014 under the bath minimum"
+      "reason": "4bd/2.5ba \u2014 under both minimums"
     },
     {
       "address": "4370 Hillwood Dr, Shingle Springs",
       "price": 699000,
       "reason": "0.25 acres"
     }
-  ]
+  ],
+  "relisted": []
 }
