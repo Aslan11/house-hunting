@@ -2,111 +2,116 @@
 
 Automated house-hunt tracker for **Shingle Springs**, **Rescue**, and **Placerville, CA**.
 
+Published from the `gh-pages` branch.
+
 ## Criteria
 
 | Requirement | Value |
 |---|---|
-| Bedrooms | 5+ |
+| Bedrooms | **4+** (was 5+ before the 2026-09-21 run) |
 | Bathrooms | 3+ |
 | Pool | Required |
 | Lot size | 2.5 acres minimum, 5+ preferred |
 | Max price | $1,500,000 |
 
+## How the pipeline works
+
+Network egress was blocked for earlier runs and is open again as of 2026-09-21, so the tracker now
+reads live MLS data instead of guessing from search snippets.
+
+1. **Inventory** — `coldwellbankerhomes.com` serves a live MetroList IDX feed as server-rendered
+   HTML, and it does not bot-block this environment. Paginate a city with `?offset=N`:
+
+   ```
+   https://www.coldwellbankerhomes.com/ca/shingle-springs/
+   https://www.coldwellbankerhomes.com/ca/placerville/?offset=24
+   ```
+
+   The result count is in `data-count`; each card is a `property-snapshot-psr-panel` div carrying
+   address, price, beds, baths, sqft, MLS number and status. Acreage and pool are **not** on the
+   card — they need the detail page.
+
+2. **Detail** — each card's `data-detailurl` leads to a page with a JSON-LD
+   `LocationFeatureSpecification` list. The fields that matter: `Lot Size (Acres)`, `Pool`,
+   `Pool Description`, `Year Built`.
+
+3. **Verification** — every candidate is re-checked against **MetroListPRO**
+   (`https://www.metrolistpro.com/homes/2/6/a/<MLS>`), the official search site of MetroList, the
+   MLS for El Dorado County. The slug segment is ignored, so only the MLS number matters. It exposes
+   a live `Status` field (`Active`, `Contingent - Show`, …) plus price, beds, baths (`2 | 1` means
+   two full and one half), `Lot Size in Acres`, `Pool`, agent and office. A 404 means the listing is
+   not in the IDX feed.
+
+On the 2026-09-21 run this read 309 active listings across the three towns, narrowed to 48 on
+beds/baths/price, and verified 47 of those 48 on MetroListPRO.
+
+### Sites that do *not* work from here
+
+Zillow, Redfin, Trulia, Homes.com, Movoto, Realtor.com, LandWatch and KW all return 403/429 — these
+are **site-level bot blocks on the datacenter IP**, not proxy denials. Confirm the difference with
+`curl -sS "$HTTPS_PROXY/__agentproxy/status"`: an empty `recentRelayFailures` means egress is open
+and the site itself refused. Do not waste a run retrying them.
+
 ## ⚠️ Verification gate — read before reporting anything
 
-The first run of this tracker reported four properties as matches. **All four were off market.**
+The 2026-07-26 run reported four properties as matches. **All four were off market.** Status had
+been inferred from search-engine result text, which indexes sold listings with "For Sale" in the
+title for years. A second failure compounded it: search snippets conflated two properties on the
+same street, producing a listing with the wrong MLS number, bed count and price.
 
-Root cause: listing status was inferred from search-engine result text. Search engines index
-listing pages that keep "For Sale" in the `<title>` for years after the sale closes, so stale
-listings read as active. A second failure compounded it — search snippets conflated two different
-properties on the same street, producing a listing with the wrong MLS number, bed count and price.
+**Rules that follow:**
 
-**Rules that follow from this:**
-
-1. A property may only be given `status: "match"` when its active status is confirmed against a
-   live listing page or an authoritative feed. Search-result text is **not** sufficient.
-2. MetroList MLS numbers encode the listing year: `221…` = 2021, `223…` = 2023, `225…` = 2025,
-   `226…` = 2026. A prefix older than the current year is strong evidence the listing is stale.
-   Treat it as off market unless proven otherwise.
-3. Cross-check bed/bath/price against at least two independent sources before reporting. If they
-   disagree, report the disagreement rather than picking one.
+1. A property may only be given `status: "match"` when its status is confirmed against a live
+   listing page or an authoritative feed. Search-result text is **not** sufficient. MetroListPRO is
+   the authority; Coldwell Banker's IDX is acceptable corroboration.
+2. MetroList MLS numbers encode the listing year: `221…` = 2021, `225…` = 2025, `226…` = 2026.
+   A prefix older than the current year is strong evidence of a stale listing.
+3. Cross-check bed/bath/price against at least two independent sources. **If they disagree, report
+   the disagreement** on the card rather than picking one. See 3538 Wildwood Ln for a live example.
 4. Prefer *under*-reporting. An empty result is correct and useful; a fabricated match is not.
+5. Watch the bath count. MetroList's "Total Baths: 3" can mean two full and one half — which is
+   2.5 baths by the usual reckoning and **fails** a 3-bath minimum. The `bathsLabel` field carries
+   the honest breakdown.
 
-## Why the environment can't verify
+### Photo hazard
 
-The network policy allows GitHub, package registries, and a keyed `maps.googleapis.com`. Everything
-else is blocked at the proxy — Zillow, Redfin, Realtor.com, Homes.com, Movoto, small brokerage
-sites, plus OpenStreetMap, Wikimedia and Esri tile servers. `WebFetch` is blocked outright
-(`example.com` returns 403). `WebSearch` is the only channel, and it returns summarised text, never
-live status and never image URLs.
+Detail pages embed "similar listings" carousels, so a naive scrape of `m.cbhomes.com` image URLs
+pulls in **other properties' photos**. Always constrain the photo URL to the listing's own MLS
+number:
 
-## Fixing the pipeline
-
-Ranked cheapest-first. The first option solves listing status **and** photos at once:
-
-1. **Zillow/Redfin saved search with email alerts** to `kvn.p.mrtn@gmail.com`. This repo's runner
-   has Gmail access, so alert emails become an authoritative feed: current listings, correct
-   status, price cuts, and image URLs. ~5 minutes to set up, one time.
-2. **An agent-run MLS/IDX client portal** with email alerts — same benefits, fuller MLS data.
-3. **A real-estate data API key** in the environment (SimplyRETS, Bridge Interactive, a RapidAPI
-   provider) for direct queries.
-4. **Allowlisting a listing domain** in the network policy. Least reliable — the portals bot-block
-   independently of the proxy.
-
-## Photos
-
-Photo support is built and waiting on a source.
-
-- Each listing has a `photos` array in `listings.json`. Put any image URL in it and the card
-  renders it on the next build.
-- Hotlinking works even though this environment can't load images: the **viewer's browser** fetches
-  them, and it isn't behind this proxy. Images carry `referrerpolicy="no-referrer"`, which also
-  gets past most CDN referrer blocks.
-- If a photo URL 404s or is blocked, an `onerror` handler swaps in the fallback tile client-side,
-  so a dead URL never leaves a hole in the layout.
-- With no photo, the card shows a "View photos on <site>" tile linking to `gallery` (or `url`).
-
-Note that MLS photos are the copyright of the listing brokerage. Fine for a private hunting page;
-don't republish them more broadly.
-
-## Fastest path: paste from Zillow
-
-`ingest.js` takes listings copied straight off a Zillow or Redfin results page and merges them in,
-applying the dedupe rules below automatically.
-
-```bash
-node ingest.js paste.txt     # or:  pbpaste | node ingest.js
-node build.js
+```
+https://m.cbhomes.com/p/<prefix>/<THIS LISTING'S MLS>/<photoid>/m23cc.webp
 ```
 
-It reports what was new, what changed price, and what was already tracked. Anything outside the
-three target cities is skipped; anything failing a hard criterion is added but flagged rather than
-presented as a match. Image URLs in the paste become the card photo.
+Also size-check each URL: anything under ~9 KB is a placeholder asset, not a photograph. This bug
+was caught and fixed on the 2026-09-21 run; do not reintroduce it.
 
-Note the coverage problem this solves: web search returns only a small, stale, non-random slice of
-inventory, because it reads *summaries of* portal pages rather than querying the live MLS. A portal's
-own filtered search is the real result set. Do not treat a thin search-derived result list as
-evidence that inventory is thin.
+Hotlinking works even though images can't be previewed here: the **viewer's** browser fetches them.
+Images carry `referrerpolicy="no-referrer"`, and a dead URL swaps in a fallback tile client-side.
+MLS photos are the copyright of the listing brokerage — fine for a private page, don't republish.
 
 ## Files
 
 - **`listings.json`** — canonical data. Single source of truth.
-- **`ingest.js`** — merge pasted portal listings into `listings.json`.
+  - `listings[]` — verified matches. `isNew` drives the highlight section at the top of the page.
+  - `nearMisses[]` — cleared beds/baths/budget, failed exactly one test (usually the pool).
+  - `dropped[]` — removed this run, with the reason. Prevents re-surfacing.
+  - `rejected[]` — ruled out on earlier runs.
 - **`build.js`** — renders `index.html` from `listings.json`. No dependencies: `node build.js`.
 - **`index.html`** — generated. Don't hand-edit; edit the JSON and rebuild.
+- **`ingest.js`** — merges listings pasted from a Zillow/Redfin results page, for when the scrape
+  path breaks again.
 
 ## Dedupe rules for future runs
 
 Read `listings.json` **before** reporting anything.
 
-1. A property already in `listings` is a **duplicate** — do not re-surface it.
+1. A property already in `listings` is a **duplicate** — do not re-surface it. Clear its `isNew`
+   flag on the next run so the highlight section only shows genuinely new finds.
 2. Exception: if the price differs from `currentPrice`, that *is* worth reporting. Append to
-   `priceHistory`, update `currentPrice`, and the card will render the delta automatically.
-3. Anything in `rejected` stays rejected unless a price change brings it into range.
-4. An `off-market` property returning to market is newsworthy — but only once verified per the gate.
+   `priceHistory` and update `currentPrice`; the card renders the delta automatically.
+3. Anything in `rejected` stays rejected unless a price change — or a criteria change — brings it
+   back into range. The bedroom minimum moved 5+ → 4+ on 2026-09-21, which required re-checking.
+4. A listing that goes `Contingent`, `Pending` or 404s on MetroListPRO is off market: move it to
+   `dropped[]` with the reason and drop it from the page.
 5. Update `lastSeen` on confirmed-active properties and `lastRun` on every run.
-
-## Publishing
-
-Served from the `gh-pages` branch at repo root. Enable under
-**Settings → Pages → Source: `gh-pages` / `(root)`**.
