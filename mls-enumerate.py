@@ -93,15 +93,20 @@ def detail(rec):
     url = f"https://www.metrolistpro.com/homes/2/6/x/{rec['mls']}"
     title, t = text_of(get(url))
     r = dict(rec, url=url, title=title)
+    # Square footage can be "N/A" on a record that is otherwise a complete house — 4707 Peace
+    # Trail (MLS 226118520) is one. Requiring digits there sent a real 2bd/2ba house to the
+    # unreadable bucket, which is precisely the conflation the README warns about: sqft is not
+    # a criterion, so a missing value must not cost us the bed/bath/price read.
     hdr = re.search(r"\$([\d,]+)\s*\(([^)]*)\)\s*Bedrooms:\s*(\d+)\s*Bathrooms:\s*(\d+)"
-                    r"(?:\s*\|\s*(\d+))?\s*Sq\. Ft\.:\s*([\d,]+)", t)
+                    r"(?:\s*\|\s*(\d+))?\s*Sq\. Ft\.:\s*([\d,]+|N/A)", t)
     if hdr:
+        sqft = hdr.group(6).replace(",", "")
         r.update(price=int(hdr.group(1).replace(",", "")),
                  saleState=hdr.group(2).strip(),
                  beds=int(hdr.group(3)),
                  fullBaths=int(hdr.group(4)),
                  halfBaths=int(hdr.group(5) or 0),
-                 sqft=int(hdr.group(6).replace(",", "")))
+                 sqft=int(sqft) if sqft.isdigit() else None)
     else:
         # No whole-home bed/bath header. That is normal for three property types and does NOT
         # mean the page failed to parse — conflating the two is what made a first pass report
