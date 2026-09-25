@@ -13,16 +13,16 @@
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-09-24",
-  "previousRun": "2026-09-23",
+  "lastRun": "2026-09-25",
+  "previousRun": "2026-09-24",
   "source": {
     "name": "Coldwell Banker IDX (MetroList feed), verified against MetroListPRO (MetroList MLS)",
     "method": "Enumerated every active listing in the three cities from IDX city pages, applied the hard criteria to structured MLS fields, then re-read each survivor's record from MetroListPRO and required price, beds, full baths, acreage and pool to match.",
-    "inventoryScanned": 305,
-    "passedBedsBathsPrice": 58,
+    "inventoryScanned": 312,
+    "passedBedsBathsPrice": 59,
     "verifiedActiveMatches": 5,
     "pendingMatches": 1,
-    "mlsVerifiedOn": "2026-09-24",
+    "mlsVerifiedOn": "2026-09-25",
     "mlsVerifiedCount": 5,
     "mlsForeignSource": [
       {
@@ -35,15 +35,15 @@
   },
   "dataQuality": {
     "verifiedActiveListings": 5,
-    "note": "305 active listings scanned across the three cities; 58 cleared beds, baths and price and had their MLS field table read directly. Status disagreement this run \u2014 the IDX feed called 1 listing Active that Redfin reports in escrow: 2500 Hwy 50, Placerville (Redfin: Pending, MLS 226113066). Shown as pending.",
+    "note": "312 active listings scanned across the three cities; 59 cleared beds, baths and price and had their MLS field table read directly. Status disagreement this run — the IDX feed called 1 listing Active that Redfin reports in escrow: 2500 Hwy 50, Placerville (Redfin: Pending, MLS 226113066). Shown as pending.",
     "independentEnumeration": {
-      "ranOn": "2026-09-24",
+      "ranOn": "2026-09-25",
       "source": "MetroListPRO city indexes (the MLS of record)",
-      "activeRecords": 334,
-      "pendingRecords": 62,
-      "recordsPulledBeyondIdxSweep": 396,
-      "singleFamilyRead": 279,
-      "excludedByType": 117,
+      "activeRecords": 338,
+      "pendingRecords": 64,
+      "recordsPulledBeyondIdxSweep": 402,
+      "singleFamilyRead": 284,
+      "excludedByType": 118,
       "additionalMatchesFound": 0
     }
   },
@@ -54,13 +54,24 @@
     "relisted": [],
     "dropped": [],
     "poollessChanges": {
-      "added": [],
+      "added": [
+        {
+          "address": "5000 Reservation Rd",
+          "city": "Placerville",
+          "price": 799000,
+          "acres": 5,
+          "beds": 4,
+          "fullBaths": 4,
+          "url": "https://www.coldwellbankerhomes.com/ca/placerville/5000-reservation-rd/pid_72035132/",
+          "status": "Pending"
+        }
+      ],
       "priceChanges": [
         {
-          "address": "5681 Honeycomb Ln",
-          "city": "Shingle Springs",
-          "from": 924900,
-          "to": 899000
+          "address": "1300 Large Oak Dr",
+          "city": "Placerville",
+          "from": 1199000,
+          "to": 1129000
         }
       ],
       "gone": []
@@ -109,7 +120,7 @@
       "summary": "Crafted as the builder's own residence, this extraordinary European Country-inspired estate was designed without compromise. From its commanding setting on 40 acres with sweeping Sierra foothill views and timeless architectural details, every aspect of the property reflects quality and enduring elegance. From the moment you arrive, the home makes a striking impression, thoughtfully designed to fra",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-09-24",
+      "lastSeen": "2026-09-25",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -163,7 +174,7 @@
       "summary": "Escape the hustle and bustle and discover your own private retreat in Shingle Springs. Set on approximately 5 private acres with sweeping hillside views, this single-story custom home offers over 3,000 sq. ft. of thoughtfully designed living space with 4 bedrooms, 3 full baths and an impressive 4-car garage.    The outdoor setting is where this property truly shines. A stunning infinity-edge saltw",
       "notes": "",
       "firstSeen": "2026-08-13",
-      "lastSeen": "2026-09-24",
+      "lastSeen": "2026-09-25",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -213,7 +224,7 @@
       "summary": "Just minutes from town yet worlds away, this 10 acre sanctuary delivers the ultimate retreat lifestyle. Step inside to discover a beautifully updated home with 4 bedrooms, 3 baths, and an inviting upstairs game room complete with a wet bar  perfect for gatherings. The renovated kitchen shines with quartz counters, stainless appliances, and beautiful white cabinetry, flowing seamlessly into the fam",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-09-24",
+      "lastSeen": "2026-09-25",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -263,7 +274,7 @@
       "summary": "Major price reduction!  Sought-after area. Minutes from shopping, schools. Country living at its finest. Don't miss the approx. 750SF ultimate entertainment hub: game room plus extra room & bath situated above the detached three-car garage. Connected to the main house by a breeze-catching walkway, this private extra space makes a perfect teen hangout or man cave.  Situated in a serene, park-like s",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-09-24",
+      "lastSeen": "2026-09-25",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -321,7 +332,7 @@
       "summary": "Welcome to a property that doesn't ask you to choose between a home, a retreat, and country living - you get all three. Set among the Placerville foothills, 3538 Wildwood Lane is a place to swim, garden, gather and spread out. The two-story main home offers a private ground-level guest suite with its own entrance and full bath, plus a two-car garage and full basement access. Upstairs, the living s",
       "notes": "",
       "firstSeen": "2026-08-27",
-      "lastSeen": "2026-09-24",
+      "lastSeen": "2026-09-25",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -335,7 +346,7 @@
       ],
       "secondSource": {
         "name": "Redfin MLS field table",
-        "checkedOn": "2026-09-24",
+        "checkedOn": "2026-09-25",
         "url": "https://www.redfin.com/CA/Placerville/3538-Wildwood-Ln-95667/home/167376612",
         "confirmed": [
           "mls",
@@ -402,7 +413,7 @@
           "price": 969000
         }
       ],
-      "lastSeen": "2026-09-24"
+      "lastSeen": "2026-09-25"
     }
   ],
   "poolless": [
@@ -493,7 +504,7 @@
     {
       "address": "1300 Large Oak Dr",
       "city": "Placerville",
-      "price": 1199000,
+      "price": 1129000,
       "beds": 4,
       "baths": 4,
       "fullBaths": 4,
@@ -607,6 +618,22 @@
       "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226068369"
     },
     {
+      "address": "5000 Reservation Rd",
+      "city": "Placerville",
+      "price": 799000,
+      "beds": 4,
+      "baths": 4.5,
+      "fullBaths": 4,
+      "halfBaths": 1,
+      "acres": 5,
+      "sqft": 3752,
+      "mls": "226077234",
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/5000-reservation-rd/pid_72035132/",
+      "status": "Pending",
+      "reason": "IDX field table records no pool",
+      "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226077234"
+    },
+    {
       "address": "5025 Eco Ridge Rd",
       "city": "Placerville",
       "price": 799999,
@@ -695,7 +722,7 @@
     {
       "address": "1300 Large Oak Dr",
       "city": "Placerville",
-      "price": 1199000,
+      "price": 1129000,
       "beds": 4,
       "baths": 4,
       "acres": 6.72,
@@ -786,12 +813,12 @@
     {
       "address": "1781 Springvale Rd, Placerville",
       "price": 1250000,
-      "reason": "Tracked as a relist after dropping from $1.5M. Resolved this run against MetroListPRO (MLS 226100125): Property Subtype is Triplex \u2014 multi-unit residential income, 10.27 acres, no pool. Fails the pool requirement and is not a single-family home. Retired from tracking."
+      "reason": "Tracked as a relist after dropping from $1.5M. Resolved this run against MetroListPRO (MLS 226100125): Property Subtype is Triplex — multi-unit residential income, 10.27 acres, no pool. Fails the pool requirement and is not a single-family home. Retired from tracking."
     },
     {
       "address": "1601 Velvet Horn Ln, Rescue",
       "price": 1100000,
-      "reason": "Still actively listed at $1,100,000 (no price change since last run), 5 acres with a sports pool and slide \u2014 but 3 bd / 3 ba, under the 4BR minimum."
+      "reason": "Still actively listed at $1,100,000 (no price change since last run), 5 acres with a sports pool and slide — but 3 bd / 3 ba, under the 4BR minimum."
     },
     {
       "address": "5135 Bryant Rd, Shingle Springs",
@@ -825,20 +852,20 @@
     },
     {
       "address": "5040 Milton Ranch Rd, Shingle Springs",
-      "reason": "Not for sale \u2014 sold 2019 for $1.4M"
+      "reason": "Not for sale — sold 2019 for $1.4M"
     },
     {
       "address": "5457 Bryant Rd, Shingle Springs",
-      "reason": "Not for sale \u2014 sold 2020 for $1,405,000"
+      "reason": "Not for sale — sold 2020 for $1,405,000"
     },
     {
       "address": "2800 La Paz Rd, Placerville",
       "price": 995000,
-      "reason": "4bd/2ba \u2014 under both minimums"
+      "reason": "4bd/2ba — under both minimums"
     },
     {
       "address": "2931 Texas Hill Rd, Placerville",
-      "reason": "4bd/2.5ba \u2014 under both minimums"
+      "reason": "4bd/2.5ba — under both minimums"
     },
     {
       "address": "4370 Hillwood Dr, Shingle Springs",

@@ -553,6 +553,32 @@ the summary happens to iterate.** Each time this bug has appeared, the arrays we
 and the vocabulary was short one word. When a new section is added to the page, ask what its movement
 would be called before asking how to render it.
 
+#### …and once it had a category, it dropped the one field that qualified it
+
+The section above got `poollessChanges` rendering into the banner. It carried `address`, `city`,
+`price`, `acres`, `beds`, `fullBaths` and `url` — everything except `status`. The table those rows
+come from has rendered a status column since it was built, and its own intro counts the pending
+rows ("one is already under contract, so check the status column"), because that table has always
+held both active and pending listings. The banner inherited the rows and not the caveat.
+
+On 2026-09-25 the banner announced **5000 Reservation Rd** — Placerville, 5 acres, 4bd/4 full ba,
+$799,000, $701,000 under the ceiling — as a new entry on the add-a-pool list. The same run's own
+detail read had it **Pending**. Every number in the sentence was right and the sentence was still
+wrong, because the one field that decides whether a reader should act on it was not in the object.
+The row three inches below it said `Pending` correctly the whole time.
+
+`scrape.js` now carries `status` on each `added` row and `build.js` appends **already pending**
+when it is set. Two things generalise:
+
+- **A summary line inherits the caveats of the table it summarises, or it overstates it.** The
+  banner is the part people read; it is the last place that should carry less qualification than
+  the detail it points at.
+- **"Correct fields, wrong conclusion" is the failure mode a field-by-field check cannot see.**
+  Every value in that item matched the source. What was missing was not wrong data but absent
+  data, and absent data has no value to compare against. When a projection is built by picking
+  keys, the question is not whether the picked keys are right — it is what the reader will infer
+  from the ones that were left out.
+
 ### The same carry-forward, two keys over
 
 The rule above was written but only `runSummary` was fixed. `source` and `dataQuality` were still

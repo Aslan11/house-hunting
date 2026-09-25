@@ -178,8 +178,10 @@ const poollessMoved = plAdded.length + plPriced.length + plGone.length;
 // Shown in both banner branches, so it is built once. Phrased to keep the distinction the
 // whole page rests on: these are not matches, they are the add-a-pool list.
 const poollessItems = [
+  // An addition that is already under contract is not an opportunity, so it never reads as one.
   ...plAdded.map((p) => `<strong>${esc(p.address)}, ${esc(p.city)}</strong> — ${money(p.price)},
-     ${esc(p.acres)} acres, ${p.beds} bd / ${p.fullBaths} full ba, no pool`),
+     ${esc(p.acres)} acres, ${p.beds} bd / ${p.fullBaths} full ba, no pool${
+       /pending/i.test(p.status || '') ? ' — <strong>already pending</strong>' : ''}`),
   ...plPriced.map((p) => `<strong>${esc(p.address)}, ${esc(p.city)}</strong> —
      ${money(p.from)} → ${money(p.to)}`),
   ...plGone.map((p) => `<strong>${esc(p.address)}, ${esc(p.city)}</strong> — off the table

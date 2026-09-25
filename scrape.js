@@ -698,8 +698,13 @@ const poollessNow = new Map(poolless.map((p) => [poollessKey(p), p]));
 const poollessChanges = {
   added: poolless
     .filter((p) => !priorPoolless.has(poollessKey(p)) && !priorPoolless.has(p.address))
+    // `status` travels with the row. The pool-less table has carried both active and pending
+    // listings since it was built, and the table renders a status column for exactly that
+    // reason — but the banner item did not, so a row that arrived already in escrow read as a
+    // fresh opportunity. On 2026-09-25 that was 5000 Reservation Rd: announced as a new 5-acre
+    // entry $701,000 under the ceiling, and Pending on the same run's own detail read.
     .map((p) => ({ address: p.address, city: p.city, price: p.price, acres: p.acres,
-      beds: p.beds, fullBaths: p.fullBaths, url: p.url })),
+      beds: p.beds, fullBaths: p.fullBaths, status: p.status, url: p.url })),
   priceChanges: poolless
     .map((p) => {
       const was = priorPoolless.get(poollessKey(p)) || priorPoolless.get(p.address);
