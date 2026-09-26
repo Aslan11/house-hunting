@@ -118,6 +118,30 @@ and MetroListPRO records it as a **Triplex with no pool** (already retired in `r
 structured field was blank and the prose was wrong; the MLS of record settled it, exactly as the
 gate requires.
 
+###### The county call also surfaces listings no MLS carries
+
+The 2026-09-26 run found the one row in that county pull that neither the IDX feed nor
+MetroListPRO knew about: **3476 Buena Vista Dr, Shingle Springs**, 4bd/3ba, $860,000, 52 days on
+market. Its `MLS#` was not an MLS number at all but a Redfin internal id
+(`cmsfk6lj404c1s601hr3c84qk`), its `SOURCE` read **FSBO.com** and its `SALE TYPE`
+**For-Sale-by-Owner Listing**. That is the explanation for a gap the board cannot otherwise close:
+an MLS-derived enumeration is complete over the MLS, and a for-sale-by-owner listing is by
+definition outside it. Redfin syndicates those; the IDX feed and MetroListPRO structurally cannot.
+
+So the county call earns its keep for a second reason beyond catching stale prices, and the check
+to run on its output is: **any row whose `MLS#` is not a MetroList-style number is off-MLS
+inventory, and no amount of MLS verification will ever confirm or deny it.** Read it by hand.
+
+This one also arrived with an empty `LOT SIZE`, exactly as the ZIP section warns, so it survived
+the local acreage filter by having no acreage to filter on. The detail page settled it: **0.79
+acres** against a 2.5 acre minimum, and no pool in the record or the description. Rejected on
+land, and recorded in `rejected` so the next run does not spend the fetch re-deriving it.
+
+Note what the verification gate implies for a listing like this if one ever does qualify. There is
+no MLS of record to re-read, so the gate cannot be satisfied the usual way and the listing cannot
+join the board as a verified match on Redfin's say-so alone. Carry it as a flagged candidate with
+its source named, the way `3538 Wildwood Ln` is carried for being in BAREIS rather than MetroList.
+
 ### Pool-less rows carry unverified prices
 
 `verify.py` only reads matches and pendings, so everything in `poolless` and `nearMisses` carries
