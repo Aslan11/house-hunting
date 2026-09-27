@@ -54,6 +54,28 @@ plus MetroListPRO remains the source of record, and the gate is unchanged. But a
 enumeration is cheap and it earns its keep — this one caught a stale price the IDX feed was
 carrying (below).
 
+#### "Nearly empty" is the wrong reason to avoid `/filter/`, and the right rule survives it
+
+The 2026-09-27 run measured the `/filter/…` path again and it is **not** nearly empty. A server-side
+`min-beds=4,min-baths=3,max-price=1.5M,min-lot-size=2.5-acre` returned a populated, correctly
+filtered result set — 4 rows for Shingle Springs, 10 for Placerville, 2 for 95672 — with the full
+GIS payload embedded exactly as the bare `/zipcode/<zip>` page carries it, and the city and ZIP
+variants of each query agreed row for row. Read against the board, those 16 rows contained **5 of
+the 6 pool matches**; the miss was 1315 Arrowbee Dr, which is Pending and therefore correctly
+outside an `status=9` active-only result.
+
+So the operative rule stands and is worth restating with its real justification: **`/filter/` is
+unsafe for enumeration because it is narrow, not because it is empty.** 16 rows against the MLS's
+402 residential records is a small, server-chosen slice; it happened to contain almost every match
+today, which is exactly what makes it seductive. The 2026-08-23 sweep's 12-rows-for-95667 was a real
+measurement of that narrowness, and "nearly empty" over-generalised from it — a page that returns
+plausible, correct, *incomplete* data is the more dangerous failure, because nothing about the
+result looks wrong.
+
+The practical warning for a future run: a `/filter/` sweep that finds the matches already on the
+board will look like a successful completeness check and is not one. Corroboration needs a source
+that enumerates — `parse_search.py` on the bare ZIP pages, `gis-csv`, or `mls-enumerate.py`.
+
 Each query is capped at **350 rows**, and a payload that comes back at the cap is silently truncated;
 `parse_search.py` warns when that happens. Treat a result set at the cap as incomplete.
 
