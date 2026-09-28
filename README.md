@@ -743,6 +743,49 @@ the methodology table — is a claim in its own right, and it has to be generate
 records the per-item caveats come from, not written once against the case where nothing is
 exceptional. Grep for a blanket "every"/"each"/"all" in `build.js` before adding one.
 
+### …and the same gap, one table further over
+
+**Fixed 2026-09-28.** The pool-less table got its category on 2026-09-10 and the rule was written
+down: *a summary that says nothing happened needs a category for everything that can happen.* The
+near-miss table — "Close, but one criterion short" — never got one. So on 2026-09-28 `runSummary`'s
+five board arrays and all three `poollessChanges` arrays were correctly empty, the banner published
+**"Nothing moved on the board"**, and the published near-miss table quietly swapped a row: **2500 Hwy
+50** (Placerville, 12.4 acres, $1,115,000) left it and **4351 Rossler Rd** (Placerville, 10 acres,
+$585,000) took its place. Both tables on the page were right; the sentence introducing them was not.
+
+`nearMissChanges` in `scrape.js` now mirrors `poollessChanges` — added, price changes, gone — and
+`build.js` renders it in both banner branches. Two details worth keeping:
+
+- It diffs the **published** list (`publishedNear`, the capped 14), not the full near-miss set. A
+  report about rows the page does not show would be worse than none. The cost is that a row can be
+  reported as arriving or leaving because the cap shifted under it, so every reported row carries
+  what it is short of rather than being announced as inventory.
+- Near-miss rows carry no MLS number, so the address is the key. That is weaker than
+  `poollessChanges`' `mls || address` and will mis-key a re-addressed listing; there is nothing
+  better in the row as built.
+
+That is now every table on the page with a category of its own. The next one added needs one on the
+same day, or the banner will lie about it.
+
+### One status, two answers on the same page
+
+**Fixed 2026-09-28.** `scrape.js` reads a listing's status from the detail page into `d.realStatus`,
+then upgrades it to `Pending` when the Redfin cross-check finds the listing in escrow while the feed
+still calls it Active — the correction the file's own header comment exists for. The corrected value
+lives in `realStatus`, and the match, pending and pool-less branches all read it.
+
+The near-miss branch read `d.realStatus`, the raw value. So a listing the same run had just
+established was under contract was still published as an active near miss. On 2026-09-27 that was
+**2500 Hwy 50**: carried in the near-miss table as for sale, and shown `Pending` in the pool-less
+table one section below — the same property, two statuses, one page, from one run's data.
+
+It survived because nothing on the page compared the two tables, and because the near-miss branch is
+the `else` of a chain whose earlier arms use the corrected name — the inconsistency is invisible
+unless the arms are read against each other. `realStatus` is now used throughout. **When a value is
+corrected into a new variable, the old name is a live trap for every later reader**; the correction
+belongs in the variable everything already reads, or the raw one should be renamed to make an
+accidental read obvious.
+
 ## Photos
 
 Photos are hotlinked from `m.cbhomes.com`, pulled off each detail page in document order:

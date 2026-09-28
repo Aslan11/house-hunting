@@ -496,6 +496,10 @@ const matches = [], pending = [], near = [], poolless = [];
    read against still holds; once it moves they are dropped rather than left to describe a
    number that no longer exists. */
 const priorPoolless = new Map((prior.poolless || []).map((p) => [p.mls || p.address, p]));
+/* Same reason as `priorPoolless`: the near-miss table can move without any board listing moving,
+   so the summary needs the previous run's rows to diff against. Near-miss rows carry no MLS
+   number, so the address is the only stable key. */
+const priorNear = new Map((prior.nearMisses || []).map((p) => [p.address, p]));
 /** id -> why it fell out of the match list, for properties still on the market. */
 const stillListed = new Map();
 candidates.forEach((r, i) => {
@@ -542,7 +546,13 @@ candidates.forEach((r, i) => {
     pending.push({ ...rec, status: 'pending', newThisRun: false,
       ...carryPending(rec), lastSeen: TODAY,
       notes: 'Meets every criterion but is under contract (Sale Pending). Kept on file in case the deal falls through.' });
-  } else if (d.realStatus === 'Active') {
+  } else if (realStatus === 'Active') {
+    /* `realStatus`, not `d.realStatus`. Line ~530 upgrades a feed "Active" to "Pending" when the
+       Redfin cross-check says the listing is in escrow, and every other branch here reads the
+       corrected value. This one read the raw detail status, so a near miss the same run had just
+       established was under contract was still published as actively for sale: on 2026-09-27 that
+       was 2500 Hwy 50, carried in the near-miss table while the pool-less table one section down
+       correctly showed it Pending. Same status, two answers on one page. */
     const missing = [];
     if (!d.pool) missing.push('no pool');
     if (!bigEnough) missing.push(d.acres != null ? `only ${d.acres} acres` : 'lot size unknown');
@@ -583,6 +593,11 @@ candidates.forEach((r, i) => {
 matches.sort((a, b) => b.currentPrice - a.currentPrice);
 pending.sort((a, b) => b.currentPrice - a.currentPrice);
 near.sort((a, b) => (a.missing === 'no pool') - (b.missing === 'no pool') || b.price - a.price);
+/* The page shows a capped list, so the change report has to be computed on the same capped list —
+   otherwise it describes rows nobody can see. A consequence worth knowing when reading the banner:
+   a row can enter or leave purely because the cap shifted under it, which is why each reported row
+   carries what it is missing rather than being announced as new inventory. */
+const publishedNear = near.slice(0, 14);
 poolless.sort((a, b) => b.acres - a.acres || b.price - a.price);
 
 const pendingIds = new Set(pending.map((p) => p.id));
@@ -639,7 +654,7 @@ const out = {
   },
   listings,
   pending,
-  nearMisses: near.slice(0, 14),
+  nearMisses: publishedNear,
   poolless,
   dropped: dropped.length ? dropped : [],
   relisted: relisted.length ? relisted : [],
@@ -721,6 +736,32 @@ const poollessChanges = {
     .map((p) => ({ address: p.address, city: p.city, price: p.price })),
 };
 
+/* The last table with no category of its own. `nearMisses` is the "one criterion short" list, and
+   it moves on its own schedule: on 2026-09-28 it lost 2500 Hwy 50 and gained 4351 Rossler Rd while
+   the board itself did not move, and the banner still said "Nothing moved on the board". The rule
+   the pool-less block above states applies unchanged — a summary that says nothing happened needs a
+   category for everything that can happen. */
+const nearNow = new Map(publishedNear.map((p) => [p.address, p]));
+const nearMissChanges = {
+  added: publishedNear
+    .filter((p) => !priorNear.has(p.address))
+    .map((p) => ({ address: p.address, city: p.city, price: p.price, acres: p.acres,
+      beds: p.beds, baths: p.baths, missing: p.missing, url: p.url })),
+  priceChanges: publishedNear
+    .map((p) => {
+      const was = priorNear.get(p.address);
+      return was && was.price !== p.price
+        ? { address: p.address, city: p.city, from: was.price, to: p.price } : null;
+    })
+    .filter(Boolean),
+  // Absence is the only signal: the list is rebuilt from live detail reads each run, and a row can
+  // leave because it sold, went pending, was repriced, or was pushed past the cap. Don't assert a
+  // cause the run did not establish.
+  gone: [...priorNear.values()]
+    .filter((p) => !nearNow.has(p.address))
+    .map((p) => ({ address: p.address, city: p.city, price: p.price, missing: p.missing })),
+};
+
 out.runSummary = {
   new: listings.filter((l) => l.newThisRun).map((l) => `${l.address}, ${l.city}`),
   priceChanges: listings.concat(pending).filter(movedToday).map((l) => ({
@@ -731,6 +772,7 @@ out.runSummary = {
   relisted: relisted.filter((r) => r.rescuedThisRun).map((r) => `${r.address}, ${r.city}`),
   dropped: dropped.map((d) => d.address),
   poollessChanges,
+  nearMissChanges,
   unchanged: listings.filter((l) => !l.newThisRun && !movedToday(l) && !changedToday(l)).length,
 };
 

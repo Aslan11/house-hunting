@@ -187,6 +187,28 @@ const poollessItems = [
   ...plGone.map((p) => `<strong>${esc(p.address)}, ${esc(p.city)}</strong> — off the table
      (last ${money(p.price)}); no longer an active or pending listing clearing the other criteria`),
 ];
+// The near-miss table ("one criterion short") moves independently of both the board and the
+// pool-less list, and had no banner category at all: on 2026-09-28 it swapped a row while the
+// banner said "Nothing moved on the board". Same treatment as the pool-less block above.
+const nm = (data.runSummary && data.runSummary.nearMissChanges) || {};
+const nmAdded = nm.added || [], nmPriced = nm.priceChanges || [], nmGone = nm.gone || [];
+const nearMissMoved = nmAdded.length + nmPriced.length + nmGone.length;
+const nearMissItems = [
+  // Each row says what it is short of, so nothing here reads as a match.
+  ...nmAdded.map((p) => `<strong>${esc(p.address)}, ${esc(p.city)}</strong> — ${money(p.price)},
+     ${esc(p.acres)} acres, ${p.beds} bd / ${p.baths} ba — <em>${esc(p.missing)}</em>`),
+  ...nmPriced.map((p) => `<strong>${esc(p.address)}, ${esc(p.city)}</strong> —
+     ${money(p.from)} → ${money(p.to)}`),
+  ...nmGone.map((p) => `<strong>${esc(p.address)}, ${esc(p.city)}</strong> — off the list
+     (last ${money(p.price)}${p.missing ? `, <em>${esc(p.missing)}</em>` : ''}); sold, under
+     contract, repriced, or pushed past the table's cap`),
+];
+const nearMissSummary = nearMissMoved ? `${[
+  nmAdded.length ? `${nmAdded.length} added` : '',
+  nmPriced.length ? `${nmPriced.length} price ${nmPriced.length === 1 ? 'change' : 'changes'}` : '',
+  nmGone.length ? `${nmGone.length} removed` : '',
+].filter(Boolean).join(', ')}` : '';
+
 const poollessSummary = poollessMoved ? `${[
   plAdded.length ? `${plAdded.length} added` : '',
   plPriced.length ? `${plPriced.length} price ${plPriced.length === 1 ? 'change' : 'changes'}` : '',
@@ -450,6 +472,8 @@ const html = `<!DOCTYPE html>
     ${dropped.length ? `<li><strong>${dropped.length} previously tracked ${dropped.length === 1 ? 'property' : 'properties'} removed</strong> — no longer on the market. Listed at the bottom.</li>` : ''}
     ${poollessMoved ? `<li><strong>Pool-less table:</strong> ${esc(poollessSummary)} — see
       &ldquo;Right land, right house, no pool&rdquo; below.</li>` : ''}
+    ${nearMissMoved ? `<li><strong>Near-miss table:</strong> ${esc(nearMissSummary)} — see
+      &ldquo;Close, but one criterion short&rdquo; below.</li>` : ''}
   </ul>` : `<p><strong>Nothing moved on the board.</strong> No new matches, no price changes, and
   nothing left the board since ${esc(data.previousRun)}. ${verifiedToday
     ? `All ${activeList.length} active matches and ${pendingList.length} pending were re-verified
@@ -460,6 +484,10 @@ const html = `<!DOCTYPE html>
   ${poollessMoved ? `<p><strong>The pool-less list did move</strong>
     (${esc(poollessSummary)}) — properties with the right land, beds and baths but no pool:</p>
   <ul>${poollessItems.map((i) => `\n    <li>${i}</li>`).join('')}
+  </ul>` : ''}
+  ${nearMissMoved ? `<p><strong>The near-miss list did move</strong>
+    (${esc(nearMissSummary)}) — properties one criterion short of the bar:</p>
+  <ul>${nearMissItems.map((i) => `\n    <li>${i}</li>`).join('')}
   </ul>` : ''}`}
 </div>
 

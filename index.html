@@ -125,7 +125,7 @@
 <header>
   <h1>House Hunt: El Dorado County</h1>
   <p class="sub">Shingle Springs &middot; Rescue &middot; Placerville — updated
-    <strong>2026-09-27</strong> (previous run 2026-09-26)</p>
+    <strong>2026-09-28</strong> (previous run 2026-09-27)</p>
   <div class="criteria">
     <span class="chip">4+ bedrooms</span>
     <span class="chip">3+ full bathrooms</span>
@@ -146,10 +146,19 @@
 <div class="banner">
   <h3>What changed this run</h3>
   <p><strong>Nothing moved on the board.</strong> No new matches, no price changes, and
-  nothing left the board since 2026-09-26. All 5 active matches and 1 pending were re-verified
+  nothing left the board since 2026-09-27. All 5 active matches and 1 pending were re-verified
        against the MLS of record today and are unchanged — same prices, same status. The board below
        is current, not stale.</p>
   
+  <p><strong>The near-miss list did move</strong>
+    (1 added, 1 removed) — properties one criterion short of the bar:</p>
+  <ul>
+    <li><strong>4351 Rossler Rd, Placerville</strong> — $585,000,
+     10 acres, 4 bd / 3 ba — <em>no pool</em></li>
+    <li><strong>2500 Hwy 50, Placerville</strong> — off the list
+     (last $1,115,000, <em>no pool</em>); sold, under
+     contract, repriced, or pushed past the table's cap</li>
+  </ul>
 </div>
 
 
@@ -157,7 +166,7 @@
 <h2>Still active from earlier runs <span class="count">(5)</span></h2>
 <p class="sectnote">Already on the board last run and re-checked today.
 4 of the 5 are confirmed
-<strong>Active</strong> on MetroList as of 2026-09-27. One exception — <strong>3538 Wildwood Ln</strong> — is not MetroList's to confirm; its card says what was read instead. Any
+<strong>Active</strong> on MetroList as of 2026-09-28. One exception — <strong>3538 Wildwood Ln</strong> — is not MetroList's to confirm; its card says what was read instead. Any
 price movement since it was first seen is shown on the card.</p>
 <div class="grid">
   <article class="card">
@@ -382,7 +391,7 @@ price movement since it was first seen is shown on the card.</p>
       <div class="facts"><span class="fact">4 bd</span><span class="fact">3 full ba</span><span class="fact acres pref">5 acres</span><span class="fact pool">Pool</span><span class="fact">Built 1962</span></div>
       <p class="pooldetail">Gunite Construction, Pool Sweep, Pool Cover, On Lot, Built-In</p>
       <p class="note">Welcome to a property that doesn&#39;t ask you to choose between a home, a retreat, and country living - you get all three. Set among the Placerville foothills, 3538 Wildwood Lane is a place to swim, garden, gather and spread out. The two-story main home offers a private ground-level guest suite with its own entrance and full bath, plus a two-car garage and full basement access. Upstairs, the living s</p>
-      <p class="flagnote">Listed in BAREIS, not MetroList — so MetroListPRO, the site this tracker verifies against, has no record of it and never will. That is a gap in the checking route, not a doubt about the listing. The IDX feed and Redfin MLS field table were read independently on 2026-09-27 and agree on MLS number, price, beds, full baths, lot size, pool — it reads Active there too.</p>
+      <p class="flagnote">Listed in BAREIS, not MetroList — so MetroListPRO, the site this tracker verifies against, has no record of it and never will. That is a gap in the checking route, not a doubt about the listing. The IDX feed and Redfin MLS field table were read independently on 2026-09-28 and agree on MLS number, price, beds, full baths, lot size, pool — it reads Active there too.</p>
       <dl class="micro">
         <div><dt>Per acre</dt><dd>$177,800</dd></div>
         <div><dt>Water</dt><dd>Well, Storage Tank, Public</dd></div>
@@ -477,9 +486,6 @@ yours rather than the script's.</p>
     <tr><td><a href="https://www.coldwellbankerhomes.com/ca/placerville/1300-large-oak-dr/pid_73377437/" rel="noopener">1300 Large Oak Dr</a>, Placerville</td>
         <td>$1,129,000</td><td>6.72 ac</td>
         <td>4 bd / 4 ba</td><td>no pool</td></tr>
-    <tr><td><a href="https://www.coldwellbankerhomes.com/ca/placerville/2500-hwy-50/pid_73603201/" rel="noopener">2500 Hwy 50</a>, Placerville</td>
-        <td>$1,115,000</td><td>12.4 ac</td>
-        <td>4 bd / 4 ba</td><td>no pool</td></tr>
     <tr><td><a href="https://www.coldwellbankerhomes.com/ca/placerville/4810-robledo-dr/pid_72301750/" rel="noopener">4810 Robledo Dr</a>, Placerville</td>
         <td>$999,900</td><td>5 ac</td>
         <td>5 bd / 4.5 ba</td><td>no pool</td></tr>
@@ -497,6 +503,9 @@ yours rather than the script's.</p>
         <td>4 bd / 3.5 ba</td><td>no pool</td></tr>
     <tr><td><a href="https://www.coldwellbankerhomes.com/ca/placerville/6560-agape-ct/pid_71736013/" rel="noopener">6560 Agape Ct</a>, Placerville</td>
         <td>$649,000</td><td>5.02 ac</td>
+        <td>4 bd / 3 ba</td><td>no pool</td></tr>
+    <tr><td><a href="https://www.coldwellbankerhomes.com/ca/placerville/4351-rossler-rd/pid_73286699/" rel="noopener">4351 Rossler Rd</a>, Placerville</td>
+        <td>$585,000</td><td>10 ac</td>
         <td>4 bd / 3 ba</td><td>no pool</td></tr>
   </tbody>
 </table>
@@ -620,17 +629,17 @@ failure mode is now closed off.</p>
   <thead><tr><th>Step</th><th>What happens</th></tr></thead>
   <tbody>
     <tr><td><strong>Enumerate</strong></td><td>Every active listing in the three cities is pulled from an IDX feed carrying MetroList data — 313 properties this run, not a search-result sample.</td></tr>
-    <tr><td><strong>Filter</strong></td><td>Hard criteria applied to structured MLS fields, never to prose: 59 cleared beds/baths/price, then acreage and pool narrowed it to 6.</td></tr>
+    <tr><td><strong>Filter</strong></td><td>Hard criteria applied to structured MLS fields, never to prose: 58 cleared beds/baths/price, then acreage and pool narrowed it to 6.</td></tr>
     <tr><td><strong>Verify</strong></td><td>Each survivor is re-read from <strong>MetroListPRO</strong>, the official MetroList MLS site, and price, beds, full baths, acreage and pool must match.
-      5 agreed, checked 2026-09-27. One listing is carried by a
+      5 agreed, checked 2026-09-28. One listing is carried by a
                   different MLS — <strong>3538 Wildwood Ln</strong> (BAREIS)
                   — so MetroListPRO has no record of it and never will.
                   It is confirmed against the IDX feed and Redfin instead.</td></tr>
     <tr><td><strong>Cross-enumerate</strong></td><td>The three cities were listed again straight from
-      <strong>MetroListPRO's own city indexes</strong> — 340 active and 62 pending MLS
-      records, a wider net than the IDX feed. All 402 were pulled and filtered
-      independently: 284 houses read field by field, 118 excluded
-      as land, commercial or multi-unit; none qualified beyond what is already on the board, so this board is complete against the MLS of record, not just against the feed. Checked 2026-09-27.</td></tr>
+      <strong>MetroListPRO's own city indexes</strong> — 338 active and 62 pending MLS
+      records, a wider net than the IDX feed. All 400 were pulled and filtered
+      independently: 283 houses read field by field, 117 excluded
+      as land, commercial or multi-unit; none qualified beyond what is already on the board, so this board is complete against the MLS of record, not just against the feed. Checked 2026-09-28.</td></tr>
     
     <tr><td><strong>Resolve</strong></td><td>Where sources disagree, the MLS of record wins and the disagreement is printed on the card rather than hidden.</td></tr>
   </tbody>
