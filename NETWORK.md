@@ -1,110 +1,126 @@
-# Network config needed for this tracker
+# Network reality for this tracker
 
-The container that runs this tracker denies outbound HTTPS to every listing site. The denial is
-at the egress gateway, not at the destination — a `CONNECT www.zillow.com:443` gets `403 Forbidden`
-from the local proxy, so no packet ever reaches Zillow.
-
-Verify at any time with:
+Superseded as of **2026-08-15**. Outbound HTTPS now works — the egress gateway is open and
+`recentRelayFailures` is empty:
 
 ```bash
 curl -sS "$HTTPS_PROXY/__agentproxy/status" | python3 -m json.tool
 ```
 
-`recentRelayFailures` records each denial as
-`"gateway answered 403 to CONNECT (policy denial or upstream failure)"`.
+What blocks listing data now is **site-side bot defence**, not the proxy. Distinguish the two: a
+gateway denial shows up in `recentRelayFailures`; a site block does not.
 
-## Where to change it
+## Host status, measured 2026-08-15
 
-**claude.ai → profile icon (bottom left) → Settings → Capabilities →
-"Code execution and file creation" → Domain allowlist**
+| Host | Result | Usable |
+|---|---|---|
+| `www.coldwellbankerhomes.com` | 200, correct city, full MetroList IDX data | **Yes — primary** |
+| `www.metrolistpro.com` | 200, official MetroList MLS records by MLS number | **Yes — verification** |
+| `m.cbhomes.com` | 200 on `GET` (rejects `HEAD`) | **Yes — photos** |
+| `www.redfin.com` | 200, full GIS payload on `/zipcode/<zip>` | **Yes — cross-check only** |
+| `www.zillow.com`, `www.homes.com`, `www.movoto.com`, `www.remax.com`, `www.har.com` | 403 | No |
+| `www.realtor.com` | 429 | No |
+| `www.redfin.com/stingray/api/gis-csv` | 200, CSV export of a region's listings | **Yes — cross-check** |
+| `www.redfin.com/stingray/do/location-autocomplete` | 403 (CloudFront) | No |
+| `www.century21.com` | 200 but client-rendered shell, no data in HTML | No |
 
-Either set it to **All domains**, or keep it restricted and add the hosts below under
-**Additional allowed domains**.
+Both usable hosts require a browser `User-Agent`. The default agent string is blocked.
 
-If the environment was created through Claude Code on the web with its own network policy, that
-policy governs instead, and it's edited on the environment itself. See
-<https://code.claude.com/docs/en/claude-code-on-the-web> and
-<https://code.claude.com/docs/en/network-config>.
+The Redfin row was corrected on **2026-08-23**. The "decoy page for another state" was real but
+self-inflicted: `/city/<id>/…` resolves by numeric id, and a guessed id serves a complete,
+valid-looking page for a different city (17151 is San Francisco, not Shingle Springs). HTTP 200 on a
+wrong id looks exactly like success. `/zipcode/<zip>` has no such failure mode and returns the full
+GIS search payload — good enough to enumerate as a cross-check, though the board still comes from
+the IDX feed. Either way, **assert the expected city appears in the returned HTML** before trusting
+a page.
 
-## Minimal set — test viability first
+Redfin also answers **202 with a stub body** under load rather than 429. A short body is retryable;
+back off and try again, and never read a 202 as a missing listing.
 
-Start with Redfin alone. It's the most likely to actually work: it serves a structured CSV of
-search results, and it bot-blocks less aggressively than Zillow.
+## `stingray/*` is not blocked as a whole — corrected 2026-09-06
 
-```
-www.redfin.com
-ssl.cdn-redfin.com
-```
-
-If that works, a filtered search can be pulled directly as CSV — the cleanest possible input for
-`ingest.js`, with no HTML parsing.
-
-## Full set — listing data plus photos
-
-The CDN hosts matter: without them, pages load but every photo is broken.
-
-```
-# Zillow (+ Trulia, same company)
-www.zillow.com
-zillow.com
-photos.zillowstatic.com
-www.trulia.com
-
-# Redfin
-www.redfin.com
-ssl.cdn-redfin.com
-
-# Realtor.com
-www.realtor.com
-api.realtor.com
-ap.rdcpix.com
-
-# Others carrying El Dorado County inventory
-www.homes.com
-images.homes.com
-www.movoto.com
-www.compass.com
-
-# MetroList — the actual MLS for El Dorado County
-www.metrolistpro.com
-www.metrolist.com
-```
-
-If the field accepts wildcards, this is equivalent and more robust:
-
-```
-*.zillow.com  *.zillowstatic.com  *.redfin.com  *.cdn-redfin.com
-*.realtor.com  *.rdcpix.com  *.homes.com  *.movoto.com
-*.compass.com  *.trulia.com  *.metrolistpro.com  *.metrolist.com
-```
-
-## Known issues to expect
-
-1. **The setting may not take effect.** Several open bugs report that "Additional allowed domains"
-   is not propagated to container egress — anthropics/claude-code
-   [#19087](https://github.com/anthropics/claude-code/issues/19087),
-   [#30112](https://github.com/anthropics/claude-code/issues/30112),
-   [#52982](https://github.com/anthropics/claude-code/issues/52982). If the hosts are still denied
-   after the change, "All domains" is the reliable fallback.
-2. **Allowlisting is necessary but may not be sufficient.** Zillow and Redfin block datacenter IP
-   ranges, which is what this container runs on. A second 403 may appear — that one genuinely from
-   the site. Distinguish them by source: a gateway denial shows up in `recentRelayFailures`, a site
-   block does not and returns an HTML body.
-3. **`WebFetch` is blocked too**, independently of `curl` (`example.com` returns 403). It's likely
-   governed by the same allowlist, so it may start working after the change — worth retesting.
-
-## Verifying after the change
+The row above used to read `www.redfin.com/stingray/* | 403 (CloudFront) | No`, generalising from a
+single blocked path. It is per-endpoint: `do/location-autocomplete` is CloudFront-blocked,
+`api/gis-csv` is not, and the latter returns a clean CSV of a region's listings — no HTML parsing.
 
 ```bash
-curl -sS -o /dev/null -w "%{http_code}\n" https://www.redfin.com/
+curl -sS -A "$UA" -H "Referer: https://www.redfin.com/zipcode/95682" \
+  "https://www.redfin.com/stingray/api/gis-csv?al=1&num_homes=350&ord=redfin-recommended-asc\
+&page_number=1&region_id=39806&region_type=2&sf=1,2,3,5,6,7&status=9&uipt=1,2,3,4,7,8&v=8"
 ```
 
-- `200` → egress open and the site is serving. Working.
-- `403` **with** a new entry in `recentRelayFailures` → still an egress policy denial.
-- `403` **without** a new relay-failure entry → egress is open; the site is bot-blocking.
+`region_id` is Redfin's **internal** region id, not the ZIP. Passing the ZIP returns HTTP 200 with a
+full, valid-looking CSV of listings **in another state** — the same silent-wrong-region failure the
+`/city/<id>/` path has. Scrape the id, and assert the city column before trusting a row:
 
-## If the sites block anyway
+```bash
+curl -sSL -A "$UA" https://www.redfin.com/zipcode/95682 | grep -oE 'region_id=[0-9]+'
+```
 
-Fall back to the paths that don't fight bot defenses: Zillow/Redfin saved-search **email alerts**
-into the connected Gmail (works today, needs no network change, and carries photo URLs), or a
-licensed data API key (SimplyRETS, Bridge Interactive, RapidAPI).
+Current ids: **95682 → 39806**, **95672 → 39796**, **95667 → 39791**. The CSV footer states that
+some MLS listings are excluded from the download, so this stays a cross-check and never the board.
+A 2026-09-06 sweep this way returned 291 active listings in the three cities and found the same six
+pool matches — the same corroboration `scripts/parse_search.py` gives, with less parsing.
+
+One thing it did add: **3538 Wildwood Ln, which MetroListPRO still has not indexed** (10 days), read
+`For sale` on its live Redfin page, MLS 226107286, 10 days on market, at the board's $949,000. When
+`verify.py` carries a match as unverified-because-unindexed, this is a cheap second opinion.
+
+The listing page also carries a status banner that discriminates correctly — `For sale` vs
+`Off Market`, validated on 2026-09-06 against two known-sold properties — and structured pool
+fields (`"hasPrivatePool"`, plus the MLS `Pool Information` amenity group). Unescape the embedded
+JSON (`\"` → `"`) before matching. Beware **spa-only** records: 5025 Eco Ridge Rd carries
+`Spa/Hot Tub Personal` with no pool, and prose is no guide either — listing descriptions mention
+neighbours' pools, nearby pool contractors and "room for a future pool".
+
+## Headless browser
+
+**Corrected 2026-09-03.** This section previously said Chromium had no outbound network at all,
+because even `https://example.com` failed with `ERR_CONNECTION_RESET` with or without
+`--proxy-server`. That diagnosis was wrong. Chromium reaches the network fine; its **TLS handshake**
+was being dropped.
+
+The proxy logs the failure as:
+
+```
+ws_closed_mid_exchange: tunnel closed (code 1006) after 6s; 1820 B sent, 39 B received
+```
+
+1,820 bytes of ClientHello out, 39 bytes back, tunnel dead. Chromium's post-quantum key agreement
+(`X25519MLKEM768`) produces an oversized ClientHello spanning multiple TLS records and the proxy
+drops it. Disable that and everything loads:
+
+```js
+chromium.launch({
+  executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
+  args: [
+    '--no-sandbox', '--disable-dev-shm-usage',
+    '--disable-blink-features=AutomationControlled',
+    '--disable-quic', '--ignore-certificate-errors',
+    '--disable-features=EncryptedClientHello,PostQuantumKyber,TLS13KyberSupport,' +
+      'X25519Kyber768,X25519MLKEM768,UseDnsHttpsSvcb,AsyncDns,OptimizationHints',
+    '--ssl-version-max=tls1.2',
+  ],
+  proxy: { server: process.env.HTTPS_PROXY },
+});
+```
+
+Playwright is at `/opt/node22/lib/node_modules/playwright`; don't run `playwright install`.
+
+Nothing in the pipeline needs this today — `curl` reaches both source hosts and is simpler. It
+matters for two cases. First, if the IDX or MetroListPRO ever starts bot-blocking `curl` the way
+the consumer portals do, a real browser is the fallback, and it works: a 2026-09-03 check pulled
+Redfin search CSVs and 22 detail pages this way (Zillow still refuses a real browser too, so don't
+bother). Second, and more important, **a bare `ERR_CONNECTION_RESET` is not evidence that a host is
+blocked by policy.** A genuine policy denial shows up in `recentRelayFailures` as a CONNECT 403;
+confirm that before recording a host as unreachable. Reading resets as denials is what produced the
+incorrect claim this section used to make.
+
+## If the usable hosts start blocking
+
+Fall back to paths that don't fight bot defences:
+
+1. A Zillow/Redfin **saved search with email alerts** into the connected Gmail — carries current
+   status, price cuts and image URLs, needs no network change.
+2. An agent-run **MLS/IDX client portal** with email alerts.
+3. A licensed **data API key** (SimplyRETS, Bridge Interactive, RapidAPI).
