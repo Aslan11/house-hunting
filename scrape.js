@@ -502,6 +502,14 @@ const priorPoolless = new Map((prior.poolless || []).map((p) => [p.mls || p.addr
 const priorNear = new Map((prior.nearMisses || []).map((p) => [p.address, p]));
 /** id -> why it fell out of the match list, for properties still on the market. */
 const stillListed = new Map();
+/* The IDX serves a grey "No Photo Available" SVG for a listing whose photos it has not
+   ingested yet (common on day one). It is a placeholder, not a photograph: passing it through
+   renders a card that looks broken and claims the listing has no pictures, when in fact the
+   photos simply are not on this feed yet. Drop it and let build.js fall back to its
+   "View photos" link, which goes somewhere useful. */
+const usablePhotos = (imgs) =>
+  (imgs || []).filter((u) => !/\/photo\/listing\/not-available\//.test(u)).slice(0, 6);
+
 candidates.forEach((r, i) => {
   const d = detail(r.url);
   if (!d) { process.stderr.write(`  ! fetch failed ${r.name}\n`); return; }
@@ -518,7 +526,7 @@ candidates.forEach((r, i) => {
     propertyType: d.propertyType, mlsStatus: d.realStatus, mlsSource: d.mlsSource,
     flag: d.badge && d.badge !== 'Sale Pending' ? d.badge : null,
     listedOn: (d.datePosted || '').slice(0, 10) || null,
-    lat: r.lat, lng: r.lng, photos: d.images.slice(0, 6),
+    lat: r.lat, lng: r.lng, photos: usablePhotos(d.images),
     url: r.url, gallery: r.url, status: 'match',
     summary: (d.description || '').replace(/^Discover the property .*? for sale\.\s*/, '').slice(0, 400),
     notes: '',
