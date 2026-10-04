@@ -73,6 +73,42 @@ JSON (`\"` → `"`) before matching. Beware **spa-only** records: 5025 Eco Ridge
 `Spa/Hot Tub Personal` with no pool, and prose is no guide either — listing descriptions mention
 neighbours' pools, nearby pool contractors and "room for a future pool".
 
+## Host status re-measured 2026-10-04 — two rows have changed
+
+Zillow and Redfin's autocomplete both answer now. The table above records them as blocked; that was
+true when measured and is not any more.
+
+| Host | Was | Now |
+|---|---|---|
+| `www.zillow.com` | 403 | **200** — full listing JSON, descriptions, photo URLs |
+| `www.zillowstatic.com/autocomplete/v3/suggestions` | — | **200** — returns `zpid` and an `addressType` |
+| `www.redfin.com/stingray/do/location-autocomplete` | 403 (CloudFront) | **200** |
+| `www.homes.com`, `www.movoto.com` | 403 | 403 (unchanged) |
+| `www.realtor.com` | 429 | 429 (unchanged) |
+
+The Zillow autocomplete row is the useful one: `addressType` discriminates `forsale_address` from
+`sold_address`, which is a cheap status second-opinion that needs no page fetch.
+
+### It does not promote Redfin or Zillow to a source of pool data
+
+The 2026-10-04 run tested exactly that and it failed in both directions on the eight-match board.
+Redfin's MLS `Pool Information` amenity group, read per listing:
+
+- **3720 Four Springs Dr, Rescue** — Redfin exposes no pool amenity group at all. MetroList
+  (MLS 226083791) records `Built-In, On Lot, Pool Sweep, Gunite Construction`. A **false negative**
+  that would have dropped a verified match off the board.
+- **1781 Springvale Rd, Placerville** — Redfin reports `Has Pool`. MetroList records no pool, and the
+  listing is a **triplex**, not single-family. A **false positive** that would have put a
+  retired-from-tracking property back on the board as a match.
+
+Both errors were caught only because the baseline came from `origin/gh-pages` and the board was
+re-read from MetroListPRO. Neither listing's Redfin record is *wrong* in a way that is detectable
+without the MLS — which is the whole argument for the verification gate.
+
+So the standing rule extends unchanged to amenity fields: **use Redfin and Zillow to contradict a
+status, never to establish the inventory, the criteria fields, or the pool.** What the new access
+buys is a second opinion and full listing descriptions, not a second board.
+
 ## Headless browser
 
 **Corrected 2026-09-03.** This section previously said Chromium had no outbound network at all,
