@@ -13,16 +13,16 @@
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-10-06",
-  "previousRun": "2026-10-05",
+  "lastRun": "2026-10-07",
+  "previousRun": "2026-10-06",
   "source": {
     "name": "Coldwell Banker IDX (MetroList feed), verified against MetroListPRO (MetroList MLS)",
     "method": "Enumerated every active listing in the three cities from IDX city pages, applied the hard criteria to structured MLS fields, then re-read each survivor's record from MetroListPRO and required price, beds, full baths, acreage and pool to match.",
-    "inventoryScanned": 312,
-    "passedBedsBathsPrice": 61,
+    "inventoryScanned": 313,
+    "passedBedsBathsPrice": 60,
     "verifiedActiveMatches": 8,
     "pendingMatches": 0,
-    "mlsVerifiedOn": "2026-10-06",
+    "mlsVerifiedOn": "2026-10-07",
     "mlsVerifiedCount": 6,
     "mlsForeignSource": [
       {
@@ -41,16 +41,27 @@
   },
   "dataQuality": {
     "verifiedActiveListings": 8,
-    "note": "312 active listings scanned across the three cities; 61 cleared beds, baths and price and had their MLS field table read directly. No status disagreement between the IDX feed and the Redfin cross-check this run.",
+    "note": "313 active listings scanned across the three cities; 60 cleared beds, baths and price and had their MLS field table read directly. No status disagreement between the IDX feed and the Redfin cross-check this run.",
     "independentEnumeration": {
-      "ranOn": "2026-10-06",
+      "ranOn": "2026-10-07",
       "source": "MetroListPRO city indexes (the MLS of record)",
-      "activeRecords": 333,
-      "pendingRecords": 57,
-      "recordsPulledBeyondIdxSweep": 390,
-      "singleFamilyRead": 281,
+      "activeRecords": 336,
+      "pendingRecords": 55,
+      "recordsPulledBeyondIdxSweep": 391,
+      "singleFamilyRead": 282,
       "excludedByType": 109,
       "additionalMatchesFound": 0
+    },
+    "redfinCrossCheck": {
+      "ranOn": "2026-10-07",
+      "route": "Redfin gis-csv active export via the direct stingray API, one call per region (95672 Rescue=39796, 95667 Placerville=39791, 95682 Shingle Springs=39806, 95619 Diamond Springs=39748, 95623 El Dorado=39751, Shingle Springs (city)=25976, Placerville (city)=14915)",
+      "scope": "active for-sale listings in ZIPs 95672, 95667, 95682, 95619 and 95623 plus the Shingle Springs and Placerville city regions",
+      "rowsScanned": 362,
+      "candidatesAfterFilters": 16,
+      "poolConfirmed": 8,
+      "additionalMatchesFound": 0,
+      "confirmedUnindexedListing": null,
+      "note": "Third independent source, run separately from the IDX feed and MetroListPRO. Pool taken only from the structured MLS field POOL_PRIVATE_YN of the belowTheFold API called with an explicit propertyId, never from page text, because a Redfin listing page embeds copy for nearby homes and it bleeds across properties. Redfin's CSV export omits listings whose MLS forbids download, so this sweep can corroborate the board and surface something it is missing, but its silence is not evidence a listing is gone."
     }
   },
   "runSummary": {
@@ -65,27 +76,9 @@
       "gone": []
     },
     "nearMissChanges": {
-      "added": [
-        {
-          "address": "7991 S Shingle Rd",
-          "city": "Shingle Springs",
-          "price": 1250000,
-          "acres": 21.15,
-          "beds": 4,
-          "baths": 3,
-          "missing": "no pool",
-          "url": "https://www.coldwellbankerhomes.com/ca/shingle-springs/7991-s-shingle-rd/pid_72631444/"
-        }
-      ],
+      "added": [],
       "priceChanges": [],
-      "gone": [
-        {
-          "address": "6560 Agape Ct",
-          "city": "Placerville",
-          "price": 649000,
-          "missing": "no pool"
-        }
-      ]
+      "gone": []
     },
     "unchanged": 8
   },
@@ -131,7 +124,7 @@
       "summary": "Crafted as the builder's own residence, this extraordinary European Country-inspired estate was designed without compromise. From its commanding setting on 40 acres with sweeping Sierra foothill views and timeless architectural details, every aspect of the property reflects quality and enduring elegance. From the moment you arrive, the home makes a striking impression, thoughtfully designed to fra",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-10-06",
+      "lastSeen": "2026-10-07",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -185,7 +178,7 @@
       "summary": "Escape the hustle and bustle and discover your own private retreat in Shingle Springs. Set on approximately 5 private acres with sweeping hillside views, this single-story custom home offers over 3,000 sq. ft. of thoughtfully designed living space with 4 bedrooms, 3 full baths and an impressive 4-car garage.    The outdoor setting is where this property truly shines. A stunning infinity-edge saltw",
       "notes": "",
       "firstSeen": "2026-08-13",
-      "lastSeen": "2026-10-06",
+      "lastSeen": "2026-10-07",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -235,7 +228,7 @@
       "summary": "This is an exceptional property, fully permitted & short-term rental permitted. Welcome to this majestic luxury estate situated on over 16.74 acres. The large lot provides opportunities for an additional home. Positioned atop the serene Bedford Canyon, this estate boasts sweeping panoramic views that capture the natural beauty of sunrises, sunsets & stargazing. A unique combination of privacy & op",
       "notes": "",
       "firstSeen": "2026-10-02",
-      "lastSeen": "2026-10-06",
+      "lastSeen": "2026-10-07",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -245,7 +238,7 @@
       ],
       "secondSource": {
         "name": "Redfin MLS field table",
-        "checkedOn": "2026-10-06",
+        "checkedOn": "2026-10-07",
         "url": "https://www.redfin.com/CA/Placerville/2520-Bedford-Ave-95667/home/167313858",
         "confirmed": [
           "mls",
@@ -302,7 +295,7 @@
       "summary": "Just minutes from town yet worlds away, this 10 acre sanctuary delivers the ultimate retreat lifestyle. Step inside to discover a beautifully updated home with 4 bedrooms, 3 baths, and an inviting upstairs game room complete with a wet bar  perfect for gatherings. The renovated kitchen shines with quartz counters, stainless appliances, and beautiful white cabinetry, flowing seamlessly into the fam",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-10-06",
+      "lastSeen": "2026-10-07",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -352,7 +345,7 @@
       "summary": "Major price reduction!  Sought-after area. Minutes from shopping, schools. Country living at its finest. Don't miss the approx. 750SF ultimate entertainment hub: game room plus extra room & bath situated above the detached three-car garage. Connected to the main house by a breeze-catching walkway, this private extra space makes a perfect teen hangout or man cave.  Situated in a serene, park-like s",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-10-06",
+      "lastSeen": "2026-10-07",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -410,7 +403,7 @@
       "summary": "Welcome to this charming mini ranch with an ADU, tucked behind a gated entrance at the end of a paved driveway, offering privacy, versatility, and lovely views in a peaceful country setting. The single-story ranch home design welcomes you into a light-filled living room where vaulted ceilings and expansive picture windows showcase the scenery beyond. The updated kitchen features granite countertop",
       "notes": "Back on the market \u2014 was under contract since 2026-09-08 and the deal did not close. re-verified Active against the IDX detail page this run.",
       "firstSeen": "2026-09-08",
-      "lastSeen": "2026-10-06",
+      "lastSeen": "2026-10-07",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -464,7 +457,7 @@
       "summary": "Welcome to a property that doesn't ask you to choose between a home, a retreat, and country living - you get all three. Set among the Placerville foothills, 3538 Wildwood Lane is a place to swim, garden, gather and spread out. The two-story main home offers a private ground-level guest suite with its own entrance and full bath, plus a two-car garage and full basement access. Upstairs, the living s",
       "notes": "",
       "firstSeen": "2026-08-27",
-      "lastSeen": "2026-10-06",
+      "lastSeen": "2026-10-07",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -478,7 +471,7 @@
       ],
       "secondSource": {
         "name": "Redfin MLS field table",
-        "checkedOn": "2026-10-06",
+        "checkedOn": "2026-10-07",
         "url": "https://www.redfin.com/CA/Placerville/3538-Wildwood-Ln-95667/home/167376612",
         "confirmed": [
           "mls",
@@ -535,7 +528,7 @@
       "summary": "Tucked away in Gold Hill on five golden acres, this single story ranch style home offers the kind of setting that makes you want to slow down and stay a while. Surrounded by rolling, oak studded terrain with beautiful valley and mountain views, the property combines privacy, space and effortless indoor/outdoor living. At the heart of the home, a vaulted great room is filled with natural light from",
       "notes": "",
       "firstSeen": "2026-10-02",
-      "lastSeen": "2026-10-06",
+      "lastSeen": "2026-10-07",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -963,8 +956,8 @@
     },
     {
       "address": "1781 Springvale Rd, Placerville",
-      "price": 1250000,
-      "reason": "Tracked as a relist after dropping from $1.5M. Resolved this run against MetroListPRO (MLS 226100125): Property Subtype is Triplex \u2014 multi-unit residential income, 10.27 acres, no pool. Fails the pool requirement and is not a single-family home. Retired from tracking."
+      "price": 1200000,
+      "reason": "Tracked as a relist after dropping from $1.5M, now asking $1,200,000. Resolved against MetroListPRO (MLS 226100125): Property Subtype is Triplex \u2014 multi-unit residential income, three dwellings (3bd/2ba main, 1bd/1ba ADU, studio pool house) on 10.27 acres. No single unit meets the 4BR/3BA minimum, and the MLS pool field reads No even though the remarks describe a 150,000-gallon pool. Re-confirmed a triplex on 2026-10-07. Retired from tracking; further price cuts do not change the subtype."
     },
     {
       "address": "1601 Velvet Horn Ln, Rescue",

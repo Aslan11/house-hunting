@@ -97,9 +97,11 @@ baths, sqft, lot size, status, MLS number, days on market and the listing URL.
 
 Three things to know before using it:
 
-- **Get region IDs from `/zipcode/<ZIP>`**, which embeds `regionId=<N>`. The `location-autocomplete`
-  API is CloudFront-blocked (403), and `/city/<id>/…` IDs are not guessable — a wrong one silently
-  serves a different city, the same decoy failure the section above warns about.
+- **Get region IDs from `/zipcode/<ZIP>`**, which embeds `regionId=<N>`. `location-autocomplete`
+  answered 200 on 2026-10-07 (see below) but had been CloudFront-blocked (403) before that, so
+  `/zipcode/<ZIP>` remains the route that has always worked. `/city/<id>/…` IDs are not guessable —
+  a wrong one silently serves a different city, the same decoy failure the section above warns
+  about.
 - **Never filter lot size server-side.** A listing with an empty `LOT SIZE` is dropped silently.
   Filter locally (`LOT SIZE` is square feet; divide by 43,560) and check the empty ones by hand. On
   2026-09-07 one row came back with no lot size and had to be read individually.
@@ -120,6 +122,61 @@ That run scanned 414 rows, narrowed to 23 candidates, and returned the same six 
 board carried — including **3538 Wildwood Ln**, which MetroListPRO still has not indexed, so this is
 the second source that card's note depends on. Under load Redfin answers **202 with an empty body**
 rather than 429; back off a few seconds and retry rather than treating it as a failure.
+
+##### The `/stingray/api/*` endpoints answer directly now — `redfin-csv.py`
+
+Measured on **2026-10-07**: the endpoints this repo had recorded as CloudFront-blocked return 200 to
+this environment. `redfin.py`'s header still says they must be dug out of the search page's
+`ReactServerAgent.cache.dataCache`, and the bullet above still says `location-autocomplete` 403s.
+Both were true when written. Today:
+
+| Endpoint | Result |
+|---|---|
+| `do/location-autocomplete` | 200 — region ids, as `"<type>_<id>"` (type 2 = city, 4 = ZIP) |
+| `api/gis-csv` | 200 — the CSV export described above |
+| `api/home/details/aboveTheFold` | 200 — live status, latest price, real photo URLs |
+| `api/home/details/belowTheFold` | 200 — the MLS amenity record, property history |
+
+The two detail endpoints matter more than the convenience, because they close the hole the
+"do not grep a listing page for pool" warning above exists to work around. Both take an explicit
+`propertyId` and `listingId` and return **only that property's record**, so there is no scope
+ambiguity to guard against — no comparable-homes payload to leak a neighbour's pool status, and no
+regex to get wrong. `belowTheFold` → `payload.amenitiesInfo.superGroups[].amenityGroups[]
+.amenityEntries[]` carries `POOL_PRIVATE_YN`, `POOL_FEATURES` and `SPA_YN`; `aboveTheFold` →
+`payload.addressSectionInfo.status.displayValue` carries `Active` / `Pending` / `Sold` and
+`payload.mediaBrowserInfo.photos[]` the photo URLs. Both responses are prefixed `{}&&` to defeat
+JSON hijacking; strip it before parsing. `listingId` is not in the CSV — scrape it off the listing
+page with `"listingId":(\d+)`, which is the one HTML read still needed.
+
+`redfin-csv.py` is this route packaged as the repeatable third-source sweep, replacing the
+hand-rolled one the 2026-09-07 run did:
+
+```bash
+python3 redfin-csv.py                 # sweep, read each candidate's MLS pool field, diff the board
+python3 redfin-csv.py --stamp         # also record dataQuality.redfinCrossCheck for build.js
+```
+
+It sweeps seven regions (the three target ZIPs plus 95619 and 95623, plus the two city regions as
+belt-and-braces), filters on the `CITY` column rather than the ZIP queried, takes pool **only** from
+`POOL_PRIVATE_YN`, and diffs against `listings.json` in the one direction that proves anything: a
+match it has that the board lacks. The reverse proves nothing, because the CSV export omits listings
+whose MLS forbids download. `--stamp` refuses to write if the sweep came back under 200 rows, so a
+truncated sweep cannot publish a completeness claim.
+
+The 2026-10-07 run: 362 unique rows, 16 cleared beds/baths/price/acres, 8 pool-confirmed and active
+— the same 8 the board carries, no price disagreement, nothing missing.
+
+One thing it deliberately does not decide. Redfin's `BATHS` column is full + half and cannot be
+decomposed: 2.5 is certainly 2 full, but 5.0 might be 5 full or 4 full + 2 half. So it excludes
+fractional rows under the 3-full minimum, flags the ones it cannot resolve, and leaves the full-bath
+count to the IDX/MetroList field the board uses. Four rows were flagged this run (4661 Holm Rd,
+4810 Robledo Dr, 4020 Saddlehorn Ct, 5681 Honeycomb Ln) and all four are already on the pool-less
+list, so nothing turned on it.
+
+**None of this promotes Redfin to the board.** It is the third source, same as before: the IDX feed
+enumerates, MetroListPRO speaks for the MLS of record, and if the direct endpoints start 403ing
+again the fallback is `redfin.py` and `scripts/fetch.sh`, which read the same data out of the page
+HTML.
 
 ##### One county call instead of three ZIP calls
 
@@ -891,10 +948,12 @@ cities, straight from the MLS of record, filtered independently of the IDX feed:
 
 ```bash
 python3 mls-enumerate.py --stamp                  # 4. cross-enumerate; run before step 3
+python3 redfin-csv.py --stamp                     # 5. third source; also run before step 3
 ```
 
-It stamps nothing if any page failed to parse, so a partial sweep cannot publish a completeness
-claim. Run it before `build.js` if you want the "Cross-enumerate" row on the page.
+`mls-enumerate.py` stamps nothing if any page failed to parse, and `redfin-csv.py` stamps nothing if
+its sweep came back short, so a partial sweep cannot publish a completeness claim either way. Run
+both before `build.js` if you want the "Cross-enumerate" and "Third source" rows on the page.
 
 Also available, and it caught a stale price on 2026-08-23 — a Redfin enumeration as a second
 cross-check:
