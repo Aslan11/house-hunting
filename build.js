@@ -620,8 +620,17 @@ failure mode is now closed off.</p>
 <p class="sectnote" style="margin-top:14px">Two things that bite here and are handled explicitly:
 <strong>half baths</strong> — some sites report 2 full + 1 half as &ldquo;3 baths&rdquo;, so the bath
 test counts full baths only; and <strong>MetroList MLS number prefixes encode the listing year</strong>
-(<code>226…</code> = 2026), which makes a stale listing easy to spot. Every property on this page
-carries a 226 number.</p>
+(<code>226…</code> = 2026), which makes a stale listing easy to spot. ${(() => {
+  const shown = [...activeList, ...pendingList];
+  const other = shown.filter(l => !/^226/.test(String(l.mls || '')));
+  if (!other.length) return 'Every property on this page carries a 226 number.';
+  const names = other.map(l => `<strong>${esc(l.address)}</strong> (MLS ${esc(String(l.mls))}${
+    l.mlsSource ? `, ${esc(l.mlsSource)}` : ''})`).join(' and ');
+  return `Every MetroList-carried property on this page has one; the ${other.length === 1
+    ? 'single exception is' : `${other.length} exceptions are`} ${names}, numbered by a
+    different MLS, so the year cannot be read off ${other.length === 1 ? 'it' : 'them'} this way
+    and ${other.length === 1 ? 'its' : 'their'} card says how ${other.length === 1 ? 'it was' : 'they were'} checked instead.`;
+})()}</p>
 
 <footer>
   <p>Generated from <code>listings.json</code> by <code>build.js</code>.

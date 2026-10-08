@@ -843,6 +843,52 @@ corrected into a new variable, the old name is a live trap for every later reade
 belongs in the variable everything already reads, or the raw one should be renamed to make an
 accidental read obvious.
 
+### A universal claim the board had already outgrown
+
+**Fixed 2026-10-08.** The "How this list is built" footnote explained the MLS year prefix and then
+closed with a flat assertion: *"Every property on this page carries a 226 number."* It was hardcoded
+prose, true when written, and false from **2026-10-02** onward — the run that added **2520 Bedford
+Ave**, MLS `41150059`, carried by MAX (bridgeMLS / Bay East / Contra Costa AOR). For six consecutive
+runs the page taught the reader a staleness test and, in the same breath, told them every row passed
+it, while one row was not even numbered in that scheme.
+
+The sentence is now computed from the rendered set: it names the exceptions, their MLS number and
+their MLS, and points at the card that says how each was checked instead. With the current board it
+reads *"the single exception is 2520 Bedford Ave (MLS 41150059, MAX)"*. Note that 3538 Wildwood Ln is
+**not** an exception here even though it is a foreign-MLS listing — its number, `226107286`, is in
+MetroList's 2026 space and does pass the prefix test. Which MLS *carries* a listing and which MLS
+*numbered* it are different questions, and this footnote is only about the second.
+
+The lesson is narrow and keeps recurring in this file: **a universal quantifier over the board is a
+claim that has to be recomputed every run.** "Every property here…" was correct for every run that
+had been published when it was typed, which is exactly why nobody re-read it. Any sentence of the
+form *all / every / none* belongs in a template expression over the data it quantifies, not in prose
+beside it — otherwise the data moves and the sentence does not, and the page keeps asserting it with
+undiminished confidence.
+
+### What MetroList's own index says about the foreign-MLS pair
+
+Also **2026-10-08**, and it closes the loop on the section above about Wildwood's 404. Until this run
+the foreign-MLS conclusion rested on two labels — the IDX page's `Source` field and Redfin's CSV
+`SOURCE` column — and labels can share an upstream. `mls-enumerate.py` now supplies the positive
+form of the evidence: a full sweep of MetroListPRO's own city indexes, **391 residential records**
+across the three cities, contains **neither** 3538 Wildwood Ln nor 2520 Bedford Ave at any MLS
+number. The same sweep found all six MetroList-carried matches.
+
+So the 404s are not a keying accident or an indexing delay on a record MetroList holds; the records
+are absent from the MLS of record's own enumeration. That is the difference between *"the site says
+not found"* and *"the MLS does not carry this"*, and only the second justifies a caveat with no
+clock on it. Worth knowing for the next listing that 404s: **check the enumerator before accepting a
+per-record 404 as structural**, because the per-record lookup and the index are two surfaces of the
+same site and agreeing is not guaranteed.
+
+One incidental finding from the same Redfin sweep, recorded in case it misleads a later run: the
+`226…` prefix does **not** imply Redfin will report `MetroList` in its source column. 2913 Bedford
+Ave (MLS `226123189`) reads `BAREIS` there while 2750 Bedford Ave (MLS `226103546`) reads
+`MetroList`. Redfin's column names the feed it received the listing through, not the MLS that issued
+the number — so it corroborates *which feed carries a listing* and must not be read as evidence
+about the numbering scheme.
+
 ## Photos
 
 Photos are hotlinked from `m.cbhomes.com`, pulled off each detail page in document order:
