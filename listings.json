@@ -13,16 +13,16 @@
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-10-08",
-  "previousRun": "2026-10-07",
+  "lastRun": "2026-10-09",
+  "previousRun": "2026-10-08",
   "source": {
     "name": "Coldwell Banker IDX (MetroList feed), verified against MetroListPRO (MetroList MLS)",
     "method": "Enumerated every active listing in the three cities from IDX city pages, applied the hard criteria to structured MLS fields, then re-read each survivor's record from MetroListPRO and required price, beds, full baths, acreage and pool to match.",
-    "inventoryScanned": 314,
+    "inventoryScanned": 317,
     "passedBedsBathsPrice": 59,
     "verifiedActiveMatches": 8,
     "pendingMatches": 0,
-    "mlsVerifiedOn": "2026-10-08",
+    "mlsVerifiedOn": "2026-10-09",
     "mlsVerifiedCount": 6,
     "mlsForeignSource": [
       {
@@ -41,23 +41,13 @@
   },
   "dataQuality": {
     "verifiedActiveListings": 8,
-    "note": "314 active listings scanned across the three cities; 59 cleared beds, baths and price and had their MLS field table read directly. No status disagreement between the IDX feed and the Redfin cross-check this run.",
-    "independentEnumeration": {
-      "ranOn": "2026-10-08",
-      "source": "MetroListPRO city indexes (the MLS of record)",
-      "activeRecords": 340,
-      "pendingRecords": 51,
-      "recordsPulledBeyondIdxSweep": 391,
-      "singleFamilyRead": 282,
-      "excludedByType": 109,
-      "additionalMatchesFound": 0
-    },
+    "note": "317 active listings scanned across the three cities; 59 cleared beds, baths and price and had their MLS field table read directly. No status disagreement between the IDX feed and the Redfin cross-check this run.",
     "redfinCrossCheck": {
-      "ranOn": "2026-10-08",
+      "ranOn": "2026-10-09",
       "route": "Redfin gis-csv active export via the direct stingray API, one call per region (95672 Rescue=39796, 95667 Placerville=39791, 95682 Shingle Springs=39806, 95619 Diamond Springs=39748, 95623 El Dorado=39751, Shingle Springs (city)=25976, Placerville (city)=14915)",
       "scope": "active for-sale listings in ZIPs 95672, 95667, 95682, 95619 and 95623 plus the Shingle Springs and Placerville city regions",
-      "rowsScanned": 367,
-      "candidatesAfterFilters": 16,
+      "rowsScanned": 371,
+      "candidatesAfterFilters": 17,
       "poolConfirmed": 8,
       "additionalMatchesFound": 0,
       "confirmedUnindexedListing": null,
@@ -73,61 +63,37 @@
     "poollessChanges": {
       "added": [
         {
-          "address": "2550 Tolowa Trail",
+          "address": "3430 Old Ditch Dr",
           "city": "Placerville",
-          "price": 595000,
-          "acres": 5.02,
+          "price": 1175000,
+          "acres": 5.12,
           "beds": 4,
-          "fullBaths": 3,
-          "status": "For Sale",
-          "url": "https://www.coldwellbankerhomes.com/ca/placerville/2550-tolowa-trail/pid_74156181/"
+          "fullBaths": 4,
+          "status": "Pending",
+          "url": "https://www.coldwellbankerhomes.com/ca/placerville/3430-old-ditch-dr/pid_72911450/"
         }
       ],
       "priceChanges": [
-        {
-          "address": "3900 Loma Dr",
-          "city": "Shingle Springs",
-          "from": 1380000,
-          "to": 1375000
-        }
-      ],
-      "gone": [
-        {
-          "address": "5025 Eco Ridge Rd",
-          "city": "Placerville",
-          "price": 799999
-        }
-      ]
-    },
-    "nearMissChanges": {
-      "added": [
         {
           "address": "6560 Agape Ct",
           "city": "Placerville",
-          "price": 649000,
-          "acres": 5.02,
-          "beds": 4,
-          "baths": 3,
-          "missing": "no pool",
-          "url": "https://www.coldwellbankerhomes.com/ca/placerville/6560-agape-ct/pid_71736013/"
+          "from": 649000,
+          "to": 599000
         }
       ],
+      "gone": []
+    },
+    "nearMissChanges": {
+      "added": [],
       "priceChanges": [
         {
-          "address": "3900 Loma Dr",
-          "city": "Shingle Springs",
-          "from": 1380000,
-          "to": 1375000
+          "address": "6560 Agape Ct",
+          "city": "Placerville",
+          "from": 649000,
+          "to": 599000
         }
       ],
-      "gone": [
-        {
-          "address": "5025 Eco Ridge Rd",
-          "city": "Placerville",
-          "price": 799999,
-          "missing": "no pool"
-        }
-      ]
+      "gone": []
     },
     "unchanged": 8
   },
@@ -173,7 +139,7 @@
       "summary": "Crafted as the builder's own residence, this extraordinary European Country-inspired estate was designed without compromise. From its commanding setting on 40 acres with sweeping Sierra foothill views and timeless architectural details, every aspect of the property reflects quality and enduring elegance. From the moment you arrive, the home makes a striking impression, thoughtfully designed to fra",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-10-08",
+      "lastSeen": "2026-10-09",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -227,7 +193,7 @@
       "summary": "Escape the hustle and bustle and discover your own private retreat in Shingle Springs. Set on approximately 5 private acres with sweeping hillside views, this single-story custom home offers over 3,000 sq. ft. of thoughtfully designed living space with 4 bedrooms, 3 full baths and an impressive 4-car garage.    The outdoor setting is where this property truly shines. A stunning infinity-edge saltw",
       "notes": "",
       "firstSeen": "2026-08-13",
-      "lastSeen": "2026-10-08",
+      "lastSeen": "2026-10-09",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -277,7 +243,7 @@
       "summary": "This is an exceptional property, fully permitted & short-term rental permitted (Airbnb & other short-term rentals). Welcome to this majestic luxury estate situated on over 16.74 acres. The large lot provides opportunities for an additional home. Positioned atop the serene Bedford Canyon, this estate boasts sweeping panoramic views that capture the natural beauty of sunrises, sunsets & stargazing. ",
       "notes": "",
       "firstSeen": "2026-10-02",
-      "lastSeen": "2026-10-08",
+      "lastSeen": "2026-10-09",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -287,7 +253,7 @@
       ],
       "secondSource": {
         "name": "Redfin MLS field table",
-        "checkedOn": "2026-10-08",
+        "checkedOn": "2026-10-09",
         "url": "https://www.redfin.com/CA/Placerville/2520-Bedford-Ave-95667/home/167313858",
         "confirmed": [
           "mls",
@@ -344,7 +310,7 @@
       "summary": "Just minutes from town yet worlds away, this 10 acre sanctuary delivers the ultimate retreat lifestyle. Step inside to discover a beautifully updated home with 4 bedrooms, 3 baths, and an inviting upstairs game room complete with a wet bar  perfect for gatherings. The renovated kitchen shines with quartz counters, stainless appliances, and beautiful white cabinetry, flowing seamlessly into the fam",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-10-08",
+      "lastSeen": "2026-10-09",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -394,7 +360,7 @@
       "summary": "Major price reduction!  Sought-after area. Minutes from shopping, schools. Country living at its finest. Don't miss the approx. 750SF ultimate entertainment hub: game room plus extra room & bath situated above the detached three-car garage. Connected to the main house by a breeze-catching walkway, this private extra space makes a perfect teen hangout or man cave.  Situated in a serene, park-like s",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-10-08",
+      "lastSeen": "2026-10-09",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -434,7 +400,7 @@
       "propertyType": "Multi-Family",
       "mlsStatus": "Active",
       "mlsSource": "METROLIST_Cali",
-      "flag": "Price Reduced",
+      "flag": null,
       "listedOn": "2026-08-06",
       "lat": 38.785,
       "lng": -120.9315,
@@ -452,7 +418,7 @@
       "summary": "Welcome to this charming mini ranch with an ADU, tucked behind a gated entrance at the end of a paved driveway, offering privacy, versatility, and lovely views in a peaceful country setting. The single-story ranch home design welcomes you into a light-filled living room where vaulted ceilings and expansive picture windows showcase the scenery beyond. The updated kitchen features granite countertop",
       "notes": "Back on the market \u2014 was under contract since 2026-09-08 and the deal did not close. re-verified Active against the IDX detail page this run.",
       "firstSeen": "2026-09-08",
-      "lastSeen": "2026-10-08",
+      "lastSeen": "2026-10-09",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -506,7 +472,7 @@
       "summary": "Welcome to a property that doesn't ask you to choose between a home, a retreat, and country living - you get all three. Set among the Placerville foothills, 3538 Wildwood Lane is a place to swim, garden, gather and spread out. The two-story main home offers a private ground-level guest suite with its own entrance and full bath, plus a two-car garage and full basement access. Upstairs, the living s",
       "notes": "",
       "firstSeen": "2026-08-27",
-      "lastSeen": "2026-10-08",
+      "lastSeen": "2026-10-09",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -520,7 +486,7 @@
       ],
       "secondSource": {
         "name": "Redfin MLS field table",
-        "checkedOn": "2026-10-08",
+        "checkedOn": "2026-10-09",
         "url": "https://www.redfin.com/CA/Placerville/3538-Wildwood-Ln-95667/home/167376612",
         "confirmed": [
           "mls",
@@ -577,7 +543,7 @@
       "summary": "Tucked away in Gold Hill on five golden acres, this single story ranch style home offers the kind of setting that makes you want to slow down and stay a while. Surrounded by rolling, oak studded terrain with beautiful valley and mountain views, the property combines privacy, space and effortless indoor/outdoor living. At the heart of the home, a vaulted great room is filled with natural light from",
       "notes": "",
       "firstSeen": "2026-10-02",
-      "lastSeen": "2026-10-08",
+      "lastSeen": "2026-10-09",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -690,6 +656,22 @@
       "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226109915"
     },
     {
+      "address": "3430 Old Ditch Dr",
+      "city": "Placerville",
+      "price": 1175000,
+      "beds": 4,
+      "baths": 4,
+      "fullBaths": 4,
+      "halfBaths": null,
+      "acres": 5.12,
+      "sqft": 4563,
+      "mls": "226089905",
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/3430-old-ditch-dr/pid_72911450/",
+      "status": "Pending",
+      "reason": "IDX field table records no pool",
+      "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226089905"
+    },
+    {
       "address": "4661 Holm Rd",
       "city": "Placerville",
       "price": 899900,
@@ -726,7 +708,7 @@
     {
       "address": "6560 Agape Ct",
       "city": "Placerville",
-      "price": 649000,
+      "price": 599000,
       "beds": 4,
       "baths": 3,
       "fullBaths": 3,
@@ -736,10 +718,8 @@
       "mls": "226070903",
       "url": "https://www.coldwellbankerhomes.com/ca/placerville/6560-agape-ct/pid_71736013/",
       "status": "For Sale",
-      "reason": "MetroList records no pool",
-      "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226070903",
-      "mlsPrice": 649000,
-      "mlsPool": "No"
+      "reason": "IDX field table records no pool",
+      "mlsUrl": "https://www.metrolistpro.com/homes/2/6/x/226070903"
     },
     {
       "address": "2550 Tolowa Trail",
@@ -985,7 +965,7 @@
     {
       "address": "6560 Agape Ct",
       "city": "Placerville",
-      "price": 649000,
+      "price": 599000,
       "beds": 4,
       "baths": 3,
       "acres": 5.02,
@@ -1003,13 +983,13 @@
     },
     {
       "address": "1781 Springvale Rd, Placerville",
-      "price": 1200000,
-      "reason": "Tracked as a relist after dropping from $1.5M, now asking $1,200,000. Resolved against MetroListPRO (MLS 226100125): Property Subtype is Triplex \u2014 multi-unit residential income, three dwellings (3bd/2ba main, 1bd/1ba ADU, studio pool house) on 10.27 acres. No single unit meets the 4BR/3BA minimum, and the MLS pool field reads No even though the remarks describe a 150,000-gallon pool. Re-confirmed a triplex on 2026-10-07. Retired from tracking; further price cuts do not change the subtype."
+      "price": 1150000,
+      "reason": "Tracked as a relist after dropping from $1.5M; cut again to $1,150,000 (MetroListPRO list price on 2026-10-09, was $1,200,000). Resolved against MetroListPRO (MLS 226100125): Property Subtype is Triplex \u2014 multi-unit residential income, three dwellings (3bd/2ba main, 1bd/1ba ADU, studio pool house) on 10.27 acres. No single unit meets the 4BR/3BA minimum, and the MLS pool field reads No even though the remarks describe a 150,000-gallon pool. Re-confirmed Active, Triplex, Has a Pool: No on 2026-10-09. Retired from tracking; further price cuts do not change the subtype."
     },
     {
       "address": "1601 Velvet Horn Ln, Rescue",
       "price": 1100000,
-      "reason": "Still actively listed at $1,100,000 (no price change since last run), 5 acres with a sports pool and slide \u2014 but 3 bd / 3 ba, under the 4BR minimum."
+      "reason": "Went PENDING between the 2026-10-08 and 2026-10-09 runs \u2014 MetroListPRO (MLS 226060031) reads Status: Pending at $1,100,000. 5 acres with a built-in sports pool, but 3 bd / 3 ba, under the 4BR minimum, so it was never a candidate; recorded here because the previous note asserted it was still actively listed."
     },
     {
       "address": "5135 Bryant Rd, Shingle Springs",
