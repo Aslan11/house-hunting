@@ -974,13 +974,19 @@ re-read from MetroListPRO, so skipping step 2 publishes a verification claim not
 
 ```bash
 node scrape.js                                    # 1. enumerate + filter + Redfin status check
-node -e 'const d=require("./listings.json");require("fs").writeFileSync("matches.json",
-  JSON.stringify([...d.listings,...(d.pending||[])].map(l=>({address:l.address,city:l.city,
-  mls:l.mls,price:l.currentPrice,beds:l.beds,fullBaths:l.fullBaths,acres:l.acres,
-  status:l.status,mlsSource:l.mlsSource}))))' && python3 verify.py   # 2. confirm against the MLS
+python3 verify.py                                 # 2. confirm against the MLS of record
 python3 foreign-verify.py                         # 2b. second source for other-MLS listings
 node build.js                                     # 3. render index.html
 ```
+
+Step 2 reads `matches.json`, which **step 1 now writes** (since 2026-10-09) as a projection of the
+matches and pendings it just wrote. That file is gitignored, and nothing in the repo used to create
+it, so on a fresh clone — which is what a scheduled run gets — step 2 died with
+`FileNotFoundError: matches.json` and the refresh stopped after step 1 with the board already
+rewritten. This section used to carry a `node -e` one-liner to rebuild it by hand; that worked and
+was easy to skip. The general shape is worth noting, because the repo has hit it before in
+*"…and the clock has to be wound by something that outlives the run"*: **a pipeline step that
+depends on an ignored file depends on a previous run having happened on the same disk.**
 
 Step 2b only does work when step 2 put something in `source.mlsForeignSource` — a listing carried
 by an MLS that is not MetroList, which MetroListPRO can never confirm. It reads that listing's
@@ -1046,6 +1052,7 @@ and a second composer that has to be kept in step with the first will drift.
 
 - **`listings.json`** — canonical data. Single source of truth.
 - **`scrape.js`** — refreshes `listings.json` from the IDX feed; handles dedupe, price history, drops.
+  Also writes `matches.json`, the input `verify.py` reads.
 - **`verify.py`** — independent MetroListPRO confirmation of every match and pending listing.
 - **`foreign-verify.py`** — the second source for listings MetroListPRO structurally cannot cover,
   because another MLS carries them. Reads the Redfin MLS field table through `parse_detail.py`'s

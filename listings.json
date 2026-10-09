@@ -52,6 +52,16 @@
       "additionalMatchesFound": 0,
       "confirmedUnindexedListing": null,
       "note": "Third independent source, run separately from the IDX feed and MetroListPRO. Pool taken only from the structured MLS field POOL_PRIVATE_YN of the belowTheFold API called with an explicit propertyId, never from page text, because a Redfin listing page embeds copy for nearby homes and it bleeds across properties. Redfin's CSV export omits listings whose MLS forbids download, so this sweep can corroborate the board and surface something it is missing, but its silence is not evidence a listing is gone."
+    },
+    "independentEnumeration": {
+      "ranOn": "2026-10-09",
+      "source": "MetroListPRO city indexes (the MLS of record)",
+      "activeRecords": 345,
+      "pendingRecords": 52,
+      "recordsPulledBeyondIdxSweep": 397,
+      "singleFamilyRead": 287,
+      "excludedByType": 110,
+      "additionalMatchesFound": 0
     }
   },
   "runSummary": {

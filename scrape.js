@@ -818,7 +818,20 @@ if (DRY) {
     `${pending.length} pending, ${dropped.length} dropped, ${relisted.length} relisted. Nothing written.\n`);
 } else {
   fs.writeFileSync(FILE, JSON.stringify(out, null, 2) + '\n');
+
+  /* verify.py reads matches.json, which is gitignored — so on a fresh clone the documented
+     pipeline died at step 2 with FileNotFoundError until it was rebuilt by hand. It is a pure
+     projection of what was just written, so emit it here rather than leaving step 2 to depend on
+     an artefact of some earlier run. Matches AND pendings: the gate re-reads both. */
+  const verifyRows = [...listings, ...pending].map((l) => ({
+    mls: l.mls, address: l.address, city: l.city, price: l.currentPrice,
+    beds: l.beds, fullBaths: l.fullBaths, acres: l.acres,
+    status: l.status, mlsSource: l.mlsSource || '',
+  }));
+  fs.writeFileSync(path.join(__dirname, 'matches.json'), JSON.stringify(verifyRows, null, 1) + '\n');
+
   process.stderr.write(`\nWrote listings.json — ${listings.length} matches ` +
     `(${nNew} new, ${nChg} price changes), ${pending.length} pending, ${dropped.length} dropped, ${relisted.length} relisted.\n` +
-    `Now run: node build.js\n`);
+    `Wrote matches.json — ${verifyRows.length} record(s) for verify.py.\n` +
+    `Now run: python3 verify.py, then node build.js\n`);
 }
