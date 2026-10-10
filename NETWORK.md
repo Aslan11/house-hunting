@@ -109,6 +109,41 @@ So the standing rule extends unchanged to amenity fields: **use Redfin and Zillo
 status, never to establish the inventory, the criteria fields, or the pool.** What the new access
 buys is a second opinion and full listing descriptions, not a second board.
 
+#### The Four Springs false negative was a missing `listingId`, not a Redfin data gap — 2026-10-10
+
+The bullet above is a correct record of what was measured and the wrong explanation of why.
+`belowTheFold` answers with whichever view the parameters select, and it does not say which one it
+gave you:
+
+```bash
+# public-records view: 8 amenity groups, no Pool Information group at all
+.../belowTheFold?propertyId=167348607&accessLevel=1
+# MLS view: 19 groups, including Has Private Pool = Yes
+.../belowTheFold?propertyId=167348607&listingId=220405491&accessLevel=1
+```
+
+Re-measured on 2026-10-10 against 3720 Four Springs Dr: with `listingId` the group is present and
+reads `Pool Features = Built-In, On Lot, Pool Sweep, Gunite Construction`, `Has Private Pool = Yes`
+— exactly what MetroList records. Redfin had the MLS pool field the whole time; the call asked for
+the public-records view and got an honest answer to a different question.
+
+`redfin-csv.py` already passes `listingId` (it scrapes it off the listing page first), so the
+cross-check in the repo is not affected. The trap is for the next person who calls the endpoint by
+hand with the `propertyId` sitting in the URL and reads an empty amenity set as "no pool".
+**A missing amenity group means the MLS view was not requested. It never means no pool.**
+
+This changes the *support* for the standing rule without changing the rule. Of the two errors cited
+above, one was self-inflicted; the false positive on 1781 Springvale Rd is real, is not a parameter
+mistake, and is on its own sufficient — structured-field agreement on a triplex still put a retired
+property back on the board. Use the MLS of record for the pool. But do not carry the claim that
+Redfin's pool field is unreliable *in both directions*; the evidence for that half has dissolved.
+
+An independent sweep that same day, run from a cold start without reading this repo first
+(Redfin `gis` per ZIP -> MLS amenity fields -> Zillow JSON-LD cross-check), reproduced the board
+exactly: the same 8 pool matches, no additions. Its one extra candidate was 1781 Springvale Rd,
+reached through the tags/remarks fallback this file warns against — the predicted failure, arriving
+on schedule.
+
 ## Headless browser
 
 **Corrected 2026-09-03.** This section previously said Chromium had no outbound network at all,
