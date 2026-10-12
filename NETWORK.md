@@ -138,6 +138,39 @@ mistake, and is on its own sufficient — structured-field agreement on a triple
 property back on the board. Use the MLS of record for the pool. But do not carry the claim that
 Redfin's pool field is unreliable *in both directions*; the evidence for that half has dissolved.
 
+#### The Springvale false positive was the *same* missing `listingId` — 2026-10-12
+
+The paragraph above calls that one real and "not a parameter mistake". It is a parameter mistake,
+in the other direction, and the same `listingId` fixes it. Measured on 2026-10-12 against
+1781 Springvale Rd (`propertyId=167348318`, `listingId=222128780`):
+
+| Call | Amenity groups | `Pool Information` |
+|---|---|---|
+| `?propertyId=167348318&accessLevel=1` | 11 | **present** — `Has Pool` |
+| `?propertyId=167348318&listingId=222128780&accessLevel=1` | 16 | absent |
+| `?propertyId=167348318&listingId=222128780&accessLevel=3` | 16 | absent |
+
+So the public-records view does not merely *omit* MLS fields, as the Four Springs case suggested —
+for this property it **supplies a pool field the MLS view does not carry**, and MetroList records
+no `POOL_PRIVATE_YN` for the listing at all. `redfin-csv.py` reads it correctly as
+`pool UNKNOWN` and holds the listing back. The `Has Pool` that the 2026-10-04 run attributed to
+Redfin's MLS data came from the assessor-style view, which the call had asked for without meaning
+to.
+
+Both 2026-10-04 errors therefore have one cause, and the symmetry is the useful part:
+**the public-records view is not a subset of the MLS view.** It can be missing a pool that exists
+and can assert a pool that the MLS does not record, so neither an empty amenity set nor a populated
+one means anything until `listingId` is on the URL. Checking the group count is the cheap tell —
+roughly 8–11 groups is the public-records view, 16–19 the MLS view.
+
+What does *not* change: the verification gate, or the standing rule. The board still comes from the
+IDX feed and MetroListPRO, and a property whose MLS record carries no pool field stays off it
+whatever Redfin answers. The accurate statement of the residual risk is narrower than "unreliable
+in both directions" and narrower than "the evidence has dissolved": called correctly, with
+`listingId`, Redfin's pool field agreed with MetroList on every one of the 20 candidates swept on
+2026-10-12 — 8 pools confirmed, 11 clean negatives, and Springvale the single unknown, which it
+reported as unknown rather than guessing.
+
 An independent sweep that same day, run from a cold start without reading this repo first
 (Redfin `gis` per ZIP -> MLS amenity fields -> Zillow JSON-LD cross-check), reproduced the board
 exactly: the same 8 pool matches, no additions. Its one extra candidate was 1781 Springvale Rd,
