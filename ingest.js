@@ -128,7 +128,7 @@ for (const b of blocks(raw)) {
       url: r.url || null,
     };
     const fails = [];
-    if (rec.beds  != null && rec.beds  < 4)   fails.push(`${rec.beds}BR`);
+    if (rec.beds  != null && rec.beds  < 5)   fails.push(`${rec.beds}BR`);
     if (rec.baths != null && rec.baths < 3)   fails.push(`${rec.baths}BA`);
     if (rec.acres != null && rec.acres < 2.5) fails.push(`${rec.acres}ac`);
     if (rec.currentPrice > store.criteria.maxPrice) fails.push('over budget');

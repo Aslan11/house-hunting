@@ -1,18 +1,5 @@
 # Network config needed for this tracker
 
-> **Status as of 2026-10-15: outbound access is OPEN.** `https://www.redfin.com/` and
-> `https://www.zillow.com/` both return `200` from this container, and both sites' search APIs
-> respond to a browser `User-Agent`. The tracker reads live listing data directly — see the README
-> for the exact endpoints. Nothing below needs doing unless access closes again.
->
-> Re-check at the start of any run with:
-> ```bash
-> curl -sS -o /dev/null -w "%{http_code}\n" https://www.redfin.com/
-> ```
-> `200` means carry on. A `403` sends you back to the rest of this document.
-
-## If access closes again
-
 The container that runs this tracker denies outbound HTTPS to every listing site. The denial is
 at the egress gateway, not at the destination — a `CONNECT www.zillow.com:443` gets `403 Forbidden`
 from the local proxy, so no packet ever reaches Zillow.
