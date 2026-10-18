@@ -246,6 +246,20 @@ function slug(name) {
     .join('-');
 }
 
+/* "Under contract" is not one word in this feed. The IDX `Status:` field carries `Pending`, `Sale Pending`,
+   `Contingent` and `Active Under Contract`, and only `Pending` was ever branched on — so a
+   listing that went contingent matched no branch at all and fell out of every table silently.
+   On 2026-10-18 that was 4661 Holm Rd, Placerville (5.12 acres, 4bd/4 full ba, $899,900): it
+   left the pool-less table with no record of why, and the banner published the generic
+   "sold, under contract, repriced, or pushed past the table's cap" over a status the same run
+   had already read as `Contingent`.
+
+   This is the repo's standing lesson one level down from the verification gate: a vocabulary
+   that is short one word turns a known fact into a four-way guess. Match on the category, not
+   on the one spelling of it that happened to be seen first. */
+const UNDER_CONTRACT = /^(pending|pending sale|sale pending|contingent|active under contract)$/i;
+const underContract = (status) => UNDER_CONTRACT.test(String(status || '').trim());
+
 /* Pending listings were rebuilt from scratch every run, which stamped `priceHistory`
    with today's date and today's price each time. A price cut on a property in escrow
    was therefore invisible — and so was the date it went under contract, which is the
@@ -550,10 +564,10 @@ candidates.forEach((r, i) => {
   }
 
   if (ok && realStatus === 'Active') matches.push(rec);
-  else if (ok && realStatus === 'Pending') {
+  else if (ok && underContract(realStatus)) {
     pending.push({ ...rec, status: 'pending', newThisRun: false,
-      ...carryPending(rec), lastSeen: TODAY,
-      notes: 'Meets every criterion but is under contract (Sale Pending). Kept on file in case the deal falls through.' });
+      ...carryPending(rec), lastSeen: TODAY, mlsStatus: realStatus,
+      notes: `Meets every criterion but is under contract (${realStatus}). Kept on file in case the deal falls through.` });
   } else if (realStatus === 'Active') {
     /* `realStatus`, not `d.realStatus`. Line ~530 upgrades a feed "Active" to "Pending" when the
        Redfin cross-check says the listing is in escrow, and every other branch here reads the
@@ -578,16 +592,16 @@ candidates.forEach((r, i) => {
   }
 
   /* Right land, right house, no pool — the section above the near misses. Collected for
-     any listing still on the market, Active or Pending, so a poolless property going into
-     escrow shows in its status column instead of vanishing. */
-  if (!d.pool && bigEnough && bathsOk && (realStatus === 'Active' || realStatus === 'Pending')) {
+     any listing still on the market, Active or under contract in any of its spellings, so a
+     poolless property going into escrow shows in its status column instead of vanishing. */
+  if (!d.pool && bigEnough && bathsOk && (realStatus === 'Active' || underContract(realStatus))) {
     const was = priorPoolless.get(rec.mls) || priorPoolless.get(rec.address);
     const priceHeld = was && was.mlsPrice === rec.currentPrice;
     poolless.push({
       address: rec.address, city: rec.city, price: rec.currentPrice,
       beds: rec.beds, baths: rec.baths, fullBaths: rec.fullBaths, halfBaths: rec.partialBaths,
       acres: rec.acres, sqft: rec.sqft, mls: rec.mls, url: rec.url,
-      status: realStatus === 'Pending' ? 'Pending' : 'For Sale',
+      status: underContract(realStatus) ? realStatus : 'For Sale',
       reason: priceHeld ? was.reason : 'IDX field table records no pool',
       mlsUrl: `https://www.metrolistpro.com/homes/2/6/x/${rec.mls}`,
       ...(priceHeld ? { mlsPrice: was.mlsPrice, mlsPool: was.mlsPool } : {}),
@@ -735,9 +749,23 @@ const poollessChanges = {
         ? { address: p.address, city: p.city, from: was.price, to: p.price } : null;
     })
     .filter(Boolean),
-  // A row leaving this table means it is no longer an active or pending listing that clears
-  // beds, baths, price and lot size — sold, withdrawn, or repriced out of the band. The table
-  // is rebuilt from live detail reads, so absence is the only signal available; say that
+  /* A row crossing between For Sale and under contract *within* this table. Until 2026-10-18
+     `Contingent` matched no branch at all, so such a row left the table entirely and showed up
+     under `gone` — which reads as "sold, withdrawn or repriced out" and threw away a status the
+     run had measured. Fixing the classification without adding this category would have been a
+     straight downgrade: the row would simply stay put and the banner would report no movement on
+     a run where a property on the add-a-pool list went under contract. */
+  statusChanges: poolless
+    .map((p) => {
+      const was = priorPoolless.get(poollessKey(p)) || priorPoolless.get(p.address);
+      return was && (was.status || '') !== (p.status || '')
+        ? { address: p.address, city: p.city, price: p.price,
+            from: was.status || 'unknown', to: p.status, url: p.url } : null;
+    })
+    .filter(Boolean),
+  // A row leaving this table means it is no longer an active or under-contract listing that
+  // clears beds, baths, price and lot size — sold, withdrawn, or repriced out of the band. The
+  // table is rebuilt from live detail reads, so absence is the only signal available; say that
   // rather than asserting a cause the run did not establish.
   gone: (prior.poolless || [])
     .filter((p) => !poollessNow.has(poollessKey(p)) && !poollessNow.has(p.address))

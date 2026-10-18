@@ -682,6 +682,60 @@ when it is set. Two things generalise:
   keys, the question is not whether the picked keys are right — it is what the reader will infer
   from the ones that were left out.
 
+#### …and the third time, the missing category was a word in the status field
+
+The two sections above added a category for a property crossing between sections, then another for
+the table next door. Both took for granted that the pipeline could *name* the status it was sorting
+on. It could not. The IDX `Status:` field is free text and carries `Pending`, `Contingent` and
+`Active Under Contract` for the same real-world event, and `scrape.js` only ever branched on
+`Pending` — so a listing that went **contingent** matched no branch anywhere: not the board, not
+`pending`, not the pool-less table, not the near-miss table.
+
+On 2026-10-18 that was **4661 Holm Rd**, Placerville — 5.12 acres, 4bd / 4 full ba, $899,900, on
+the pool-less "right land, add a pool" list. Its detail read that run said `status=Contingent`, in
+the run log, in plain sight. The page built from that run — caught before publishing, and the
+only reason this entry is not a post-mortem — said *"off the table (last $899,900); no longer an
+active or pending listing clearing the other criteria"*, and the near-miss line offered the reader
+four guesses: *sold, under contract, repriced, or pushed past the table's cap*. The run had already
+measured which one it was.
+
+Note how this differs from the two sections above it. There the arrays were correct and the
+vocabulary was short a word for an *event*. Here the vocabulary was short a word for a **state**,
+which is worse in one specific way: the generic "gone" wording exists precisely because sold,
+withdrawn and repriced-out are genuinely indistinguishable from the feed — it is honest when the
+status is unknown, and it quietly launders a known status into an unknown one when a branch is
+missing. A hedge is only honest if nothing upstream knew better.
+
+`scrape.js` now matches the category rather than the spelling, through one predicate
+(`underContract`, `/^(pending|contingent|active under contract)$/i`) used at all three branch
+points, and carries the observed word through so the card and the status column say `Contingent`
+rather than flattening it to `Pending`. `build.js`'s "already under contract" count in the
+pool-less intro matched `/pending/i` for the same reason and is widened to the same set.
+
+The fix then surfaced two more instances of the same shape downstream, both caught by looking at
+the rendered page rather than the data:
+
+- `poollessMoved` counted the new category and `poollessSummary` did not *name* it, so the heading
+  rendered **"The pool-less list did move ()"** — a page announcing movement and declining to say
+  what kind. A count and its label are one object; extend both or neither.
+- The near-miss table carries active listings only, so the row legitimately left it — and the
+  generic four-way guess fired there too, on the same run, three lines below a banner item that
+  had just named the status. When one diff knows the cause of another's removal, pass it across:
+  the near-miss line now reads *now Contingent — this table carries active listings only*.
+
+Three things generalise:
+
+- **Match the category, not the first spelling of it you saw.** A free-text field from an upstream
+  feed will eventually use a synonym, and an equality test against one value fails open — silently,
+  into whichever branch collects everything else, or into none at all.
+- **A hedge is a claim about what you know.** "Sold, withdrawn, or repriced — can't tell from here"
+  is good writing when it is true and a bug when the answer is sitting in the same run's log. When
+  a page offers the reader a disjunction, check that nothing upstream could have collapsed it.
+- **Fixing a classification is not done until every reader of it is fixed.** The predicate, the
+  counter, the label and the prose each had their own copy of the old assumption. Grep for the
+  thing you widened, then read the rendered output — two of these three were invisible in the JSON
+  and obvious on the page.
+
 ### The same carry-forward, two keys over
 
 The rule above was written but only `runSummary` was fixed. `source` and `dataQuality` were still

@@ -18,6 +18,10 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 const money = (n) => (n == null ? '—' : '$' + n.toLocaleString('en-US'));
+
+/* The IDX status field spells "under contract" three ways. Kept in step with `underContract`
+   in scrape.js — matching one spelling here is what let a Contingent row read as unqualified. */
+const UNDER_CONTRACT = /^(pending|pending sale|sale pending|contingent|active under contract)$/i;
 const short = (n) => (n == null ? '—' : '$' + (n / 1e6).toFixed(3).replace(/0+$/, '').replace(/\.$/, '') + 'M');
 
 // MetroList reports baths as "full | half". Half baths are shown but never counted toward the
@@ -174,18 +178,28 @@ const statusMoves = (data.runSummary && data.runSummary.statusChanges) || [];
 // cut two prices and lost one to the market still printed "Nothing moved".
 const pl = (data.runSummary && data.runSummary.poollessChanges) || {};
 const plAdded = pl.added || [], plPriced = pl.priceChanges || [], plGone = pl.gone || [];
-const poollessMoved = plAdded.length + plPriced.length + plGone.length;
+/* Going under contract is the most actionable thing that can happen to a row on this list, and
+   until 2026-10-18 it had no category — a `Contingent` listing fell out of the table entirely
+   and was reported as "off the table". It is counted here so the banner cannot call that run
+   quiet. */
+const plStatus = pl.statusChanges || [];
+const poollessMoved = plAdded.length + plPriced.length + plGone.length + plStatus.length;
 // Shown in both banner branches, so it is built once. Phrased to keep the distinction the
 // whole page rests on: these are not matches, they are the add-a-pool list.
 const poollessItems = [
   // An addition that is already under contract is not an opportunity, so it never reads as one.
   ...plAdded.map((p) => `<strong>${esc(p.address)}, ${esc(p.city)}</strong> — ${money(p.price)},
      ${esc(p.acres)} acres, ${p.beds} bd / ${p.fullBaths} full ba, no pool${
-       /pending/i.test(p.status || '') ? ' — <strong>already pending</strong>' : ''}`),
+       UNDER_CONTRACT.test((p.status || '').trim())
+         ? ` — <strong>already ${esc((p.status || '').toLowerCase())}</strong>` : ''}`),
   ...plPriced.map((p) => `<strong>${esc(p.address)}, ${esc(p.city)}</strong> —
      ${money(p.from)} → ${money(p.to)}`),
+  // Names the status actually read, rather than flattening every escrow word to "pending".
+  ...plStatus.map((p) => `<strong>${esc(p.address)}, ${esc(p.city)}</strong> — ${money(p.price)},
+     now <strong>${esc(p.to)}</strong>${UNDER_CONTRACT.test((p.to || '').trim())
+       ? ' (under contract)' : ''}, was ${esc(p.from)}`),
   ...plGone.map((p) => `<strong>${esc(p.address)}, ${esc(p.city)}</strong> — off the table
-     (last ${money(p.price)}); no longer an active or pending listing clearing the other criteria`),
+     (last ${money(p.price)}); no longer an active or under-contract listing clearing the other criteria`),
 ];
 // The near-miss table ("one criterion short") moves independently of both the board and the
 // pool-less list, and had no banner category at all: on 2026-09-28 it swapped a row while the
@@ -193,15 +207,23 @@ const poollessItems = [
 const nm = (data.runSummary && data.runSummary.nearMissChanges) || {};
 const nmAdded = nm.added || [], nmPriced = nm.priceChanges || [], nmGone = nm.gone || [];
 const nearMissMoved = nmAdded.length + nmPriced.length + nmGone.length;
+/* A row can leave the near-miss table because it went under contract — that table carries
+   active listings only. When the pool-less diff recorded exactly that for the same address,
+   the reason is known and the generic four-way guess below would be throwing it away. */
+const plStatusBy = new Map(plStatus.map((p) => [`${p.address}|${p.city}`, p]));
 const nearMissItems = [
   // Each row says what it is short of, so nothing here reads as a match.
   ...nmAdded.map((p) => `<strong>${esc(p.address)}, ${esc(p.city)}</strong> — ${money(p.price)},
      ${esc(p.acres)} acres, ${p.beds} bd / ${p.baths} ba — <em>${esc(p.missing)}</em>`),
   ...nmPriced.map((p) => `<strong>${esc(p.address)}, ${esc(p.city)}</strong> —
      ${money(p.from)} → ${money(p.to)}`),
-  ...nmGone.map((p) => `<strong>${esc(p.address)}, ${esc(p.city)}</strong> — off the list
-     (last ${money(p.price)}${p.missing ? `, <em>${esc(p.missing)}</em>` : ''}); sold, under
-     contract, repriced, or pushed past the table's cap`),
+  ...nmGone.map((p) => {
+    const known = plStatusBy.get(`${p.address}|${p.city}`);
+    return `<strong>${esc(p.address)}, ${esc(p.city)}</strong> — off the list
+     (last ${money(p.price)}${p.missing ? `, <em>${esc(p.missing)}</em>` : ''}); ${known
+       ? `now <strong>${esc(known.to)}</strong> — this table carries active listings only`
+       : `sold, under contract, repriced, or pushed past the table's cap`}`;
+  }),
 ];
 const nearMissSummary = nearMissMoved ? `${[
   nmAdded.length ? `${nmAdded.length} added` : '',
@@ -209,9 +231,14 @@ const nearMissSummary = nearMissMoved ? `${[
   nmGone.length ? `${nmGone.length} removed` : '',
 ].filter(Boolean).join(', ')}` : '';
 
+/* Every category counted by `poollessMoved` must also be *named* here, or the heading renders
+   its parenthetical empty — "The pool-less list did move ()" — which is how the 2026-10-18 run
+   first rendered a status-only change. A count and its label are one thing; adding a bucket to
+   one and not the other produces a page that says something moved and declines to say what. */
 const poollessSummary = poollessMoved ? `${[
   plAdded.length ? `${plAdded.length} added` : '',
   plPriced.length ? `${plPriced.length} price ${plPriced.length === 1 ? 'change' : 'changes'}` : '',
+  plStatus.length ? `${plStatus.length} under contract` : '',
   plGone.length ? `${plGone.length} removed` : '',
 ].filter(Boolean).join(', ')}` : '';
 
@@ -236,7 +263,10 @@ const nearRows = nearMiss.map((n) => `
 const poolless = data.poolless || [];
 // Rendered from the data rather than asserted in prose: the count of pending rows here
 // changes run to run, and a hardcoded "one is already pending" goes wrong the moment it does.
-const poollessPending = poolless.filter((r) => /pending/i.test(r.status || '')).length;
+/* Same category, several spellings — see `underContract` in scrape.js. Matching only
+   /pending/ here would undercount the "already under contract" caveat the intro prints,
+   and a caveat that silently omits a row is the failure this table already fixed once. */
+const poollessPending = poolless.filter((r) => UNDER_CONTRACT.test((r.status || '').trim())).length;
 const poollessRows = poolless.map((r) => `
     <tr><td><a href="${esc(r.url)}" rel="noopener">${esc(r.address)}</a>, ${esc(r.city)}</td>
         <td>${money(r.price)}</td><td>${esc(r.acres)} ac</td>
