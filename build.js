@@ -177,13 +177,35 @@ const statusMoves = (data.runSummary && data.runSummary.statusChanges) || [];
 // baths but no pool never touches `listings`. Before this, a run where that table gained a row,
 // cut two prices and lost one to the market still printed "Nothing moved".
 const pl = (data.runSummary && data.runSummary.poollessChanges) || {};
-const plAdded = pl.added || [], plPriced = pl.priceChanges || [], plGone = pl.gone || [];
+const plPriced = pl.priceChanges || [];
+/* scrape.js keys the pool-less diff on `mls || address`, so a property relisted under a fresh MLS
+   number lands in `added` and `gone` at once. The 2026-10-20 run reported 4810 Robledo Dr as one
+   addition and one removal while it sat in the table throughout at the same price. Each half is
+   true of the MLS record and neither is true of the property, so they collapse into a relist
+   instead of being counted twice in opposite directions. */
+const plKey = (p) => `${p.address}|${p.city}`;
+const plGoneBy = new Map((pl.gone || []).map((p) => [plKey(p), p]));
+const plAddedBy = new Map((pl.added || []).map((p) => [plKey(p), p]));
+/* The diff's `added` projection carries no `mls` field, so the new number is read back off the
+   rendered table rather than printed as an empty parenthetical. */
+const poollessBy = new Map((data.poolless || []).map((p) => [plKey(p), p]));
+const plRelisted = (pl.added || [])
+  .filter((p) => plGoneBy.has(plKey(p)))
+  .map((p) => ({
+    ...p,
+    priorPrice: plGoneBy.get(plKey(p)).price,
+    mls: p.mls || (poollessBy.get(plKey(p)) || {}).mls || null,
+    priorMls: plGoneBy.get(plKey(p)).mls || null,
+  }));
+const plAdded = (pl.added || []).filter((p) => !plGoneBy.has(plKey(p)));
+const plGone = (pl.gone || []).filter((p) => !plAddedBy.has(plKey(p)));
 /* Going under contract is the most actionable thing that can happen to a row on this list, and
    until 2026-10-18 it had no category — a `Contingent` listing fell out of the table entirely
    and was reported as "off the table". It is counted here so the banner cannot call that run
    quiet. */
 const plStatus = pl.statusChanges || [];
-const poollessMoved = plAdded.length + plPriced.length + plGone.length + plStatus.length;
+const poollessMoved = plAdded.length + plPriced.length + plGone.length + plStatus.length +
+  plRelisted.length;
 // Shown in both banner branches, so it is built once. Phrased to keep the distinction the
 // whole page rests on: these are not matches, they are the add-a-pool list.
 const poollessItems = [
@@ -200,6 +222,11 @@ const poollessItems = [
        ? ' (under contract)' : ''}, was ${esc(p.from)}`),
   ...plGone.map((p) => `<strong>${esc(p.address)}, ${esc(p.city)}</strong> — off the table
      (last ${money(p.price)}); no longer an active or under-contract listing clearing the other criteria`),
+  // Still on the list, still no pool — what moved is the MLS number, so it reads as a relist.
+  ...plRelisted.map((p) => `<strong>${esc(p.address)}, ${esc(p.city)}</strong> — relisted under
+     a new MLS number${p.mls ? ` (${esc(p.mls)}${p.priorMls ? `, was ${esc(p.priorMls)}` : ''})` : ''}
+     at ${money(p.price)}${p.priorPrice && p.priorPrice !== p.price
+       ? `, was ${money(p.priorPrice)}` : ', unchanged in price'}; it stays on this list`),
 ];
 // The near-miss table ("one criterion short") moves independently of both the board and the
 // pool-less list, and had no banner category at all: on 2026-09-28 it swapped a row while the
@@ -239,6 +266,7 @@ const poollessSummary = poollessMoved ? `${[
   plAdded.length ? `${plAdded.length} added` : '',
   plPriced.length ? `${plPriced.length} price ${plPriced.length === 1 ? 'change' : 'changes'}` : '',
   plStatus.length ? `${plStatus.length} under contract` : '',
+  plRelisted.length ? `${plRelisted.length} relisted` : '',
   plGone.length ? `${plGone.length} removed` : '',
 ].filter(Boolean).join(', ')}` : '';
 
@@ -501,7 +529,7 @@ const html = `<!DOCTYPE html>
          appears to have fallen through.</li>`)).join('\n    ')}
     ${dropped.length ? `<li><strong>${dropped.length} previously tracked ${dropped.length === 1 ? 'property' : 'properties'} removed</strong> — no longer on the market. Listed at the bottom.</li>` : ''}
     ${poollessMoved ? `<li><strong>Pool-less table:</strong> ${esc(poollessSummary)} — see
-      &ldquo;Right land, right house, no pool&rdquo; below.</li>` : ''}
+      &ldquo;Right land, no pool&rdquo; below.</li>` : ''}
     ${nearMissMoved ? `<li><strong>Near-miss table:</strong> ${esc(nearMissSummary)} — see
       &ldquo;Close, but one criterion short&rdquo; below.</li>` : ''}
   </ul>` : `<p><strong>Nothing moved on the board.</strong> No new matches, no price changes, and

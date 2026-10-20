@@ -826,6 +826,29 @@ describes a run" and "remember what happened" are not in conflict, but they need
 Each time this has come up, the run-scoped array was right to be cleared and the mistake was
 assuming it was also the memory. A bucket that is both a report and a record is neither for long.
 
+### One property, counted as both an arrival and a departure
+
+**Fixed 2026-10-20.** `scrape.js` keys the pool-less diff on `mls || address`, which is the right
+key for telling two listings apart and the wrong key for telling one property from itself. When
+4810 Robledo Dr was relisted under a fresh MLS number (226083409 → 226129641) at an unchanged
+$999,900, the new number was absent from the prior map and the old one was absent from the current
+map, so the same row was reported as `added` **and** `gone` on a run where it never left the table.
+The banner read "1 added, 2 removed" about a table that gained nothing and lost one.
+
+`build.js` now collapses an address appearing on both sides into a third category, `relisted`, and
+names it as such. Two details worth keeping:
+
+- Neither projection carries every field the sentence needs. `added` has no `mls`, so the new number
+  is read back off `data.poolless`; `gone` has no `mls` either, so the old number simply is not
+  printed rather than printed as an empty parenthetical. A diff written for counting does not
+  automatically support describing.
+- The fix belongs in the composer, not the key. Making the key address-only would merge two genuinely
+  different listings at one address — the thing the MLS number is there to prevent.
+
+The shape generalises past this table: **a diff keyed on an identifier reports identifier changes as
+inventory changes.** Any bucket keyed on an MLS number will say a property arrived and left on the
+day it was relisted, and that sentence is wrong in both directions at once.
+
 ### A caveat the card carried and the heading above it denied
 
 **Fixed 2026-09-17.** The foreign-MLS machinery above works: `verify.py` records that 3538 Wildwood
