@@ -314,6 +314,17 @@ const awaitingIndex = (data.source && data.source.mlsAwaitingIndex) || [];
 // Records the MLS of record will never carry, because they belong to a different MLS. Distinct
 // from awaitingIndex: waiting resolves that one and cannot resolve this one.
 const foreignMls = (data.source && data.source.mlsForeignSource) || [];
+/* Split by whether foreign-verify.py actually landed its stamp. The summary row below used to
+   say "confirmed against the IDX feed and Redfin" for every foreign-MLS listing unconditionally,
+   while `foreignNote()` on the very same page told the reader the second confirmation was still
+   outstanding. On 2026-10-21 Redfin was rate-limiting detail pages, foreign-verify.py stamped
+   0 of 2, and the two statements contradicted each other — the summary claiming the check that
+   the cards said had not run. Same rule as every other row here: describe what happened. */
+const foreignConfirmed = foreignMls.filter((a) =>
+  listings.some((l) => l.mls === a.mls && l.secondSource));
+const foreignOutstanding = foreignMls.filter((a) => !foreignConfirmed.includes(a));
+const nameList = (arr) =>
+  arr.map((a) => `<strong>${esc(a.address)}</strong> (${esc(a.source)})`).join(', ');
 // Records whose MLS re-read could not be attempted, because the MLS site did not answer. A third
 // kind of gap again: waiting fixes awaitingIndex, nothing fixes foreignMls, and this one is fixed
 // by the next run. It must never read as a confirmation, and it is not a contradiction either.
@@ -644,9 +655,24 @@ failure mode is now closed off.</p>
               : ''}${
             foreignMls.length
               ? ` ${foreignMls.length === 1 ? 'One listing is' : `${foreignMls.length} listings are`} carried by a
-                  different MLS — ${foreignMls.map((a) => `<strong>${esc(a.address)}</strong> (${esc(a.source)})`).join(', ')}
-                  — so MetroListPRO has no record of ${foreignMls.length === 1 ? 'it' : 'them'} and never will.
-                  ${foreignMls.length === 1 ? 'It is' : 'They are'} confirmed against the IDX feed and Redfin instead.`
+                  different MLS — ${nameList(foreignMls)}
+                  — so MetroListPRO has no record of ${foreignMls.length === 1 ? 'it' : 'them'} and never will.${
+                  foreignConfirmed.length
+                    ? ` ${foreignConfirmed.length === foreignMls.length
+                        ? (foreignMls.length === 1 ? 'It is' : 'They are')
+                        : nameList(foreignConfirmed) + (foreignConfirmed.length === 1 ? ' is' : ' are')
+                      } confirmed against the IDX feed and Redfin instead.`
+                    : ''}${
+                  foreignOutstanding.length
+                    ? ` ${foreignOutstanding.length === foreignMls.length
+                        ? (foreignMls.length === 1 ? 'The second' : 'A second')
+                        : nameList(foreignOutstanding) + ' still has no second'
+                      } confirmation${foreignOutstanding.length === foreignMls.length ? ' is still outstanding' : ''} —
+                      only the IDX feed has been read, so treat
+                      ${foreignOutstanding.length === 1 ? 'it' : 'them'} as single-sourced. The card${
+                      foreignOutstanding.length === 1 ? '' : 's'} say${
+                      foreignOutstanding.length === 1 ? 's' : ''} so.`
+                    : ''}`
               : ''}${
             unreachable.length
               ? ` MetroListPRO did not answer for ${unreachable.length === 1 ? '' : `${unreachable.length} records — `}${unreachable.map((a) => `<strong>${esc(a.address)}</strong>`).join(', ')}${unreachable.length === 1 ? ' —' : ''}

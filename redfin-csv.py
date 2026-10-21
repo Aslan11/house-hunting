@@ -126,7 +126,15 @@ def pool_of(url):
     page = fetch(url)
     m = re.search(r'"listingId":(\d+)', page)
     if not m:
-        return {"pool": None, "why": "no listingId on the page"}
+        # Under load Redfin answers with a stub body instead of the page (the 202 described in
+        # the README), and a stub has no listingId. Return the full record shape: on 2026-10-21
+        # the short form crashed main() with KeyError: 'status' *after* a complete 363-row
+        # sweep, throwing away the whole run over one unreadable detail page. A page that will
+        # not load is an unknown, not a fatal error — and `unreadable` below keeps that unknown
+        # from being published as a clean cross-check.
+        return {"pool": None, "poolFeatures": None, "spa": None, "status": None,
+                "price": None, "unreadable": True,
+                "why": "Redfin served no page body — detail read failed, not a pool-less listing"}
     lid = m.group(1)
     base = ("https://www.redfin.com/stingray/api/home/details/"
             f"{{}}?propertyId={pid}&listingId={lid}&accessLevel=1")
@@ -150,6 +158,7 @@ def pool_of(url):
         "spa": amenities.get("SPA_YN"),
         "status": (addr.get("status") or {}).get("displayValue"),
         "price": latest.get("amount"),
+        "unreadable": False,
         "why": None if yn else "MLS records no POOL_PRIVATE_YN field for this listing",
     }
 
@@ -176,6 +185,11 @@ def main():
             "price": int(price), "beds": int(beds), "baths": baths,
             "sqft": r["SQUARE FEET"], "acres": round(lot / SQFT_PER_ACRE, 2),
             "mls": r["MLS#"], "mlsSource": r["SOURCE"], "url": url,
+            # The CSV's own status and price, kept as the fallback for a detail page that
+            # will not load. pool_of() returns None for both in that case, and blanking a
+            # figure the sweep already had is how the 2026-10-21 run hit
+            # TypeError on the line below.
+            "status": r.get("STATUS") or None,
         }
         # A fractional count is certainly short of `MIN_BATHS` full baths; an integer count
         # might still hide two half baths. Exclude the first, flag the second.
@@ -185,7 +199,9 @@ def main():
 
     print(f"{len(candidates)} cleared beds/baths/price/acres; reading each MLS pool field\n")
     for c in candidates + halfbath:
-        c.update(pool_of(c["url"]))
+        # Never let an unreadable detail page overwrite a figure the CSV already gave us.
+        c.update({k: v for k, v in pool_of(c["url"]).items()
+                  if v is not None or k not in c})
         flag = {True: "POOL", False: "no pool", None: "pool UNKNOWN"}[c["pool"]]
         print(f"  {c['price']:>9,}  {c['address'][:28]:<28} {c['city'][:15]:<15} "
               f"{c['beds']}bd/{c['baths']}ba {c['acres']:>6}ac  {c['status'] or '?':<10} {flag}")
@@ -231,8 +247,18 @@ def main():
         # wholesale, so a stamp only survives when this ran after it — which is what keeps the
         # row honest. Nothing is stamped if a region came back empty, because a short sweep
         # cannot support a completeness claim.
+        # A detail page that would not load is not a pool-less listing. Counting it as one
+        # would publish "0 additional matches found" off a sweep that never read the pool
+        # field — the exact silent failure the enumeration guard below exists to prevent.
+        unreadable = [c for c in candidates + halfbath if c.get("unreadable")]
         if len(rows) < 200:
             print(f"\nNOT stamping: only {len(rows)} rows came back, too few to be a full sweep.")
+        elif unreadable:
+            print(f"\nNOT stamping: {len(unreadable)} of {len(candidates) + len(halfbath)} "
+                  "detail pages would not load, so the pool field was never read for them:")
+            for c in unreadable:
+                print(f"    {c['address']}, {c['city']}")
+            print("  Re-run once Redfin is serving pages again.")
         else:
             # build.js renders this as "the one match MetroListPRO has not indexed", so only
             # claim it when this sweep really is the sole second source for exactly one listing.

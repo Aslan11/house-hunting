@@ -220,6 +220,31 @@ blocked by policy.** A genuine policy denial shows up in `recentRelayFailures` a
 confirm that before recording a host as unreachable. Reading resets as denials is what produced the
 incorrect claim this section used to make.
 
+## Redfin detail pages have a budget, and spending it breaks two pipeline steps
+
+**Measured 2026-10-21.** The 202-stub behaviour noted above is not only a load condition — it is
+also rate limiting, and it is **per-endpoint**. On this run an exploratory sweep opened roughly
+twenty Redfin *detail* pages in quick succession. After about seven, every subsequent detail page
+came back as a stub, and stayed that way for **over forty minutes** despite 15-second spacing.
+Throughout that window the CSV endpoint kept answering perfectly: `api/gis-csv` returned all seven
+regions, 363 rows, while `/CA/<city>/<slug>/home/<id>` returned nothing at all.
+
+Two pipeline steps read detail pages and both silently lost their evidence as a result:
+
+- `foreign-verify.py` reported `Redfin returned no body — cannot confirm` for both foreign-MLS
+  listings, so neither card could claim its second source.
+- `redfin-csv.py` enumerated fine and then could not read a single pool field — 16 of 16.
+
+So: **do the exploratory browsing after the pipeline, not before.** A detail page spent on a
+curiosity is one `foreign-verify.py` cannot spend on evidence. If a run needs both, run
+`scrape.js`, `verify.py` and `foreign-verify.py` first, and treat Redfin detail reads as a scarce
+budget for the rest of the session. Enumeration — `gis-csv`, the bare `/zipcode/<zip>` pages — is
+not affected and can be run freely.
+
+Spacing does not buy much back. The useful signal is the stub itself: once detail pages start
+returning no body, stop issuing them and come back later, because continued polling appears to
+hold the window open rather than drain it.
+
 ## If the usable hosts start blocking
 
 Fall back to paths that don't fight bot defences:

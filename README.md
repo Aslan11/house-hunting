@@ -1105,6 +1105,34 @@ and, when **every** record reads back clean, stamps `source.mlsVerifiedOn` / `ml
 `listings.json`. That stamp is what `build.js` renders, so the order matters: run step 2 before step
 3, or the page will correctly report that the board was re-enumerated but not re-verified.
 
+### A cross-check that threw away its own sweep, and nearly published a hollow one
+
+`redfin-csv.py` enumerates first and then reads one detail page per surviving candidate for the
+pool field. On 2026-10-21 Redfin was rate-limiting detail pages (see NETWORK.md), and the script
+hit two separate faults in that path — the second only visible once the first was fixed:
+
+1. **It crashed after finishing the work.** `pool_of()`'s early return for a page with no
+   `listingId` carried only `pool` and `why`, so the reporting line died with
+   `KeyError: 'status'` — discarding a complete 363-row sweep over one unreadable page.
+2. **Once it no longer crashed, it blanked good data.** `c.update(pool_of(...))` overwrote the
+   price the CSV had already supplied with the detail API's `None`, and the same line died again
+   on `TypeError: unsupported format string passed to NoneType.__format__`.
+
+Both are now fixed — the early return carries the full record shape, and the update never lets a
+`None` overwrite a field the CSV filled.
+
+The third fault is the one worth remembering, because nothing would have reported it. The stamp
+guard only checked that **enumeration** was complete (`len(rows) < 200`). It did not check that the
+detail reads happened. With the crash fixed and nothing else changed, a run where every detail page
+returned a stub would have stamped `poolConfirmed: 0, additionalMatchesFound: 0` and rendered a
+"Third source" row on the page — a clean cross-check, published off a sweep that never read a single
+pool field. The guard now also refuses to stamp when any candidate's detail page would not load,
+and names them.
+
+The general shape is the one this repo keeps rediscovering: **a check degrades into a claim unless
+something distinguishes "looked and found nothing" from "never looked."** `verify.py` and
+`mls-enumerate.py` already make that distinction; this one did not.
+
 ### Do not refresh with `refresh.py`
 
 `refresh.py` is an older, parallel composer that reads plausibly and is wrong in four silent ways.
