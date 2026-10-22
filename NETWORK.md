@@ -37,6 +37,14 @@ a page.
 Redfin also answers **202 with a stub body** under load rather than 429. A short body is retryable;
 back off and try again, and never read a 202 as a missing listing.
 
+The throttle is **per-endpoint-class, and it clears unevenly**, measured 2026-10-22 while recovering
+from a self-inflicted overload (see the README section "Exploratory fetches spend the same quota the
+pipeline needs"). Within a minute of the offending process dying, `api/gis-csv` was back to 200 with
+a full CSV while listing **detail pages were still 202 with an empty body**. So a successful
+`gis-csv` pull is *not* evidence that the detail reads will work, and the step that needs detail
+pages — `foreign-verify.py`, via `parse_detail.py` — can still be blocked when the sweep is fine.
+Probe the endpoint class a step actually depends on before concluding Redfin has recovered.
+
 ## `stingray/*` is not blocked as a whole — corrected 2026-09-06
 
 The row above used to read `www.redfin.com/stingray/* | 403 (CloudFront) | No`, generalising from a

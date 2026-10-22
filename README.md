@@ -1142,22 +1142,38 @@ section above, and it rediscovered the `/filter/` trap from scratch (15 rows, wh
 contain all 7 board matches at identical prices — exactly the seductive near-miss this file warns
 about).
 
-The cost was not the wasted time. Redfin began answering **202 with a stub body** partway through
-the hand probing and stayed throttled for the rest of the run, so when `foreign-verify.py` came to
-read the two foreign-MLS listings — the one step in the documented order that *needs* Redfin — it
-hung on retries and had to be abandoned. The run published correctly, because `build.js` says a
-second confirmation is outstanding when no stamp is written, so 2520 Bedford Ave and 3538 Wildwood
-Ln were shown as single-sourced rather than falsely confirmed. But that degradation was
-self-inflicted, and it degraded the two cards the gate already treats as weakest.
+The cost was not the wasted time. Redfin began answering **202 with a stub body** and stayed that
+way for the whole run, so when `foreign-verify.py` came to read the two foreign-MLS listings — the
+one step in the documented order that *needs* Redfin — it hung on retries and had to be abandoned.
+The run published correctly, because `build.js` says a second confirmation is outstanding when no
+stamp is written, so 2520 Bedford Ave and 3538 Wildwood Ln were shown as single-sourced rather than
+falsely confirmed. But that degradation was self-inflicted, and it hit the two cards the gate
+already treats as weakest.
 
-Two things follow:
+The specific mechanism is worth recording, because "I probed too much" is the comfortable version
+and it is not what happened. One of those probes was a 15-listing detail scraper started in the
+background. It was abandoned as soon as this file was read and its approach shown to be wrong — and
+it **kept running for the rest of the session**, re-fetching Redfin detail pages with exponential
+backoff the entire time. `kill` was aimed at the shell that launched it, which is not the process
+doing the fetching: the shell died, the `node` child was reparented and carried on, and `pgrep -f`
+could not reveal it because the pattern matched the grepping shell's own command line and returned
+that instead. It surfaced only on a stray-process sweep after the run was already published. Once
+it was actually dead, `gis-csv` answered 200 within a minute; detail pages were still 202, which is
+why the retry of step 2b failed too.
+
+Three things follow, in increasing order of how much they generalise:
 
 - **Read this file before fetching anything.** The host table in `NETWORK.md` and the Redfin
   sections above exist so a run does not have to re-derive them, and re-deriving them is not free.
 - **Rate limit is a shared, exhaustible resource across a run.** The pipeline's later steps have a
   claim on it. An exploratory sweep against a host the pipeline depends on is borrowing from a step
-  that has not run yet, and the bill arrives after the board has already been rewritten — too late
-  to choose differently.
+  that has not run yet, and the bill arrives after the board has been rewritten — too late to
+  choose differently.
+- **Abandoning an approach is not the same as stopping it.** A background job outlives the decision
+  that it was the wrong idea, and it goes on spending the shared resource while contributing
+  nothing. Kill the worker by PID, confirm `/proc/<pid>` is gone, and do not trust a `pgrep -f`
+  whose pattern appears in the command you are running. A run that ends without sweeping for its
+  own orphans cannot say what else was competing with it.
 
 ### Do not refresh with `refresh.py`
 
