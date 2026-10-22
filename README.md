@@ -1133,6 +1133,32 @@ The general shape is the one this repo keeps rediscovering: **a check degrades i
 something distinguishes "looked and found nothing" from "never looked."** `verify.py` and
 `mls-enumerate.py` already make that distinction; this one did not.
 
+### Exploratory fetches spend the same quota the pipeline needs
+
+The 2026-10-22 run started before reading this file and spent its first half probing Redfin by hand
+— `/filter/` sweeps across the three ZIPs, then detail pages for all 15 rows — to work out where
+listing data could be read at all. That probing was redundant twice over: the answer is in the
+section above, and it rediscovered the `/filter/` trap from scratch (15 rows, which happened to
+contain all 7 board matches at identical prices — exactly the seductive near-miss this file warns
+about).
+
+The cost was not the wasted time. Redfin began answering **202 with a stub body** partway through
+the hand probing and stayed throttled for the rest of the run, so when `foreign-verify.py` came to
+read the two foreign-MLS listings — the one step in the documented order that *needs* Redfin — it
+hung on retries and had to be abandoned. The run published correctly, because `build.js` says a
+second confirmation is outstanding when no stamp is written, so 2520 Bedford Ave and 3538 Wildwood
+Ln were shown as single-sourced rather than falsely confirmed. But that degradation was
+self-inflicted, and it degraded the two cards the gate already treats as weakest.
+
+Two things follow:
+
+- **Read this file before fetching anything.** The host table in `NETWORK.md` and the Redfin
+  sections above exist so a run does not have to re-derive them, and re-deriving them is not free.
+- **Rate limit is a shared, exhaustible resource across a run.** The pipeline's later steps have a
+  claim on it. An exploratory sweep against a host the pipeline depends on is borrowing from a step
+  that has not run yet, and the bill arrives after the board has already been rewritten — too late
+  to choose differently.
+
 ### Do not refresh with `refresh.py`
 
 `refresh.py` is an older, parallel composer that reads plausibly and is wrong in four silent ways.
