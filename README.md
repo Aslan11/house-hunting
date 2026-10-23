@@ -1053,6 +1053,7 @@ re-read from MetroListPRO, so skipping step 2 publishes a verification claim not
 node scrape.js                                    # 1. enumerate + filter + Redfin status check
 python3 verify.py                                 # 2. confirm against the MLS of record
 python3 foreign-verify.py                         # 2b. second source for other-MLS listings
+python3 mlsl-verify.py                            # 2c. fallback for whatever 2b could not reach
 node build.js                                     # 3. render index.html
 ```
 
@@ -1064,6 +1065,42 @@ rewritten. This section used to carry a `node -e` one-liner to rebuild it by han
 was easy to skip. The general shape is worth noting, because the repo has hit it before in
 *"…and the clock has to be wound by something that outlives the run"*: **a pipeline step that
 depends on an ignored file depends on a previous run having happened on the same disk.**
+
+Step 2c fills whatever step 2b could not. It is new on 2026-10-23, and it exists because step 2b
+had failed on three consecutive runs for the same reason: `foreign-verify.py` needs a Redfin
+**detail** page, Redfin throttles those independently of `gis-csv`, and a throttled detail page is
+202 with an empty body. On 2026-10-21, 2026-10-22 and 2026-10-23 it stamped 0 of 2, so both foreign
+cards carried only the IDX feed's word three runs running. A fallback that never runs when the
+primary works costs nothing; a gap that stays open for three runs is a standing hole in the gate.
+
+`mlsl-verify.py` reads **MLSListings.com**, which syndicates several boards — MetroList and
+MAXEBRDI among them — and serves a plain server-rendered MLS sheet: status in the `<title>`, the
+structured Pool field, price, beds, baths, lot size. It is not behind the defences Redfin's detail
+pages are, and it has no comparable-homes payload to leak a neighbour's data, so there is no
+free-text bleed to guard against. It **only fills gaps**: a listing step 2b already stamped is left
+alone, so the better-scoped Redfin amenity table still wins when it is reachable. Run it after 2b
+and before 3, for the same reason 2b runs before 3.
+
+Two things it is careful about, both of which are the repo's own lessons applied to a new host:
+
+- **The scope gate.** MLSListings answers an unknown id with its generic search page at HTTP 200 —
+  the same "valid-looking page for the wrong property" failure NETWORK.md records for Redfin's
+  `/city/<id>` URLs. So a sheet is accepted only when its `<title>` carries **both** the expected
+  street line and the MLS number asked for; anything else is discarded unread. Verified on
+  2026-10-23 against a bogus MLS number and against a real number with the wrong street — both
+  correctly rejected.
+- **The pool field.** MetroList sheets state `Pool - Yes` / `Pool - No` outright; a spot check of
+  four known pool-less matches on 2026-10-23 returned `Pool - No` on all four, so the field is a
+  real negative and not just a missing positive. MAXEBRDI sheets have no yes/no token and give a
+  feature list instead, rendering an absent field as an en dash — so a **construction** token
+  (`In Ground`, `Gunite`, …) is what distinguishes a real pool there. `Spa/Hot Tub` alone is
+  deliberately **not** such a token: a spa is not a pool, and a sheet carrying only that is left
+  unresolved rather than counted either way.
+
+On the run that introduced it, 2c confirmed both foreign cards on every field — price, beds, full
+baths, acreage and pool — and read `Active` on both. Note that MLSListings serves 3538 Wildwood Ln
+under a MetroList (`ME`) prefix even though the IDX feed records it as BAREIS; the scope gate, not
+the prefix, is what establishes it is the right property.
 
 Step 2b only does work when step 2 put something in `source.mlsForeignSource` — a listing carried
 by an MLS that is not MetroList, which MetroListPRO can never confirm. It reads that listing's
@@ -1206,6 +1243,9 @@ and a second composer that has to be kept in step with the first will drift.
   subject-scope gate and stamps `secondSource` on the listing; resolves the Redfin URL by MLS
   number through the ZIP's CSV feed rather than guessing it from the address, because Redfin's
   slug does not always match the MLS street name.
+- **`mlsl-verify.py`** — the fallback for step 2b, reading MLSListings.com. Only fills listings
+  `foreign-verify.py` left unstamped, gates each sheet on street **and** MLS number appearing in
+  its `<title>`, and treats a spa-only pool field as unresolved rather than as a pool.
 - **`crosscheck.js`** / **`mls-status.js`** — the Redfin second opinion `scrape.js` calls to catch
   listings the IDX feed still reports Active after they have gone into escrow.
 - **`build.js`** — renders `index.html` from `listings.json`. No dependencies: `node build.js`.

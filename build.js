@@ -322,6 +322,19 @@ const foreignMls = (data.source && data.source.mlsForeignSource) || [];
    the cards said had not run. Same rule as every other row here: describe what happened. */
 const foreignConfirmed = foreignMls.filter((a) =>
   listings.some((l) => l.mls === a.mls && l.secondSource));
+/* Name the source that actually signed off, rather than the one that usually does. This row used
+   to say "the IDX feed and Redfin" unconditionally; on 2026-10-23 Redfin's detail pages were
+   unavailable and `mlsl-verify.py` supplied the confirmation instead, so the sentence named a
+   source that had not been read. Same rule as every other claim on this page: describe what
+   happened. */
+const foreignSourceNames = [...new Set(foreignConfirmed
+  .map((a) => (listings.find((l) => l.mls === a.mls) || {}).secondSource)
+  .map((ss) => (ss && ss.name) || 'a second source'))];
+const foreignSourcePhrase = foreignSourceNames.length
+  ? foreignSourceNames.length === 1
+    ? foreignSourceNames[0]
+    : foreignSourceNames.slice(0, -1).join(', ') + ' and ' + foreignSourceNames.slice(-1)
+  : 'a second source';
 const foreignOutstanding = foreignMls.filter((a) => !foreignConfirmed.includes(a));
 const nameList = (arr) =>
   arr.map((a) => `<strong>${esc(a.address)}</strong> (${esc(a.source)})`).join(', ');
@@ -661,7 +674,7 @@ failure mode is now closed off.</p>
                     ? ` ${foreignConfirmed.length === foreignMls.length
                         ? (foreignMls.length === 1 ? 'It is' : 'They are')
                         : nameList(foreignConfirmed) + (foreignConfirmed.length === 1 ? ' is' : ' are')
-                      } confirmed against the IDX feed and Redfin instead.`
+                      } confirmed against the IDX feed and ${foreignSourcePhrase} instead.`
                     : ''}${
                   foreignOutstanding.length
                     ? ` ${foreignOutstanding.length === foreignMls.length

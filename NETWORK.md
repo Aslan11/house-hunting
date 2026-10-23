@@ -18,6 +18,7 @@ gateway denial shows up in `recentRelayFailures`; a site block does not.
 | `www.metrolistpro.com` | 200, official MetroList MLS records by MLS number | **Yes — verification** |
 | `m.cbhomes.com` | 200 on `GET` (rejects `HEAD`) | **Yes — photos** |
 | `www.redfin.com` | 200, full GIS payload on `/zipcode/<zip>` | **Yes — cross-check only** |
+| `www.mlslistings.com` | 200, server-rendered MLS sheet by `/property/<PREFIX><MLS#>` | **Yes — foreign-MLS second source** (added 2026-10-23) |
 | `www.zillow.com`, `www.homes.com`, `www.movoto.com`, `www.remax.com`, `www.har.com` | 403 | No |
 | `www.realtor.com` | 429 | No |
 | `www.redfin.com/stingray/api/gis-csv` | 200, CSV export of a region's listings | **Yes — cross-check** |
@@ -25,6 +26,38 @@ gateway denial shows up in `recentRelayFailures`; a site block does not.
 | `www.century21.com` | 200 but client-rendered shell, no data in HTML | No |
 
 Both usable hosts require a browser `User-Agent`. The default agent string is blocked.
+
+### `www.mlslistings.com` — the one host that answers when Redfin's detail pages will not
+
+Added **2026-10-23**, after `foreign-verify.py` stamped 0 of 2 on three consecutive runs. The
+distinction that matters: Redfin throttles **per endpoint class**, so `gis-csv` at 200 says nothing
+about detail pages, and it is detail pages that step 2b needs. On this run `gis-csv` answered fine
+and detail pages answered **202 with an empty body from the session's very first request**, before
+this run had fetched anything in volume — so for the foreign-MLS step that class is better read as
+blocked than as throttled by use.
+
+MLSListings serves what that step actually needs, as plain server-rendered HTML:
+
+```bash
+curl -sS -A "$UA" https://www.mlslistings.com/property/ME226107286   # MetroList
+curl -sS -A "$UA" https://www.mlslistings.com/property/BE41150059    # MAXEBRDI
+```
+
+The `<title>` carries address, beds, baths and **status** (`(Active)`); the body carries the
+structured `Pool` field, price in `<meta name="description">`, and the photo gallery with per-photo
+categories on `data-category`. Prefix is the originating board: `ME` MetroList, `BE` MAXEBRDI,
+`ML` MLSListings' own.
+
+Two traps, both already familiar from other hosts here:
+
+- An **unknown id returns 200** with the site's generic search page, not a 404 — the same
+  wrong-property-at-200 failure as Redfin's `/city/<id>` URLs. Gate on the `<title>` containing
+  both the expected street and the MLS number before reading a single field.
+- Agent remarks in `<meta name="description">` are **truncated to ~160 characters**; the full text
+  is in the longest `<p>` in the body. Don't mistake the truncation for the whole remarks.
+
+`www.redfin.com/stingray/api/gis-csv` was 200 throughout this run, and listing **detail** pages
+(`/CA/<city>/<slug>/home/<id>`) were 202-with-empty-body throughout — both measured 2026-10-23.
 
 The Redfin row was corrected on **2026-08-23**. The "decoy page for another state" was real but
 self-inflicted: `/city/<id>/…` resolves by numeric id, and a guessed id serves a complete,
