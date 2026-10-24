@@ -294,3 +294,73 @@ Fall back to paths that don't fight bot defences:
    status, price cuts and image URLs, needs no network change.
 2. An agent-run **MLS/IDX client portal** with email alerts.
 3. A licensed **data API key** (SimplyRETS, Bridge Interactive, RapidAPI).
+
+## A second MetroList enumeration that needs no `User-Agent` spoofing — added 2026-10-24
+
+Every host in the table above wants a browser `User-Agent`. `www.cherielliott.com` — an **iHouse
+IDX over MetroList** — does not. It answers plain `curl` with the default agent string, which makes
+it the cheapest way to re-enumerate the board independently of the Coldwell Banker feed.
+
+```bash
+curl -sS "https://www.cherielliott.com/homes-for-sale-in-el-dorado-county?display_page=N&lpp=20"
+```
+
+- Server-rendered, **20 listings per page, ~36 pages** for the county. `lpp` is accepted but
+  ignored — it is pinned at 20.
+- Each listing block carries structured attributes: `data-mlsno`, `data-status`, `data-price`,
+  plus `listing-beds` / `listing-baths` / `listing-sqft` / `listing-lot-size` /
+  `listing-address-*`, the photo count in `listing-photos-qty`, and a photo URL.
+- Per-city pages exist for two of the three towns and make a good completeness check — the county
+  sweep returned the same totals on 2026-10-24: `/homes-for-sale-in-shingle-springs-ca` (27),
+  `/homes-for-sale-in-rescue-ca` (22). **Placerville has no city page** (153 via the county sweep).
+- The saved search behind it is **single-family only** (711/711 on 2026-10-24), so it will never
+  show land. That is usually what you want here, but it is not a general inventory.
+
+Two cautions, both already familiar:
+
+- **`listing-baths` is the rounded IDX bath count**, so it has the same "2 full + 1 half reads as
+  3" trap the `_comment` in `listings.json` warns about. Use it to shortlist, never to qualify.
+- **Listing detail pages on this host are behind a human-verification challenge**
+  (`/-/ChallengeRequest/im_not_a_bot/`). Don't try to get past it. Everything needed for a
+  shortlist is on the result pages, and the pool comes from photos instead (below).
+
+### Pool from photos, when a feed has no remarks field
+
+The iHouse result pages carry no remarks, so pool status came from the listing photos:
+
+```
+https://idx-photos-ihouseprd.b-cdn.net/CA-SACMLS/<mls>/org/<NNN>.jpg?width=500
+```
+
+`NNN` is zero-padded from `000`; the count is in the `listing-photos-qty` title attribute (36–96
+per listing here). Downloading ~20 photos spread across the full range and tiling them into one
+contact sheet per candidate makes a pool unmistakable at a glance, and is far cheaper than opening
+20 images. This caught the **spa-only** case the README warns about — 6310 Butterfield Way has a
+hot tub under a pergola and community tennis courts, and no pool.
+
+Note the system Pillow is broken on this host (`cannot import name '_imaging'`). Install to a
+local target instead of fighting it:
+
+```bash
+python3 -m pip install --quiet --target ./pylib --upgrade Pillow
+PYTHONPATH=./pylib python3 sheet.py
+```
+
+### Hosts re-measured 2026-10-24
+
+| Host | Result |
+|---|---|
+| `www.cherielliott.com` | **200 on plain `curl`** — result pages; detail pages challenged |
+| `idx-photos-ihouseprd.b-cdn.net` | **200** — listing photos, no UA needed |
+| `www.metrolistpro.com` | **200** (unchanged) |
+| `www.mlslistings.com` | **200** via `WebFetch` — settles disputed records |
+| `www.compass.com` | **202 empty to `curl`**, but **`WebFetch` renders it** — address, price, beds, baths, sqft, **lot acres**. URL path filters are ignored, only ~30 results render, and the Shingle Springs page returns an empty shell. Rescue and Placerville work. |
+| `www.coldwellbankerhomes.com` | **200** (unchanged) — still the primary |
+| `www.zillow.com`, `www.homes.com`, `www.movoto.com`, `www.landwatch.com`, `www.metrolist.com` | 403 |
+| `www.trulia.com` | 403 via `WebFetch` |
+| `www.realtor.com` | `WebFetch` refuses the domain outright |
+| `www.redfin.com` | 405 from the proxy via `WebFetch`; use `curl` paths above |
+| `www.landsearch.com` | 200 but **ignores filters** — returns a nationwide list. Useless here. |
+
+`www.cherielliott.com` returns `curl: (35) Recv failure` / `ws_closed_mid_exchange` on roughly 1 in
+30 long fetches. Transient — retry with backoff; both occurrences on 2026-10-24 succeeded on retry.
