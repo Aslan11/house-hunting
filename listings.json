@@ -13,16 +13,16 @@
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-10-24",
-  "previousRun": "2026-10-23",
+  "lastRun": "2026-10-25",
+  "previousRun": "2026-10-24",
   "source": {
-    "name": "iHouse MetroList IDX (cherielliott.com) for the board, cross-checked against Compass and MLSListings.com",
-    "method": "Independent re-run on a different feed from the usual primary. Enumerated every active single-family listing in the three cities from the iHouse MetroList IDX county sweep (27 Shingle Springs, 22 Rescue, 153 Placerville — the two city-page totals matched the county sweep exactly, confirming completeness), applied the hard criteria to the structured MLS fields, then confirmed the pool on every survivor from its own listing photos. Compass and MLSListings.com were run as the foreign-MLS net. Result: the same seven properties at the same seven prices as the 2026-10-23 board.",
-    "inventoryScanned": 202,
-    "passedBedsBathsPrice": 24,
+    "name": "Coldwell Banker IDX (MetroList feed), verified against MetroListPRO (MetroList MLS)",
+    "method": "Enumerated every active listing in the three cities from IDX city pages, applied the hard criteria to structured MLS fields, then re-read each survivor's record from MetroListPRO and required price, beds, full baths, acreage and pool to match.",
+    "inventoryScanned": 314,
+    "passedBedsBathsPrice": 48,
     "verifiedActiveMatches": 7,
     "pendingMatches": 0,
-    "mlsVerifiedOn": "2026-10-23",
+    "mlsVerifiedOn": "2026-10-25",
     "mlsVerifiedCount": 5,
     "mlsForeignSource": [
       {
@@ -41,16 +41,16 @@
   },
   "dataQuality": {
     "verifiedActiveListings": 7,
-    "note": "202 active single-family listings scanned across the three cities; 24 cleared beds, baths, acreage and price, and each had its pool checked individually against its listing photos. All seven existing matches re-confirmed Active at unchanged prices. Nothing new, no price changes, nothing dropped. MetroListPRO was NOT re-stamped this run — the board carries the 2026-10-23 stamp — so this run is corroboration from independent feeds rather than a fresh MLS-of-record confirmation.",
-    "independentEnumeration": {
-      "ranOn": "2026-10-23",
-      "source": "MetroListPRO city indexes (the MLS of record)",
-      "activeRecords": 335,
-      "pendingRecords": 50,
-      "recordsPulledBeyondIdxSweep": 385,
-      "singleFamilyRead": 278,
-      "excludedByType": 107,
-      "additionalMatchesFound": 0
+    "note": "314 active listings scanned across the three cities; 48 cleared beds, baths and price and had their MLS field table read directly. No status disagreement between the IDX feed and the Redfin cross-check this run. Separately, this run's board was re-derived from scratch on a second pass over the same IDX with an independently written filter, and every one of the seven was then re-read on a third feed \u2014 a RealGeeks MetroList IDX mirror addressed by MLS number for the five MetroList records, and MLSListings for the two foreign-MLS ones. All three passes returned the same seven properties at the same seven prices.",
+    "independentRerun": {
+      "ranOn": "2026-10-25",
+      "sources": [
+        "Coldwell Banker IDX (re-derived with a separate filter)",
+        "RealGeeks MetroList IDX mirror, by MLS number",
+        "MLSListings.com"
+      ],
+      "agreement": "identical \u2014 7 matches, 7 prices, no new, no drops",
+      "note": "Redfin detail pages returned empty bodies again this run, so foreign-verify.py stamped 0 of 2; mlsl-verify.py filled both. That is the fourth consecutive run Redfin's detail path has been throttled \u2014 the fallback is now carrying the foreign-MLS gate, not backing it up."
     }
   },
   "runSummary": {
@@ -114,7 +114,7 @@
       "summary": "Crafted as the builder's own residence, this extraordinary European Country-inspired estate was designed without compromise. From its commanding setting on 40 acres with sweeping Sierra foothill views and timeless architectural details, every aspect of the property reflects quality and enduring elegance. From the moment you arrive, the home makes a striking impression, thoughtfully designed to fra",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-10-24",
+      "lastSeen": "2026-10-25",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -168,7 +168,7 @@
       "summary": "Escape the hustle and bustle and discover your own private retreat in Shingle Springs. Set on approximately 5 private acres with sweeping hillside views, this single-story custom home offers over 3,000 sq. ft. of thoughtfully designed living space with 4 bedrooms, 3 full baths and an impressive 4-car garage.    The outdoor setting is where this property truly shines. A stunning infinity-edge saltw",
       "notes": "",
       "firstSeen": "2026-08-13",
-      "lastSeen": "2026-10-24",
+      "lastSeen": "2026-10-25",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -218,7 +218,7 @@
       "summary": "This is an exceptional property, fully permitted & short-term rental permitted (Airbnb & other short-term rentals). Welcome to this majestic luxury estate situated on over 16.74 acres. The large lot provides opportunities for an additional home. Positioned atop the serene Bedford Canyon, this estate boasts sweeping panoramic views that capture the natural beauty of sunrises, sunsets & stargazing. ",
       "notes": "",
       "firstSeen": "2026-10-02",
-      "lastSeen": "2026-10-24",
+      "lastSeen": "2026-10-25",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -228,7 +228,7 @@
       ],
       "secondSource": {
         "name": "the MLSListings.com MLS sheet",
-        "checkedOn": "2026-10-23",
+        "checkedOn": "2026-10-25",
         "url": "https://www.mlslistings.com/property/BE41150059",
         "confirmed": [
           "price",
@@ -285,7 +285,7 @@
       "summary": "Just minutes from town yet worlds away, this 10 acre sanctuary delivers the ultimate retreat lifestyle. Step inside to discover a beautifully updated home with 4 bedrooms, 3 baths, and an inviting upstairs game room complete with a wet bar  perfect for gatherings. The renovated kitchen shines with quartz counters, stainless appliances, and beautiful white cabinetry, flowing seamlessly into the fam",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-10-24",
+      "lastSeen": "2026-10-25",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -335,7 +335,7 @@
       "summary": "Major price reduction!  Sought-after area. Minutes from shopping, schools. Country living at its finest. Don't miss the approx. 750SF ultimate entertainment hub: game room plus extra room & bath situated above the detached three-car garage. Connected to the main house by a breeze-catching walkway, this private extra space makes a perfect teen hangout or man cave.  Situated in a serene, park-like s",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-10-24",
+      "lastSeen": "2026-10-25",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -395,9 +395,9 @@
       "gallery": "https://www.coldwellbankerhomes.com/ca/placerville/1315-arrowbee-dr/pid_72934505/",
       "status": "match",
       "summary": "Welcome to this charming mini ranch with an ADU, tucked behind a gated entrance at the end of a paved driveway, offering privacy, versatility, and lovely views in a peaceful country setting. The single-story ranch home design welcomes you into a light-filled living room where vaulted ceilings and expansive picture windows showcase the scenery beyond. The updated kitchen features granite countertop",
-      "notes": "Back on the market — was under contract since 2026-09-08 and the deal did not close. re-verified Active against the IDX detail page this run.",
+      "notes": "Back on the market \u2014 was under contract since 2026-09-08 and the deal did not close. re-verified Active against the IDX detail page this run.",
       "firstSeen": "2026-09-08",
-      "lastSeen": "2026-10-24",
+      "lastSeen": "2026-10-25",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -451,7 +451,7 @@
       "summary": "Welcome to a property that doesn't ask you to choose between a home, a retreat, and country living - you get all three. Set among the Placerville foothills, 3538 Wildwood Lane is a place to swim, garden, gather and spread out. The two-story main home offers a private ground-level guest suite with its own entrance and full bath, plus a two-car garage and full basement access. Upstairs, the living s",
       "notes": "",
       "firstSeen": "2026-08-27",
-      "lastSeen": "2026-10-24",
+      "lastSeen": "2026-10-25",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -469,7 +469,7 @@
       ],
       "secondSource": {
         "name": "the MLSListings.com MLS sheet",
-        "checkedOn": "2026-10-23",
+        "checkedOn": "2026-10-25",
         "url": "https://www.mlslistings.com/property/ME226107286",
         "confirmed": [
           "price",
@@ -833,17 +833,17 @@
     {
       "address": "3476 Buena Vista Dr, Shingle Springs",
       "price": 860000,
-      "reason": "Surfaced only by the Redfin county cross-check, not by the IDX feed or MetroListPRO — it is a For-Sale-by-Owner listing sourced from FSBO.com, so no MLS carries it. It came back with an empty LOT SIZE in the CSV (the trap the README warns about) and had to be read by hand: the detail page gives 0.79 acres, against a 2.5 acre minimum. 4bd/3ba, 2,444 sqft, no pool in the record or the description. Fails acreage."
+      "reason": "Surfaced only by the Redfin county cross-check, not by the IDX feed or MetroListPRO \u2014 it is a For-Sale-by-Owner listing sourced from FSBO.com, so no MLS carries it. It came back with an empty LOT SIZE in the CSV (the trap the README warns about) and had to be read by hand: the detail page gives 0.79 acres, against a 2.5 acre minimum. 4bd/3ba, 2,444 sqft, no pool in the record or the description. Fails acreage."
     },
     {
       "address": "1781 Springvale Rd, Placerville",
       "price": 1150000,
-      "reason": "Tracked as a relist after dropping from $1.5M; cut again to $1,150,000 (MetroListPRO list price on 2026-10-09, was $1,200,000). Resolved against MetroListPRO (MLS 226100125): Property Subtype is Triplex — multi-unit residential income, three dwellings (3bd/2ba main, 1bd/1ba ADU, studio pool house) on 10.27 acres. No single unit meets the 4BR/3BA minimum, and the MLS pool field reads No even though the remarks describe a 150,000-gallon pool. Re-confirmed Active, Triplex, Has a Pool: No on 2026-10-09. Retired from tracking; further price cuts do not change the subtype."
+      "reason": "Tracked as a relist after dropping from $1.5M; cut again to $1,150,000 (MetroListPRO list price on 2026-10-09, was $1,200,000). Resolved against MetroListPRO (MLS 226100125): Property Subtype is Triplex \u2014 multi-unit residential income, three dwellings (3bd/2ba main, 1bd/1ba ADU, studio pool house) on 10.27 acres. No single unit meets the 4BR/3BA minimum, and the MLS pool field reads No even though the remarks describe a 150,000-gallon pool. Re-confirmed Active, Triplex, Has a Pool: No on 2026-10-09. Retired from tracking; further price cuts do not change the subtype."
     },
     {
       "address": "1601 Velvet Horn Ln, Rescue",
       "price": 1100000,
-      "reason": "Went PENDING between the 2026-10-08 and 2026-10-09 runs — MetroListPRO (MLS 226060031) reads Status: Pending at $1,100,000. 5 acres with a built-in sports pool, but 3 bd / 3 ba, under the 4BR minimum, so it was never a candidate; recorded here because the previous note asserted it was still actively listed."
+      "reason": "Went PENDING between the 2026-10-08 and 2026-10-09 runs \u2014 MetroListPRO (MLS 226060031) reads Status: Pending at $1,100,000. 5 acres with a built-in sports pool, but 3 bd / 3 ba, under the 4BR minimum, so it was never a candidate; recorded here because the previous note asserted it was still actively listed."
     },
     {
       "address": "5135 Bryant Rd, Shingle Springs",
@@ -877,20 +877,20 @@
     },
     {
       "address": "5040 Milton Ranch Rd, Shingle Springs",
-      "reason": "Not for sale — sold 2019 for $1.4M"
+      "reason": "Not for sale \u2014 sold 2019 for $1.4M"
     },
     {
       "address": "5457 Bryant Rd, Shingle Springs",
-      "reason": "Not for sale — sold 2020 for $1,405,000"
+      "reason": "Not for sale \u2014 sold 2020 for $1,405,000"
     },
     {
       "address": "2800 La Paz Rd, Placerville",
       "price": 995000,
-      "reason": "4bd/2ba — under both minimums"
+      "reason": "4bd/2ba \u2014 under both minimums"
     },
     {
       "address": "2931 Texas Hill Rd, Placerville",
-      "reason": "4bd/2.5ba — under both minimums"
+      "reason": "4bd/2.5ba \u2014 under both minimums"
     },
     {
       "address": "4370 Hillwood Dr, Shingle Springs",
