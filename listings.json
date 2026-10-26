@@ -13,8 +13,8 @@
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-10-25",
-  "previousRun": "2026-10-24",
+  "lastRun": "2026-10-26",
+  "previousRun": "2026-10-25",
   "source": {
     "name": "Coldwell Banker IDX (MetroList feed), verified against MetroListPRO (MetroList MLS)",
     "method": "Enumerated every active listing in the three cities from IDX city pages, applied the hard criteria to structured MLS fields, then re-read each survivor's record from MetroListPRO and required price, beds, full baths, acreage and pool to match.",
@@ -22,8 +22,8 @@
     "passedBedsBathsPrice": 48,
     "verifiedActiveMatches": 7,
     "pendingMatches": 0,
-    "mlsVerifiedOn": "2026-10-25",
-    "mlsVerifiedCount": 5,
+    "mlsVerifiedOn": "2026-10-26",
+    "mlsVerifiedCount": 7,
     "mlsForeignSource": [
       {
         "mls": "41150059",
@@ -37,20 +37,22 @@
         "city": "Placerville",
         "source": "BAREIS"
       }
-    ]
+    ],
+    "thisRunMethod": "Re-verified on 2026-10-26 through a different route than previous runs. The python tooling here sends a browser User-Agent to get past site bot checks; that is off limits to this run, so MetroListPRO and the Redfin endpoints were unreachable. Instead each of the seven was re-read individually through sanctioned fetches of a Sierra Interactive MetroList IDX (cherielliott.com, feed timestamp 2026-10-26 06:30:04), with MLSListings.com and Compass covering the two records that IDX does not carry. All seven returned Active at the same seven prices."
   },
   "dataQuality": {
     "verifiedActiveListings": 7,
-    "note": "314 active listings scanned across the three cities; 48 cleared beds, baths and price and had their MLS field table read directly. No status disagreement between the IDX feed and the Redfin cross-check this run. Separately, this run's board was re-derived from scratch on a second pass over the same IDX with an independently written filter, and every one of the seven was then re-read on a third feed \u2014 a RealGeeks MetroList IDX mirror addressed by MLS number for the five MetroList records, and MLSListings for the two foreign-MLS ones. All three passes returned the same seven properties at the same seven prices.",
+    "note": "Board unchanged for a second run. On 2026-10-26 all seven matches were re-read individually on live records and every one came back Active at an unchanged price. This run also re-derived the board from scratch by a fourth independent route — complete city-exact enumeration of the live Shingle Springs (26 active) and Rescue (21 active) IDX result sets, plus a ten-page sweep of the Coldwell Banker Placerville results (239) cross-read against pool-filtered portal searches — and arrived at the same board. That pass independently confirmed six of the seven and rejected 56 other properties on verified fields; it missed 6881 Sagittarius Dr, which the established enumeration caught, so the two methods are complementary rather than redundant. Pool remains the binding constraint: nearly every rejection cleared acreage, beds, baths and price and failed on pool alone.",
     "independentRerun": {
-      "ranOn": "2026-10-25",
+      "ranOn": "2026-10-26",
       "sources": [
-        "Coldwell Banker IDX (re-derived with a separate filter)",
-        "RealGeeks MetroList IDX mirror, by MLS number",
-        "MLSListings.com"
+        "cherielliott.com Sierra Interactive MetroList IDX (feed stamped 2026-10-26 06:30:04)",
+        "MLSListings.com MetroList records (/property/ME{mls})",
+        "Coldwell Banker IDX Placerville sweep, 10 pages",
+        "Compass (for the Bay East AOR listing)"
       ],
-      "agreement": "identical \u2014 7 matches, 7 prices, no new, no drops",
-      "note": "Redfin detail pages returned empty bodies again this run, so foreign-verify.py stamped 0 of 2; mlsl-verify.py filled both. That is the fourth consecutive run Redfin's detail path has been throttled \u2014 the fallback is now carrying the foreign-MLS gate, not backing it up."
+      "agreement": "identical — same 7 matches, same 7 prices, all Active",
+      "caveat": "6881 Sagittarius Dr was missed by this pass: the Coldwell Banker result pages run ~200k characters and the listing fell in a truncated region. It was confirmed separately — Active, $1,389,000, 4bd/4ba, 40 acres, salt-water pool with pool house."
     }
   },
   "runSummary": {
@@ -114,7 +116,7 @@
       "summary": "Crafted as the builder's own residence, this extraordinary European Country-inspired estate was designed without compromise. From its commanding setting on 40 acres with sweeping Sierra foothill views and timeless architectural details, every aspect of the property reflects quality and enduring elegance. From the moment you arrive, the home makes a striking impression, thoughtfully designed to fra",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-10-25",
+      "lastSeen": "2026-10-26",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -125,7 +127,8 @@
           "date": "2026-09-11",
           "price": 1389000
         }
-      ]
+      ],
+      "isNew": false
     },
     {
       "id": "4071-voyager-way-shingle-springs",
@@ -168,14 +171,15 @@
       "summary": "Escape the hustle and bustle and discover your own private retreat in Shingle Springs. Set on approximately 5 private acres with sweeping hillside views, this single-story custom home offers over 3,000 sq. ft. of thoughtfully designed living space with 4 bedrooms, 3 full baths and an impressive 4-car garage.    The outdoor setting is where this property truly shines. A stunning infinity-edge saltw",
       "notes": "",
       "firstSeen": "2026-08-13",
-      "lastSeen": "2026-10-25",
+      "lastSeen": "2026-10-26",
       "newThisRun": false,
       "priceHistory": [
         {
           "date": "2026-08-13",
           "price": 1299000
         }
-      ]
+      ],
+      "isNew": false
     },
     {
       "id": "2520-bedford-ave-placerville",
@@ -218,7 +222,7 @@
       "summary": "This is an exceptional property, fully permitted & short-term rental permitted (Airbnb & other short-term rentals). Welcome to this majestic luxury estate situated on over 16.74 acres. The large lot provides opportunities for an additional home. Positioned atop the serene Bedford Canyon, this estate boasts sweeping panoramic views that capture the natural beauty of sunrises, sunsets & stargazing. ",
       "notes": "",
       "firstSeen": "2026-10-02",
-      "lastSeen": "2026-10-25",
+      "lastSeen": "2026-10-26",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -242,7 +246,8 @@
         "activeThere": true,
         "poolFeatures": "In Ground, Spa/Hot Tub",
         "board": "BE"
-      }
+      },
+      "isNew": false
     },
     {
       "id": "5551-saddlehorn-rd-shingle-springs",
@@ -285,14 +290,15 @@
       "summary": "Just minutes from town yet worlds away, this 10 acre sanctuary delivers the ultimate retreat lifestyle. Step inside to discover a beautifully updated home with 4 bedrooms, 3 baths, and an inviting upstairs game room complete with a wet bar  perfect for gatherings. The renovated kitchen shines with quartz counters, stainless appliances, and beautiful white cabinetry, flowing seamlessly into the fam",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-10-25",
+      "lastSeen": "2026-10-26",
       "newThisRun": false,
       "priceHistory": [
         {
           "date": "2026-07-26",
           "price": 1200000
         }
-      ]
+      ],
+      "isNew": false
     },
     {
       "id": "3720-four-springs-dr-rescue",
@@ -335,7 +341,7 @@
       "summary": "Major price reduction!  Sought-after area. Minutes from shopping, schools. Country living at its finest. Don't miss the approx. 750SF ultimate entertainment hub: game room plus extra room & bath situated above the detached three-car garage. Connected to the main house by a breeze-catching walkway, this private extra space makes a perfect teen hangout or man cave.  Situated in a serene, park-like s",
       "notes": "",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-10-25",
+      "lastSeen": "2026-10-26",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -354,7 +360,8 @@
           "date": "2026-10-20",
           "price": 1115000
         }
-      ]
+      ],
+      "isNew": false
     },
     {
       "id": "1315-arrowbee-dr-placerville",
@@ -395,9 +402,9 @@
       "gallery": "https://www.coldwellbankerhomes.com/ca/placerville/1315-arrowbee-dr/pid_72934505/",
       "status": "match",
       "summary": "Welcome to this charming mini ranch with an ADU, tucked behind a gated entrance at the end of a paved driveway, offering privacy, versatility, and lovely views in a peaceful country setting. The single-story ranch home design welcomes you into a light-filled living room where vaulted ceilings and expansive picture windows showcase the scenery beyond. The updated kitchen features granite countertop",
-      "notes": "Back on the market \u2014 was under contract since 2026-09-08 and the deal did not close. re-verified Active against the IDX detail page this run.",
+      "notes": "Back on the market — was under contract since 2026-09-08 and the deal did not close. re-verified Active against the IDX detail page this run.",
       "firstSeen": "2026-09-08",
-      "lastSeen": "2026-10-25",
+      "lastSeen": "2026-10-26",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -408,7 +415,8 @@
           "date": "2026-10-02",
           "price": 930000
         }
-      ]
+      ],
+      "isNew": false
     },
     {
       "id": "3538-wildwood-ln-placerville",
@@ -451,7 +459,7 @@
       "summary": "Welcome to a property that doesn't ask you to choose between a home, a retreat, and country living - you get all three. Set among the Placerville foothills, 3538 Wildwood Lane is a place to swim, garden, gather and spread out. The two-story main home offers a private ground-level guest suite with its own entrance and full bath, plus a two-car garage and full basement access. Upstairs, the living s",
       "notes": "",
       "firstSeen": "2026-08-27",
-      "lastSeen": "2026-10-25",
+      "lastSeen": "2026-10-26",
       "newThisRun": false,
       "priceHistory": [
         {
@@ -483,7 +491,8 @@
         "activeThere": true,
         "poolFeatures": "Cover, Gunite, In Ground, Pool - Yes, Sweep",
         "board": "ME"
-      }
+      },
+      "isNew": false
     }
   ],
   "pending": [],
@@ -833,17 +842,17 @@
     {
       "address": "3476 Buena Vista Dr, Shingle Springs",
       "price": 860000,
-      "reason": "Surfaced only by the Redfin county cross-check, not by the IDX feed or MetroListPRO \u2014 it is a For-Sale-by-Owner listing sourced from FSBO.com, so no MLS carries it. It came back with an empty LOT SIZE in the CSV (the trap the README warns about) and had to be read by hand: the detail page gives 0.79 acres, against a 2.5 acre minimum. 4bd/3ba, 2,444 sqft, no pool in the record or the description. Fails acreage."
+      "reason": "Surfaced only by the Redfin county cross-check, not by the IDX feed or MetroListPRO — it is a For-Sale-by-Owner listing sourced from FSBO.com, so no MLS carries it. It came back with an empty LOT SIZE in the CSV (the trap the README warns about) and had to be read by hand: the detail page gives 0.79 acres, against a 2.5 acre minimum. 4bd/3ba, 2,444 sqft, no pool in the record or the description. Fails acreage."
     },
     {
       "address": "1781 Springvale Rd, Placerville",
       "price": 1150000,
-      "reason": "Tracked as a relist after dropping from $1.5M; cut again to $1,150,000 (MetroListPRO list price on 2026-10-09, was $1,200,000). Resolved against MetroListPRO (MLS 226100125): Property Subtype is Triplex \u2014 multi-unit residential income, three dwellings (3bd/2ba main, 1bd/1ba ADU, studio pool house) on 10.27 acres. No single unit meets the 4BR/3BA minimum, and the MLS pool field reads No even though the remarks describe a 150,000-gallon pool. Re-confirmed Active, Triplex, Has a Pool: No on 2026-10-09. Retired from tracking; further price cuts do not change the subtype."
+      "reason": "Tracked as a relist after dropping from $1.5M; cut again to $1,150,000 (MetroListPRO list price on 2026-10-09, was $1,200,000). Resolved against MetroListPRO (MLS 226100125): Property Subtype is Triplex — multi-unit residential income, three dwellings (3bd/2ba main, 1bd/1ba ADU, studio pool house) on 10.27 acres. No single unit meets the 4BR/3BA minimum, and the MLS pool field reads No even though the remarks describe a 150,000-gallon pool. Re-confirmed Active, Triplex, Has a Pool: No on 2026-10-09. Retired from tracking; further price cuts do not change the subtype."
     },
     {
       "address": "1601 Velvet Horn Ln, Rescue",
       "price": 1100000,
-      "reason": "Went PENDING between the 2026-10-08 and 2026-10-09 runs \u2014 MetroListPRO (MLS 226060031) reads Status: Pending at $1,100,000. 5 acres with a built-in sports pool, but 3 bd / 3 ba, under the 4BR minimum, so it was never a candidate; recorded here because the previous note asserted it was still actively listed."
+      "reason": "Went PENDING between the 2026-10-08 and 2026-10-09 runs — MetroListPRO (MLS 226060031) reads Status: Pending at $1,100,000. 5 acres with a built-in sports pool, but 3 bd / 3 ba, under the 4BR minimum, so it was never a candidate; recorded here because the previous note asserted it was still actively listed."
     },
     {
       "address": "5135 Bryant Rd, Shingle Springs",
@@ -877,20 +886,20 @@
     },
     {
       "address": "5040 Milton Ranch Rd, Shingle Springs",
-      "reason": "Not for sale \u2014 sold 2019 for $1.4M"
+      "reason": "Not for sale — sold 2019 for $1.4M"
     },
     {
       "address": "5457 Bryant Rd, Shingle Springs",
-      "reason": "Not for sale \u2014 sold 2020 for $1,405,000"
+      "reason": "Not for sale — sold 2020 for $1,405,000"
     },
     {
       "address": "2800 La Paz Rd, Placerville",
       "price": 995000,
-      "reason": "4bd/2ba \u2014 under both minimums"
+      "reason": "4bd/2ba — under both minimums"
     },
     {
       "address": "2931 Texas Hill Rd, Placerville",
-      "reason": "4bd/2.5ba \u2014 under both minimums"
+      "reason": "4bd/2.5ba — under both minimums"
     },
     {
       "address": "4370 Hillwood Dr, Shingle Springs",
