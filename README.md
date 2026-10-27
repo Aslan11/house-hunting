@@ -1043,7 +1043,116 @@ Then compare against `baseline.json` before reporting anything.
    bedroom rule and had to be corrected.
 5. Update `lastSeen` on confirmed-active properties and `lastRun` on every run.
 
+### The whole board can be built without claiming to be a browser
+
+Measured **2026-10-27**. Every script in this repo sent a Chrome `User-Agent`, because the portals
+it reads bot-block datacenter IPs and that is what gets past them. A run that will not make that
+claim therefore had no step 1 at all: the 2026-10-26 run recorded exactly this and fell back to
+re-reading the seven matches one at a time.
+
+It turns out two of the sources need nothing of the kind. **MetroListPRO and MLSListings.com both
+answer an ordinary request** — curl's and urllib's own default `User-Agent`, no `Referer`, no
+cookie — and between them they cover the enumeration *and* the foreign-MLS confirmation:
+
+| Host | Default-UA result | What it gives |
+|---|---|---|
+| `www.metrolistpro.com` | 200, server-rendered | Every active and pending record in a city, plus each detail page's `Status`, `Has a Pool`, `Lot Size in Acres`, full baths, and photo URLs |
+| `www.mlslistings.com` | 200, server-rendered | `/property/<prefix><mls>` sheets, including the boards MetroList does not carry (`BE` = MAXEBRDI, `ME` = MetroList) |
+| `www.zillow.com`, `www.homes.com`, `www.movoto.com`, `www.trulia.com`, `www.remax.com` | 403 | — |
+| `www.redfin.com` | 302 → `ratelimited.redfin.com`, "Are You a Robot?" | — |
+| `www.coldwellbankerhomes.com` | 200 with a "Request Rejected" body | — |
+| `www.realtor.com` | 429 | — |
+
+`mls-enumerate.py` and `mlsl-verify.py` no longer send a spoofed `UA`; both were re-run against the
+live sites after the change and returned the same records as before. The egress proxy itself is
+open (`selective: false`, empty `recentRelayFailures`), so every 403 above is the site's own
+defense, not the gateway's — see `NETWORK.md`.
+
+This is not a degraded fallback. MetroListPRO is the MLS of record *and* it enumerates, so for a
+MetroList listing this one source satisfies the gate by itself. The 2026-10-27 run read 382 records
+across the three cities — more than the IDX feed's usual ~300 — and found the same five MetroList
+matches the board carried, at the same prices, with nothing new.
+
+#### `mls-compose.py` — the board, from that enumeration alone
+
+`scrape.js` cannot run without the spoof, so the board had nowhere to come from. `mls-compose.py`
+is that path scripted, so it is repeatable rather than a hand edit:
+
+```bash
+python3 mls-enumerate.py                                    # 1. read MetroListPRO
+python3 mls-compose.py --foreign 41150059=Active:1275000 \
+                       --foreign 226107286=Active:829000    # 2. compose the board
+python3 mlsl-verify.py --refresh                            # 3. stamp the foreign-MLS reads
+node build.js                                               # 4. render
+```
+
+The `--foreign` arguments are the point, not a nuisance. MetroListPRO is structurally blind to a
+listing on another MLS, so a run that simply carried those two forward would be publishing last
+run's word as this run's check. Each one must name the status and price a live record was read at,
+and a foreign-MLS listing with no argument is **dropped, not assumed**.
+
+The gap this route cannot close is the mirror image: a *new* non-MetroList listing cannot be found
+by it at all. Both known ones were found by the IDX feed, and 2520 Bedford Ave arrived as recently
+as 2026-10-02. That is recorded in `dataQuality.coverageGap` and is the one reason to still want
+step 1 back.
+
+#### Three ways the page can report a change that did not happen
+
+Switching enumeration source made the diff report movement that was really vocabulary. All three
+are fixed in `mls-compose.py`, and all three are the same mistake — **comparing how a source
+spells something instead of what it says**:
+
+- **Street types.** The IDX feed writes `3291 Texas Hill Rd`; MetroList writes `Texas Hill Road`.
+  Keyed on the raw string, every row in both supporting tables left and arrived on the same run.
+  `addr_key()` normalises the type words before diffing.
+- **Status words.** The feed's `For Sale` is MetroList's `Active`. Nine pool-less rows reported a
+  status change on a run where none of them moved. `status_key()` folds the aliases, and also
+  folds `Contingent - Show` to `Contingent`.
+- **Table membership.** The near-miss table used to repeat every pool-less row, so tightening it to
+  "has the pool, short on exactly one of land or the third full bath" emptied nine rows out of it.
+  They moved table; they did not leave the market. `diff_tables(moved=…)` takes the crossover set
+  and counts neither side.
+
+A fourth was a plain parse bug the switch exposed: `field()` read the flattened page text with a
+lookahead for the next `Label:`, so `Status: Contingent - Show Is Short Sale: No` returned
+`Contingent -` — the lookahead matched inside the value's own words. It now reads the
+`<span class="listing-info-item-title">` markup, where the label and value have a real boundary.
+
+#### A stamp that is never refreshed is a date the page cannot justify
+
+`mlsl-verify.py` skipped any listing that already had a `secondSource` stamp, on the sound ground
+that `foreign-verify.py`'s Redfin read is better scoped and must not be overwritten. But the stamp
+carries the date the card prints. Both foreign cards were re-read on 2026-10-27 and both still said
+**"read independently on 2026-10-25"**, and nothing distinguished that from a check that had simply
+not been made. `--refresh` re-reads a stamp this script wrote itself; a `foreign-verify.py` stamp is
+still never touched.
+
+#### Aggregators had three different prices for a listing the MLS sheet settled
+
+Worth recording as a live example of why the gate exists. Searching for 3538 Wildwood Ln this run
+returned **$949,000** (Redfin, Movoto, RE/MAX), **$889,000** (Trulia, with "original $949,000"), and
+**$829,000** (Homes.com, price-drop tag) — plus a second MLS number, 226107571, for the same
+address. The board carried $829,000. The MLSListings MLS sheet reads `$829,000 (Active)`. The board
+was right and three of the four aggregator prices were stale; a run that had "corrected" the board
+from search results would have published a $60,000–$120,000 error.
+
+#### Claims on the page now name the source that was actually read
+
+Three sentences in `build.js` named the IDX feed unconditionally: the Enumerate row, the Verify
+row's foreign-MLS clause, and `foreignNote()` on each foreign card ("The IDX feed and the
+MLSListings.com MLS sheet were read independently on …"). On a run that never read the IDX feed all
+three credited work nobody did. They branch on `idxEnumerated`, derived from `source.name`, for the
+same reason the rest of this file keeps insisting on: **describe what happened.** `source
+.passedBedsBathsPrice` was also being carried forward, so the funnel line printed the previous
+run's 48 against this run's totals; `mls-enumerate.py` now counts it, and `mlsVerifiedCount` counts
+only the records MetroListPRO actually answered for — it said "7 agreed" one sentence before
+explaining that two of the seven are ones MetroListPRO has no record of and never will.
+
 ## Running a refresh
+
+This is the full path, for a run that can reach the IDX feed and Redfin. A run that will not
+spoof a `User-Agent` cannot do step 1 and should use the MetroListPRO-only path in
+*"The whole board can be built without claiming to be a browser"* above instead.
 
 Three steps, in this order. **`scrape.js` does not perform the MetroListPRO check** — it verifies
 against Redfin's feed only. The page's "How this list is built" table states that every match was
@@ -1258,6 +1367,9 @@ and a second composer that has to be kept in step with the first will drift.
 - **`mls-enumerate.py`** — independent second enumeration from MetroListPRO's own city indexes, the
   only source that both enumerates and speaks for the MLS of record. Writes `mls-enumeration.json`;
   `--stamp` records the result under `dataQuality.independentEnumeration`. Never touches the board.
+- **`mls-compose.py`** — composes the board from `mls-enumeration.json` alone, for runs that
+  cannot spoof a `User-Agent`. Needs a `--foreign` argument per other-MLS listing naming the live
+  status and price read this run; one without an argument is dropped rather than carried.
 - **`refresh.py`** — superseded composer, guarded so it can't be run by accident. See above.
 - **`ingest.js`** — merges listings pasted from a portal results page, applying the dedupe rules.
   Kept as a manual fallback; the scrape path above supersedes it.

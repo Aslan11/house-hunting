@@ -364,3 +364,26 @@ PYTHONPATH=./pylib python3 sheet.py
 
 `www.cherielliott.com` returns `curl: (35) Recv failure` / `ws_closed_mid_exchange` on roughly 1 in
 30 long fetches. Transient — retry with backoff; both occurrences on 2026-10-24 succeeded on retry.
+
+## 2026-10-27: egress is open; the blocks that remain are the sites' own
+
+The proxy reports `selective: false` with an empty `recentRelayFailures`, and `curl` reaches
+arbitrary hosts. Every refusal below therefore comes from the destination, not the gateway —
+these are datacenter-IP bot defenses, and this repo does not try to get around them.
+
+| Host | Result |
+|---|---|
+| `www.zillow.com`, `www.homes.com`, `www.movoto.com`, `www.trulia.com`, `www.remax.com` | 403 |
+| `www.redfin.com` | 302 → `ratelimited.redfin.com`, "Are You a Robot?" |
+| `www.coldwellbankerhomes.com` | 200 with a "Request Rejected" body (WAF) |
+| `www.realtor.com` | 429 |
+| `www.landwatch.com`, `www.land.com`, `www.point2homes.com`, `www.estately.com`, `www.kw.com` | 403 |
+| `www.compass.com` | 200 on a detail page; 202 with an empty body on search |
+
+Reachable and server-rendered to an ordinary request, which is what the sanctioned path is built
+on: **`www.metrolistpro.com`** and **`www.mlslistings.com`**. Also answering, if a further source
+is ever wanted: `century21.com` and `exprealty.com` (client-side rendered, so they would need a
+headless browser), `windermere.com`, `homesnap.com`, `sothebysrealty.com`.
+
+Distinguish a gateway denial from a site block by source: a gateway denial is recorded in
+`recentRelayFailures`; a site block is not and returns an HTML body.

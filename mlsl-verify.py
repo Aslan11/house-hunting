@@ -35,9 +35,14 @@ import subprocess
 import sys
 
 TODAY = subprocess.run(["date", "-u", "+%Y-%m-%d"], capture_output=True, text=True).stdout.strip()
-UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
-      "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
+# MLSListings.com serves these property sheets to an ordinary request — measured 2026-10-27,
+# `/property/ME226107286` and `/property/BE41150059` both answered 200 with the full record to
+# curl's own default User-Agent. Nothing here needs a browser claim, so it does not make one.
+UA = "house-hunting-tracker (+https://github.com/Aslan11/house-hunting)"
 WORK = os.path.join("work", "mlsl")
+
+# The stamp this script signs its reads with; --refresh only ever re-reads its own.
+NAME = "the MLSListings.com MLS sheet"
 
 # Board prefixes MLSListings namespaces listings under. ME is MetroList, BE is MAXEBRDI (the East
 # Bay board that carries 2520 Bedford Ave), ML is MLSListings' own. Tried in order; the scope gate
@@ -168,9 +173,19 @@ def main():
             print(f"! {t['address']}: in mlsForeignSource but not on the board", file=sys.stderr)
             continue
         # foreign-verify.py's Redfin read is better scoped; never overwrite one that landed.
-        if listing.get("secondSource"):
-            src = listing["secondSource"].get("name", "another source")
-            print(f"{t['address'][:24]:24} already confirmed by {src} — left alone")
+        #
+        # But "left alone" must not mean "left stale". The stamp carries the date the card
+        # prints, so a stamp that is never refreshed makes the card say "read independently on
+        # <two weeks ago>" on a run that did read it again — and a reader cannot tell a check
+        # that was skipped from one that was made. --refresh re-reads a stamp this script wrote
+        # itself; a better-scoped stamp from foreign-verify.py still wins and is never touched.
+        prior = listing.get("secondSource")
+        mine = (prior or {}).get("name") == NAME
+        if prior and not ("--refresh" in sys.argv and mine):
+            src = prior.get("name", "another source")
+            stale = prior.get("checkedOn")
+            note = f" (read {stale}; --refresh re-reads it)" if mine and stale != TODAY else ""
+            print(f"{t['address'][:24]:24} already confirmed by {src} — left alone{note}")
             skipped += 1
             continue
 
@@ -191,7 +206,7 @@ def main():
                   f"acres={r.get('acres')} pool={r.get('pool')})", file=sys.stderr)
 
         listing["secondSource"] = {
-            "name": "the MLSListings.com MLS sheet",
+            "name": NAME,
             "checkedOn": TODAY,
             "url": r["url"],
             "confirmed": agreed,

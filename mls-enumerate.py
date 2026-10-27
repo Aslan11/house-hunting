@@ -32,8 +32,12 @@ import subprocess
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 
-UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
-      "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
+# MetroListPRO serves this content to an ordinary request. Measured 2026-10-27: the city
+# indexes and the detail pages all answer 200 to curl's and urllib's own default User-Agent,
+# so there is nothing here to get past and no reason to claim to be a browser. Every other
+# script in this repo still spoofs one for the portals that bot-block; this route does not
+# need it, which is what makes it the one enumeration a run can always do.
+UA = "house-hunting-tracker (+https://github.com/Aslan11/house-hunting)"
 
 COUNTY = "193"
 CITIES = {  # MetroListPRO city ids for the target area
@@ -64,7 +68,30 @@ def text_of(html):
     return title, re.sub(r"\s+", " ", t)
 
 
-def field(t, name, pat=r"([^:]+?)(?=\s+[A-Z][A-Za-z./ ]{2,}:|$)"):
+# Each field on a detail page is rendered as
+#   <span class="listing-info-item-title">Label:</span> Value </div>
+# so the label and the value have an unambiguous boundary in the markup. Reading them there
+# rather than out of the flattened text fixes values whose own words look like the next label:
+# "Status: Contingent - Show" came back as "Contingent -", because the text-mode lookahead
+# below sees "Show Is Short Sale:" and stops in front of it.
+FIELD_RE = re.compile(
+    r'<span class="listing-info-item-title">\s*([^<:]{1,60}):\s*</span>(.*?)</div>',
+    re.S)
+
+
+def field_map(html):
+    out = {}
+    body = re.sub(r"<script.*?</script>", " ", html, flags=re.S)
+    for m in FIELD_RE.finditer(body):
+        value = re.sub(r"<[^>]+>", " ", m.group(2))
+        out[m.group(1).strip()] = re.sub(r"\s+", " ", value.replace("&nbsp;", " ")).strip()
+    return out
+
+
+def field(t, name, pat=r"([^:]+?)(?=\s+[A-Z][A-Za-z./ ]{2,}:|$)", fields=None):
+    """Structured value when the markup gave one, else the flattened-text fallback."""
+    if fields and fields.get(name):
+        return fields[name]
     m = re.search(re.escape(name) + r":\s*" + pat, t)
     return m.group(1).strip() if m else None
 
@@ -91,7 +118,9 @@ def index_records(city, city_id, slug, pending=False):
 
 def detail(rec):
     url = f"https://www.metrolistpro.com/homes/2/6/x/{rec['mls']}"
-    title, t = text_of(get(url))
+    html = get(url)
+    title, t = text_of(html)
+    f = field_map(html)
     r = dict(rec, url=url, title=title)
     # Square footage can be "N/A" on a record that is otherwise a complete house — 4707 Peace
     # Trail (MLS 226118520) is one. Requiring digits there sent a real 2bd/2ba house to the
@@ -123,17 +152,17 @@ def detail(rec):
     ty = re.search(r"(?<!Property )Type:\s*([A-Za-z][A-Za-z/ ]*?)"
                    r"(?=\s+(?:Virtual Tour|Save To)|\s+[A-Z][A-Za-z./ ]{2,}:|$)", t)
     r["headerType"] = ty.group(1).strip() if ty else None
-    r["status"] = field(t, "Status")
-    r["pool"] = field(t, "Has a Pool")
-    r["poolDesc"] = field(t, "Pool Description")
-    r["propertyType"] = field(t, "Property Type") or r.get("headerType")
+    r["status"] = field(t, "Status", fields=f)
+    r["pool"] = field(t, "Has a Pool", fields=f)
+    r["poolDesc"] = field(t, "Pool Description", fields=f)
+    r["propertyType"] = field(t, "Property Type", fields=f) or r.get("headerType")
     # The unit table is not guaranteed to start at "Unit 1" — records exist whose first entry is
     # "Unit 2" or "Unit 3" — so match any unit index, and fall back to the type fields, which
     # spell this out as "Multi-Unit Residential" in the header and the code "RI" in the table.
     r["multiUnit"] = bool(re.search(r"Unit \d+ Features:\s*Bedrooms:", t)
                           or re.match(r"^RI$", (r.get("propertyType") or "").strip())
                           or re.search(r"multi-unit", r.get("headerType") or "", re.I))
-    acres = field(t, "Lot Size in Acres")
+    acres = field(t, "Lot Size in Acres", fields=f)
     try:
         r["acres"] = float(acres)
     except (TypeError, ValueError):
@@ -218,6 +247,54 @@ def main():
              and r.get("acres") is not None and r["acres"] >= crit["minAcres"]
              and r.get("price") is not None and r["price"] <= crit["maxPrice"]]
 
+    # The two supporting tables the page carries, derived from the same MLS fields rather than
+    # from the IDX feed. A row qualifies for exactly one of them, so a property never appears
+    # twice: `poolless` clears every test but the pool, `near_misses` has the pool and falls
+    # short only on land.
+    def clears_but_pool_and_land(r):
+        return (r.get("beds") is not None and r["beds"] >= crit["beds"]
+                and r.get("fullBaths") is not None and r["fullBaths"] >= crit["fullBaths"]
+                and r.get("price") is not None and r["price"] <= crit["maxPrice"]
+                and r["kind"] == "residential")
+
+    poolless = sorted(
+        (r for r in rows if clears_but_pool_and_land(r) and r.get("pool") != "Yes"
+         and r.get("acres") is not None and r["acres"] >= crit["minAcres"]),
+        key=lambda r: -(r["acres"] or 0))
+
+    # A near miss has the pool — the scarce thing — and falls short on exactly one of the two
+    # criteria that can be bought or lived with: land, or the third full bath. Rows with no pool
+    # belong in `poolless` and are deliberately not repeated here.
+    def near_miss(r):
+        if r["kind"] != "residential" or r.get("pool") != "Yes":
+            return None
+        if r.get("beds") is None or r["beds"] < crit["beds"]:
+            return None
+        if r.get("price") is None or r["price"] > crit["maxPrice"]:
+            return None
+        short_land = r.get("acres") is not None and r["acres"] < crit["minAcres"]
+        short_bath = r.get("fullBaths") is not None and r["fullBaths"] < crit["fullBaths"]
+        if short_land == short_bath:        # neither (it is a match) or both (two criteria short)
+            return None
+        if short_land:
+            return f'only {r["acres"]} acres'
+        half = r.get("halfBaths") or 0
+        return (f'only {r["fullBaths"]} full baths'
+                + (f' (+ {half} half)' if half else ''))
+
+    passed_bbp = sum(1 for r in rows if r["kind"] == "residential"
+                     and (r.get("beds") or 0) >= crit["beds"]
+                     and (r.get("fullBaths") or 0) >= crit["fullBaths"]
+                     and r.get("price") is not None and r["price"] <= crit["maxPrice"])
+
+    near_misses = []
+    for r in rows:
+        why = near_miss(r)
+        if why:
+            r["missing"] = why
+            near_misses.append(r)
+    near_misses.sort(key=lambda r: -(r["acres"] or 0))
+
     tracked = {l.get("mls") for l in (board.get("listings") or [])
                + (board.get("pending") or []) + (board.get("dropped") or [])}
     new = [r for r in matches if r["mls"] not in tracked]
@@ -233,6 +310,8 @@ def main():
               f'status={r["status"]}')
 
     print(f"\n{len(matches)} records met every criterion; {len(new)} not already tracked.")
+    print(f'{len(poolless)} clear beds/baths/price/acreage but have no pool; '
+          f'{len(near_misses)} have a pool and fall short on land.')
     for r in multi:
         print(f'  multi-unit, needs a human read: MLS{r["mls"]} {r["title"][:40]} '
               f'${r["price"]:,} {r["acres"]}ac pool={r["pool"]}')
@@ -244,7 +323,9 @@ def main():
                                        text=True).stdout.strip(),
                "activeRecords": n_active, "pendingRecords": n_pending,
                "landSkipped": land_skipped, "kinds": dict(kinds), "unreadable": unread,
-               "matches": matches, "newBeyondBoard": new, "multiUnitToReview": multi},
+               "matches": matches, "newBeyondBoard": new, "multiUnitToReview": multi,
+               "poolless": poolless, "nearMisses": near_misses,
+               "passedBedsBathsPrice": passed_bbp},
               open("mls-enumeration.json", "w"), indent=1)
 
     if "--stamp" in sys.argv:

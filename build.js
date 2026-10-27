@@ -82,6 +82,12 @@ function facts(l) {
   return f.join('');
 }
 
+/* Which enumeration ran this time. `scrape.js` reads the Coldwell Banker IDX feed and needs a
+   spoofed User-Agent to do it; `mls-enumerate.py` + `mls-compose.py` read MetroListPRO, which
+   answers an ordinary request. Several sentences below name their sources, and naming the wrong
+   one credits a read that did not happen — so they all branch on this rather than assuming. */
+const idxEnumerated = /IDX/i.test((data.source && data.source.name) || '');
+
 /* The card note for a listing the MLS of record structurally cannot cover — it belongs to a
    different MLS, so MetroListPRO answers 404 forever and no waiting closes the gap.
 
@@ -108,8 +114,16 @@ function foreignNote(l) {
   const label = (f) => FIELD_LABELS[f] || f;
   const ok = (ss.confirmed || []).map(label);
   const bad = (ss.disagreed || []).map(label);
-  let note = `${head}. The IDX feed and ${ss.name || 'a second source'} were read independently on `
-    + `${ss.checkedOn} and agree on ${ok.length ? ok.join(', ') : 'nothing'}`;
+  /* Name only the sources this run actually read. The note used to open "The IDX feed and
+     <second source> were read independently", which was true while scrape.js ran every run —
+     and false the first time it could not, because the IDX feed is reachable only with a
+     spoofed User-Agent. A card that credits a read nobody performed is the exact failure the
+     verification gate exists to prevent, so the phrasing follows the run's enumeration source. */
+  const read = idxEnumerated
+    ? `The IDX feed and ${ss.name || 'a second source'} were read independently on ${ss.checkedOn}`
+    : `${(ss.name || 'A second source').replace(/^the /, 'The ')} was read on ${ss.checkedOn}`;
+  let note = `${head}. ${read} and ${idxEnumerated ? 'agree' : 'agrees with the board'} on `
+    + `${ok.length ? ok.join(', ') : 'nothing'}`;
   note += ss.status ? ` — it reads ${ss.status} there too.` : '.';
   if (bad.length) {
     note += ` They disagree on ${bad.join(', ')} — per the verification gate that disagreement is `
@@ -650,7 +664,11 @@ failure mode is now closed off.</p>
 <table>
   <thead><tr><th>Step</th><th>What happens</th></tr></thead>
   <tbody>
-    <tr><td><strong>Enumerate</strong></td><td>Every active listing in the three cities is pulled from an IDX feed carrying MetroList data — ${data.source ? data.source.inventoryScanned : '—'} properties this run, not a search-result sample.</td></tr>
+    <tr><td><strong>Enumerate</strong></td><td>Every listing in the three cities is pulled from ${
+      idxEnumerated
+        ? 'an IDX feed carrying MetroList data'
+        : '<a href="https://www.metrolistpro.com/" rel="noopener">MetroListPRO</a>&rsquo;s own city indexes — the MLS of record itself, active and pending alike'
+      } — ${data.source ? data.source.inventoryScanned : '—'} properties this run, not a search-result sample.</td></tr>
     <tr><td><strong>Filter</strong></td><td>Hard criteria applied to structured MLS fields, never to prose: ${data.source ? data.source.passedBedsBathsPrice : '—'} cleared beds/baths/price, then acreage and pool narrowed it to ${listings.length}.</td></tr>
     <tr><td><strong>Verify</strong></td><td>Each survivor is re-read from <strong>MetroListPRO</strong>, the official MetroList MLS site, and price, beds, full baths, acreage and pool must match.
       ${verifiedToday
@@ -674,7 +692,7 @@ failure mode is now closed off.</p>
                     ? ` ${foreignConfirmed.length === foreignMls.length
                         ? (foreignMls.length === 1 ? 'It is' : 'They are')
                         : nameList(foreignConfirmed) + (foreignConfirmed.length === 1 ? ' is' : ' are')
-                      } confirmed against the IDX feed and ${foreignSourcePhrase} instead.`
+                      } confirmed against ${idxEnumerated ? `the IDX feed and ${foreignSourcePhrase}` : foreignSourcePhrase} instead.`
                     : ''}${
                   foreignOutstanding.length
                     ? ` ${foreignOutstanding.length === foreignMls.length
