@@ -20,9 +20,13 @@ const money = (n) => (n == null ? '—' : '$' + n.toLocaleString('en-US'));
 
 const TAGS = {
   match:                  { cls: 'match',   tag: 'ok',   label: 'Verified match' },
+  'near-miss':            { cls: 'caution', tag: 'warn', label: 'Near miss' },
   'active-fails-criteria':{ cls: 'caution', tag: 'warn', label: 'Active — fails criteria' },
   'off-market':           { cls: 'miss',    tag: 'bad',  label: 'Off market' },
 };
+
+/** A listing first seen on this run is "new". */
+const isNew = (l) => l.firstSeen === data.lastRun;
 
 function galleryHost(u) {
   try { return new URL(u).hostname.replace(/^www\./, '').split('.')[0]; }
@@ -80,11 +84,12 @@ function card(l) {
   const meta = TAGS[l.status] || { cls: 'match', tag: 'ok', label: 'Match' };
   const label = l.badge || meta.label;
   const mls = l.mls ? ` &middot; MLS ${esc(l.mls)}` : '';
+  const newPill = isNew(l) ? `<span class="tag new">New this run</span>` : '';
   return `
-  <div class="card ${meta.cls}">
+  <div class="card ${meta.cls}${isNew(l) ? ' isnew' : ''}" id="${esc(l.id)}">
     ${media(l)}
     <div class="body">
-      <span class="tag ${meta.tag}">${esc(label)}</span>
+      <div class="tags">${newPill}<span class="tag ${meta.tag}">${esc(label)}</span></div>
       ${priceBlock(l)}
       <p class="addr">${esc(l.address)}</p>
       <p class="city">${esc(l.city)}, CA ${esc(l.zip)}${mls}</p>
@@ -96,23 +101,27 @@ function card(l) {
 }
 
 const byStatus = (s) => data.listings.filter((l) => l.status === s);
-const matches  = byStatus('match');
+const matches  = byStatus('match').sort((a, b) => b.currentPrice - a.currentPrice);
+const nearMiss = byStatus('near-miss');
 const active   = byStatus('active-fails-criteria');
 const archived = byStatus('off-market');
+const fresh    = data.listings.filter(isNew);
+const dropped  = data.droppedThisRun || [];
+
+const acreNote = (l) => (l.acres >= 5 ? '' : ` &middot; under the 5-acre preference`);
+const freshRows = fresh.map((l) => `      <li><a href="#${esc(l.id)}"><strong>${esc(l.address)}</strong>, ${esc(l.city)}</a>
+        &mdash; ${money(l.currentPrice)} &middot; ${esc(l.beds)}bd/${esc(l.baths)}ba &middot; ${esc(l.acres)} acres
+        &middot; ${esc(l.poolDetail || 'pool')}${l.status === 'near-miss' ? ' <em>(near miss)</em>' : acreNote(l)}</li>`).join('\n');
+
+const droppedRows = dropped
+  .map((d) => `    <tr><td>${esc(d.address)}</td><td>${esc(d.reason)}</td></tr>`)
+  .join('\n');
 
 const rejectedRows = data.rejected
   .map((r) => `    <tr><td>${esc(r.address)}</td><td>${money(r.price)}</td><td>${esc(r.reason)}</td></tr>`)
   .join('\n');
 
 const photoCount = data.listings.filter((l) => l.photos && l.photos.length).length;
-const photoNote = photoCount === 0
-  ? `Photos aren't embedded yet — every listing portal and image CDN is blocked from the
-     environment that generates this page, so photo URLs can't be discovered automatically. Each
-     card links straight to its gallery instead. Drop any image URL into a listing's
-     <code>photos</code> array in <code>listings.json</code> and it will render here on the next build.`
-  : `${photoCount} of ${data.listings.length} listings have photos embedded. Cards without one link
-     straight to the listing gallery.`;
-
 const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -183,6 +192,18 @@ const html = `<!DOCTYPE html>
   .tag.ok{background:var(--accent-soft);color:var(--accent)}
   .tag.warn{background:var(--warn-soft);color:var(--warn)}
   .tag.bad{background:var(--miss-soft);color:var(--miss)}
+  .tag.new{background:var(--accent);color:var(--card)}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+  .tags .tag{margin-bottom:0}
+  .card.isnew{box-shadow:0 0 0 2px var(--accent-soft)}
+  .fresh{background:var(--accent-soft);border:1px solid var(--line);border-left:4px solid var(--accent);
+    border-radius:10px;padding:18px 20px;margin-bottom:12px}
+  .fresh h3{margin:0 0 10px;font-size:1rem}
+  .fresh ul{margin:0;padding-left:20px}
+  .fresh li{margin-bottom:7px;font-size:.9rem}
+  .fresh li:last-child{margin-bottom:0}
+  .fresh a{color:var(--accent);text-decoration:none;font-weight:600}
+  .fresh a:hover{text-decoration:underline}
   .note{font-size:.88rem;color:var(--muted);margin:0 0 16px;flex:1}
   .note strong{color:var(--ink)}
   a.btn{display:inline-block;text-decoration:none;color:var(--accent);font-weight:600;
@@ -210,7 +231,7 @@ const html = `<!DOCTYPE html>
   <h1>House Hunt: El Dorado County</h1>
   <p class="sub">Shingle Springs · Rescue · Placerville — updated <strong>${esc(data.lastRun)}</strong></p>
   <div class="criteria">
-    <span class="chip">5+ bedrooms</span>
+    <span class="chip">4+ bedrooms</span>
     <span class="chip">3+ bathrooms</span>
     <span class="chip">Pool required</span>
     <span class="chip">2.5+ acres (5+ preferred)</span>
@@ -218,40 +239,23 @@ const html = `<!DOCTYPE html>
   </div>
 </header>
 
-<div class="banner">
-  <h3>&#9888; This search has no verified results yet</h3>
-  <p>The first run of this page presented four properties as matches. <strong>All of them were off
-  market.</strong> The cause: listing status was inferred from search-engine text, and search engines
-  keep indexing sold listings with &ldquo;For Sale&rdquo; in the title for years afterward. Every
-  listing portal and MLS site is blocked from the environment that generates this page, so no live
-  listing page can be read to check.</p>
-  <p>Nothing is shown as a match below until its status can be confirmed against a live source.
-  The properties on this page are kept as an <strong>archive of what was checked and ruled out</strong>,
-  so a genuine relist gets flagged rather than re-reported as new. See
-  <a href="#fix">how to fix the pipeline</a>.</p>
-  <p>${photoNote}</p>
+<div class="fresh">
+  <h3>&#10024; New this run &mdash; ${fresh.length} propert${fresh.length === 1 ? 'y' : 'ies'} added ${esc(data.lastRun)}</h3>
+  ${fresh.length ? `<ul>
+${freshRows}
+  </ul>` : '<p style="margin:0;color:var(--muted)">No new properties since the last run.</p>'}
 </div>
-
-<h2 id="fix">Making this work</h2>
-<p class="sectnote">One of these unblocks real results. The first is the cheapest and also solves
-photos, since listing-alert emails carry both current status and image URLs:</p>
-<div class="tablewrap" style="margin-bottom:8px">
-<table>
-  <thead><tr><th>Option</th><th>What it fixes</th><th>Effort</th></tr></thead>
-  <tbody>
-    <tr><td><strong>Zillow/Redfin saved search &rarr; email alerts</strong> to this Gmail</td><td>Status + photos + price cuts, authoritative</td><td>~5 min, one-time</td></tr>
-    <tr><td>Have your agent set up an <strong>MLS/IDX client portal</strong> with email alerts</td><td>Same, plus full MLS data</td><td>One ask</td></tr>
-    <tr><td>Add a <strong>real-estate data API key</strong> to the environment</td><td>Direct queries, no email round-trip</td><td>Paid API</td></tr>
-    <tr><td><strong>Allowlist</strong> a listing domain in the environment's network policy</td><td>Direct reads, but portals still bot-block</td><td>Unreliable</td></tr>
-  </tbody>
-</table>
-</div>
-<p class="sectnote">With alerts flowing into Gmail, this page becomes reliable: current listings,
-correct status, real photos, and genuine price-change detection.</p>
+<p class="sectnote">${esc(data.dataQuality.note)}</p>
 
 ${matches.length ? `<h2>Verified matches</h2>
 <p class="sectnote">Confirmed active and meeting every hard criterion.</p>
 <div class="grid">${matches.map(card).join('\n')}
+</div>` : ''}
+
+${nearMiss.length ? `<h2>Near misses</h2>
+<p class="sectnote">Verified active and short on exactly one criterion — shown in case that one has
+any give.</p>
+<div class="grid">${nearMiss.map(card).join('\n')}
 </div>` : ''}
 
 ${active.length ? `<h2>Active, but doesn't meet criteria</h2>
@@ -259,15 +263,26 @@ ${active.length ? `<h2>Active, but doesn't meet criteria</h2>
 <div class="grid">${active.map(card).join('\n')}
 </div>` : ''}
 
-<h2>Archive — checked, not available</h2>
-<p class="sectnote">Reported in error on the first run, or ruled out on the facts. Kept so they are
-not re-surfaced as new finds. MLS year prefixes are shown where known — <code>221…</code> is a 2021
-listing, <code>225…</code> a 2025 one.</p>
+${archived.length ? `<h2>Archive</h2>
 <div class="grid">${archived.map(card).join('\n')}
-</div>
+</div>` : ''}
+
+${dropped.length ? `<h2>Dropped this run</h2>
+<p class="sectnote">Previously tracked, now confirmed sold or off market. Removed from the list above
+and recorded here so a genuine relist registers as new rather than silently reappearing.</p>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Address</th><th>Why it was dropped</th></tr></thead>
+  <tbody>
+${droppedRows}
+  </tbody>
+</table>
+</div>` : ''}
 
 <h2>Ruled out on the facts</h2>
-<p class="sectnote">Failed price, bedroom, bath or acreage minimums regardless of availability.</p>
+<p class="sectnote">Every other property checked this run, with the reason it didn't qualify. The
+acreage homes marked &ldquo;no pool&rdquo; are the near-candidates worth knowing about if adding a
+pool is ever on the table.</p>
 <div class="tablewrap">
 <table>
   <thead><tr><th>Address</th><th>Price</th><th>Why not</th></tr></thead>
@@ -277,21 +292,44 @@ ${rejectedRows}
 </table>
 </div>
 
-<h2>What the search did establish</h2>
-<p class="sectnote">Even with unreliable status data, the shape of the market came through
-consistently across sources, and this part is worth keeping: <strong>the pool is the binding
-constraint, not the budget.</strong> Five-bedroom homes on 5+ acres under $1.5M are common in all
-three towns; ones with a pool are rare. Placerville is well stocked with large acreage homes at
-$1.0–1.2M that have <em>ponds</em> rather than pools. Shingle Springs pool properties tend to jump
-from roughly $1.5M straight to $2M+. So a genuine 5BR/3BA pool property on 5 acres near $1.25M is an
-outlier worth moving quickly on — which is also why stale listings at that price looked so
-convincing. Expect few candidates at any given moment, and prioritise speed when one appears.</p>
+<h2>What the market looks like</h2>
+<p class="sectnote"><strong>The pool is the binding constraint, not the budget.</strong> Across all
+three towns there is plenty of 4BR/3BA acreage under $1.5M &mdash; what's scarce is a pool attached to
+it. Of every qualifying-size home checked this run, the large majority had no pool, and several of
+the biggest parcels offered a koi pond, a seasonal stream or a decorative waterfall instead. Three
+properties on 5&ndash;24 acres were ruled out for exactly that reason.</p>
+<p class="sectnote">Placerville carries the deepest inventory and the widest price range, and produced
+half the matches. Rescue is tight &mdash; one qualifying property out of the entire active list, with
+most of its acreage inventory sitting on half-acre to 1.5-acre lots despite the rural address.
+Shingle Springs clusters its pool properties right at the top of the range, which is why both matches
+there land between $1.2M and $1.3M.</p>
+<p class="sectnote">Timing note: <strong>1988 Cold Springs Rd sold on 4 September 2026 for
+$840,000</strong> &mdash; 4bd/3ba, 2.73 acres, pool. It would have matched every criterion. Properties
+in this niche clear quickly, and five of the six matches below already carry price reductions, so
+there is room to negotiate on the ones still standing.</p>
+
+<h2>How this was verified</h2>
+<p class="sectnote">${esc(data.sources.coverage)} Each property was then opened individually on an
+MLS-backed detail page to confirm status, price, bed/bath count, acreage and pool before being listed
+as a match. Feeds used were stamped with today's date:</p>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Source</th></tr></thead>
+  <tbody>
+${data.sources.feeds.map((f) => `    <tr><td>${esc(f)}</td></tr>`).join('\n')}
+  </tbody>
+</table>
+</div>
+<p class="sectnote" style="margin-top:14px">${esc(data.sources.note)}</p>
 
 <footer>
   <p>Generated from <code>listings.json</code> by <code>build.js</code>.
-  ${data.listings.length} properties on file, ${data.rejected.length} ruled out,
-  <strong>${matches.length} verified as available</strong>.
-  Future runs flag only new listings and price changes — no repeats.</p>
+  <strong>${matches.length} verified matches</strong>, ${nearMiss.length} near miss,
+  ${data.rejected.length} ruled out, ${dropped.length} dropped as sold or off market.
+  ${photoCount}/${data.listings.length} listings have photos embedded.</p>
+  <p>Each run re-checks every tracked property against the live MLS feed: sold and withdrawn
+  listings are dropped, price changes are shown on the card, and anything genuinely new is
+  highlighted at the top. Listing photos are &copy; their listing brokerages.</p>
 </footer>
 
 </div>

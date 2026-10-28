@@ -1,5 +1,30 @@
 # Network config needed for this tracker
 
+> **Status update 2026-10-28 — largely resolved; no config change needed.**
+>
+> General outbound HTTPS now works from this environment (`example.com` returns 200), and the
+> tracker verified live MLS data without any allowlist change. What remains blocked is the portals'
+> own bot defenses, not the egress gateway:
+>
+> | Host | Result |
+> |---|---|
+> | `zillow.com`, `homes.com`, `movoto.com`, `trulia.com`, `remax.com`, `estately.com`, `landwatch.com` | 403 (site bot-block) |
+> | `realtor.com` | 429 (rate-limited) |
+> | `coldwellbankerhomes.com`, `compass.com`, `century21.com`, `windermere.com`, `metrolistpro.com` | 200 |
+> | `cherielliott.com`, `ownplacer.com`, `plumaslakeproperties.realgeeks.com` | 200 — **MetroList IDX, usable** |
+>
+> The MetroList IDX mirrors in the last row carry the same underlying MLS data as the portals,
+> including status, acreage, pool and photo URLs. See README "Working data sources". Two caveats
+> learned the hard way:
+>
+> - `coldwellbankerhomes.com` rejects plain `curl` at its WAF but serves `WebFetch` fine.
+> - Do **not** spoof a user-agent or call portals' internal JSON/CSV endpoints. Both are blocked as
+>   bot-circumvention, and neither is necessary now.
+>
+> Everything below is the original diagnosis, kept for reference in case egress is restricted again.
+
+---
+
 The container that runs this tracker denies outbound HTTPS to every listing site. The denial is
 at the egress gateway, not at the destination — a `CONNECT www.zillow.com:443` gets `403 Forbidden`
 from the local proxy, so no packet ever reaches Zillow.
