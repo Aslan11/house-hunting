@@ -1073,6 +1073,35 @@ MetroList listing this one source satisfies the gate by itself. The 2026-10-27 r
 across the three cities — more than the IDX feed's usual ~300 — and found the same five MetroList
 matches the board carried, at the same prices, with nothing new.
 
+#### Three more hosts answer a plain request — and all three share the same blind spot
+
+Measured **2026-10-28**, while looking for a route that could close the `coverageGap` above. Three
+MetroList IDX mirrors also answer an ordinary request, and one of them is addressable by MLS number:
+
+| Host | What it gives |
+|---|---|
+| `plumaslakeproperties.realgeeks.com/property/<MLS>/` | Status, price, beds/baths, acreage, pool, **photo URLs** — keyed directly on the MLS number, no slug needed |
+| `cherielliott.com/homes-for-sale-in-<city>-ca` | City inventory **with acreage in the result list**; paginate `?display_page=N&lpp=20`. No Placerville page |
+| `ownplacer.com/<city>-homes-for-sale/<band>/` | Placerville and Rescue inventory, price-band filtered (`600000-700000`, `over-1000000`); paginate `?p=2` |
+
+A run built on these alone reproduced the five MetroList matches at the same prices and found nothing
+new — so they corroborate MetroListPRO, which is worth something. What they do **not** do is close
+the coverage gap, and the way that surfaced is the trap this repo keeps re-learning:
+
+> On 2026-10-28 a sweep of `ownplacer`'s $800–900k Placerville band did not contain 3538 Wildwood Ln,
+> and the run initially recorded it as **off market**. It is Active at $829,000. The listing is on
+> BAREIS, and every host in the table above republishes **MetroList only**, so the absence meant
+> "this feed does not carry it" and nothing more.
+
+That is README *"'Not found' is not 'does not match'"* arriving through a new door, and it is the
+same shape as the `--foreign` rule in `mls-compose.py`: a foreign-MLS listing that a MetroList
+source cannot see must be **read on its own board or dropped as unverified — never inferred gone
+from silence.** 2520 Bedford Ave (MAXEBRDI) was invisible to the same sweep for the same reason.
+
+So these hosts are useful as a corroborating enumeration and as the cheapest source of photo URLs.
+They are not a second opinion on whether a non-MetroList listing still exists. For that there is
+still only `mlsl-verify.py` reading the listing's own board.
+
 #### `mls-compose.py` — the board, from that enumeration alone
 
 `scrape.js` cannot run without the spoof, so the board had nowhere to come from. `mls-compose.py`

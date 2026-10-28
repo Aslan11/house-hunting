@@ -13,16 +13,16 @@
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-10-27",
-  "previousRun": "2026-10-26",
+  "lastRun": "2026-10-28",
+  "previousRun": "2026-10-27",
   "source": {
     "name": "MetroListPRO (MetroList MLS of record), complete city enumeration",
     "method": "Enumerated every active and pending residential record in the three cities from the MetroListPRO city indexes and read each detail page's Status, Has a Pool, Lot Size in Acres and full-bath fields. No User-Agent spoofing: MetroListPRO answers an ordinary request, which is why this route is available to every run. Listings on another MLS were each confirmed against a live record named in foreignVerifiedBy.",
-    "inventoryScanned": 382,
+    "inventoryScanned": 384,
     "passedBedsBathsPrice": 30,
     "verifiedActiveMatches": 7,
     "pendingMatches": 0,
-    "mlsVerifiedOn": "2026-10-27",
+    "mlsVerifiedOn": "2026-10-28",
     "mlsVerifiedCount": 5,
     "mlsForeignSource": [
       {
@@ -73,25 +73,15 @@
     "relisted": [],
     "dropped": [],
     "poollessChanges": {
-      "added": [
+      "added": [],
+      "priceChanges": [
         {
-          "address": "2610 Ranch Road",
+          "address": "2550 Tolowa Trail",
           "city": "Placerville",
-          "price": 499000,
-          "beds": 6,
-          "baths": 4,
-          "fullBaths": 4,
-          "halfBaths": 0,
-          "acres": 6.3,
-          "sqft": 2536,
-          "mls": "226132045",
-          "status": "Active",
-          "url": "https://www.metrolistpro.com/homes/2/6/2610-RANCH-ROAD-PLACERVILLE-CA-95667/226132045",
-          "reason": "MetroList records no pool",
-          "mlsPool": "No"
+          "from": 595000,
+          "to": 575000
         }
       ],
-      "priceChanges": [],
       "statusChanges": [],
       "gone": []
     },
@@ -153,7 +143,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-10-27",
+      "lastSeen": "2026-10-28",
       "flag": null
     },
     {
@@ -202,7 +192,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-08-13",
-      "lastSeen": "2026-10-27",
+      "lastSeen": "2026-10-28",
       "flag": null
     },
     {
@@ -246,7 +236,7 @@
       "summary": "This is an exceptional property, fully permitted & short-term rental permitted (Airbnb & other short-term rentals). Welcome to this majestic luxury estate situated on over 16.74 acres. The large lot provides opportunities for an additional home. Positioned atop the serene Bedford Canyon, this estate boasts sweeping panoramic views that capture the natural beauty of sunrises, sunsets & stargazing. ",
       "notes": "",
       "firstSeen": "2026-10-02",
-      "lastSeen": "2026-10-27",
+      "lastSeen": "2026-10-28",
       "priceHistory": [
         {
           "date": "2026-10-02",
@@ -255,7 +245,7 @@
       ],
       "secondSource": {
         "name": "the MLSListings.com MLS sheet",
-        "checkedOn": "2026-10-27",
+        "checkedOn": "2026-10-28",
         "url": "https://www.mlslistings.com/property/BE41150059",
         "confirmed": [
           "price",
@@ -317,7 +307,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-10-27",
+      "lastSeen": "2026-10-28",
       "flag": null
     },
     {
@@ -378,7 +368,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-10-27",
+      "lastSeen": "2026-10-28",
       "flag": null
     },
     {
@@ -431,7 +421,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-09-08",
-      "lastSeen": "2026-10-27",
+      "lastSeen": "2026-10-28",
       "flag": null
     },
     {
@@ -475,7 +465,7 @@
       "summary": "Welcome to a property that doesn't ask you to choose between a home, a retreat, and country living - you get all three. Set among the Placerville foothills, 3538 Wildwood Lane is a place to swim, garden, gather and spread out. The two-story main home offers a private ground-level guest suite with its own entrance and full bath, plus a two-car garage and full basement access. Upstairs, the living s",
       "notes": "",
       "firstSeen": "2026-08-27",
-      "lastSeen": "2026-10-27",
+      "lastSeen": "2026-10-28",
       "priceHistory": [
         {
           "date": "2026-08-27",
@@ -492,7 +482,7 @@
       ],
       "secondSource": {
         "name": "the MLSListings.com MLS sheet",
-        "checkedOn": "2026-10-27",
+        "checkedOn": "2026-10-28",
         "url": "https://www.mlslistings.com/property/ME226107286",
         "confirmed": [
           "price",
@@ -626,7 +616,7 @@
     {
       "address": "2550 Tolowa Trail",
       "city": "Placerville",
-      "price": 595000,
+      "price": 575000,
       "beds": 4,
       "baths": 3,
       "fullBaths": 3,
