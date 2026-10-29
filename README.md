@@ -1177,6 +1177,28 @@ run's 48 against this run's totals; `mls-enumerate.py` now counts it, and `mlsVe
 only the records MetroListPRO actually answered for — it said "7 agreed" one sentence before
 explaining that two of the seven are ones MetroListPRO has no record of and never will.
 
+#### A 404 from a listing's own board is a departure; silence from a mirror is not
+
+Recorded **2026-10-29**, when 1300 Large Oak Drive left the pool-less list. Three facts together:
+it was absent from the MetroListPRO active index, absent from the pending index, and its
+MetroListPRO detail page returned **404**.
+
+That looks like the *"'Not found' is not 'does not match'"* trap above, and it is the opposite of
+it. The distinction is **which board is being asked about whose listing**:
+
+| Situation | What absence means |
+|---|---|
+| A MetroList mirror has no record of a **BAREIS or MAXEBRDI** listing | The feed does not carry it. Says nothing about the listing. Re-read it on its own board or leave it unverified — never infer it gone. |
+| **MetroListPRO** 404s a **MetroList** listing, and both its indexes omit it | The record is no longer published. A real departure. |
+
+3538 Wildwood Ln is the standing example of the first row: it is on BAREIS, every enumerating host
+here republishes MetroList only, and a 2026-10-28 sweep briefly recorded it off market on exactly
+that absence. It was Active at $829,000 throughout.
+
+So the rule is not "absence proves nothing" — it is **absence proves nothing unless the source
+asked is the listing's own board.** Collapse the two and the board either carries sold property
+forever, or drops live listings on a mirror's blind spot. Both have happened here.
+
 ## Running a refresh
 
 This is the full path, for a run that can reach the IDX feed and Redfin. A run that will not
