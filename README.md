@@ -1,110 +1,109 @@
 # House Hunting — El Dorado County
 
 Automated house-hunt tracker for **Shingle Springs**, **Rescue**, and **Placerville, CA**.
+Published from the `gh-pages` branch.
 
 ## Criteria
 
 | Requirement | Value |
 |---|---|
-| Bedrooms | 5+ |
+| Bedrooms | 4+ |
 | Bathrooms | 3+ |
 | Pool | Required |
 | Lot size | 2.5 acres minimum, 5+ preferred |
 | Max price | $1,500,000 |
 
-## ⚠️ Verification gate — read before reporting anything
+The bedroom minimum was **5+** on the first run and is **4+** from 2026-10-30 onward, per the
+current request. Loosening it is what surfaced most of the present match list.
 
-The first run of this tracker reported four properties as matches. **All four were off market.**
+## Where the data comes from
 
-Root cause: listing status was inferred from search-engine result text. Search engines index
-listing pages that keep "For Sale" in the `<title>` for years after the sale closes, so stale
-listings read as active. A second failure compounded it — search snippets conflated two different
+`coldwellbankerhomes.com` serves a full **MetroList IDX** feed and is reachable from this
+environment. Its city pages carry a `schema.org` `ItemList` in a `<script type="application/ld+json">`
+block with price, beds, baths, square footage, a photo URL and an `availability` flag for every
+active listing. Detail pages add the two fields that decide this search — **Lot Size (Acres)** and
+**Pool** — plus the MLS number, year built, garage count and an `IsActive` flag.
+
+The run procedure:
+
+1. Enumerate every active listing on `/ca/<city>/` and its `p_2/`, `p_3/`… pages for all three
+   cities, reading the JSON-LD rather than scraping the rendered cards. Paginate until a page
+   returns nothing new. The 2026-10-30 run read **313** active listings this way (Shingle Springs
+   46, Placerville 236, Rescue 31).
+2. Filter on price, beds and baths from the list data.
+3. Fetch the detail page of each survivor for acreage and pool.
+4. **Cross-check every match against a second independent source** before it goes on the page.
+   `mlslistings.com/property/ME<mls>` and `plumaslakeproperties.realgeeks.com/property/<mls>/` both
+   resolve by MLS number and are the quickest second reads. `verification.second` on each listing
+   records what was found.
+
+That enumeration is the point: it is the *whole* active inventory, not a sample. Web search returns
+a small, stale slice, because it reads summaries of portal pages instead of a live feed.
+
+### Be considerate of the source
+
+The IDX host rate-limits, and it started returning `Request Rejected` after roughly 70 requests in
+the 2026-10-30 run. Space requests out, keep the detail-page fetches to listings that actually
+cleared the cheap filters, and do not send a spoofed browser user-agent to get around a bot check.
+`WebFetch` reaches the same pages when `curl` is being throttled, and it is the right tool for
+spot-checking a handful of listings.
+
+## ⚠️ Verification gate
+
+The first run reported four properties as matches. **All four were off market.** Listing status had
+been inferred from search-engine result text, and search engines keep indexing sold listings with
+"For Sale" in the `<title>` for years. A second failure compounded it: snippets conflated two
 properties on the same street, producing a listing with the wrong MLS number, bed count and price.
 
-**Rules that follow from this:**
+The rules that follow still hold, even now that a live feed is available:
 
 1. A property may only be given `status: "match"` when its active status is confirmed against a
-   live listing page or an authoritative feed. Search-result text is **not** sufficient.
+   **live listing page**. Search-result text is not sufficient.
 2. MetroList MLS numbers encode the listing year: `221…` = 2021, `223…` = 2023, `225…` = 2025,
    `226…` = 2026. A prefix older than the current year is strong evidence the listing is stale.
-   Treat it as off market unless proven otherwise.
-3. Cross-check bed/bath/price against at least two independent sources before reporting. If they
-   disagree, report the disagreement rather than picking one.
-4. Prefer *under*-reporting. An empty result is correct and useful; a fabricated match is not.
+   (Some listings carry a non-MetroList number — `41150059` is a Bay Area MLS — so treat the prefix
+   rule as a flag, not a verdict.)
+3. Cross-check bed/bath/price against at least two independent sources. If they disagree, report the
+   disagreement rather than picking one. On 2026-10-30 the IDX price was consistently *lower* than
+   the second source's, which is what a real price cut looks like; the reverse would be a red flag.
+4. Prefer under-reporting. An empty result is correct and useful; a fabricated match is not.
 
-## Why the environment can't verify
-
-The network policy allows GitHub, package registries, and a keyed `maps.googleapis.com`. Everything
-else is blocked at the proxy — Zillow, Redfin, Realtor.com, Homes.com, Movoto, small brokerage
-sites, plus OpenStreetMap, Wikimedia and Esri tile servers. `WebFetch` is blocked outright
-(`example.com` returns 403). `WebSearch` is the only channel, and it returns summarised text, never
-live status and never image URLs.
-
-## Fixing the pipeline
-
-Ranked cheapest-first. The first option solves listing status **and** photos at once:
-
-1. **Zillow/Redfin saved search with email alerts** to `kvn.p.mrtn@gmail.com`. This repo's runner
-   has Gmail access, so alert emails become an authoritative feed: current listings, correct
-   status, price cuts, and image URLs. ~5 minutes to set up, one time.
-2. **An agent-run MLS/IDX client portal** with email alerts — same benefits, fuller MLS data.
-3. **A real-estate data API key** in the environment (SimplyRETS, Bridge Interactive, a RapidAPI
-   provider) for direct queries.
-4. **Allowlisting a listing domain** in the network policy. Least reliable — the portals bot-block
-   independently of the proxy.
-
-## Photos
-
-Photo support is built and waiting on a source.
-
-- Each listing has a `photos` array in `listings.json`. Put any image URL in it and the card
-  renders it on the next build.
-- Hotlinking works even though this environment can't load images: the **viewer's browser** fetches
-  them, and it isn't behind this proxy. Images carry `referrerpolicy="no-referrer"`, which also
-  gets past most CDN referrer blocks.
-- If a photo URL 404s or is blocked, an `onerror` handler swaps in the fallback tile client-side,
-  so a dead URL never leaves a hole in the layout.
-- With no photo, the card shows a "View photos on <site>" tile linking to `gallery` (or `url`).
-
-Note that MLS photos are the copyright of the listing brokerage. Fine for a private hunting page;
-don't republish them more broadly.
-
-## Fastest path: paste from Zillow
-
-`ingest.js` takes listings copied straight off a Zillow or Redfin results page and merges them in,
-applying the dedupe rules below automatically.
-
-```bash
-node ingest.js paste.txt     # or:  pbpaste | node ingest.js
-node build.js
-```
-
-It reports what was new, what changed price, and what was already tracked. Anything outside the
-three target cities is skipped; anything failing a hard criterion is added but flagged rather than
-presented as a match. Image URLs in the paste become the card photo.
-
-Note the coverage problem this solves: web search returns only a small, stale, non-random slice of
-inventory, because it reads *summaries of* portal pages rather than querying the live MLS. A portal's
-own filtered search is the real result set. Do not treat a thin search-derived result list as
-evidence that inventory is thin.
-
-## Files
-
-- **`listings.json`** — canonical data. Single source of truth.
-- **`ingest.js`** — merge pasted portal listings into `listings.json`.
-- **`build.js`** — renders `index.html` from `listings.json`. No dependencies: `node build.js`.
-- **`index.html`** — generated. Don't hand-edit; edit the JSON and rebuild.
-
-## Dedupe rules for future runs
+## Dedupe rules for every run
 
 Read `listings.json` **before** reporting anything.
 
-1. A property already in `listings` is a **duplicate** — do not re-surface it.
+1. A property already in `listings` is a **duplicate** — do not re-surface it as new.
 2. Exception: if the price differs from `currentPrice`, that *is* worth reporting. Append to
-   `priceHistory`, update `currentPrice`, and the card will render the delta automatically.
-3. Anything in `rejected` stays rejected unless a price change brings it into range.
-4. An `off-market` property returning to market is newsworthy — but only once verified per the gate.
-5. Update `lastSeen` on confirmed-active properties and `lastRun` on every run.
+   `priceHistory` and update `currentPrice`; the card renders the delta automatically.
+3. A listing no longer in the live active set has sold or been withdrawn. **Drop it** from
+   `listings` and add a one-line entry to `dropped`, so a genuine relist is recognised later
+   instead of being reported as a new find.
+4. Anything in `nearMisses` stays there unless a price change or a corrected field brings it into
+   range.
+5. `firstSeen` is what drives the "new this run" highlight at the top of the page: set it to the run
+   date on first sight and never touch it again. Update `lastSeen` on every confirmed-active
+   property and `lastRun` on every run.
+
+## Files
+
+- **`listings.json`** — canonical data. Single source of truth. Holds `listings` (verified matches),
+  `nearMisses` (active, clears most criteria, fails one), and `dropped` (gone, kept for dedupe).
+- **`build.js`** — renders `index.html` from `listings.json`. No dependencies: `node build.js`.
+- **`ingest.js`** — merge listings pasted off a portal results page into `listings.json`, applying
+  the dedupe rules above. `node ingest.js paste.txt`, then `node build.js`.
+- **`index.html`** — generated. Don't hand-edit; edit the JSON and rebuild.
+- **`NETWORK.md`** — what is and isn't reachable from the runner, and why.
+
+## Photos
+
+Each listing has a `photos` array; the first entry renders as the card image. Images carry
+`referrerpolicy="no-referrer"`, which gets past most CDN referrer blocks, and an `onerror` handler
+swaps in a "View photos" tile client-side so a dead URL never leaves a hole in the layout. The
+container itself often can't load these images — that doesn't matter, the viewer's browser fetches
+them and it isn't behind this proxy.
+
+MLS photos and listing copy are the copyright of the listing brokerage. Fine for a private hunting
+page; don't republish more broadly.
 
 ## Publishing
 
