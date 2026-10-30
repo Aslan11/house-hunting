@@ -294,6 +294,17 @@ def main():
         "request, which is why this route is available to every run. Listings on another MLS "
         "were each confirmed against a live record named in foreignVerifiedBy.")
     src["inventoryScanned"] = enum["activeRecords"] + enum["pendingRecords"]
+    # Same carry-forward as passedBedsBathsPrice, two keys over: these were written by whatever
+    # ran before and were republished beside this run's inventoryScanned, so the three numbers
+    # described two different runs and did not add up.
+    src["activeScanned"] = enum["activeRecords"]
+    src["pendingScanned"] = enum["pendingRecords"]
+    # Prose describing one specific run must not survive into the next one. Each of these says
+    # what a named run did; carried forward silently it becomes this run's claim about itself.
+    # Dropping them forces a run to restate what it actually did or leave the field empty.
+    src.pop("thisRunMethod", None)
+    board.get("dataQuality", {}).pop("note", None)
+    board.get("dataQuality", {}).pop("independentRerun", None)
     # The page prints this as "N cleared beds/baths/price". Carried over unchanged it reported
     # the previous run's funnel against this run's totals.
     src["passedBedsBathsPrice"] = enum.get("passedBedsBathsPrice")

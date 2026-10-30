@@ -568,6 +568,24 @@ Two things generalise:
   while the page never had it. Where the docs claim a property is on the page, the cheapest possible
   check is to look for it there.
 
+#### The same trap, in the one field an IDX enumeration gives you for free
+
+2026-10-30 ran a full `coldwellbankerhomes.com` enumeration as a blind cross-check and it reported
+**eight** matches against the board's seven. The extra one was 1234 Rising Hill W Rd again.
+
+The cause is worth recording because it is specific to enumerating from the IDX *city* pages rather
+than its detail pages. The JSON-LD on a city page carries `numberOfBathroomsTotal`,
+`numberOfFullBathrooms` and `numberOfPartialBathrooms`, but only the first is populated on the
+search payload — and it is the rounded-up total, so a 2-full-plus-1-half house reads `3`. The
+detail page's `Full Bathrooms` field, which the section above says to filter on, is correct; the
+list payload simply does not have it.
+
+So the rule "filter on `Full Bathrooms` only" has a corollary for anything enumerating from a search
+payload: **the cheap list field and the authoritative detail field have the same name in prose and
+different meanings in fact.** A bath count that arrives without a half-bath count beside it has not
+been decomposed and cannot clear a full-bath minimum on its own — exactly the limit `redfin-csv.py`
+already records for Redfin's `BATHS` column. Treat it as a candidate filter, never as the test.
+
 ### A criterion that silently matched nothing
 
 Renaming `criteria.baths` to `criteria.fullBaths` on 2026-08-15 broke `scrape.js`, which still read
@@ -749,6 +767,26 @@ long since resolved.
 Both are now constructed literally in `scrape.js` from that run's own counters, with no spread. The
 duplicate `scanned`/`verifiedMatches` keys are gone. If you add a field that describes the run, add
 it there and give it a value every time.
+
+#### …and a third time, in the composer the no-spoof path actually uses
+
+`mls-compose.py` had learned half of this. It writes `source.passedBedsBathsPrice` from its own
+enumeration with a comment explaining exactly why — "carried over unchanged it reported the previous
+run's funnel against this run's totals" — and then left `activeScanned` and `pendingScanned`
+untouched two lines below, beside the `inventoryScanned` it *does* recompute. On 2026-10-30 the
+board therefore published `inventoryScanned: 377` next to `activeScanned: 354` and
+`pendingScanned: 51 … 55`: this run's total, last run's split, and the two did not add up. The same
+spread also carried `source.thisRunMethod` and `dataQuality.note` forward, so the board described a
+Trulia cross-check that this run had not run.
+
+All three are fixed the way the sections above prescribe — the two counters are written from the
+enumeration, and the two prose fields are **popped** rather than overwritten, so a run that does not
+restate what it did leaves them empty instead of inheriting a predecessor's account of itself.
+
+The reason this keeps recurring is worth naming: the fix has been applied per *field* each time, and
+the bug is per *writer*. Every composer that opens the existing board and writes some keys into it
+inherits the whole class again. When adding one, the question is not "did I update the counters" but
+**"which keys in this object describe a run, and does this writer set every one of them?"**
 
 ### A verification claim nothing had tested
 
