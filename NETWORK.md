@@ -1,5 +1,20 @@
 # Network config needed for this tracker
 
+> **Status 2026-10-31: egress is OPEN.** `curl -sS "$HTTPS_PROXY/__agentproxy/status"` reports
+> `"selective": false` with an empty `recentRelayFailures`, and `WebFetch` on `example.com` now
+> succeeds. The blanket gateway denial described below no longer applies, so **no action is needed
+> on the allowlist**. What remains is *site-level* bot blocking by the big portals, which an
+> allowlist cannot fix. The tracker works around it by reading the MetroList-backed IDX at
+> `coldwellbanker.com` (HTTP 200) instead — see README, "How the current run gets its data".
+>
+> Observed 2026-10-31: zillow / homes.com / movoto / trulia / remax = 403, realtor.com = 429,
+> redfin.com = 302 (filter + CSV endpoints 405), coldwellbanker.com / metrolistpro.com /
+> compass.com / windermere.com / exprealty.com = 200.
+>
+> Keep the rest of this file for re-diagnosis if egress is ever closed again.
+
+---
+
 The container that runs this tracker denies outbound HTTPS to every listing site. The denial is
 at the egress gateway, not at the destination — a `CONNECT www.zillow.com:443` gets `403 Forbidden`
 from the local proxy, so no packet ever reaches Zillow.
