@@ -1140,6 +1140,79 @@ So these hosts are useful as a corroborating enumeration and as the cheapest sou
 They are not a second opinion on whether a non-MetroList listing still exists. For that there is
 still only `mlsl-verify.py` reading the listing's own board.
 
+#### A fourth host answers a plain request — and it is *not* MetroList-only
+
+Measured **2026-10-31**, and it closes the `coverageGap` the three hosts above could not.
+
+`www.coldwellbanker.com` answers curl's default `User-Agent` with HTTP 200 and serves complete city
+inventory. What makes it different from every other plain-request source this repo has found is
+that it **carries other boards**: 2520 Bedford Ave appears under a `CRMLS` photo bucket and 3538
+Wildwood Ln under `CABAREIS` — the latter being the listing MetroListPRO has still never indexed.
+So it is the one no-spoof route that could see a *new* foreign-MLS listing, which is exactly the
+hole `mls-compose.py`'s docstring has described since 2026-10-27.
+
+Note the distinction from `www.coldwellbankerhomes.com`, which the table above records as 200 with
+a "Request Rejected" body. Different host, different answer; the `homes` subdomain is still blocked.
+
+Each city page embeds `<script id="__NEXT_DATA__">` with
+`props.pageProps.propertiesData.properties[]` — `markerPrice`, `beds`, `baths`, `squareFeet`,
+`mlsId`, `standardStatus`, `daysOnMarket`, `officeName`, `photos[].mediaUrl` and
+`propertyDetailsRoutePath`. Page with `?page=N`, 32 per page. The detail page carries
+`rawPropertyDetails.property.characteristics.lotSizeAcres` and
+`propertyDetails.about.description`. The 2026-10-31 sweep read 406 records (62 + 52 + 292).
+
+`cb-crosscheck.py` is this packaged as the repeatable sweep. Four cautions, all of them this
+repo's existing lessons arriving at a new host:
+
+- **`price` is a formatted string** (`"$1,275,000"`); the number is `markerPrice`. A numeric filter
+  on `price` throws per row and drops the lot silently — it returned 0 candidates out of 406 the
+  first time, which looks exactly like "no inventory matches" and is not.
+- **`baths` is full + half combined and cannot be decomposed**, the same limit `redfin-csv.py`
+  records for Redfin's `BATHS`. 1234 Rising Hill W Road reads `3` here and is 2 full + 1 half on
+  the MLS — it is on `nearMisses` for precisely that reason. The script flags and does not decide.
+- **There is no structured pool field.** Pool comes from the agent's remarks, so a hit is a
+  candidate, never a determination. Unlike a Redfin detail page there is no comparable-homes
+  payload, so the text is correctly scoped — but the prose lies in both directions, and both
+  were live this run: 1777 Carl Rd reads "…build an ADU, or *add a pool* or barn" (no pool), and
+  rows with no "pool" at all are re-scanned for `spa|hot tub|swim|water feature|waterfall|resort`
+  so a pool described in other words is not missed. 4810 Robledo Dr is the one that hits that
+  second net, and its "waterfall" is decorative ponds and its "spa bath" a bathroom.
+- **It carries stale ACTIVE rows** — see immediately below.
+
+##### The first thing the new source found was a listing that is not there
+
+3784 Cattle Drive (MLS 226092223) reads ACTIVE at $1,050,000, 4bd, 5.0 acres, 101 days on market,
+with remarks describing a "custom Milton Estates pool home". On the feed's own numbers it clears
+every criterion, and it was the single row this sweep had that the board did not.
+
+It is not on the market. The number is a MetroList number and the feed files its photos under the
+MetroList bucket, so **MetroListPRO is its own board of record** — and MetroListPRO does not carry
+it: absent from the Shingle Springs active index (45 records) and the pending index (12), and
+`/homes/2/6/x/226092223` serves the generic unknown-id page. The MLS-keyed realgeeks mirror 404s on
+it. A control listing (4071 Voyager Way, 226082753) resolves at both.
+
+Per *"A 404 from a listing's own board is a departure; silence from a mirror is not"*, that is a
+departure and not mirror silence, so the gate resolves it the usual way: the MLS of record wins and
+the IDX row is stale. Recorded in `rejected` so a future run does not spend the fetches re-deriving
+it. Note which way round this cuts — the new source's first contribution was a **false positive it
+could not settle itself**, which is the argument for keeping it a cross-check rather than promoting
+it to the board.
+
+###### `build.js` had never printed the gap, though two docstrings said it did
+
+`mls-compose.py` has written `dataQuality.coverageGap` since 2026-10-27 and its docstring says
+"`build.js` prints it, because the point of this repo is that the page says what the run actually
+covered." `build.js` contained no reference to the key at all, so every MetroList-only run
+published a page that was silent about its own blind spot while the repo's own documentation
+asserted otherwise. That is the same shape as *"A verification claim nothing had tested"*, one file
+over. It renders now, under the "How this list is built" table.
+
+The gap note is also written twice on purpose, and by the script entitled to make each claim:
+`mls-compose.py` runs first and cannot know whether the cross-check will run, so it writes the open
+form and names the route that closes it; `cb-crosscheck.py --stamp` runs after and overwrites it
+with the closed form and the row counts that justify it. A run that skips the cross-check therefore
+publishes "open", which is the honest default.
+
 #### `mls-compose.py` — the board, from that enumeration alone
 
 `scrape.js` cannot run without the spoof, so the board had nowhere to come from. `mls-compose.py`
@@ -1150,8 +1223,22 @@ python3 mls-enumerate.py                                    # 1. read MetroListP
 python3 mls-compose.py --foreign 41150059=Active:1275000 \
                        --foreign 226107286=Active:829000    # 2. compose the board
 python3 mlsl-verify.py --refresh                            # 3. stamp the foreign-MLS reads
-node build.js                                               # 4. render
+python3 cb-crosscheck.py --stamp                            # 4. cover the other boards
+node build.js                                               # 5. render
 ```
+
+Step 4 is new on 2026-10-31 and is what makes this route complete rather than merely spoof-free.
+Steps 1–3 see MetroList only, so a **new** listing on another MLS is invisible to them; the
+Coldwell Banker IDX carries other boards and answers a plain request. Run it **after** step 2,
+because it overwrites the `coverageGap` note that step 2 writes, and **before** step 5, because
+`build.js` renders both the stamp and the note. Skip it and the page correctly publishes the open
+form of the gap rather than claiming a coverage it did not check.
+
+Where to get the `--foreign` values for step 2: read each listing's own board on MLSListings —
+`https://www.mlslistings.com/property/BE41150059` and `…/ME226107286`. The `<title>` carries the
+street, the MLS number and the status in parentheses, which is also the scope gate, and the price
+is in the body. A wrong prefix (`ME41150059`, `BE226107286`) serves the generic search page at
+HTTP 200 and is correctly rejected by that gate — so the title check is not optional.
 
 The `--foreign` arguments are the point, not a nuisance. MetroListPRO is structurally blind to a
 listing on another MLS, so a run that simply carried those two forward would be publishing last
@@ -1456,6 +1543,13 @@ and a second composer that has to be kept in step with the first will drift.
 - **`mls-enumerate.py`** — independent second enumeration from MetroListPRO's own city indexes, the
   only source that both enumerates and speaks for the MLS of record. Writes `mls-enumeration.json`;
   `--stamp` records the result under `dataQuality.independentEnumeration`. Never touches the board.
+- **`cb-crosscheck.py`** — the Coldwell Banker IDX sweep: the only plain-request enumeration that
+  is not MetroList-only, so it is what covers other boards on a no-spoof run. Filters on
+  `markerPrice` (not the formatted `price`), leaves the 3-full-bath call to the MLS because the
+  feed's bath count is full + half combined, treats a pool in the remarks as a candidate rather
+  than a determination, and diffs against the board in the one direction that proves anything.
+  `--stamp` records `dataQuality.idxCrossCheck` and rewrites `dataQuality.coverageGap`; it refuses
+  to stamp on a short sweep or a failed city. Never touches the board.
 - **`mls-compose.py`** — composes the board from `mls-enumeration.json` alone, for runs that
   cannot spoof a `User-Agent`. Needs a `--foreign` argument per other-MLS listing naming the live
   status and price read this run; one without an argument is dropped rather than carried.

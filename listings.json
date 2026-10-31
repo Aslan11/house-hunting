@@ -13,18 +13,18 @@
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-10-30",
-  "previousRun": "2026-10-29",
+  "lastRun": "2026-10-31",
+  "previousRun": "2026-10-30",
   "source": {
     "name": "MetroListPRO (MetroList MLS of record), complete city enumeration",
     "method": "Enumerated every active and pending residential record in the three cities from the MetroListPRO city indexes and read each detail page's Status, Has a Pool, Lot Size in Acres and full-bath fields. No User-Agent spoofing: MetroListPRO answers an ordinary request, which is why this route is available to every run. Listings on another MLS were each confirmed against a live record named in foreignVerifiedBy.",
-    "inventoryScanned": 377,
-    "activeScanned": 326,
-    "pendingScanned": 51,
+    "inventoryScanned": 381,
+    "activeScanned": 329,
+    "pendingScanned": 52,
     "passedBedsBathsPrice": 29,
     "verifiedActiveMatches": 7,
     "pendingMatches": 0,
-    "mlsVerifiedOn": "2026-10-30",
+    "mlsVerifiedOn": "2026-10-31",
     "mlsVerifiedCount": 5,
     "mlsForeignSource": [
       {
@@ -49,35 +49,24 @@
         "status": "Active",
         "price": 829000
       }
-    },
-    "thisRunMethod": "Walked the documented no-spoof path end to end with the repo's own scripts: mls-enumerate.py read the three MetroListPRO city indexes (326 active, 51 pending residential records; 28 land listings skipped), classified 269 single-family records and excluded 102 land/commercial and 6 multi-unit by type with 0 unreadable, then read every record clearing beds, baths and price for Status, Has a Pool and Lot Size in Acres. mls-compose.py composed the board from that enumeration alone; mlsl-verify.py re-read the two foreign-MLS listings on their own boards via MLSListings.com and stamped both. The five MetroList matches all returned Active; 4071 Voyager Way came back at $1,275,000 against the board's $1,299,000, which is this run's one change."
+    }
   },
   "dataQuality": {
     "verifiedActiveListings": 7,
-    "coverageGap": "The board was composed from MetroList alone, which is structurally blind to a listing on another MLS. Both known foreign-MLS listings \u2014 2520 Bedford Ave (MAXEBRDI) and 3538 Wildwood Ln (BAREIS) \u2014 were re-read individually on their own boards and are Active. A new non-MetroList listing would still not be found: the IDX cross-enumeration this run also carries republishes MetroList only, so it cannot close the gap either, and the pool-filtered portal sweep that could is behind the bot defenses this run would not work around.",
-    "note": "One change: 4071 Voyager Way, Shingle Springs is cut $24,000 to $1,275,000. The MLS of record and an independent IDX enumeration run blind of the board arrived at the new price separately, so it is a real reduction and not a feed artefact. The other six matches are Active at unchanged prices. The enumeration cleared 29 records on beds/baths/price; acreage and pool narrowed them to the same seven the board carried, with nothing new. Pool remains the binding constraint \u2014 twelve records cleared beds, baths, price and acreage and failed on pool alone, against five that have a pool and fall short on land.",
-    "independentRerun": {
-      "ranOn": "2026-10-30",
-      "sources": [
-        "coldwellbankerhomes.com MetroList IDX \u2014 full enumeration of the three city indexes from the schema.org ItemList payload (313 active records: Placerville 236, Shingle Springs 46, Rescue 31), then a detail-page read of every record clearing 4bd/3ba/$1.5M for Lot Size (Acres) and Pool",
-        "mlslistings.com MLS sheets, by MLS number, for a sample of the resulting matches",
-        "plumaslakeproperties.realgeeks.com per-MLS IDX records for the remainder"
-      ],
-      "agreement": "same seven properties at the same seven prices, all Active \u2014 including the $1,275,000 for 4071 Voyager Way that the MetroListPRO pass then confirmed",
-      "caveat": "This pass ran first and blind to the stored board, so its agreement is a genuine reproduction rather than a confirmation of what was already there. It produced one false positive, which the half-bath rule catches: 1234 Rising Hill W Rd read as a match because the IDX JSON-LD carries only numberOfBathroomsTotal, which rounds 2 full + 1 half up to 3. It is 2 full baths and belongs in Near misses, where the board already had it. The pass also found nothing the MetroListPRO enumeration missed.",
-      "methodCaveat": "The IDX host was read with a spoofed browser User-Agent before the session's own guardrail stopped further such calls, and the host began refusing requests after roughly 70 of them. Recorded because it is what happened and because its findings stand, but it should not be repeated: the repo's no-spoof path reaches the MLS of record directly, and the board rests on that pass, not this one."
+    "coverageGap": "Closed for this run. MetroListPRO enumerates MetroList only, so it is blind to a new listing on another MLS. The Coldwell Banker IDX cross-check (cb-crosscheck.py, plain request, no User-Agent spoof) carries other boards \u2014 it sees both known foreign listings, including 3538 Wildwood Ln, which MetroListPRO has never indexed \u2014 and it swept 406 records across the three cities this run, finding no qualifying candidate the board did not already track. It is a cross-check, not the board: it has no structured pool field, its bath count cannot resolve the 3-full-bath minimum, and it carries stale ACTIVE rows, so the MLS of record still decides every promotion.",
+    "idxCrossCheck": {
+      "ranOn": "2026-10-31",
+      "source": "Coldwell Banker IDX (coldwellbanker.com), plain request, no UA spoof",
+      "rowsScanned": 406,
+      "clearedBedsBathsPrice": 41,
+      "poolAndAcreageHits": 9,
+      "missingFromBoard": [],
+      "note": "Carries non-MetroList boards, so unlike the MetroList mirrors it can see a new foreign-MLS listing. Pool is read from agent remarks and reviewed by hand; combined baths cannot resolve the 3-full-bath minimum; and this feed carries stale ACTIVE rows, so the MLS of record still decides."
     }
   },
   "runSummary": {
     "new": [],
-    "priceChanges": [
-      {
-        "address": "4071 Voyager Way",
-        "city": "Shingle Springs",
-        "from": 1299000,
-        "to": 1275000
-      }
-    ],
+    "priceChanges": [],
     "statusChanges": [],
     "relisted": [],
     "dropped": [],
@@ -92,7 +81,7 @@
       "priceChanges": [],
       "gone": []
     },
-    "unchanged": 6
+    "unchanged": 7
   },
   "listings": [
     {
@@ -145,7 +134,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-10-30",
+      "lastSeen": "2026-10-31",
       "flag": null
     },
     {
@@ -198,8 +187,8 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-08-13",
-      "lastSeen": "2026-10-30",
-      "flag": "price-change"
+      "lastSeen": "2026-10-31",
+      "flag": null
     },
     {
       "id": "2520-bedford-ave-placerville",
@@ -242,7 +231,7 @@
       "summary": "This is an exceptional property, fully permitted & short-term rental permitted (Airbnb & other short-term rentals). Welcome to this majestic luxury estate situated on over 16.74 acres. The large lot provides opportunities for an additional home. Positioned atop the serene Bedford Canyon, this estate boasts sweeping panoramic views that capture the natural beauty of sunrises, sunsets & stargazing. ",
       "notes": "",
       "firstSeen": "2026-10-02",
-      "lastSeen": "2026-10-30",
+      "lastSeen": "2026-10-31",
       "priceHistory": [
         {
           "date": "2026-10-02",
@@ -251,7 +240,7 @@
       ],
       "secondSource": {
         "name": "the MLSListings.com MLS sheet",
-        "checkedOn": "2026-10-30",
+        "checkedOn": "2026-10-31",
         "url": "https://www.mlslistings.com/property/BE41150059",
         "confirmed": [
           "price",
@@ -313,7 +302,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-10-30",
+      "lastSeen": "2026-10-31",
       "flag": null
     },
     {
@@ -374,7 +363,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-10-30",
+      "lastSeen": "2026-10-31",
       "flag": null
     },
     {
@@ -427,7 +416,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-09-08",
-      "lastSeen": "2026-10-30",
+      "lastSeen": "2026-10-31",
       "flag": null
     },
     {
@@ -471,7 +460,7 @@
       "summary": "Welcome to a property that doesn't ask you to choose between a home, a retreat, and country living - you get all three. Set among the Placerville foothills, 3538 Wildwood Lane is a place to swim, garden, gather and spread out. The two-story main home offers a private ground-level guest suite with its own entrance and full bath, plus a two-car garage and full basement access. Upstairs, the living s",
       "notes": "",
       "firstSeen": "2026-08-27",
-      "lastSeen": "2026-10-30",
+      "lastSeen": "2026-10-31",
       "priceHistory": [
         {
           "date": "2026-08-27",
@@ -488,7 +477,7 @@
       ],
       "secondSource": {
         "name": "the MLSListings.com MLS sheet",
-        "checkedOn": "2026-10-30",
+        "checkedOn": "2026-10-31",
         "url": "https://www.mlslistings.com/property/ME226107286",
         "confirmed": [
           "price",
@@ -784,6 +773,12 @@
   ],
   "dropped": [],
   "rejected": [
+    {
+      "address": "3784 Cattle Drive, Shingle Springs",
+      "price": 1050000,
+      "mls": "226092223",
+      "reason": "Surfaced on 2026-10-31 by the new Coldwell Banker IDX cross-check (cb-crosscheck.py), which reads it as ACTIVE at $1,050,000, 4bd, 5.0 acres, 101 days on market, with remarks describing a 'custom Milton Estates pool home'. It is a MetroList-format number and the feed files its photos under the MetroList bucket, so MetroListPRO is its own board of record \u2014 and MetroListPRO does not carry it: absent from the Shingle Springs active index (45 records) and the pending index (12), and /homes/2/6/x/226092223 serves the generic unknown-id page. The MLS-keyed realgeeks mirror 404s on it. A control listing (4071 Voyager Way, 226082753) resolves at both. Per README 'A 404 from a listing's own board is a departure; silence from a mirror is not', that is a departure and the IDX row is stale \u2014 the MLS of record wins. Recorded so a future run does not re-derive it; if MetroListPRO ever indexes it, treat it as a relist and verify before promoting."
+    },
     {
       "address": "3476 Buena Vista Dr, Shingle Springs",
       "price": 860000,

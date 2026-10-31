@@ -397,6 +397,14 @@ const indep = (data.dataQuality || {}).independentEnumeration;
 // scrape.js rebuilds dataQuality wholesale, so this key only survives when the check was stamped
 // after it — which is what keeps the row honest: it renders on the runs that actually ran one.
 const rfx = (data.dataQuality || {}).redfinCrossCheck;
+// Optional fourth source: the Coldwell Banker IDX, the one plain-request enumeration that is not
+// MetroList-only, so it is the route that can see a NEW foreign-MLS listing. Stamped by
+// cb-crosscheck.py --stamp, which runs after mls-compose.py and overwrites its coverageGap note.
+const idx = (data.dataQuality || {}).idxCrossCheck;
+// What the run could NOT cover. mls-compose.py has always written this and its docstring has
+// always said build.js prints it; it did not, so the page stayed silent about its own blind spot
+// on every MetroList-only run. Rendered below the table now.
+const coverageGap = (data.dataQuality || {}).coverageGap;
 
 const rejectedRows = (data.rejected || []).map((r) => `
     <tr><td>${esc(r.address)}</td><td>${r.price ? money(r.price) : '—'}</td><td>${esc(r.reason)}</td></tr>`).join('');
@@ -728,10 +736,22 @@ failure mode is now closed off.</p>
         : `${rfx.additionalMatchesFound} the board was missing`}.${rfx.confirmedUnindexedListing
         ? ` It is also what independently confirms <strong>${esc(rfx.confirmedUnindexedListing)}</strong>,
             the one match MetroListPRO has not indexed.` : ''} Checked ${esc(rfx.ranOn)}.</td></tr>` : ''}
+    ${idx ? `<tr><td><strong>Cover other boards</strong></td><td>MetroListPRO speaks for MetroList and is blind to
+      every other MLS, so a <em>new</em> listing on another board could not be found by it at all. The
+      <strong>Coldwell Banker IDX</strong> closes that: it answers an ordinary request &mdash; no browser
+      impersonation &mdash; and carries other boards, including the one match MetroListPRO has never indexed.
+      It swept ${idx.rowsScanned} records across the three cities, ${idx.clearedBedsBathsPrice} cleared
+      beds, baths and price, and ${idx.poolAndAcreageHits} cleared acreage with a pool in the remarks &mdash;
+      ${(idx.missingFromBoard || []).length === 0
+        ? 'none of them missing from the board'
+        : `${(idx.missingFromBoard || []).length} not already tracked, each sent for an MLS read before it could qualify`}.
+      Checked ${esc(idx.ranOn)}.</td></tr>` : ''}
     <tr><td><strong>Resolve</strong></td><td>Where sources disagree, the MLS of record wins and the disagreement is printed on the card rather than hidden.</td></tr>
   </tbody>
 </table>
 </div>
+${coverageGap ? `<p class="sectnote" style="margin-top:14px"><strong>What this run could not cover.</strong>
+${esc(coverageGap)}</p>` : ''}
 <p class="sectnote" style="margin-top:14px">Two things that bite here and are handled explicitly:
 <strong>half baths</strong> — some sites report 2 full + 1 half as &ldquo;3 baths&rdquo;, so the bath
 test counts full baths only; and <strong>MetroList MLS number prefixes encode the listing year</strong>

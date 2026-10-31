@@ -276,7 +276,13 @@ def main():
     summary["nearMissChanges"] = {"added": nm_add, "priceChanges": nm_price, "gone": nm_gone}
     summary["unchanged"] = len([l for l in listings if not l.get("flag")])
 
-    board["previousRun"] = board.get("lastRun")
+    # Only advance previousRun when the stored run is genuinely an earlier day. Re-running the
+    # composer twice in one day (to correct a --foreign argument, say) used to set previousRun to
+    # today as well, so the page claimed its own run as its predecessor and the "since <date>"
+    # line in the banner became vacuous. Same family as the carry-forward bugs above: a field
+    # that is only correct the first time it is written is a field that will go wrong.
+    if board.get("lastRun") != TODAY:
+        board["previousRun"] = board.get("lastRun")
     board["lastRun"] = TODAY
     board["listings"] = listings
     board["pending"] = pending
@@ -319,10 +325,13 @@ def main():
 
     board.setdefault("dataQuality", {})["verifiedActiveListings"] = len(listings)
     board["dataQuality"]["coverageGap"] = (
-        "This run enumerated MetroList only. A listing carried by another MLS that is not already "
-        "tracked could not have been found — the IDX-feed enumeration that would catch one needs a "
-        "spoofed User-Agent and was not run. Both known foreign-MLS listings were re-read "
-        "individually." if foreign_src else "")
+        "This step enumerated MetroList only, so a listing carried by another MLS that is not "
+        "already tracked could not have been found here. Both known foreign-MLS listings were "
+        "re-read individually. Since 2026-10-31 this gap is closable without a spoofed "
+        "User-Agent: run `python3 cb-crosscheck.py --stamp` after this composer — the Coldwell "
+        "Banker IDX answers a plain request and, unlike the MetroList mirrors, carries other "
+        "boards. If it ran, it overwrites this note with what it found."
+        if foreign_src else "")
 
     json.dump(board, open("listings.json", "w"), indent=2)
     print(f'{len(listings)} active matches, {len(pending)} pending, '
