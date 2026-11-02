@@ -1272,6 +1272,42 @@ lookahead for the next `Label:`, so `Status: Contingent - Show Is Short Sale: No
 `Contingent -` — the lookahead matched inside the value's own words. It now reads the
 `<span class="listing-info-item-title">` markup, where the label and value have a real boundary.
 
+#### A fifth way: a row that matches no bucket is reported gone
+
+Found on **2026-11-02**. The 2026-11-01 run recorded 4800 Abbey Road (MLS 226133530) as a near
+miss — Active, $1,500,000, 11.04 acres, pool, 3 full baths, but `Bedrooms: 3` against
+`Possible Bedrooms: 5`, two houses on one lot. The next run regenerated `nearMisses` from the
+enumeration and published it as **gone**. It had not gone anywhere: its MetroListPRO detail page
+read `Status: Active` at the same price that same day.
+
+The cause was not a parse failure or a source disagreement. `near_miss()` admitted a pool property
+short on *land* or on the *third full bath*, and rejected anything under the bedroom minimum
+outright — so a pool property short **only** on bedrooms matched no bucket at all. Not `matches`,
+not `poolless` (it has a pool), not a near miss (too few bedrooms). It fell through every list, and
+a row that appears in no list is indistinguishable, to the diff, from a row that left the market.
+
+Two things follow, and the second is the general one:
+
+- `mls-enumerate.py` now parses **`Possible Bedrooms`** and admits a bedroom shortfall as a near
+  miss when the record's own possible count clears the minimum and land, baths and price all pass.
+  On acreage this disagreement is routine rather than exotic: a detached second dwelling, an in-law
+  apartment or an unpermitted conversion all leave the permitted count in the header.
+- **A near-miss taxonomy is a filter, and every filter needs a default.** The four earlier entries
+  in this section are about comparing spellings instead of meanings; this one is about a row that
+  was never compared at all. Dropping out of a bucket is not evidence of a status change, and the
+  diff must not read it as one — the same rule as *"'Not found' is not 'does not match'"*, applied
+  to this repo's own buckets rather than to a feed.
+
+One operational note from the same run, worth more than the bug: **`mls-compose.py` diffs against
+whatever `listings.json` currently holds**, so re-running it twice makes the second diff relative
+to the first run's output rather than to the previous published run. The first compose here had
+already written the bad "gone"; recomposing after the fix then reported Abbey Road as newly
+*added*. Neither statement was true. Restore the baseline before recomposing:
+
+```bash
+git checkout origin/gh-pages -- listings.json     # then re-run compose -> verify -> build
+```
+
 #### A stamp that is never refreshed is a date the page cannot justify
 
 `mlsl-verify.py` skipped any listing that already had a `secondSource` stamp, on the sound ground

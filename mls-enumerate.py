@@ -162,6 +162,17 @@ def detail(rec):
     r["multiUnit"] = bool(re.search(r"Unit \d+ Features:\s*Bedrooms:", t)
                           or re.match(r"^RI$", (r.get("propertyType") or "").strip())
                           or re.search(r"multi-unit", r.get("headerType") or "", re.I))
+    # "Possible Bedrooms" is a distinct MLS field from the header's bedroom count, and on
+    # acreage properties the two routinely disagree: a record with a detached second dwelling,
+    # an in-law apartment or an unpermitted conversion carries the smaller permitted count in
+    # the header. 4800 Abbey Road (226133530) reads `Bedrooms: 3` / `Possible Bedrooms: 5` and
+    # is two houses on one lot. Reading only the header count makes such a record look like it
+    # fails the bedroom minimum outright, so keep both and let `near_miss` decide.
+    pb = field(t, "Possible Bedrooms", fields=f)
+    try:
+        r["possibleBeds"] = int(re.search(r"\d+", pb).group())
+    except (TypeError, ValueError, AttributeError):
+        r["possibleBeds"] = None
     acres = field(t, "Lot Size in Acres", fields=f)
     try:
         r["acres"] = float(acres)
@@ -268,10 +279,29 @@ def main():
     def near_miss(r):
         if r["kind"] != "residential" or r.get("pool") != "Yes":
             return None
-        if r.get("beds") is None or r["beds"] < crit["beds"]:
+        if r.get("beds") is None:
             return None
         if r.get("price") is None or r["price"] > crit["maxPrice"]:
             return None
+        # A pool property short *only* on bedrooms, whose own MLS record says enough rooms are
+        # there ("Possible Bedrooms"), is a near miss and not a rejection. Without this branch
+        # such a row matches no bucket at all — not `poolless`, not a land or bath near miss —
+        # so it vanishes from the board silently. That is what happened to 4800 Abbey Road on
+        # 2026-11-02: the 2026-11-01 run had recorded it by hand, the next run regenerated the
+        # near-miss list from the enumeration, found no bucket for it, and reported it gone
+        # while it was still Active. Silence from a bucket is not a departure — see README
+        # "'Not found' is not 'does not match'".
+        if r["beds"] < crit["beds"]:
+            if (r.get("possibleBeds") or 0) < crit["beds"]:
+                return None
+            if r.get("acres") is None or r["acres"] < crit["minAcres"]:
+                return None
+            if r.get("fullBaths") is None or r["fullBaths"] < crit["fullBaths"]:
+                return None
+            half = r.get("halfBaths") or 0
+            return (f'MLS bedroom count is {r["beds"]}'
+                    f' (record states {r["possibleBeds"]} possible)'
+                    + (f'; {r["fullBaths"]} full baths + {half} half' if half else ''))
         short_land = r.get("acres") is not None and r["acres"] < crit["minAcres"]
         short_bath = r.get("fullBaths") is not None and r["fullBaths"] < crit["fullBaths"]
         if short_land == short_bath:        # neither (it is a match) or both (two criteria short)

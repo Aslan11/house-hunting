@@ -13,18 +13,18 @@
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-11-01",
-  "previousRun": "2026-10-31",
+  "lastRun": "2026-11-02",
+  "previousRun": "2026-11-01",
   "source": {
     "name": "MetroListPRO (MetroList MLS of record), complete city enumeration",
     "method": "Enumerated every active and pending residential record in the three cities from the MetroListPRO city indexes and read each detail page's Status, Has a Pool, Lot Size in Acres and full-bath fields. No User-Agent spoofing: MetroListPRO answers an ordinary request, which is why this route is available to every run. Listings on another MLS were each confirmed against a live record named in foreignVerifiedBy.",
-    "inventoryScanned": 374,
-    "activeScanned": 325,
+    "inventoryScanned": 371,
+    "activeScanned": 322,
     "pendingScanned": 49,
     "passedBedsBathsPrice": 28,
     "verifiedActiveMatches": 7,
     "pendingMatches": 0,
-    "mlsVerifiedOn": "2026-11-01",
+    "mlsVerifiedOn": "2026-11-02",
     "mlsVerifiedCount": 5,
     "mlsForeignSource": [
       {
@@ -53,14 +53,20 @@
   },
   "dataQuality": {
     "verifiedActiveListings": 7,
-    "coverageGap": "This step enumerated MetroList only, so a listing carried by another MLS that is not already tracked could not have been found here. Both known foreign-MLS listings were re-read individually. Since 2026-10-31 this gap is closable without a spoofed User-Agent: run `python3 cb-crosscheck.py --stamp` after this composer — the Coldwell Banker IDX answers a plain request and, unlike the MetroList mirrors, carries other boards. If it ran, it overwrites this note with what it found.",
+    "coverageGap": "Closed for this run. MetroListPRO enumerates MetroList only, so it is blind to a new listing on another MLS. The Coldwell Banker IDX cross-check (cb-crosscheck.py, plain request, no User-Agent spoof) carries other boards \u2014 it sees both known foreign listings, including 3538 Wildwood Ln, which MetroListPRO has never indexed \u2014 and it swept 402 records across the three cities this run, finding 1 candidate(s) the board did not already track. It is a cross-check, not the board: it has no structured pool field, its bath count cannot resolve the 3-full-bath minimum, and it carries stale ACTIVE rows, so the MLS of record still decides every promotion.",
     "idxCrossCheck": {
-      "ranOn": "2026-10-31",
+      "ranOn": "2026-11-02",
       "source": "Coldwell Banker IDX (coldwellbanker.com), plain request, no UA spoof",
-      "rowsScanned": 406,
-      "clearedBedsBathsPrice": 41,
+      "rowsScanned": 402,
+      "clearedBedsBathsPrice": 39,
       "poolAndAcreageHits": 9,
-      "missingFromBoard": [],
+      "missingFromBoard": [
+        {
+          "mls": "41150059BE",
+          "address": "2520 Bedford Ave, PLACERVILLE, CA 95667",
+          "price": 1275000.0
+        }
+      ],
       "note": "Carries non-MetroList boards, so unlike the MetroList mirrors it can see a new foreign-MLS listing. Pool is read from agent remarks and reviewed by hand; combined baths cannot resolve the 3-full-bath minimum; and this feed carries stale ACTIVE rows, so the MLS of record still decides."
     },
     "multiUnitNote": "4800 Abbey Road (MLS 226133530) was listed 2026-11-01 and is in the MetroListPRO Placerville index, but it clears neither the board nor the enumerator's multi-unit bucket: its MLS bedroom field reads 3, so classify() calls it residential and qualifies() rejects it on beds, even though it is a 2-houses-on-one-lot record whose remarks say 5 bedrooms are possible across 6,400+ sqft. 11.04 acres, built-in pool, exactly at the $1.5M cap. Added to nearMisses by hand this run. A record with a populated bed field AND a unit table is a shape classify() cannot currently see; worth handling in mls-enumerate.py if another one appears."
@@ -78,17 +84,7 @@
       "gone": []
     },
     "nearMissChanges": {
-      "added": [
-        {
-          "address": "4800 Abbey Road",
-          "city": "Placerville",
-          "price": 1500000,
-          "acres": 11.04,
-          "beds": 3,
-          "baths": 3,
-          "missing": "MLS bedroom count is 3 (remarks say 5 possible) — two houses on one lot, 6,400+ sqft combined, listed 2026-11-01"
-        }
-      ],
+      "added": [],
       "priceChanges": [],
       "gone": []
     },
@@ -145,7 +141,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-11-01",
+      "lastSeen": "2026-11-02",
       "flag": null
     },
     {
@@ -198,7 +194,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-08-13",
-      "lastSeen": "2026-11-01",
+      "lastSeen": "2026-11-02",
       "flag": null
     },
     {
@@ -242,7 +238,7 @@
       "summary": "This is an exceptional property, fully permitted & short-term rental permitted (Airbnb & other short-term rentals). Welcome to this majestic luxury estate situated on over 16.74 acres. The large lot provides opportunities for an additional home. Positioned atop the serene Bedford Canyon, this estate boasts sweeping panoramic views that capture the natural beauty of sunrises, sunsets & stargazing. ",
       "notes": "",
       "firstSeen": "2026-10-02",
-      "lastSeen": "2026-11-01",
+      "lastSeen": "2026-11-02",
       "priceHistory": [
         {
           "date": "2026-10-02",
@@ -251,7 +247,7 @@
       ],
       "secondSource": {
         "name": "the MLSListings.com MLS sheet",
-        "checkedOn": "2026-11-01",
+        "checkedOn": "2026-11-02",
         "url": "https://www.mlslistings.com/property/BE41150059",
         "confirmed": [
           "price",
@@ -313,7 +309,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-11-01",
+      "lastSeen": "2026-11-02",
       "flag": null
     },
     {
@@ -374,7 +370,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-11-01",
+      "lastSeen": "2026-11-02",
       "flag": null
     },
     {
@@ -413,7 +409,7 @@
       "lng": -120.9315,
       "listedOn": "2026-08-06",
       "summary": "Welcome to this charming mini ranch with an ADU, tucked behind a gated entrance at the end of a paved driveway, offering privacy, versatility, and lovely views in a peaceful country setting. The single-story ranch home design welcomes you into a light-filled living room where vaulted ceilings and expansive picture windows showcase the scenery beyond. The updated kitchen features granite countertop",
-      "notes": "Back on the market — was under contract since 2026-09-08 and the deal did not close. re-verified Active against the IDX detail page this run.",
+      "notes": "Back on the market \u2014 was under contract since 2026-09-08 and the deal did not close. re-verified Active against the IDX detail page this run.",
       "photos": [
         "https://m.cbhomes.com/p/371/226085035/0A1b20073C4D4FD/m23cc.webp",
         "https://m.cbhomes.com/p/371/226085035/5Dc482F1fC9A4c0/m23cc.webp",
@@ -427,7 +423,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-09-08",
-      "lastSeen": "2026-11-01",
+      "lastSeen": "2026-11-02",
       "flag": null
     },
     {
@@ -471,7 +467,7 @@
       "summary": "Welcome to a property that doesn't ask you to choose between a home, a retreat, and country living - you get all three. Set among the Placerville foothills, 3538 Wildwood Lane is a place to swim, garden, gather and spread out. The two-story main home offers a private ground-level guest suite with its own entrance and full bath, plus a two-car garage and full basement access. Upstairs, the living s",
       "notes": "",
       "firstSeen": "2026-08-27",
-      "lastSeen": "2026-11-01",
+      "lastSeen": "2026-11-02",
       "priceHistory": [
         {
           "date": "2026-08-27",
@@ -488,7 +484,7 @@
       ],
       "secondSource": {
         "name": "the MLSListings.com MLS sheet",
-        "checkedOn": "2026-11-01",
+        "checkedOn": "2026-11-02",
         "url": "https://www.mlslistings.com/property/ME226107286",
         "confirmed": [
           "price",
@@ -715,39 +711,7 @@
       "status": "Active",
       "url": "https://www.metrolistpro.com/homes/2/6/4800-ABBEY-ROAD-PLACERVILLE-CA-95667/226133530",
       "pool": true,
-      "missing": "MLS bedroom count is 3 (remarks say 5 possible) — two houses on one lot, 6,400+ sqft combined, listed 2026-11-01"
-    },
-    {
-      "address": "3291 Texas Hill Road",
-      "city": "Placerville",
-      "price": 1299000,
-      "beds": 4,
-      "baths": 4,
-      "fullBaths": 4,
-      "halfBaths": 0,
-      "acres": 1.76,
-      "sqft": 3837,
-      "mls": "226066603",
-      "status": "Active",
-      "url": "https://www.metrolistpro.com/homes/2/6/3291-TEXAS-HILL-ROAD-PLACERVILLE-CA-95667/226066603",
-      "pool": true,
-      "missing": "only 1.76 acres"
-    },
-    {
-      "address": "2562 Starbuck Road",
-      "city": "Rescue",
-      "price": 688000,
-      "beds": 4,
-      "baths": 3,
-      "fullBaths": 3,
-      "halfBaths": 0,
-      "acres": 0.35,
-      "sqft": 2010,
-      "mls": "226129627",
-      "status": "Active",
-      "url": "https://www.metrolistpro.com/homes/2/6/2562-STARBUCK-ROAD-RESCUE-CA-95672/226129627",
-      "pool": true,
-      "missing": "only 0.35 acres"
+      "missing": "MLS bedroom count is 3 (record states 5 possible); 3 full baths + 1 half"
     },
     {
       "address": "1234 Rising Hill W Road",
@@ -766,20 +730,20 @@
       "missing": "only 2 full baths (+ 1 half)"
     },
     {
-      "address": "2805 Aquamarine Circle",
-      "city": "Rescue",
-      "price": 640000,
+      "address": "3291 Texas Hill Road",
+      "city": "Placerville",
+      "price": 1299000,
       "beds": 4,
-      "baths": 3,
-      "fullBaths": 3,
+      "baths": 4,
+      "fullBaths": 4,
       "halfBaths": 0,
-      "acres": 0.205,
-      "sqft": 2288,
-      "mls": "226063967",
+      "acres": 1.76,
+      "sqft": 3837,
+      "mls": "226066603",
       "status": "Active",
-      "url": "https://www.metrolistpro.com/homes/2/6/2805-AQUAMARINE-CIRCLE-RESCUE-CA-95672/226063967",
+      "url": "https://www.metrolistpro.com/homes/2/6/3291-TEXAS-HILL-ROAD-PLACERVILLE-CA-95667/226066603",
       "pool": true,
-      "missing": "only 0.205 acres"
+      "missing": "only 1.76 acres"
     },
     {
       "address": "1635 Country Club Drive",
@@ -796,6 +760,38 @@
       "url": "https://www.metrolistpro.com/homes/2/6/1635-COUNTRY-CLUB-DRIVE-PLACERVILLE-CA-95667/226029772",
       "pool": true,
       "missing": "only 0.61 acres"
+    },
+    {
+      "address": "2562 Starbuck Road",
+      "city": "Rescue",
+      "price": 688000,
+      "beds": 4,
+      "baths": 3,
+      "fullBaths": 3,
+      "halfBaths": 0,
+      "acres": 0.35,
+      "sqft": 2010,
+      "mls": "226129627",
+      "status": "Active",
+      "url": "https://www.metrolistpro.com/homes/2/6/2562-STARBUCK-ROAD-RESCUE-CA-95672/226129627",
+      "pool": true,
+      "missing": "only 0.35 acres"
+    },
+    {
+      "address": "2805 Aquamarine Circle",
+      "city": "Rescue",
+      "price": 640000,
+      "beds": 4,
+      "baths": 3,
+      "fullBaths": 3,
+      "halfBaths": 0,
+      "acres": 0.205,
+      "sqft": 2288,
+      "mls": "226063967",
+      "status": "Active",
+      "url": "https://www.metrolistpro.com/homes/2/6/2805-AQUAMARINE-CIRCLE-RESCUE-CA-95672/226063967",
+      "pool": true,
+      "missing": "only 0.205 acres"
     }
   ],
   "dropped": [],
@@ -804,22 +800,22 @@
       "address": "3784 Cattle Drive, Shingle Springs",
       "price": 1050000,
       "mls": "226092223",
-      "reason": "Surfaced on 2026-10-31 by the new Coldwell Banker IDX cross-check (cb-crosscheck.py), which reads it as ACTIVE at $1,050,000, 4bd, 5.0 acres, 101 days on market, with remarks describing a 'custom Milton Estates pool home'. It is a MetroList-format number and the feed files its photos under the MetroList bucket, so MetroListPRO is its own board of record — and MetroListPRO does not carry it: absent from the Shingle Springs active index (45 records) and the pending index (12), and /homes/2/6/x/226092223 serves the generic unknown-id page. The MLS-keyed realgeeks mirror 404s on it. A control listing (4071 Voyager Way, 226082753) resolves at both. Per README 'A 404 from a listing's own board is a departure; silence from a mirror is not', that is a departure and the IDX row is stale — the MLS of record wins. Recorded so a future run does not re-derive it; if MetroListPRO ever indexes it, treat it as a relist and verify before promoting."
+      "reason": "Surfaced on 2026-10-31 by the new Coldwell Banker IDX cross-check (cb-crosscheck.py), which reads it as ACTIVE at $1,050,000, 4bd, 5.0 acres, 101 days on market, with remarks describing a 'custom Milton Estates pool home'. It is a MetroList-format number and the feed files its photos under the MetroList bucket, so MetroListPRO is its own board of record \u2014 and MetroListPRO does not carry it: absent from the Shingle Springs active index (45 records) and the pending index (12), and /homes/2/6/x/226092223 serves the generic unknown-id page. The MLS-keyed realgeeks mirror 404s on it. A control listing (4071 Voyager Way, 226082753) resolves at both. Per README 'A 404 from a listing's own board is a departure; silence from a mirror is not', that is a departure and the IDX row is stale \u2014 the MLS of record wins. Recorded so a future run does not re-derive it; if MetroListPRO ever indexes it, treat it as a relist and verify before promoting."
     },
     {
       "address": "3476 Buena Vista Dr, Shingle Springs",
       "price": 860000,
-      "reason": "Surfaced only by the Redfin county cross-check, not by the IDX feed or MetroListPRO — it is a For-Sale-by-Owner listing sourced from FSBO.com, so no MLS carries it. It came back with an empty LOT SIZE in the CSV (the trap the README warns about) and had to be read by hand: the detail page gives 0.79 acres, against a 2.5 acre minimum. 4bd/3ba, 2,444 sqft, no pool in the record or the description. Fails acreage."
+      "reason": "Surfaced only by the Redfin county cross-check, not by the IDX feed or MetroListPRO \u2014 it is a For-Sale-by-Owner listing sourced from FSBO.com, so no MLS carries it. It came back with an empty LOT SIZE in the CSV (the trap the README warns about) and had to be read by hand: the detail page gives 0.79 acres, against a 2.5 acre minimum. 4bd/3ba, 2,444 sqft, no pool in the record or the description. Fails acreage."
     },
     {
       "address": "1781 Springvale Rd, Placerville",
       "price": 1150000,
-      "reason": "Tracked as a relist after dropping from $1.5M; cut again to $1,150,000 (MetroListPRO list price on 2026-10-09, was $1,200,000). Resolved against MetroListPRO (MLS 226100125): Property Subtype is Triplex — multi-unit residential income, three dwellings (3bd/2ba main, 1bd/1ba ADU, studio pool house) on 10.27 acres. No single unit meets the 4BR/3BA minimum, and the MLS pool field reads No even though the remarks describe a 150,000-gallon pool. Re-confirmed Active, Triplex, Has a Pool: No on 2026-10-09. Retired from tracking; further price cuts do not change the subtype."
+      "reason": "Tracked as a relist after dropping from $1.5M; cut again to $1,150,000 (MetroListPRO list price on 2026-10-09, was $1,200,000). Resolved against MetroListPRO (MLS 226100125): Property Subtype is Triplex \u2014 multi-unit residential income, three dwellings (3bd/2ba main, 1bd/1ba ADU, studio pool house) on 10.27 acres. No single unit meets the 4BR/3BA minimum, and the MLS pool field reads No even though the remarks describe a 150,000-gallon pool. Re-confirmed Active, Triplex, Has a Pool: No on 2026-10-09. Retired from tracking; further price cuts do not change the subtype."
     },
     {
       "address": "1601 Velvet Horn Ln, Rescue",
       "price": 1100000,
-      "reason": "Went PENDING between the 2026-10-08 and 2026-10-09 runs — MetroListPRO (MLS 226060031) reads Status: Pending at $1,100,000. 5 acres with a built-in sports pool, but 3 bd / 3 ba, under the 4BR minimum, so it was never a candidate; recorded here because the previous note asserted it was still actively listed."
+      "reason": "Went PENDING between the 2026-10-08 and 2026-10-09 runs \u2014 MetroListPRO (MLS 226060031) reads Status: Pending at $1,100,000. 5 acres with a built-in sports pool, but 3 bd / 3 ba, under the 4BR minimum, so it was never a candidate; recorded here because the previous note asserted it was still actively listed."
     },
     {
       "address": "5135 Bryant Rd, Shingle Springs",
@@ -853,20 +849,20 @@
     },
     {
       "address": "5040 Milton Ranch Rd, Shingle Springs",
-      "reason": "Not for sale — sold 2019 for $1.4M"
+      "reason": "Not for sale \u2014 sold 2019 for $1.4M"
     },
     {
       "address": "5457 Bryant Rd, Shingle Springs",
-      "reason": "Not for sale — sold 2020 for $1,405,000"
+      "reason": "Not for sale \u2014 sold 2020 for $1,405,000"
     },
     {
       "address": "2800 La Paz Rd, Placerville",
       "price": 995000,
-      "reason": "4bd/2ba — under both minimums"
+      "reason": "4bd/2ba \u2014 under both minimums"
     },
     {
       "address": "2931 Texas Hill Rd, Placerville",
-      "reason": "4bd/2.5ba — under both minimums"
+      "reason": "4bd/2.5ba \u2014 under both minimums"
     },
     {
       "address": "4370 Hillwood Dr, Shingle Springs",

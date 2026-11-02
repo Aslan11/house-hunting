@@ -48,8 +48,13 @@ structured `Pool` field, price in `<meta name="description">`, and the photo gal
 categories on `data-category`. Prefix is the originating board: `ME` MetroList, `BE` MAXEBRDI,
 `ML` MLSListings' own.
 
-Two traps, both already familiar from other hosts here:
+Three traps, the first new on **2026-11-02** and the other two already familiar from other hosts here:
 
+- **`/property/<id>` now answers `302`, not `200`.** It redirects to
+  `/Property/<ID>/<address-slug>` — note the capitalised `Property`. A `curl` without `-L` returns
+  an empty body and reads exactly like a dead host; `mlsl-verify.py` is unaffected because
+  `urllib` follows redirects by default, and it stamped 2 of 2 on this run. Use `curl -sSL` for a
+  manual check, and do not conclude from a bare `curl` that MLSListings has stopped answering.
 - An **unknown id returns 200** with the site's generic search page, not a 404 — the same
   wrong-property-at-200 failure as Redfin's `/city/<id>` URLs. Gate on the `<title>` containing
   both the expected street and the MLS number before reading a single field.
