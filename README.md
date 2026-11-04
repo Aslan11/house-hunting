@@ -1052,6 +1052,51 @@ looks at twice.** Normalise anything that varies without meaning.
 MLS photos are the copyright of the listing brokerage. Fine for a private hunting page; don't
 republish more broadly.
 
+### City-keyed enumeration is blind to the other town in the ZIP
+
+Found **2026-11-04**. Every enumeration this repo runs is keyed on *city* — MetroListPRO's
+`/lbc/2/<cityId>/…` indexes, the Coldwell Banker city pages, exprealty's `/<city>-ca-real-estate`.
+All of them filter on the `CITY` field, which is exactly right for a board defined by three cities,
+and it means none of them can see a property one street outside one.
+
+A ZIP-keyed sweep of **95682** that run returned **4262 Cameron Rd** — 4bd / 3 full ba, 5.9 acres,
+pool, $1,049,000, 7 days on market, verified Active on MetroListPRO. 95682 is the Shingle Springs
+ZIP; the property's city is **Cameron Park**. It clears every criterion on the list except the one
+in the heading, and no city-keyed run could ever have surfaced it.
+
+Two things follow:
+
+- **It is not a bug in the filters.** Cameron Park is not one of the three cities, so excluding it
+  is correct. What was missing was any way to *know* about it, and a criterion the reader cannot
+  revisit is a criterion they are stuck with.
+- **An out-of-area find goes in `rejected`, not `nearMisses`.** `mls-compose.py` rebuilds
+  `nearMisses` from the three-city enumeration on every run, so a Cameron Park row placed there
+  would disappear on the next run and be reported as *gone* — the same failure
+  "A row that matches no bucket is reported gone" describes. `rejected` is carried forward
+  untouched, which is what a standing flag needs. `runSummary.outOfAreaFlagged` carries it into the
+  brief, and `build.js` renders that category on both the moved and the quiet path.
+
+Worth re-running the ZIP sweep periodically: 95682 spans Shingle Springs and Cameron Park, 95667
+spans Placerville, Diamond Springs and Coloma. `https://www.mlslistings.com/search/result/zip/<zip>`
+answers a plain request and the result cards carry status, beds, baths, price and lot size.
+
+#### A second route to the same data, for when MetroListPRO is down
+
+MLSListings.com enumerates as well as it verifies, which the repo had not recorded — it was only
+ever used for per-MLS sheets (`mlsl-verify.py`). `/search/result/city/<City>` and
+`/search/result/zip/<zip>` are **active-only** and server-rendered, and both answer curl's default
+User-Agent. A 2026-11-04 sweep pulled 428 unique active records across the three cities and the
+three ZIPs and found the same board, with no spoofing anywhere in the path.
+
+Pagination is the one trap. The page-link hrefs carry a gzipped base64 `criteria` token
+(`/Search/Result/<slug>/<n>?view=list&criteria=…`); **follow those hrefs**. Constructing the bare
+`/Search/Result/<slug>/<n>` form instead returns `200` and silently serves the site's home page —
+no listings, no error, which parses as "this city has no inventory".
+
+And the result card's **"Acres Lot" field sometimes carries square feet**: a value of `7405` means
+0.17 acres, not 7,405. Treat anything over ~500 as sqft and divide by 43,560. Three quarter-acre
+lots cleared the 2.5-acre filter before this was handled.
+
 ## Dedupe rules for future runs
 
 **Read the baseline from `origin/gh-pages`, not from your working branch.** Each run is published to

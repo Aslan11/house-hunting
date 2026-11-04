@@ -266,6 +266,18 @@ const nearMissItems = [
        : `sold, under contract, repriced, or pushed past the table's cap`}`;
   }),
 ];
+/* Out-of-area flags: a property that clears every criterion except the city. It cannot go on the
+   board without redefining the search area, and it must not be silently dropped either — so it is
+   its own category in the brief and a persistent row in `rejected`. It lives in `rejected` rather
+   than `nearMisses` on purpose: `mls-compose.py` rebuilds `nearMisses` from the three-city
+   enumeration every run, so an out-of-area row placed there would vanish next run and be reported
+   as "gone" — the exact bug class "A row that matches no bucket is reported gone" describes. */
+const outOfArea = (data.runSummary && data.runSummary.outOfAreaFlagged) || [];
+const outOfAreaItems = outOfArea.map((p) =>
+  `<strong>${esc(p.address)}</strong> — ${money(p.price)}${p.mls ? `, MLS ${esc(p.mls)}` : ''}.
+   ${esc(p.note || '')} Not on the board: it is outside the three target cities, which is a
+   criterion like any other. Say the word and a future run can include it.`);
+
 const nearMissSummary = nearMissMoved ? `${[
   nmAdded.length ? `${nmAdded.length} added` : '',
   nmPriced.length ? `${nmPriced.length} price ${nmPriced.length === 1 ? 'change' : 'changes'}` : '',
@@ -556,7 +568,7 @@ const html = `<!DOCTYPE html>
 
 <div class="banner">
   <h3>What changed this run</h3>
-  ${fresh.length || priceMoves.length || dropped.length || statusMoves.length ? `<ul>
+  ${fresh.length || priceMoves.length || dropped.length || statusMoves.length || outOfArea.length ? `<ul>
     ${fresh.length ? `<li><strong>${fresh.length} new ${fresh.length === 1 ? 'listing' : 'listings'}</strong> meeting every hard criterion — see the top section.</li>` : ''}
     ${priceMoves.map((p) => {
       const down = p.to < p.from;
@@ -578,6 +590,7 @@ const html = `<!DOCTYPE html>
       &ldquo;Right land, no pool&rdquo; below.</li>` : ''}
     ${nearMissMoved ? `<li><strong>Near-miss table:</strong> ${esc(nearMissSummary)} — see
       &ldquo;Close, but one criterion short&rdquo; below.</li>` : ''}
+    ${outOfAreaItems.map((i) => `<li>${i}</li>`).join('\n    ')}
   </ul>` : `<p><strong>Nothing moved on the board.</strong> No new matches, no price changes, and
   nothing left the board since ${esc(data.previousRun)}. ${verifiedToday
     ? `All ${activeList.length} active matches and ${pendingList.length} pending were re-verified
@@ -592,6 +605,10 @@ const html = `<!DOCTYPE html>
   ${nearMissMoved ? `<p><strong>The near-miss list did move</strong>
     (${esc(nearMissSummary)}) — properties one criterion short of the bar:</p>
   <ul>${nearMissItems.map((i) => `\n    <li>${i}</li>`).join('')}
+  </ul>` : ''}
+  ${outOfArea.length ? `<p><strong>One find outside the search area</strong> — it clears every
+    criterion except the city, so it is flagged rather than listed:</p>
+  <ul>${outOfAreaItems.map((i) => `\n    <li>${i}</li>`).join('')}
   </ul>` : ''}`}
 </div>
 
