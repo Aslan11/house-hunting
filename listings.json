@@ -13,18 +13,18 @@
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-11-04",
-  "previousRun": "2026-11-02",
+  "lastRun": "2026-11-05",
+  "previousRun": "2026-11-04",
   "source": {
     "name": "MetroListPRO (MetroList MLS of record), complete city enumeration",
     "method": "Enumerated every active and pending residential record in the three cities from the MetroListPRO city indexes and read each detail page's Status, Has a Pool, Lot Size in Acres and full-bath fields. No User-Agent spoofing: MetroListPRO answers an ordinary request, which is why this route is available to every run. Listings on another MLS were each confirmed against a live record named in foreignVerifiedBy.",
     "inventoryScanned": 372,
-    "activeScanned": 326,
-    "pendingScanned": 46,
-    "passedBedsBathsPrice": 27,
+    "activeScanned": 321,
+    "pendingScanned": 51,
+    "passedBedsBathsPrice": 26,
     "verifiedActiveMatches": 7,
     "pendingMatches": 0,
-    "mlsVerifiedOn": "2026-11-04",
+    "mlsVerifiedOn": "2026-11-05",
     "mlsVerifiedCount": 5,
     "mlsForeignSource": [
       {
@@ -55,7 +55,7 @@
     "verifiedActiveListings": 7,
     "coverageGap": "Closed for this run. MetroListPRO enumerates MetroList only, so it is blind to a new listing on another MLS. The Coldwell Banker IDX cross-check (cb-crosscheck.py, plain request, no User-Agent spoof) carries other boards \u2014 it sees both known foreign listings, including 3538 Wildwood Ln, which MetroListPRO has never indexed \u2014 and it swept 406 records across the three cities this run, finding no qualifying candidate the board did not already track. It is a cross-check, not the board: it has no structured pool field, its bath count cannot resolve the 3-full-bath minimum, and it carries stale ACTIVE rows, so the MLS of record still decides every promotion.",
     "idxCrossCheck": {
-      "ranOn": "2026-11-04",
+      "ranOn": "2026-11-05",
       "source": "Coldwell Banker IDX (coldwellbanker.com), plain request, no UA spoof",
       "rowsScanned": 406,
       "clearedBedsBathsPrice": 38,
@@ -63,7 +63,17 @@
       "missingFromBoard": [],
       "note": "Carries non-MetroList boards, so unlike the MetroList mirrors it can see a new foreign-MLS listing. Pool is read from agent remarks and reviewed by hand; combined baths cannot resolve the 3-full-bath minimum; and this feed carries stale ACTIVE rows, so the MLS of record still decides."
     },
-    "multiUnitNote": "4800 Abbey Road (MLS 226133530) was listed 2026-11-01 and is in the MetroListPRO Placerville index, but it clears neither the board nor the enumerator's multi-unit bucket: its MLS bedroom field reads 3, so classify() calls it residential and qualifies() rejects it on beds, even though it is a 2-houses-on-one-lot record whose remarks say 5 bedrooms are possible across 6,400+ sqft. 11.04 acres, built-in pool, exactly at the $1.5M cap. Added to nearMisses by hand this run. A record with a populated bed field AND a unit table is a shape classify() cannot currently see; worth handling in mls-enumerate.py if another one appears."
+    "multiUnitNote": "4800 Abbey Road (MLS 226133530) was listed 2026-11-01 and is in the MetroListPRO Placerville index, but it clears neither the board nor the enumerator's multi-unit bucket: its MLS bedroom field reads 3, so classify() calls it residential and qualifies() rejects it on beds, even though it is a 2-houses-on-one-lot record whose remarks say 5 bedrooms are possible across 6,400+ sqft. 11.04 acres, built-in pool, exactly at the $1.5M cap. Added to nearMisses by hand this run. A record with a populated bed field AND a unit table is a shape classify() cannot currently see; worth handling in mls-enumerate.py if another one appears.",
+    "independentEnumeration": {
+      "ranOn": "2026-11-05",
+      "source": "MetroListPRO city indexes (the MLS of record)",
+      "activeRecords": 321,
+      "pendingRecords": 51,
+      "recordsPulledBeyondIdxSweep": 372,
+      "singleFamilyRead": 263,
+      "excludedByType": 109,
+      "additionalMatchesFound": 0
+    }
   },
   "runSummary": {
     "new": [],
@@ -73,38 +83,22 @@
     "dropped": [],
     "poollessChanges": {
       "added": [],
-      "priceChanges": [
-        {
-          "address": "6310 Butterfield Way",
-          "city": "Placerville",
-          "from": 1450000,
-          "to": 1390000
-        }
-      ],
-      "statusChanges": [
-        {
-          "address": "4810 Robledo Drive",
-          "city": "Placerville",
-          "mls": "226129641",
-          "price": 999900,
-          "from": "Active",
-          "to": "Pending"
-        }
-      ],
+      "priceChanges": [],
+      "statusChanges": [],
       "gone": [
         {
-          "address": "4181 Thunderbird Lane",
-          "city": "Rescue",
-          "price": 749000,
+          "address": "4280 Hillock Drive",
+          "city": "Placerville",
+          "price": 674900,
           "beds": 4,
           "baths": 3,
           "fullBaths": 3,
-          "halfBaths": 1,
-          "acres": 10.0,
-          "sqft": 3294,
-          "mls": "226064393",
+          "halfBaths": 0,
+          "acres": 5.0,
+          "sqft": 2756,
+          "mls": "226122832",
           "status": "Pending",
-          "url": "https://www.metrolistpro.com/homes/2/6/4181-THUNDERBIRD-LANE-RESCUE-CA-95672/226064393",
+          "url": "https://www.metrolistpro.com/homes/2/6/4280-HILLOCK-DRIVE-PLACERVILLE-CA-95667/226122832",
           "reason": "MetroList records no pool",
           "mlsPool": "No"
         }
@@ -115,15 +109,7 @@
       "priceChanges": [],
       "gone": []
     },
-    "unchanged": 7,
-    "outOfAreaFlagged": [
-      {
-        "address": "4262 Cameron Rd, Cameron Park",
-        "mls": "226132718",
-        "price": 1049000,
-        "note": "Meets every criterion except the city; shares the 95682 Shingle Springs ZIP."
-      }
-    ]
+    "unchanged": 7
   },
   "listings": [
     {
@@ -176,7 +162,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-11-04",
+      "lastSeen": "2026-11-05",
       "flag": null
     },
     {
@@ -229,7 +215,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-08-13",
-      "lastSeen": "2026-11-04",
+      "lastSeen": "2026-11-05",
       "flag": null
     },
     {
@@ -273,7 +259,7 @@
       "summary": "This is an exceptional property, fully permitted & short-term rental permitted (Airbnb & other short-term rentals). Welcome to this majestic luxury estate situated on over 16.74 acres. The large lot provides opportunities for an additional home. Positioned atop the serene Bedford Canyon, this estate boasts sweeping panoramic views that capture the natural beauty of sunrises, sunsets & stargazing. ",
       "notes": "",
       "firstSeen": "2026-10-02",
-      "lastSeen": "2026-11-04",
+      "lastSeen": "2026-11-05",
       "priceHistory": [
         {
           "date": "2026-10-02",
@@ -282,7 +268,7 @@
       ],
       "secondSource": {
         "name": "the MLSListings.com MLS sheet",
-        "checkedOn": "2026-11-04",
+        "checkedOn": "2026-11-05",
         "url": "https://www.mlslistings.com/property/BE41150059",
         "confirmed": [
           "price",
@@ -344,7 +330,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-11-04",
+      "lastSeen": "2026-11-05",
       "flag": null
     },
     {
@@ -405,7 +391,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-11-04",
+      "lastSeen": "2026-11-05",
       "flag": null
     },
     {
@@ -458,7 +444,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-09-08",
-      "lastSeen": "2026-11-04",
+      "lastSeen": "2026-11-05",
       "flag": null
     },
     {
@@ -502,7 +488,7 @@
       "summary": "Welcome to a property that doesn't ask you to choose between a home, a retreat, and country living - you get all three. Set among the Placerville foothills, 3538 Wildwood Lane is a place to swim, garden, gather and spread out. The two-story main home offers a private ground-level guest suite with its own entrance and full bath, plus a two-car garage and full basement access. Upstairs, the living s",
       "notes": "",
       "firstSeen": "2026-08-27",
-      "lastSeen": "2026-11-04",
+      "lastSeen": "2026-11-05",
       "priceHistory": [
         {
           "date": "2026-08-27",
@@ -519,7 +505,7 @@
       ],
       "secondSource": {
         "name": "the MLSListings.com MLS sheet",
-        "checkedOn": "2026-11-04",
+        "checkedOn": "2026-11-05",
         "url": "https://www.mlslistings.com/property/ME226107286",
         "confirmed": [
           "price",
@@ -647,22 +633,6 @@
       "mls": "226070903",
       "status": "Active",
       "url": "https://www.metrolistpro.com/homes/2/6/6560-AGAPE-COURT-PLACERVILLE-CA-95667/226070903",
-      "reason": "MetroList records no pool",
-      "mlsPool": "No"
-    },
-    {
-      "address": "4280 Hillock Drive",
-      "city": "Placerville",
-      "price": 674900,
-      "beds": 4,
-      "baths": 3,
-      "fullBaths": 3,
-      "halfBaths": 0,
-      "acres": 5.0,
-      "sqft": 2756,
-      "mls": "226122832",
-      "status": "Pending",
-      "url": "https://www.metrolistpro.com/homes/2/6/4280-HILLOCK-DRIVE-PLACERVILLE-CA-95667/226122832",
       "reason": "MetroList records no pool",
       "mlsPool": "No"
     },
