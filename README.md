@@ -1126,6 +1126,38 @@ Then compare against `baseline.json` before reporting anything.
    bedroom rule and had to be corrected.
 5. Update `lastSeen` on confirmed-active properties and `lastRun` on every run.
 
+### A near miss can become a match without anything new being listed
+
+Measured **2026-11-06**. `4800 Abbey Road, Placerville` (MLS 226133530) entered the board as a
+**new match** on this run, and no new listing appeared: it had been carried in `nearMisses` since
+2026-11-01 with `"missing": "MLS bedroom count is 3 (record states 5 possible); 3 full baths +
+1 half"`. On 2026-11-06 the same MLS record reads **4 bedrooms and 4 full baths** (5 possible beds,
+2 half baths). The listing agent corrected the record; the house did not change.
+
+Two things follow, and the second is the one worth keeping:
+
+1. **Re-read the near-miss table's fields every run, not just its membership.** The enumeration
+   does this already — it re-derives every row from the detail page rather than trusting the
+   stored `missing` string — which is why the promotion happened automatically. A cheaper design
+   that only checked whether a near miss was *still listed* would have carried the stale 3-bedroom
+   reading indefinitely, and the property would never have surfaced.
+2. **A promotion out of `nearMisses` is a real find and should read like one.** It arrives through
+   the same `runSummary.new` channel as a brand-new listing, so the page and the notification both
+   describe it as new. That is correct — it is new *to the board* — but the reason differs, and a
+   run that says only "2 new listings" when one of them is a corrected record is slightly off. The
+   card and the run note say which it was.
+
+Corroboration, since a field flip is exactly the kind of single-source reading the gate exists to
+catch: MLSListings.com returned `4800 Abbey Rd … 4 Beds | 4/2 Baths (Active) - ME226133530`,
+agreeing with MetroListPRO on both counts and on status.
+
+`cb-crosscheck.py` flagged the same property under "pool wording, not a determination" — *no 'pool'
+in remarks but water/resort wording present*. That flag is about **free text**, and the gate reads
+**structured fields**: MetroListPRO carries `Has a Pool: Yes` with `Built-In, On Lot, Pool Sweep`,
+and MLSListings carries three photos categorised `Pool`. The flag is worth keeping — it is how
+spa-only and "room for a pool" records get caught — but it does not outrank the structured field,
+and a run should not demote a match on remarks alone.
+
 ### The whole board can be built without claiming to be a browser
 
 Measured **2026-10-27**. Every script in this repo sent a Chrome `User-Agent`, because the portals

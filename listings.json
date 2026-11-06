@@ -13,19 +13,19 @@
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-11-05",
-  "previousRun": "2026-11-04",
+  "lastRun": "2026-11-06",
+  "previousRun": "2026-11-05",
   "source": {
     "name": "MetroListPRO (MetroList MLS of record), complete city enumeration",
     "method": "Enumerated every active and pending residential record in the three cities from the MetroListPRO city indexes and read each detail page's Status, Has a Pool, Lot Size in Acres and full-bath fields. No User-Agent spoofing: MetroListPRO answers an ordinary request, which is why this route is available to every run. Listings on another MLS were each confirmed against a live record named in foreignVerifiedBy.",
-    "inventoryScanned": 372,
-    "activeScanned": 321,
+    "inventoryScanned": 376,
+    "activeScanned": 325,
     "pendingScanned": 51,
-    "passedBedsBathsPrice": 26,
+    "passedBedsBathsPrice": 28,
     "verifiedActiveMatches": 7,
     "pendingMatches": 0,
-    "mlsVerifiedOn": "2026-11-05",
-    "mlsVerifiedCount": 5,
+    "mlsVerifiedOn": "2026-11-06",
+    "mlsVerifiedCount": 7,
     "mlsForeignSource": [
       {
         "mls": "41150059",
@@ -52,13 +52,13 @@
     }
   },
   "dataQuality": {
-    "verifiedActiveListings": 7,
-    "coverageGap": "Closed for this run. MetroListPRO enumerates MetroList only, so it is blind to a new listing on another MLS. The Coldwell Banker IDX cross-check (cb-crosscheck.py, plain request, no User-Agent spoof) carries other boards \u2014 it sees both known foreign listings, including 3538 Wildwood Ln, which MetroListPRO has never indexed \u2014 and it swept 406 records across the three cities this run, finding no qualifying candidate the board did not already track. It is a cross-check, not the board: it has no structured pool field, its bath count cannot resolve the 3-full-bath minimum, and it carries stale ACTIVE rows, so the MLS of record still decides every promotion.",
+    "verifiedActiveListings": 9,
+    "coverageGap": "Closed for this run. MetroListPRO enumerates MetroList only, so it is blind to a new listing on another MLS. The Coldwell Banker IDX cross-check (cb-crosscheck.py, plain request, no User-Agent spoof) carries other boards \u2014 it sees both known foreign listings, including 3538 Wildwood Ln, which MetroListPRO has never indexed \u2014 and it swept 410 records across the three cities this run, finding no qualifying candidate the board did not already track. It is a cross-check, not the board: it has no structured pool field, its bath count cannot resolve the 3-full-bath minimum, and it carries stale ACTIVE rows, so the MLS of record still decides every promotion.",
     "idxCrossCheck": {
-      "ranOn": "2026-11-05",
+      "ranOn": "2026-11-06",
       "source": "Coldwell Banker IDX (coldwellbanker.com), plain request, no UA spoof",
-      "rowsScanned": 406,
-      "clearedBedsBathsPrice": 38,
+      "rowsScanned": 410,
+      "clearedBedsBathsPrice": 41,
       "poolAndAcreageHits": 9,
       "missingFromBoard": [],
       "note": "Carries non-MetroList boards, so unlike the MetroList mirrors it can see a new foreign-MLS listing. Pool is read from agent remarks and reviewed by hand; combined baths cannot resolve the 3-full-bath minimum; and this feed carries stale ACTIVE rows, so the MLS of record still decides."
@@ -76,7 +76,10 @@
     }
   },
   "runSummary": {
-    "new": [],
+    "new": [
+      "4800 Abbey Road, Placerville",
+      "1815 Woodsman Court, Placerville"
+    ],
     "priceChanges": [],
     "statusChanges": [],
     "relisted": [],
@@ -85,33 +88,84 @@
       "added": [],
       "priceChanges": [],
       "statusChanges": [],
-      "gone": [
-        {
-          "address": "4280 Hillock Drive",
-          "city": "Placerville",
-          "price": 674900,
-          "beds": 4,
-          "baths": 3,
-          "fullBaths": 3,
-          "halfBaths": 0,
-          "acres": 5.0,
-          "sqft": 2756,
-          "mls": "226122832",
-          "status": "Pending",
-          "url": "https://www.metrolistpro.com/homes/2/6/4280-HILLOCK-DRIVE-PLACERVILLE-CA-95667/226122832",
-          "reason": "MetroList records no pool",
-          "mlsPool": "No"
-        }
-      ]
+      "gone": []
     },
     "nearMissChanges": {
       "added": [],
       "priceChanges": [],
-      "gone": []
+      "gone": [
+        {
+          "address": "4800 Abbey Road",
+          "city": "Placerville",
+          "price": 1500000,
+          "beds": 3,
+          "baths": 3,
+          "fullBaths": 3,
+          "halfBaths": 1,
+          "acres": 11.04,
+          "sqft": 4621,
+          "mls": "226133530",
+          "status": "Active",
+          "url": "https://www.metrolistpro.com/homes/2/6/4800-ABBEY-ROAD-PLACERVILLE-CA-95667/226133530",
+          "pool": true,
+          "missing": "MLS bedroom count is 3 (record states 5 possible); 3 full baths + 1 half"
+        }
+      ]
     },
     "unchanged": 7
   },
   "listings": [
+    {
+      "id": "4800-abbey-road-placerville",
+      "address": "4800 Abbey Road",
+      "city": "Placerville",
+      "zip": "95667",
+      "mls": "226133530",
+      "mlsSource": "MetroList",
+      "currentPrice": 1500000,
+      "priceHistory": [
+        {
+          "date": "2026-11-06",
+          "price": 1500000
+        }
+      ],
+      "beds": 4,
+      "baths": 5.0,
+      "fullBaths": 4,
+      "partialBaths": 2,
+      "sqft": 6421,
+      "acres": 11.04,
+      "pool": true,
+      "poolDetail": "Built-In, On Lot, Pool Sweep",
+      "yearBuilt": null,
+      "propertyType": "SFR",
+      "view": null,
+      "water": null,
+      "sewer": null,
+      "garageSpaces": null,
+      "lat": null,
+      "lng": null,
+      "listedOn": null,
+      "summary": null,
+      "notes": null,
+      "photos": [
+        "https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/10/31/dd389d1a-1a54-4fb5-b371-fe4a690ff5bf.jpg",
+        "https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/10/31/30a5e399-9e6a-48b1-9a8b-b96a8dc792c9.jpg",
+        "https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/10/31/828a03ab-c269-4718-a746-137e328dbae2.jpg",
+        "https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/10/31/1ab5a927-dc38-417e-bb87-c4ad8d13c10b.jpg",
+        "https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/10/31/d9f8cccf-3c04-4e1b-a962-af772ce8521d.jpg",
+        "https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/10/31/8d2e9265-d210-4da9-99f6-930cd36c8f36.jpg"
+      ],
+      "url": "https://www.metrolistpro.com/homes/2/6/4800-ABBEY-ROAD-PLACERVILLE-CA-95667/226133530",
+      "gallery": "https://www.metrolistpro.com/homes/2/6/x/226133530",
+      "status": "match",
+      "mlsStatus": "Active",
+      "firstSeen": "2026-11-06",
+      "lastSeen": "2026-11-06",
+      "isNew": true,
+      "newThisRun": true,
+      "flag": "new"
+    },
     {
       "id": "6881-sagittarius-drive-placerville",
       "address": "6881 Sagittarius Drive",
@@ -162,8 +216,59 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-11-05",
+      "lastSeen": "2026-11-06",
       "flag": null
+    },
+    {
+      "id": "1815-woodsman-court-placerville",
+      "address": "1815 Woodsman Court",
+      "city": "Placerville",
+      "zip": "95667",
+      "mls": "226134101",
+      "mlsSource": "MetroList",
+      "currentPrice": 1299000,
+      "priceHistory": [
+        {
+          "date": "2026-11-06",
+          "price": 1299000
+        }
+      ],
+      "beds": 4,
+      "baths": 4.5,
+      "fullBaths": 4,
+      "partialBaths": 1,
+      "sqft": 3560,
+      "acres": 3.0,
+      "pool": true,
+      "poolDetail": "Built-In, Gunite Construction",
+      "yearBuilt": null,
+      "propertyType": "SFR",
+      "view": null,
+      "water": null,
+      "sewer": null,
+      "garageSpaces": null,
+      "lat": null,
+      "lng": null,
+      "listedOn": null,
+      "summary": null,
+      "notes": null,
+      "photos": [
+        "https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/11/05/25654ee1-afbe-4570-9b5f-54e4cd9d1426.jpg",
+        "https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/11/05/6b0564db-bdc0-4db7-bc23-d681d96ea507.jpg",
+        "https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/11/05/f46decce-4946-4b67-91a6-b7713c730bb9.jpg",
+        "https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/11/05/ca408efc-744d-4066-bffe-0c82b7df4f2a.jpg",
+        "https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/11/05/f17700d5-6c18-4cac-aa13-762e587847cf.jpg",
+        "https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/11/05/3faae5b4-e807-48b3-a9b5-3d186f9b7332.jpg"
+      ],
+      "url": "https://www.metrolistpro.com/homes/2/6/1815-WOODSMAN-COURT-PLACERVILLE-CA-95667/226134101",
+      "gallery": "https://www.metrolistpro.com/homes/2/6/x/226134101",
+      "status": "match",
+      "mlsStatus": "Active",
+      "firstSeen": "2026-11-06",
+      "lastSeen": "2026-11-06",
+      "isNew": true,
+      "newThisRun": true,
+      "flag": "new"
     },
     {
       "id": "4071-voyager-way-shingle-springs",
@@ -215,7 +320,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-08-13",
-      "lastSeen": "2026-11-05",
+      "lastSeen": "2026-11-06",
       "flag": null
     },
     {
@@ -259,7 +364,7 @@
       "summary": "This is an exceptional property, fully permitted & short-term rental permitted (Airbnb & other short-term rentals). Welcome to this majestic luxury estate situated on over 16.74 acres. The large lot provides opportunities for an additional home. Positioned atop the serene Bedford Canyon, this estate boasts sweeping panoramic views that capture the natural beauty of sunrises, sunsets & stargazing. ",
       "notes": "",
       "firstSeen": "2026-10-02",
-      "lastSeen": "2026-11-05",
+      "lastSeen": "2026-11-06",
       "priceHistory": [
         {
           "date": "2026-10-02",
@@ -268,7 +373,7 @@
       ],
       "secondSource": {
         "name": "the MLSListings.com MLS sheet",
-        "checkedOn": "2026-11-05",
+        "checkedOn": "2026-11-06",
         "url": "https://www.mlslistings.com/property/BE41150059",
         "confirmed": [
           "price",
@@ -330,7 +435,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-11-05",
+      "lastSeen": "2026-11-06",
       "flag": null
     },
     {
@@ -391,7 +496,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-11-05",
+      "lastSeen": "2026-11-06",
       "flag": null
     },
     {
@@ -444,7 +549,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-09-08",
-      "lastSeen": "2026-11-05",
+      "lastSeen": "2026-11-06",
       "flag": null
     },
     {
@@ -488,7 +593,7 @@
       "summary": "Welcome to a property that doesn't ask you to choose between a home, a retreat, and country living - you get all three. Set among the Placerville foothills, 3538 Wildwood Lane is a place to swim, garden, gather and spread out. The two-story main home offers a private ground-level guest suite with its own entrance and full bath, plus a two-car garage and full basement access. Upstairs, the living s",
       "notes": "",
       "firstSeen": "2026-08-27",
-      "lastSeen": "2026-11-05",
+      "lastSeen": "2026-11-06",
       "priceHistory": [
         {
           "date": "2026-08-27",
@@ -505,7 +610,7 @@
       ],
       "secondSource": {
         "name": "the MLSListings.com MLS sheet",
-        "checkedOn": "2026-11-05",
+        "checkedOn": "2026-11-06",
         "url": "https://www.mlslistings.com/property/ME226107286",
         "confirmed": [
           "price",
@@ -686,22 +791,6 @@
     }
   ],
   "nearMisses": [
-    {
-      "address": "4800 Abbey Road",
-      "city": "Placerville",
-      "price": 1500000,
-      "beds": 3,
-      "baths": 3,
-      "fullBaths": 3,
-      "halfBaths": 1,
-      "acres": 11.04,
-      "sqft": 4621,
-      "mls": "226133530",
-      "status": "Active",
-      "url": "https://www.metrolistpro.com/homes/2/6/4800-ABBEY-ROAD-PLACERVILLE-CA-95667/226133530",
-      "pool": true,
-      "missing": "MLS bedroom count is 3 (record states 5 possible); 3 full baths + 1 half"
-    },
     {
       "address": "1234 Rising Hill W Road",
       "city": "Placerville",
