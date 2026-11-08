@@ -124,6 +124,23 @@ def num(v):
         return None
 
 
+def mls_key(value):
+    """Strip the two-letter originating-board suffix this feed appends (`41150059BE`)."""
+    return re.sub(r"[^0-9]", "", str(value or ""))
+
+
+# Same street-type folding as mls-compose.py's addr_key(), for the same reason: this feed and the
+# MLS spell "Road"/"Rd" and "Drive"/"Dr" differently, and a raw-string compare calls that a change.
+STREET_FOLD = {"road": "rd", "drive": "dr", "lane": "ln", "court": "ct", "street": "st",
+               "avenue": "ave", "trail": "trl", "place": "pl", "circle": "cir", "boulevard": "blvd",
+               "terrace": "ter", "way": "way"}
+
+
+def street_key(address):
+    words = re.sub(r"[^a-z0-9 ]", " ", str(address or "").split(",")[0].lower()).split()
+    return " ".join(STREET_FOLD.get(w, w) for w in words)
+
+
 def city_of(rec):
     m = re.search(r",\s*([^,]+),\s*CA", rec.get("propertyAddress") or "")
     return m.group(1).strip().lower() if m else ""
@@ -211,11 +228,21 @@ def main():
             print("   ", f)
 
     board = json.load(open(os.path.join(HERE, "listings.json")))
-    tracked = {str(l.get("mls")) for l in board.get("listings", [])}
-    for key in ("pending", "poolless", "nearMisses", "rejected", "relisted", "dropped"):
+    # Tracked by normalised MLS number AND by street key. Two reasons, and the first one published
+    # a false claim on 2026-11-08: this feed suffixes the originating board onto the number, so
+    # 2520 Bedford Ave arrives as `41150059BE` against the board's `41150059`, the row read
+    # NOT ON BOARD, and the page's "Cover other boards" sentence said one candidate was not
+    # already tracked when the only one on the list was a match sitting on the board. The second
+    # is the street-type spelling difference `mls-compose.py`'s addr_key() already exists for.
+    tracked = set()
+    for key in ("listings", "pending", "poolless", "nearMisses", "rejected", "relisted", "dropped"):
         for row in board.get(key, []) or []:
-            if isinstance(row, dict) and row.get("mls"):
-                tracked.add(str(row["mls"]))
+            if not isinstance(row, dict):
+                continue
+            if row.get("mls"):
+                tracked.add(mls_key(row["mls"]))
+            if row.get("address"):
+                tracked.add(street_key(row["address"]))
     rejected_addrs = {(r.get("address") or "").lower()
                       for r in board.get("rejected", []) or []}
 
@@ -259,7 +286,7 @@ def main():
                               "beds": rec.get("beds"), "bathsCombined": rec.get("baths"),
                               "acres": acres, "daysOnMarket": rec.get("daysOnMarket"),
                               "office": rec.get("officeName"),
-                              "onBoard": mls in tracked,
+                              "onBoard": mls_key(mls) in tracked or street_key(addr) in tracked,
                               "url": BASE + (rec.get("propertyDetailsRoutePath") or "")})
         elif verdict in ("negated", "cue"):
             review.append((rec, acres,
@@ -269,7 +296,9 @@ def main():
     print(f"{len(pool_hits)} rows clear acreage AND read as having a pool:\n")
     missing = []
     for h in pool_hits:
-        mark = "on board  " if h["onBoard"] else "NOT ON BOARD"
+        # "tracked" rather than "on board": the set spans poolless, nearMisses, rejected
+        # and dropped too, so a hit can be known to the page without being a match.
+        mark = "tracked     " if h["onBoard"] else "NOT TRACKED "
         print(f'  {mark} MLS {h["mls"]:<10} ${h["price"]:>9,.0f} {h["beds"]}bd '
               f'{h["bathsCombined"]}ba(comb) {h["acres"]:>6}ac dom={h["daysOnMarket"]:<4} '
               f'{h["address"]}')

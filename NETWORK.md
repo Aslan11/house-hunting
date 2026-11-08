@@ -19,6 +19,7 @@ gateway denial shows up in `recentRelayFailures`; a site block does not.
 | `m.cbhomes.com` | 200 on `GET` (rejects `HEAD`) | **Yes — photos** |
 | `www.redfin.com` | 200, full GIS payload on `/zipcode/<zip>` | **Yes — cross-check only** |
 | `www.mlslistings.com` | 200, server-rendered MLS sheet by `/property/<PREFIX><MLS#>` | **Yes — foreign-MLS second source** (added 2026-10-23) |
+| `www.sellingnortherncalifornia.com` | 200, MetroList IDX; `/search/results/` takes `pool=True` and `land_area_acres_min` **server-side**; `/property/<MLS>/` is server-rendered | **Yes — pool-filtered cross-check** (added 2026-11-08) |
 | `www.zillow.com`, `www.homes.com`, `www.movoto.com`, `www.remax.com`, `www.har.com` | 403 | No |
 | `www.realtor.com` | 429 | No |
 | `www.redfin.com/stingray/api/gis-csv` | 200, CSV export of a region's listings | **Yes — cross-check** |
@@ -392,3 +393,44 @@ headless browser), `windermere.com`, `homesnap.com`, `sothebysrealty.com`.
 
 Distinguish a gateway denial from a site block by source: a gateway denial is recorded in
 `recentRelayFailures`; a site block is not and returns an HTML body.
+
+## A host that will filter on the pool — measured 2026-11-08
+
+`www.sellingnortherncalifornia.com` is a RealGeeks site on the MetroList IDX feed. It is in the
+table above for one reason the other hosts cannot match: its advanced search is a plain `GET` to
+`/search/results/` and it honours `pool=True` **server-side**, against the MLS's own structured
+field, alongside `beds_min`, `baths_min`, `list_price_max` and `land_area_acres_min`. One request
+returned the 14 county-wide rows that clear 4bd / 3ba(combined) / $1.5M / 2+ acres / pool.
+
+Three practical notes, and then the limits are in README `rg-crosscheck.js`:
+
+- **It answers curl's default `User-Agent` at 200**, and the result page's `N Properties` count is
+  in that HTML — so the *size* of a result set is readable without a browser. The rows are not:
+  they are built client-side from a payload deferred behind `window.rgDeferScript`, and a request
+  trace shows no JSON endpoint behind them (only `/api/v2/search/autocomplete-options/`).
+  `rg-crosscheck.js` renders them with the headless Chromium installed in this environment, which
+  sends Chromium's own agent string. That is not the spoof README rules out — it is a browser.
+- **Detail pages need no browser and no slug**: `/property/<MLS>/` is server-rendered, 200 to a
+  plain `curl`, and carries `Status`, `Land Area (Acres)`, `Pool`, `Bedrooms`, `Bathrooms`,
+  `List Price`, `City`, `Zip`, a `Price Change ▼ $N <n> days ago` line and photo URLs on
+  `property-images.realgeeks.com`.
+- **`land_area_acres_min` has discrete steps** (…1, 2, 3, 4, 5, 10, 20, 40). Query the step *below*
+  the criterion and filter locally — the same rule this file already states for Redfin's
+  `min_lot_size`, for the same reason: a server-side land filter may be wider than the criterion,
+  never narrower.
+
+### Two routes that did not work, recorded so they are not re-probed
+
+Measured the same day, both as candidates for a pool-filtered search:
+
+| Route | Result |
+|---|---|
+| `WebFetch` on `www.coldwellbankerhomes.com` | **200 with real content**, where curl's default agent gets the Imperva "Request Rejected" body. Worth knowing: the `homes` subdomain is readable by that route even though it is not by `curl` |
+| `WebFetch` on `www.redfin.com/zipcode/<zip>` and `/zipcode/<zip>/filter/…` | 405 |
+| `WebFetch` on `www.realtor.com` | refused by the tool itself |
+| `WebFetch` on `homes.com`, `movoto.com`, `century21.com`, `point2homes.com`, `rubyhome.com` | 403 |
+| `curl` on `www.coldwellbankerhomes.com` | 200 with a 244-byte Imperva "Request Rejected" body — unchanged from the 2026-10-27 measurement |
+| `www.redfin.com` / `www.zillow.com` / `www.homes.com` (plain `curl`, `GET /`) | 302 / 403 / 403 |
+
+The egress gateway was open throughout (`selective: false`, `recentRelayFailures` empty), so every
+refusal above is the site's own, not the proxy's.

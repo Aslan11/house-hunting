@@ -311,6 +311,16 @@ def main():
     src.pop("thisRunMethod", None)
     board.get("dataQuality", {}).pop("note", None)
     board.get("dataQuality", {}).pop("independentRerun", None)
+    # `independentEnumeration` is the "Cross-enumerate" row on the page, and it says the three
+    # cities "were listed again straight from MetroListPRO's own city indexes — a wider net than
+    # the IDX feed". On *this* route that sentence is false twice over. MetroListPRO is not a
+    # second net here, it is the board's own net (see src["name"] above), so republishing the
+    # stamp claims an independent confirmation of the enumeration by itself. And carried forward
+    # it is last run's stamp: on 2026-11-08 the inherited 2026-11-05 row reported 321 active
+    # records beside this run's 324, the same two-runs-in-one-funnel bug fixed for
+    # `activeScanned` three lines up. Dropped, so the row has to be earned by a sweep that is
+    # actually separate — `cb-crosscheck.py --stamp` or `rg-crosscheck.js --stamp`.
+    board.get("dataQuality", {}).pop("independentEnumeration", None)
     # The page prints this as "N cleared beds/baths/price". Carried over unchanged it reported
     # the previous run's funnel against this run's totals.
     src["passedBedsBathsPrice"] = enum.get("passedBedsBathsPrice")

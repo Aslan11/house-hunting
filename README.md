@@ -1290,6 +1290,115 @@ form and names the route that closes it; `cb-crosscheck.py --stamp` runs after a
 with the closed form and the row counts that justify it. A run that skips the cross-check therefore
 publishes "open", which is the honest default.
 
+###### A board member reported as a candidate the board did not have
+
+`cb-crosscheck.py` matched the board by MLS number and nothing else. This feed appends the
+originating board to the number — **2520 Bedford Ave arrives as `41150059BE`** against the board's
+`41150059` — so on 2026-11-08 the row printed `NOT ON BOARD`, landed in `missingFromBoard`, and the
+page's "Cover other boards" sentence published *"1 not already tracked, each sent for an MLS read
+before it could qualify"*. The only candidate on that list was a **match sitting on the board**,
+re-verified the same run.
+
+Nothing failed. The sweep was complete, the row was correct, the diff direction was the right one,
+and the page still said something untrue — because the comparison was made on a string whose format
+is the feed's choice, not the property's. That is the same mistake as the three in the section below
+on street types, status words and dates, which is why the fix is the same shape: compare a
+normalised key, and have more than one way to recognise the same property. `tracked` is now keyed on
+digits-only MLS number **and** a folded street key, and it spans `listings`, `pending`, `poolless`,
+`nearMisses`, `rejected`, `relisted` and `dropped`.
+
+Two things generalise:
+
+- **An identifier that a source formats is not an identifier.** The MLS number is the property's;
+  `41150059BE` is this feed's rendering of it. Any cross-source join on an id needs the id
+  normalised first, and ideally a second, independent key to fall back on.
+- **A diff that only reports in the safe direction can still over-report in it.** The rule
+  "a candidate this feed has that the board lacks is worth an MLS read" is right, and it is exactly
+  the direction that turns a matching bug into a published claim. The cheap check is the one the
+  README keeps earning: when a diff says something moved, look for it in the thing it says it is
+  missing from.
+
+While fixing it, the printed label changed from `on board` to `tracked`, because the set it tests
+has always included `poolless`, `nearMisses` and `rejected`. 1234 Rising Hill W Road printed
+`on board` on every previous run and is a near miss, not a match.
+
+##### A fifth host — and the first one that will filter on the pool itself
+
+Measured **2026-11-08**. Every sweep above pays the same tax, and it is worth naming because it has
+shaped four scripts: **no search payload carries a pool field**, so each route clears
+beds/baths/price/city first and then opens one detail page per survivor to find out whether there is
+water in the ground. `mls-enumerate.py` reads 266 detail pages to confirm 7 matches;
+`cb-crosscheck.py` reads 42 and still has to guess from the agent's remarks because the Coldwell
+Banker feed has no structured pool field at all.
+
+`www.sellingnortherncalifornia.com` does not pay it. It is a **RealGeeks site carrying the MetroList
+IDX feed**, and its advanced search is a plain `GET` to `/search/results/` with every filter in the
+query string — including `pool=True` and `land_area_acres_min`:
+
+```
+https://www.sellingnortherncalifornia.com/search/results/?county=El+Dorado&city=all&type=res
+  &list_price_min=all&list_price_max=1500000&beds_min=4&baths_min=3
+  &land_area_acres_min=2&pool=True&page=1
+```
+
+One request returns the whole qualifying set for the county: **14 rows** on 2026-11-08, against
+`cb-crosscheck.py`'s 410 and `mls-enumerate.py`'s 375. Eight were in the three target cities, all
+eight cleared 2.5 acres with the pool field set, and all eight were already tracked — the seven
+MetroList matches on the board plus 1234 Rising Hill W Road, which is on `nearMisses`. Nothing the
+feed carried was missing.
+
+`rg-crosscheck.js` is this packaged as the repeatable sweep:
+
+```bash
+node rg-crosscheck.js            # sweep, filter, diff against listings.json
+node rg-crosscheck.js --stamp    # also write dataQuality.poolFilteredCrossCheck for build.js
+```
+
+Detail pages are server-rendered at `/property/<MLS>/` — keyed on the MLS number with no slug, the
+same convenience the realgeeks mirror in the table above has — and carry the MLS field table flat:
+`Status`, `Land Area (Acres)`, `Pool`, `Bedrooms`, `Bathrooms`, `List Price`, `City`, `Zip`, a
+`Price Change ▼ $N <n> days ago` line, and photo URLs on `property-images.realgeeks.com`.
+
+**The search *rows* need rendering; nothing else does.** The host answers curl's default
+`User-Agent` with HTTP 200, and the result page's `N Properties` count is in that HTML — but the
+rows themselves are built client-side from a payload deferred behind `window.rgDeferScript`, and
+there is no JSON endpoint behind them to call instead (a request trace shows only
+`/api/v2/search/autocomplete-options/`). So this one route uses the headless Chromium already
+installed in this environment. Note what that is and is not: the request carries Chromium's own
+`User-Agent`, because it *is* Chromium. It is not the spoof that README "The whole board can be
+built without claiming to be a browser" rules out — nothing here claims to be a browser it isn't.
+
+Four limits, each one a lesson this repo already learned at a different host:
+
+1. **`baths_min`, and the detail page's `Bathrooms`, are the combined count.** 1234 Rising Hill W
+   Road comes back under `baths_min=3` and is 2 full + 1 half on the MLS. That is README
+   "Half baths" and its corollary arriving at a fifth host, and it is the row that proves the sweep
+   cannot promote: the one listing in its output that is *not* a match is the one its bath field
+   cannot decompose. The script flags and leaves the full-bath call to the MLS of record.
+2. **MetroList only** — the same blind spot as MetroListPRO and the three mirrors. Both foreign-MLS
+   cards on the board are correctly absent from the sweep, so this does **not** close
+   `coverageGap`; `cb-crosscheck.py` remains the route that does.
+3. **`land_area_acres_min` has discrete steps** (…1, 2, 3, 4, 5, 10, 20, 40), so a 2.5-acre
+   minimum cannot be expressed server-side. Query at **2** and filter locally. The temptation is to
+   query at 3, and it would silently drop 1234 Rising Hill's 2.66 acres — the same shape as the
+   `min_lot_size` traps NETWORK.md records for Redfin, where a server-side land filter quietly
+   removes rows it should only have narrowed. **A server-side filter may be wider than the
+   criterion; it must never be narrower.**
+4. **The pool filter is a real negative, not just a missing positive**, and that was checked rather
+   than assumed. A control run with `pool=all` returned 46 rows; every extra row in the three
+   cities read with the `Pool` field *absent* from its detail page. So `pool=True` is the MLS's own
+   structured field and not a remarks match — which is what makes this the one sweep here that does
+   not need `cb-crosscheck.py`'s prose heuristics in either direction.
+
+One correction it hands back to `cb-crosscheck.py`. That script flagged **4800 Abbey Road** under
+*"no 'pool' in remarks but water/resort wording present"*. The flag is a false positive: the MLS
+remarks on this feed describe **"dual luxury pools (one with a custom waterfall slide; the second
+with a massive party deck, serving cabana, and gazebo half-bath)"**, and MetroListPRO carries
+`Has a Pool: Yes`. The Coldwell Banker feed's `about.description` is a shorter cut of the same
+remarks, so the wording the heuristic needed was simply not in the text it was given. Worth keeping
+the flag — it is how spa-only records get caught — but it is a flag about *one feed's copy of the
+prose*, never about the property.
+
 #### `mls-compose.py` — the board, from that enumeration alone
 
 `scrape.js` cannot run without the spoof, so the board had nowhere to come from. `mls-compose.py`
@@ -1301,8 +1410,13 @@ python3 mls-compose.py --foreign 41150059=Active:1275000 \
                        --foreign 226107286=Active:829000    # 2. compose the board
 python3 mlsl-verify.py --refresh                            # 3. stamp the foreign-MLS reads
 python3 cb-crosscheck.py --stamp                            # 4. cover the other boards
+node rg-crosscheck.js --stamp                               # 4b. corroborate, pool-filtered
 node build.js                                               # 5. render
 ```
+
+Step 4b is new on 2026-11-08 and is optional: it corroborates rather than covering a gap, and it is
+cheap (one search request plus one detail page per in-area row). Run it after step 4 and before
+step 5, for the same reason step 4 runs before step 5 — `build.js` renders the stamp.
 
 Step 4 is new on 2026-10-31 and is what makes this route complete rather than merely spoof-free.
 Steps 1–3 see MetroList only, so a **new** listing on another MLS is invisible to them; the
@@ -1656,6 +1770,11 @@ and a second composer that has to be kept in step with the first will drift.
 - **`mls-enumerate.py`** — independent second enumeration from MetroListPRO's own city indexes, the
   only source that both enumerates and speaks for the MLS of record. Writes `mls-enumeration.json`;
   `--stamp` records the result under `dataQuality.independentEnumeration`. Never touches the board.
+  Note the interaction with the no-spoof route, added 2026-11-08: on that route this script *is*
+  step 1, the board's own enumeration, so `mls-compose.py` deliberately drops the stamp — a
+  MetroListPRO enumeration cannot be its own independent cross-check, and the inherited stamp was
+  reporting a previous run's record counts beside this run's. Use `--stamp` on the spoofed route,
+  where `scrape.js` enumerates the IDX feed and this really is a second net.
 - **`cb-crosscheck.py`** — the Coldwell Banker IDX sweep: the only plain-request enumeration that
   is not MetroList-only, so it is what covers other boards on a no-spoof run. Filters on
   `markerPrice` (not the formatted `price`), leaves the 3-full-bath call to the MLS because the
@@ -1663,6 +1782,15 @@ and a second composer that has to be kept in step with the first will drift.
   than a determination, and diffs against the board in the one direction that proves anything.
   `--stamp` records `dataQuality.idxCrossCheck` and rewrites `dataQuality.coverageGap`; it refuses
   to stamp on a short sweep or a failed city. Never touches the board.
+- **`rg-crosscheck.js`** — the RealGeeks MetroList IDX sweep, and the only route here that filters
+  on the MLS's structured **pool** field server-side, so the candidate set arrives narrowed instead
+  of being recovered from hundreds of detail reads. Queries acreage one step *below* the criterion
+  and filters locally, leaves the 3-full-bath call to the MLS because its bath count is combined,
+  and gates each detail page on the MLS number appearing in it. Renders the search rows with the
+  headless Chromium installed here — Chromium's own `User-Agent`, no spoof. MetroList-only, so it
+  corroborates and does **not** close `coverageGap`. `--stamp` records
+  `dataQuality.poolFilteredCrossCheck` and refuses to stamp when the rows scraped disagree with the
+  page's own result count. Never touches the board.
 - **`mls-compose.py`** — composes the board from `mls-enumeration.json` alone, for runs that
   cannot spoof a `User-Agent`. Needs a `--foreign` argument per other-MLS listing naming the live
   status and price read this run; one without an argument is dropped rather than carried.

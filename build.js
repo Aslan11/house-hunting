@@ -413,6 +413,10 @@ const rfx = (data.dataQuality || {}).redfinCrossCheck;
 // MetroList-only, so it is the route that can see a NEW foreign-MLS listing. Stamped by
 // cb-crosscheck.py --stamp, which runs after mls-compose.py and overwrites its coverageGap note.
 const idx = (data.dataQuality || {}).idxCrossCheck;
+// Optional fifth source: the one feed that filters on the MLS pool field server-side, so its
+// candidate set arrives narrowed rather than recovered from hundreds of detail reads. Stamped by
+// rg-crosscheck.js --stamp. MetroList-only, so it corroborates but cannot close coverageGap.
+const pfx = (data.dataQuality || {}).poolFilteredCrossCheck;
 // What the run could NOT cover. mls-compose.py has always written this and its docstring has
 // always said build.js prints it; it did not, so the page stayed silent about its own blind spot
 // on every MetroList-only run. Rendered below the table now.
@@ -763,6 +767,17 @@ failure mode is now closed off.</p>
         ? 'none of them missing from the board'
         : `${(idx.missingFromBoard || []).length} not already tracked, each sent for an MLS read before it could qualify`}.
       Checked ${esc(idx.ranOn)}.</td></tr>` : ''}
+    ${pfx ? `<tr><td><strong>Ask for the pool directly</strong></td><td>Every other sweep here clears beds, baths
+      and price first and then opens hundreds of listing pages to find out which have a pool, because no search
+      payload carries one. One feed &mdash; a <strong>RealGeeks MetroList IDX site</strong> &mdash; filters on the
+      MLS's own structured pool field <em>server-side</em>, so the qualifying set arrives already narrowed:
+      ${pfx.countyRowsWithPool} rows county-wide, ${pfx.inTargetCities} in the three towns,
+      ${pfx.clearedLandAndPool} clearing the ${esc(String((data.criteria || {}).minAcres || ''))}-acre minimum with
+      the pool field set &mdash; ${(pfx.missingFromBoard || []).length === 0
+        ? 'and nothing in it that the page was not already tracking'
+        : `${(pfx.missingFromBoard || []).length} not already tracked, each sent for an MLS read before it could qualify`}.
+      It reads MetroList only, so it corroborates rather than closing the gap above, and its bath count is
+      full + half combined, so it never settles the full-bath minimum. Checked ${esc(pfx.ranOn)}.</td></tr>` : ''}
     <tr><td><strong>Resolve</strong></td><td>Where sources disagree, the MLS of record wins and the disagreement is printed on the card rather than hidden.</td></tr>
   </tbody>
 </table>

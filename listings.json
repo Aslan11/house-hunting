@@ -13,18 +13,18 @@
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-11-06",
-  "previousRun": "2026-11-05",
+  "lastRun": "2026-11-08",
+  "previousRun": "2026-11-06",
   "source": {
     "name": "MetroListPRO (MetroList MLS of record), complete city enumeration",
     "method": "Enumerated every active and pending residential record in the three cities from the MetroListPRO city indexes and read each detail page's Status, Has a Pool, Lot Size in Acres and full-bath fields. No User-Agent spoofing: MetroListPRO answers an ordinary request, which is why this route is available to every run. Listings on another MLS were each confirmed against a live record named in foreignVerifiedBy.",
-    "inventoryScanned": 376,
-    "activeScanned": 325,
+    "inventoryScanned": 375,
+    "activeScanned": 324,
     "pendingScanned": 51,
-    "passedBedsBathsPrice": 28,
+    "passedBedsBathsPrice": 29,
     "verifiedActiveMatches": 7,
     "pendingMatches": 0,
-    "mlsVerifiedOn": "2026-11-06",
+    "mlsVerifiedOn": "2026-11-08",
     "mlsVerifiedCount": 7,
     "mlsForeignSource": [
       {
@@ -55,31 +55,27 @@
     "verifiedActiveListings": 9,
     "coverageGap": "Closed for this run. MetroListPRO enumerates MetroList only, so it is blind to a new listing on another MLS. The Coldwell Banker IDX cross-check (cb-crosscheck.py, plain request, no User-Agent spoof) carries other boards \u2014 it sees both known foreign listings, including 3538 Wildwood Ln, which MetroListPRO has never indexed \u2014 and it swept 410 records across the three cities this run, finding no qualifying candidate the board did not already track. It is a cross-check, not the board: it has no structured pool field, its bath count cannot resolve the 3-full-bath minimum, and it carries stale ACTIVE rows, so the MLS of record still decides every promotion.",
     "idxCrossCheck": {
-      "ranOn": "2026-11-06",
+      "ranOn": "2026-11-08",
       "source": "Coldwell Banker IDX (coldwellbanker.com), plain request, no UA spoof",
       "rowsScanned": 410,
-      "clearedBedsBathsPrice": 41,
+      "clearedBedsBathsPrice": 42,
       "poolAndAcreageHits": 9,
       "missingFromBoard": [],
       "note": "Carries non-MetroList boards, so unlike the MetroList mirrors it can see a new foreign-MLS listing. Pool is read from agent remarks and reviewed by hand; combined baths cannot resolve the 3-full-bath minimum; and this feed carries stale ACTIVE rows, so the MLS of record still decides."
     },
-    "multiUnitNote": "4800 Abbey Road (MLS 226133530) was listed 2026-11-01 and is in the MetroListPRO Placerville index, but it clears neither the board nor the enumerator's multi-unit bucket: its MLS bedroom field reads 3, so classify() calls it residential and qualifies() rejects it on beds, even though it is a 2-houses-on-one-lot record whose remarks say 5 bedrooms are possible across 6,400+ sqft. 11.04 acres, built-in pool, exactly at the $1.5M cap. Added to nearMisses by hand this run. A record with a populated bed field AND a unit table is a shape classify() cannot currently see; worth handling in mls-enumerate.py if another one appears.",
-    "independentEnumeration": {
-      "ranOn": "2026-11-05",
-      "source": "MetroListPRO city indexes (the MLS of record)",
-      "activeRecords": 321,
-      "pendingRecords": 51,
-      "recordsPulledBeyondIdxSweep": 372,
-      "singleFamilyRead": 263,
-      "excludedByType": 109,
-      "additionalMatchesFound": 0
+    "multiUnitNote": "4800 Abbey Road (MLS 226133530) is on the board and reads 4 bedrooms / 4 full baths on MetroListPRO as of 2026-11-08, so the note this key used to carry \u2014 that its bed field read 3 and the enumerator therefore rejected it \u2014 no longer describes the record. The listing agent corrected it on 2026-11-06 (README \"A near miss can become a match without anything new being listed\"). The parser limitation it documented is NOT fixed and is the part worth keeping: this is a 2-houses-on-one-lot record with BOTH a populated whole-home bed field and a unit table, a shape classify() in mls-enumerate.py cannot see \u2014 it calls the record residential and qualifies() then judges it on the single bed field alone. It happens to pass now because the corrected field passes. The next record of this shape with an understated bed field will be rejected the same silent way.",
+    "poolFilteredCrossCheck": {
+      "ranOn": "2026-11-08",
+      "source": "RealGeeks MetroList IDX (sellingnortherncalifornia.com), server-side pool filter, no UA spoof",
+      "countyRowsWithPool": 14,
+      "inTargetCities": 8,
+      "clearedLandAndPool": 8,
+      "missingFromBoard": [],
+      "note": "The only source this repo has found that filters on the MLS pool field server-side, so the candidate set arrives narrowed instead of being recovered from hundreds of detail reads. MetroList only, so it is blind to a foreign-MLS listing and does not close coverageGap; and its bath count is full + half combined, so it cannot resolve the 3-full-bath minimum. A cross-check, never the board."
     }
   },
   "runSummary": {
-    "new": [
-      "4800 Abbey Road, Placerville",
-      "1815 Woodsman Court, Placerville"
-    ],
+    "new": [],
     "priceChanges": [],
     "statusChanges": [],
     "relisted": [],
@@ -93,26 +89,9 @@
     "nearMissChanges": {
       "added": [],
       "priceChanges": [],
-      "gone": [
-        {
-          "address": "4800 Abbey Road",
-          "city": "Placerville",
-          "price": 1500000,
-          "beds": 3,
-          "baths": 3,
-          "fullBaths": 3,
-          "halfBaths": 1,
-          "acres": 11.04,
-          "sqft": 4621,
-          "mls": "226133530",
-          "status": "Active",
-          "url": "https://www.metrolistpro.com/homes/2/6/4800-ABBEY-ROAD-PLACERVILLE-CA-95667/226133530",
-          "pool": true,
-          "missing": "MLS bedroom count is 3 (record states 5 possible); 3 full baths + 1 half"
-        }
-      ]
+      "gone": []
     },
-    "unchanged": 7
+    "unchanged": 9
   },
   "listings": [
     {
@@ -130,10 +109,10 @@
         }
       ],
       "beds": 4,
-      "baths": 5.0,
+      "baths": 5,
       "fullBaths": 4,
       "partialBaths": 2,
-      "sqft": 6421,
+      "sqft": 5821,
       "acres": 11.04,
       "pool": true,
       "poolDetail": "Built-In, On Lot, Pool Sweep",
@@ -161,10 +140,8 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-11-06",
-      "lastSeen": "2026-11-06",
-      "isNew": true,
-      "newThisRun": true,
-      "flag": "new"
+      "lastSeen": "2026-11-08",
+      "flag": null
     },
     {
       "id": "6881-sagittarius-drive-placerville",
@@ -185,11 +162,11 @@
         }
       ],
       "beds": 4,
-      "baths": 4.0,
+      "baths": 4,
       "fullBaths": 4,
       "partialBaths": null,
       "sqft": 5351,
-      "acres": 40.0,
+      "acres": 40,
       "pool": true,
       "poolDetail": "Built-In, On Lot, Pool House, Pool Sweep, Salt Water, Other",
       "yearBuilt": "2005",
@@ -216,7 +193,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-11-06",
+      "lastSeen": "2026-11-08",
       "flag": null
     },
     {
@@ -238,7 +215,7 @@
       "fullBaths": 4,
       "partialBaths": 1,
       "sqft": 3560,
-      "acres": 3.0,
+      "acres": 3,
       "pool": true,
       "poolDetail": "Built-In, Gunite Construction",
       "yearBuilt": null,
@@ -265,10 +242,8 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-11-06",
-      "lastSeen": "2026-11-06",
-      "isNew": true,
-      "newThisRun": true,
-      "flag": "new"
+      "lastSeen": "2026-11-08",
+      "flag": null
     },
     {
       "id": "4071-voyager-way-shingle-springs",
@@ -289,7 +264,7 @@
         }
       ],
       "beds": 4,
-      "baths": 3.0,
+      "baths": 3,
       "fullBaths": 3,
       "partialBaths": null,
       "sqft": 3132,
@@ -320,7 +295,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-08-13",
-      "lastSeen": "2026-11-06",
+      "lastSeen": "2026-11-08",
       "flag": null
     },
     {
@@ -364,7 +339,7 @@
       "summary": "This is an exceptional property, fully permitted & short-term rental permitted (Airbnb & other short-term rentals). Welcome to this majestic luxury estate situated on over 16.74 acres. The large lot provides opportunities for an additional home. Positioned atop the serene Bedford Canyon, this estate boasts sweeping panoramic views that capture the natural beauty of sunrises, sunsets & stargazing. ",
       "notes": "",
       "firstSeen": "2026-10-02",
-      "lastSeen": "2026-11-06",
+      "lastSeen": "2026-11-08",
       "priceHistory": [
         {
           "date": "2026-10-02",
@@ -373,7 +348,7 @@
       ],
       "secondSource": {
         "name": "the MLSListings.com MLS sheet",
-        "checkedOn": "2026-11-06",
+        "checkedOn": "2026-11-08",
         "url": "https://www.mlslistings.com/property/BE41150059",
         "confirmed": [
           "price",
@@ -404,7 +379,7 @@
         }
       ],
       "beds": 4,
-      "baths": 3.0,
+      "baths": 3,
       "fullBaths": 3,
       "partialBaths": null,
       "sqft": 3400,
@@ -435,7 +410,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-11-06",
+      "lastSeen": "2026-11-08",
       "flag": null
     },
     {
@@ -465,7 +440,7 @@
         }
       ],
       "beds": 4,
-      "baths": 3.0,
+      "baths": 3,
       "fullBaths": 3,
       "partialBaths": null,
       "sqft": 2506,
@@ -496,7 +471,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-11-06",
+      "lastSeen": "2026-11-08",
       "flag": null
     },
     {
@@ -518,11 +493,11 @@
         }
       ],
       "beds": 4,
-      "baths": 3.0,
+      "baths": 3,
       "fullBaths": 3,
       "partialBaths": null,
       "sqft": 2780,
-      "acres": 5.0,
+      "acres": 5,
       "pool": true,
       "poolDetail": "Built-In, Gunite Construction",
       "yearBuilt": "1971",
@@ -549,7 +524,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-09-08",
-      "lastSeen": "2026-11-06",
+      "lastSeen": "2026-11-08",
       "flag": null
     },
     {
@@ -593,7 +568,7 @@
       "summary": "Welcome to a property that doesn't ask you to choose between a home, a retreat, and country living - you get all three. Set among the Placerville foothills, 3538 Wildwood Lane is a place to swim, garden, gather and spread out. The two-story main home offers a private ground-level guest suite with its own entrance and full bath, plus a two-car garage and full basement access. Upstairs, the living s",
       "notes": "",
       "firstSeen": "2026-08-27",
-      "lastSeen": "2026-11-06",
+      "lastSeen": "2026-11-08",
       "priceHistory": [
         {
           "date": "2026-08-27",
@@ -610,7 +585,7 @@
       ],
       "secondSource": {
         "name": "the MLSListings.com MLS sheet",
-        "checkedOn": "2026-11-06",
+        "checkedOn": "2026-11-08",
         "url": "https://www.mlslistings.com/property/ME226107286",
         "confirmed": [
           "price",
@@ -749,7 +724,7 @@
       "baths": 4,
       "fullBaths": 4,
       "halfBaths": 1,
-      "acres": 5.0,
+      "acres": 5,
       "sqft": 4313,
       "mls": "226129641",
       "status": "Pending",
@@ -765,7 +740,7 @@
       "baths": 4,
       "fullBaths": 4,
       "halfBaths": 1,
-      "acres": 5.0,
+      "acres": 5,
       "sqft": 3210,
       "mls": "226068369",
       "status": "Active",
