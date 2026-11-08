@@ -1790,7 +1790,10 @@ and a second composer that has to be kept in step with the first will drift.
   headless Chromium installed here — Chromium's own `User-Agent`, no spoof. MetroList-only, so it
   corroborates and does **not** close `coverageGap`. `--stamp` records
   `dataQuality.poolFilteredCrossCheck` and refuses to stamp when the rows scraped disagree with the
-  page's own result count. Never touches the board.
+  page's own result count. Never touches the board. **The one script here with an external
+  dependency** — everything else in this repo is Node/Python stdlib and there is no `package.json`.
+  The cloud runner ships Playwright and a matching Chromium preinstalled; on a host without them it
+  exits 2 with that said, and the page just omits the row.
 - **`mls-compose.py`** — composes the board from `mls-enumeration.json` alone, for runs that
   cannot spoof a `User-Agent`. Needs a `--foreign` argument per other-MLS listing naming the live
   status and price read this run; one without an argument is dropped rather than carried.

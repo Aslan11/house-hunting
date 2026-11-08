@@ -220,7 +220,21 @@ async function detail(browser, mls) {
 
 async function main() {
   const stamp = process.argv.includes('--stamp');
-  const { chromium } = require('playwright');
+  // The only external dependency in this repo — every other script is Node/Python stdlib, and
+  // there is no package.json. The cloud runner this tracker runs on ships Playwright and a
+  // matching Chromium preinstalled and resolvable from any directory, which is why this route is
+  // available at all. Fail with that said out loud rather than with a bare MODULE_NOT_FOUND, so a
+  // run on a host without it knows this is a missing *host* capability and not a broken script —
+  // and knows the rest of the pipeline is unaffected, because nothing else imports it.
+  let chromium;
+  try {
+    ({ chromium } = require('playwright'));
+  } catch (e) {
+    console.error('playwright is not available on this host, so the search rows cannot be '
+      + 'rendered. This cross-check is optional: skip it and the page simply omits the '
+      + '"Ask for the pool directly" row. Nothing else in the pipeline needs it.');
+    process.exit(2);
+  }
   const boardPath = path.join(HERE, 'listings.json');
   const board = JSON.parse(fs.readFileSync(boardPath, 'utf8'));
   const tracked = new Set();
