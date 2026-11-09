@@ -4,6 +4,33 @@ Automated house-hunt tracker for **Shingle Springs**, **Rescue**, and **Placervi
 
 Published from the `gh-pages` branch.
 
+## Start here: `gh-pages` is the trunk
+
+There is no `main` or `master` on this repo. **`gh-pages` holds both the published page and the
+entire pipeline**, and it is the only branch that is current. Before doing anything else:
+
+```bash
+git fetch origin gh-pages && git checkout -B <your-branch> origin/gh-pages
+```
+
+Recorded **2026-11-09**, because that run did not start there. A scheduled run gets a working
+branch cut from whatever commit the clone lands on, and that one was based on the **2026-07-26**
+state — four months and a hundred-odd commits stale, back when the board had six off-market
+properties, no verification gate and a 5BR minimum. Working forward from it, the run rediscovered
+MetroListPRO from scratch, rebuilt a worse copy of `mls-enumerate.py` + `mls-compose.py`, and was
+one `git push` away from replacing this board with a nine-match page that had seven matches on it.
+
+What it would have destroyed is the part worth noting: the two **foreign-MLS** cards. A
+from-scratch MetroList enumeration cannot see 2520 Bedford Ave (MAXEBRDI) or 3538 Wildwood Ln
+(BAREIS), so a rebuild drops them silently and *looks* complete — the same blind spot
+*"'Not found' is not 'does not match'"* describes, arriving this time as a whole-repo regression
+rather than a single bad row. The rebuild also re-derived the MetroListPRO route independently and
+got the same 7 MetroList matches at the same prices, which is real corroboration and also exactly
+what made the regression look like a success.
+
+So: **check what `gh-pages` already does before building anything**, and never force-push this
+board from a branch you have not first rebased onto it.
+
 ## Criteria
 
 | Requirement | Value |
