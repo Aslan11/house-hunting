@@ -343,7 +343,7 @@ def main():
         "boards. If it ran, it overwrites this note with what it found."
         if foreign_src else "")
 
-    json.dump(board, open("listings.json", "w"), indent=2)
+    json.dump(board, open("listings.json", "w"), indent=2, ensure_ascii=False)
     print(f'{len(listings)} active matches, {len(pending)} pending, '
           f'{len(summary["new"])} new, {len(summary["priceChanges"])} price changes, '
           f'{len(summary["dropped"])} dropped, {len(poolless)} pool-less, {len(near)} near misses.')

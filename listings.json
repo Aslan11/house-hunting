@@ -13,19 +13,19 @@
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-11-09",
-  "previousRun": "2026-11-08",
+  "lastRun": "2026-11-10",
+  "previousRun": "2026-11-09",
   "source": {
     "name": "MetroListPRO (MetroList MLS of record), complete city enumeration",
     "method": "Enumerated every active and pending residential record in the three cities from the MetroListPRO city indexes and read each detail page's Status, Has a Pool, Lot Size in Acres and full-bath fields. No User-Agent spoofing: MetroListPRO answers an ordinary request, which is why this route is available to every run. Listings on another MLS were each confirmed against a live record named in foreignVerifiedBy.",
-    "inventoryScanned": 373,
-    "activeScanned": 322,
+    "inventoryScanned": 375,
+    "activeScanned": 324,
     "pendingScanned": 51,
-    "passedBedsBathsPrice": 29,
+    "passedBedsBathsPrice": 30,
     "verifiedActiveMatches": 7,
     "pendingMatches": 0,
-    "mlsVerifiedOn": "2026-11-09",
-    "mlsVerifiedCount": 7,
+    "mlsVerifiedOn": "2026-11-10",
+    "mlsVerifiedCount": 8,
     "mlsForeignSource": [
       {
         "mls": "41150059",
@@ -52,20 +52,20 @@
     }
   },
   "dataQuality": {
-    "verifiedActiveListings": 9,
+    "verifiedActiveListings": 10,
     "coverageGap": "Closed for this run. MetroListPRO enumerates MetroList only, so it is blind to a new listing on another MLS. The Coldwell Banker IDX cross-check (cb-crosscheck.py, plain request, no User-Agent spoof) carries other boards — it sees both known foreign listings, including 3538 Wildwood Ln, which MetroListPRO has never indexed — and it swept 408 records across the three cities this run, finding no qualifying candidate the board did not already track. It is a cross-check, not the board: it has no structured pool field, its bath count cannot resolve the 3-full-bath minimum, and it carries stale ACTIVE rows, so the MLS of record still decides every promotion.",
     "idxCrossCheck": {
-      "ranOn": "2026-11-09",
+      "ranOn": "2026-11-10",
       "source": "Coldwell Banker IDX (coldwellbanker.com), plain request, no UA spoof",
       "rowsScanned": 408,
-      "clearedBedsBathsPrice": 42,
-      "poolAndAcreageHits": 9,
+      "clearedBedsBathsPrice": 43,
+      "poolAndAcreageHits": 10,
       "missingFromBoard": [],
       "note": "Carries non-MetroList boards, so unlike the MetroList mirrors it can see a new foreign-MLS listing. Pool is read from agent remarks and reviewed by hand; combined baths cannot resolve the 3-full-bath minimum; and this feed carries stale ACTIVE rows, so the MLS of record still decides."
     },
     "multiUnitNote": "4800 Abbey Road (MLS 226133530) is on the board and reads 4 bedrooms / 4 full baths on MetroListPRO as of 2026-11-08, so the note this key used to carry — that its bed field read 3 and the enumerator therefore rejected it — no longer describes the record. The listing agent corrected it on 2026-11-06 (README \"A near miss can become a match without anything new being listed\"). The parser limitation it documented is NOT fixed and is the part worth keeping: this is a 2-houses-on-one-lot record with BOTH a populated whole-home bed field and a unit table, a shape classify() in mls-enumerate.py cannot see — it calls the record residential and qualifies() then judges it on the single bed field alone. It happens to pass now because the corrected field passes. The next record of this shape with an understated bed field will be rejected the same silent way.",
     "poolFilteredCrossCheck": {
-      "ranOn": "2026-11-09",
+      "ranOn": "2026-11-10",
       "source": "RealGeeks MetroList IDX (sellingnortherncalifornia.com), server-side pool filter, no UA spoof",
       "countyRowsWithPool": 14,
       "inTargetCities": 8,
@@ -75,7 +75,9 @@
     }
   },
   "runSummary": {
-    "new": [],
+    "new": [
+      "4770 Feldspar Lane, Placerville"
+    ],
     "priceChanges": [],
     "statusChanges": [],
     "relisted": [],
@@ -140,7 +142,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-11-06",
-      "lastSeen": "2026-11-09",
+      "lastSeen": "2026-11-10",
       "flag": null
     },
     {
@@ -193,7 +195,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-11-09",
+      "lastSeen": "2026-11-10",
       "flag": null
     },
     {
@@ -242,7 +244,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-11-06",
-      "lastSeen": "2026-11-09",
+      "lastSeen": "2026-11-10",
       "flag": null
     },
     {
@@ -295,7 +297,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-08-13",
-      "lastSeen": "2026-11-09",
+      "lastSeen": "2026-11-10",
       "flag": null
     },
     {
@@ -339,7 +341,7 @@
       "summary": "This is an exceptional property, fully permitted & short-term rental permitted (Airbnb & other short-term rentals). Welcome to this majestic luxury estate situated on over 16.74 acres. The large lot provides opportunities for an additional home. Positioned atop the serene Bedford Canyon, this estate boasts sweeping panoramic views that capture the natural beauty of sunrises, sunsets & stargazing. ",
       "notes": "",
       "firstSeen": "2026-10-02",
-      "lastSeen": "2026-11-09",
+      "lastSeen": "2026-11-10",
       "priceHistory": [
         {
           "date": "2026-10-02",
@@ -348,7 +350,7 @@
       ],
       "secondSource": {
         "name": "the MLSListings.com MLS sheet",
-        "checkedOn": "2026-11-09",
+        "checkedOn": "2026-11-10",
         "url": "https://www.mlslistings.com/property/BE41150059",
         "confirmed": [
           "price",
@@ -410,7 +412,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-11-09",
+      "lastSeen": "2026-11-10",
       "flag": null
     },
     {
@@ -471,7 +473,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-11-09",
+      "lastSeen": "2026-11-10",
       "flag": null
     },
     {
@@ -524,7 +526,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-09-08",
-      "lastSeen": "2026-11-09",
+      "lastSeen": "2026-11-10",
       "flag": null
     },
     {
@@ -568,7 +570,7 @@
       "summary": "Welcome to a property that doesn't ask you to choose between a home, a retreat, and country living - you get all three. Set among the Placerville foothills, 3538 Wildwood Lane is a place to swim, garden, gather and spread out. The two-story main home offers a private ground-level guest suite with its own entrance and full bath, plus a two-car garage and full basement access. Upstairs, the living s",
       "notes": "",
       "firstSeen": "2026-08-27",
-      "lastSeen": "2026-11-09",
+      "lastSeen": "2026-11-10",
       "priceHistory": [
         {
           "date": "2026-08-27",
@@ -585,7 +587,7 @@
       ],
       "secondSource": {
         "name": "the MLSListings.com MLS sheet",
-        "checkedOn": "2026-11-09",
+        "checkedOn": "2026-11-10",
         "url": "https://www.mlslistings.com/property/ME226107286",
         "confirmed": [
           "price",
@@ -600,6 +602,57 @@
         "poolFeatures": "Cover, Gunite, In Ground, Pool - Yes, Sweep",
         "board": "ME"
       }
+    },
+    {
+      "id": "4770-feldspar-lane-placerville",
+      "address": "4770 Feldspar Lane",
+      "city": "Placerville",
+      "zip": "95667",
+      "mls": "226119678",
+      "mlsSource": "MetroList",
+      "currentPrice": 789000,
+      "priceHistory": [
+        {
+          "date": "2026-11-10",
+          "price": 789000
+        }
+      ],
+      "beds": 4,
+      "baths": 3,
+      "fullBaths": 3,
+      "partialBaths": null,
+      "sqft": 2512,
+      "acres": 5,
+      "pool": true,
+      "poolDetail": "Built-In",
+      "yearBuilt": 1992,
+      "propertyType": "SFR",
+      "view": "Yes",
+      "water": "Public",
+      "sewer": "Septic",
+      "garageSpaces": null,
+      "lat": null,
+      "lng": null,
+      "listedOn": null,
+      "summary": "Tucked away in Gold Hill on five golden acres, this single story ranch style home offers the kind of setting that makes you want to slow down and stay a while. Surrounded by rolling, oak studded terrain with beautiful valley and mountain views, the property combines privacy, space and effortless indoor/outdoor living. At the heart of the home, a vaulted great room is filled with natural light from a dramatic wall of arched windows that frame the landscape beyond. A gas stove adds warmth and character, while French doors open to the view over the deck. The kitchen features granite countertops, light wood cabinetry, a tumbled stone backsplash and gas cooktop, with an adjoining dining area. The spacious primary suite offers its own peaceful retreat, including a freestanding soaking tub beneath a sunlit corner window, separate walk-in shower and dual sink vanity. Three additional bedrooms include a Jack n Jill set up and one near the garage entry providing plenty of flexibility for family and/or guests. There is a dedicated office/den as well. Go outside and see how the property truly shines. A fenced in-ground pool and generous patio create a fabulous setting for summer afternoons and gatherings, all against a backdrop of sweeping valley, mountain views and sunsets. Natural landscaping, a welcoming covered front porch and five acres provide room to enjoy the outdoors without sacrificing privacy. There is plenty of room here to park all the things necessary to enjoy foothill life; boat, RV or trailers. The land is usable with lots of space to plant a garden and for the chicken coop and whatever else your heart desires. This serene property brings together comfortable single story living, beautiful surroundings and the space to enjoy it all right in the heart of Gold HIll.",
+      "notes": null,
+      "photos": [
+        "https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/10/01/724e3dda-02f0-4894-aa5a-0ad7c4ca40be.jpg",
+        "https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/10/01/ca1a85b9-87ad-418d-bfbf-023a4e72ed8e.jpg",
+        "https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/10/01/3ea83ffa-c81b-43b3-85b5-7a65fafc2be6.jpg",
+        "https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/10/01/e28a7f6c-6915-4649-98f3-ff2eefe1a374.jpg",
+        "https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/10/01/a36062d8-592f-4789-9cf6-48503cd4185f.jpg",
+        "https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/10/01/b2515688-6863-4399-8833-32f97efa76eb.jpg"
+      ],
+      "url": "https://www.metrolistpro.com/homes/2/6/4770-FELDSPAR-LANE-PLACERVILLE-CA-95667/226119678",
+      "gallery": "https://www.metrolistpro.com/homes/2/6/x/226119678",
+      "status": "match",
+      "mlsStatus": "Active",
+      "firstSeen": "2026-11-10",
+      "lastSeen": "2026-11-10",
+      "isNew": true,
+      "newThisRun": true,
+      "flag": "new"
     }
   ],
   "pending": [],

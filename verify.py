@@ -236,7 +236,7 @@ if not disagreed and rows:
         if lst.get("mls") not in alien:
             lst.pop("secondSource", None)
 
-    json.dump(d, open("listings.json", "w"), indent=2)
+    json.dump(d, open("listings.json", "w"), indent=2, ensure_ascii=False)
     print(f"\n{clean} of {len(rows)} records agreed with the MLS of record"
           + (f"; {len(awaiting)} not yet indexed and flagged on the card" if awaiting else "")
           + (f"; {len(foreign)} in another MLS and unverifiable here" if foreign else "")

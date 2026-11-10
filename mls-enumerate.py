@@ -375,7 +375,7 @@ def main():
             "excludedByType": kinds["non-residential"] + kinds["multi-unit"],
             "additionalMatchesFound": len(new),
         }
-        json.dump(board, open("listings.json", "w"), indent=2)
+        json.dump(board, open("listings.json", "w"), indent=2, ensure_ascii=False)
         print("Recorded under dataQuality.independentEnumeration.")
 
 

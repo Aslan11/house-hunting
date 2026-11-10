@@ -221,7 +221,7 @@ def main():
               f"({r.get('board')}) | confirmed: {' '.join(agreed) or 'nothing'}"
               + (f" | DISAGREES: {' '.join(disagreed)}" if disagreed else ""))
 
-    json.dump(board, open("listings.json", "w"), indent=2)
+    json.dump(board, open("listings.json", "w"), indent=2, ensure_ascii=False)
     print(f"\nStamped secondSource on {stamped} of {len(targets)} foreign-MLS listing(s)"
           + (f"; {skipped} already had one." if skipped else "."))
 

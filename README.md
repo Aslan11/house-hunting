@@ -31,6 +31,25 @@ what made the regression look like a success.
 So: **check what `gh-pages` already does before building anything**, and never force-push this
 board from a branch you have not first rebased onto it.
 
+It happened again on **2026-11-10** — same stale `2026-07-26` base, same clone, so this is the
+default a scheduled run gets rather than a one-off. The warning above worked, but only because the
+run checked `git ls-remote` before writing anything, and it is worth being honest about how close
+that was: by the time it looked, it had already spent most of a session re-deriving an enumeration
+route from scratch (Trulia price bands for discovery, `about.mlslistings.com` sheets for
+verification) against a board that had the answer. That independent route did corroborate the board
+exactly — same 7 MetroList matches at the same prices, `Pool - No` on both 1777 Carl Rd and 5681
+Honeycomb Ln, and it found **4770 Feldspar Lane** too — which is reassuring about the pipeline and
+says nothing good about the order of operations.
+
+The cheap check is the first command of the run, before any research:
+
+```bash
+git ls-remote origin refs/heads/gh-pages && git log -1 --format=%cd HEAD
+```
+
+Two dates that far apart mean stop and rebase. Also worth knowing for next time: a `gh-pages`
+README section that says "start here" cannot be read by a run that never fetched `gh-pages`.
+
 ## Criteria
 
 | Requirement | Value |
@@ -1056,6 +1075,35 @@ rewrites `full.webp` to `m23cc.webp` and leaves any URL that doesn't match that 
 photos on the 2026-08-28 board had the rendition; if one ever doesn't, the card's `onerror` handler
 uncovers the "View photos" link behind it rather than leaving a hole.
 
+### A no-spoof run had no photo source at all, and the card showed it
+
+`scrape.js` is what fills `photos`, and it needs the spoofed `User-Agent` the Coldwell Banker
+*detail* pages require. On the no-spoof route (`mls-enumerate.py` → `mls-compose.py`) nothing did,
+so **2026-11-10**'s new card rendered with an empty photo tile and no description beside nine cards
+that had both. `mls-compose.py` is right not to write those fields — they are display-only and not
+the gate's business — but "not the gate's business" is not the same as "nobody's".
+
+Two routes were measured before picking one:
+
+- **The Coldwell Banker city index** (`cb-crosscheck.py` already fetches it, plain request) carries
+  exactly **one** photo per record, on `images-listings.coldwellbanker.com` — not the ~20-45 the
+  detail page's JSON-LD gives. One photo is not a gallery.
+- **MetroListPRO's detail page** carries the full set on `mediarem.metrolist.net`, answers an
+  ordinary request, and hotlinks cleanly: all six URLs returned 200 on a `GET`.
+
+So `mlp-enrich.py` reads the second. One rendition caveat, the mirror image of the `m23cc` lesson
+above: `mediarem` has **no small rendition**. `bigphoto` is the only path that resolves —
+`medphoto`, `smallphoto`, `thumbnail` and friends all 404 — and the images run 160-330 KB each, so a
+MetroListPRO-sourced card is roughly 1.5 MB against ~300 KB for a `cbhomes` one. Acceptable for one
+card on a private page; if several accumulate, either cap the count for `mediarem` cards or fill
+them from `scrape.js` on the next spoofed run.
+
+Document order matters more than it looks. The listing's primary photo is the first in the markup,
+so the photos are read in document order and de-duplicated in place. An earlier draft of this used
+`sorted(set(...))` while exploring the page and put an arbitrary interior shot on the card — sorting
+by a UUID filename is sorting by nothing. `agentpics` URLs on the same host are the listing agent's
+headshot, not the property, and are excluded by path.
+
 ### Pin the CDN host, or every diff is noise
 
 The feed serves the same photo from `m.cbhomes.com` and `m1.cbhomes.com` at random — byte-identical,
@@ -1078,6 +1126,29 @@ looks at twice.** Normalise anything that varies without meaning.
 
 MLS photos are the copyright of the listing brokerage. Fine for a private hunting page; don't
 republish more broadly.
+
+### The same noise, one encoding layer down: em-dashes flipped on every run
+
+Found **2026-11-10**, and it is the "normalise anything that varies without meaning" rule applied to
+the file rather than to a URL. Every Python writer here called `json.dump(..., indent=2)`, which
+defaults to `ensure_ascii=True` and escapes each `—` in a `notes` or `coverageGap` string to
+`—`. `rg-crosscheck.js` writes the same file with `JSON.stringify`, which does not escape.
+
+Both are valid JSON and both load identically, so nothing ever failed. What they produced was a
+diff that depended on **which script happened to write last**: a run ending on `rg-crosscheck.js`
+left literal dashes, a run ending on a Python stamp left escapes, and the long prose values in
+`dataQuality` flipped wholesale between the two. That is a dozen-plus changed lines of pure noise
+sitting in the same commit as the real change, which is the exact cover this repo's review model
+(read the run diff) cannot afford.
+
+Every Python writer of `listings.json` now passes `ensure_ascii=False`, matching what the one JS
+writer already did: `mls-compose.py`, `cb-crosscheck.py`, `mlsl-verify.py`, `verify.py`,
+`redfin-csv.py`, `mls-enumerate.py`, `mlp-enrich.py`. The 2026-11-10 diff went from 123 changed
+lines to the dates, four counters and the one new card.
+
+The general shape, since this is the second time it has shown up: **two writers of the same file
+must agree on its formatting, or the file's diff reports the pipeline's execution order instead of
+its content.**
 
 ### City-keyed enumeration is blind to the other town in the ZIP
 
@@ -1438,8 +1509,14 @@ python3 mls-compose.py --foreign 41150059=Active:1275000 \
 python3 mlsl-verify.py --refresh                            # 3. stamp the foreign-MLS reads
 python3 cb-crosscheck.py --stamp                            # 4. cover the other boards
 node rg-crosscheck.js --stamp                               # 4b. corroborate, pool-filtered
+python3 mlp-enrich.py                                       # 4c. photos + remarks for new cards
 node build.js                                               # 5. render
 ```
+
+Step 4c is new on 2026-11-10 and only does work when the run composed a card this route cannot
+illustrate — see *"A no-spoof run had no photo source at all"* under **Photos**. It writes display
+fields only, so it is safe to run on every pass; with nothing to fill it prints `nothing to enrich`
+and exits.
 
 Step 4b is new on 2026-11-08 and is optional: it corroborates rather than covering a gap, and it is
 cheap (one search request plus one detail page per in-area row). Run it after step 4 and before
@@ -1824,6 +1901,13 @@ and a second composer that has to be kept in step with the first will drift.
 - **`mls-compose.py`** — composes the board from `mls-enumeration.json` alone, for runs that
   cannot spoof a `User-Agent`. Needs a `--foreign` argument per other-MLS listing naming the live
   status and price read this run; one without an argument is dropped rather than carried.
+- **`mlp-enrich.py`** — fills the display-only fields `mls-compose.py` leaves empty (photos, agent
+  remarks, year built, water, sewer) from the listing's MetroListPRO detail page, so a card composed
+  on the no-spoof route doesn't render as a blank tile. With no arguments it takes every match with
+  no photos; MLS numbers limit it to those. Gates each sheet on the MLS number appearing in its
+  `<title>`, skips non-MetroList listings outright, reads photos in **document order**, and writes
+  only display keys — nothing the criteria are judged on, so it cannot move a listing on or off
+  the board.
 - **`refresh.py`** — superseded composer, guarded so it can't be run by accident. See above.
 - **`ingest.js`** — merges listings pasted from a portal results page, applying the dedupe rules.
   Kept as a manual fallback; the scrape path above supersedes it.

@@ -366,7 +366,7 @@ def main():
                   "count cannot resolve the 3-full-bath minimum, and it carries stale ACTIVE "
                   "rows, so the MLS of record still decides every promotion.")
         with open(os.path.join(HERE, "listings.json"), "w") as fh:
-            json.dump(board, fh, indent=2)
+            json.dump(board, fh, indent=2, ensure_ascii=False)
             fh.write("\n")
         print(f"\nStamped dataQuality.idxCrossCheck ({len(records)} rows).")
     return 0

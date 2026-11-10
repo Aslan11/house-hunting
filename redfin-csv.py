@@ -290,7 +290,7 @@ def main():
                         "corroborate the board and surface something it is missing, but its "
                         "silence is not evidence a listing is gone.",
             }
-            json.dump(board, open("listings.json", "w"), indent=2)
+            json.dump(board, open("listings.json", "w"), indent=2, ensure_ascii=False)
             print("\nRecorded under dataQuality.redfinCrossCheck.")
 
     if "--json" in sys.argv:
