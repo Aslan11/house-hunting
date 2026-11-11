@@ -50,6 +50,38 @@ git ls-remote origin refs/heads/gh-pages && git log -1 --format=%cd HEAD
 Two dates that far apart mean stop and rebase. Also worth knowing for next time: a `gh-pages`
 README section that says "start here" cannot be read by a run that never fetched `gh-pages`.
 
+Third time on **2026-11-11**, same `2026-07-26` base. The run went further down the wrong road than
+either predecessor: it rebuilt `listings.json`, `build.js` and `README.md` from scratch, committed
+them, and pushed the branch — it only looked at `gh-pages` when it went to publish the page, and the
+`ls-remote` above would have caught it in one command. What saved it was that publishing *is* the
+`gh-pages` step, so the trap has a natural backstop as long as nobody force-pushes.
+
+Worth recording because the rebuild corroborated the board rather than contradicting it, which is
+the failure mode the 2026-11-09 entry warns about. Coming in blind from the Coldwell Banker IDX —
+read through the `WebFetch` tool, which is served normally where `curl` and Playwright both get the
+F5 "Request Rejected" body — it swept all 310 city-index rows, carried 48 past beds/baths/price,
+and read every one of their detail pages. It reproduced **9 of the board's 10 matches at identical
+prices, acreage and pool fields**, including both foreign-MLS cards, because the CB feed carries
+other boards. So the independent route works and agrees.
+
+The two places it came out *worse* than the board are both things the board already knew:
+
+- It counted **1234 Rising Hill W Rd** a match on the MLS's combined "3 total baths". That is
+  2 full + 1 half, and the board has had it in `nearMisses` as *"only 2 full baths"* since the
+  bedroom relaxation. `ba(comb)` in `cb-crosscheck.py` output means combined for this reason.
+- It missed **5551 Saddlehorn Road** entirely — and then, because the sweep came back without it,
+  would have published a board with no mention of a property that had been tracked since July.
+  Silently dropping a match is the same error shape as silently adding one. (It happens that
+  Saddlehorn really did leave the market this run — confirmed below — but the sweep did not
+  establish that, it just failed to see it.)
+
+The blind spot behind the miss is mechanical and applies to any `WebFetch` enumeration: **a CB city
+index runs ~200K characters and `WebFetch` returns 100K per call**, so each page needs `offset: 0`
+*and* `offset: 100000`, and a 216K page needs a third call at `offset: 200000`. The run read two
+chunks of a three-chunk page. A truncated sweep reports clean — there is no marker in the result
+saying inventory was left unread — which is why the scripted enumerators are the board and an
+ad-hoc tool sweep is only ever a cross-check.
+
 ## Criteria
 
 | Requirement | Value |

@@ -13,19 +13,19 @@
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-11-10",
-  "previousRun": "2026-11-09",
+  "lastRun": "2026-11-11",
+  "previousRun": "2026-11-10",
   "source": {
     "name": "MetroListPRO (MetroList MLS of record), complete city enumeration",
     "method": "Enumerated every active and pending residential record in the three cities from the MetroListPRO city indexes and read each detail page's Status, Has a Pool, Lot Size in Acres and full-bath fields. No User-Agent spoofing: MetroListPRO answers an ordinary request, which is why this route is available to every run. Listings on another MLS were each confirmed against a live record named in foreignVerifiedBy.",
-    "inventoryScanned": 375,
-    "activeScanned": 324,
-    "pendingScanned": 51,
+    "inventoryScanned": 371,
+    "activeScanned": 322,
+    "pendingScanned": 49,
     "passedBedsBathsPrice": 30,
     "verifiedActiveMatches": 7,
     "pendingMatches": 0,
-    "mlsVerifiedOn": "2026-11-10",
-    "mlsVerifiedCount": 8,
+    "mlsVerifiedOn": "2026-11-11",
+    "mlsVerifiedCount": 7,
     "mlsForeignSource": [
       {
         "mls": "41150059",
@@ -52,14 +52,14 @@
     }
   },
   "dataQuality": {
-    "verifiedActiveListings": 10,
-    "coverageGap": "Closed for this run. MetroListPRO enumerates MetroList only, so it is blind to a new listing on another MLS. The Coldwell Banker IDX cross-check (cb-crosscheck.py, plain request, no User-Agent spoof) carries other boards — it sees both known foreign listings, including 3538 Wildwood Ln, which MetroListPRO has never indexed — and it swept 408 records across the three cities this run, finding no qualifying candidate the board did not already track. It is a cross-check, not the board: it has no structured pool field, its bath count cannot resolve the 3-full-bath minimum, and it carries stale ACTIVE rows, so the MLS of record still decides every promotion.",
+    "verifiedActiveListings": 9,
+    "coverageGap": "Closed for this run. MetroListPRO enumerates MetroList only, so it is blind to a new listing on another MLS. The Coldwell Banker IDX cross-check (cb-crosscheck.py, plain request, no User-Agent spoof) carries other boards — it sees both known foreign listings, including 3538 Wildwood Ln, which MetroListPRO has never indexed — and it swept 406 records across the three cities this run, finding no qualifying candidate the board did not already track. It is a cross-check, not the board: it has no structured pool field, its bath count cannot resolve the 3-full-bath minimum, and it carries stale ACTIVE rows, so the MLS of record still decides every promotion.",
     "idxCrossCheck": {
-      "ranOn": "2026-11-10",
+      "ranOn": "2026-11-11",
       "source": "Coldwell Banker IDX (coldwellbanker.com), plain request, no UA spoof",
-      "rowsScanned": 408,
+      "rowsScanned": 406,
       "clearedBedsBathsPrice": 43,
-      "poolAndAcreageHits": 10,
+      "poolAndAcreageHits": 9,
       "missingFromBoard": [],
       "note": "Carries non-MetroList boards, so unlike the MetroList mirrors it can see a new foreign-MLS listing. Pool is read from agent remarks and reviewed by hand; combined baths cannot resolve the 3-full-bath minimum; and this feed carries stale ACTIVE rows, so the MLS of record still decides."
     },
@@ -75,13 +75,13 @@
     }
   },
   "runSummary": {
-    "new": [
-      "4770 Feldspar Lane, Placerville"
-    ],
+    "new": [],
     "priceChanges": [],
     "statusChanges": [],
     "relisted": [],
-    "dropped": [],
+    "dropped": [
+      "5551 Saddlehorn Road"
+    ],
     "poollessChanges": {
       "added": [],
       "priceChanges": [],
@@ -142,7 +142,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-11-06",
-      "lastSeen": "2026-11-10",
+      "lastSeen": "2026-11-11",
       "flag": null
     },
     {
@@ -195,7 +195,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-11-10",
+      "lastSeen": "2026-11-11",
       "flag": null
     },
     {
@@ -244,7 +244,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-11-06",
-      "lastSeen": "2026-11-10",
+      "lastSeen": "2026-11-11",
       "flag": null
     },
     {
@@ -297,7 +297,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-08-13",
-      "lastSeen": "2026-11-10",
+      "lastSeen": "2026-11-11",
       "flag": null
     },
     {
@@ -341,7 +341,7 @@
       "summary": "This is an exceptional property, fully permitted & short-term rental permitted (Airbnb & other short-term rentals). Welcome to this majestic luxury estate situated on over 16.74 acres. The large lot provides opportunities for an additional home. Positioned atop the serene Bedford Canyon, this estate boasts sweeping panoramic views that capture the natural beauty of sunrises, sunsets & stargazing. ",
       "notes": "",
       "firstSeen": "2026-10-02",
-      "lastSeen": "2026-11-10",
+      "lastSeen": "2026-11-11",
       "priceHistory": [
         {
           "date": "2026-10-02",
@@ -350,7 +350,7 @@
       ],
       "secondSource": {
         "name": "the MLSListings.com MLS sheet",
-        "checkedOn": "2026-11-10",
+        "checkedOn": "2026-11-11",
         "url": "https://www.mlslistings.com/property/BE41150059",
         "confirmed": [
           "price",
@@ -365,55 +365,6 @@
         "poolFeatures": "In Ground, Spa/Hot Tub",
         "board": "BE"
       }
-    },
-    {
-      "id": "5551-saddlehorn-road-shingle-springs",
-      "address": "5551 Saddlehorn Road",
-      "city": "Shingle Springs",
-      "zip": "95682",
-      "mls": "226083864",
-      "mlsSource": "MetroList",
-      "currentPrice": 1200000,
-      "priceHistory": [
-        {
-          "date": "2026-07-26",
-          "price": 1200000
-        }
-      ],
-      "beds": 4,
-      "baths": 3,
-      "fullBaths": 3,
-      "partialBaths": null,
-      "sqft": 3400,
-      "acres": 10.11,
-      "pool": true,
-      "poolDetail": "Built-In",
-      "yearBuilt": "1988",
-      "propertyType": "SFR",
-      "view": null,
-      "water": "Well",
-      "sewer": "Septic System",
-      "garageSpaces": "3",
-      "lat": 38.6025,
-      "lng": -120.9874,
-      "listedOn": "2026-07-03",
-      "summary": "Just minutes from town yet worlds away, this 10 acre sanctuary delivers the ultimate retreat lifestyle. Step inside to discover a beautifully updated home with 4 bedrooms, 3 baths, and an inviting upstairs game room complete with a wet bar  perfect for gatherings. The renovated kitchen shines with quartz counters, stainless appliances, and beautiful white cabinetry, flowing seamlessly into the fam",
-      "notes": "",
-      "photos": [
-        "https://m.cbhomes.com/p/371/226083864/245D9C20c9f74Ec/m23cc.webp",
-        "https://m.cbhomes.com/p/371/226083864/881f2d640421423/m23cc.webp",
-        "https://m.cbhomes.com/p/371/226083864/762EbF4a2F284A1/m23cc.webp",
-        "https://m.cbhomes.com/p/371/226083864/BA8E193B566b4d5/m23cc.webp",
-        "https://m.cbhomes.com/p/371/226083864/5BB5D4722f84410/m23cc.webp",
-        "https://m.cbhomes.com/p/371/226083864/A7bb3FBB35924D2/m23cc.webp"
-      ],
-      "url": "https://www.metrolistpro.com/homes/2/6/5551-SADDLEHORN-ROAD-SHINGLE-SPRINGS-CA-95682/226083864",
-      "gallery": "https://www.coldwellbankerhomes.com/ca/shingle-springs/5551-saddlehorn-rd/pid_72318162/",
-      "status": "match",
-      "mlsStatus": "Active",
-      "firstSeen": "2026-07-26",
-      "lastSeen": "2026-11-10",
-      "flag": null
     },
     {
       "id": "3720-four-springs-drive-rescue",
@@ -473,7 +424,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-11-10",
+      "lastSeen": "2026-11-11",
       "flag": null
     },
     {
@@ -526,7 +477,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-09-08",
-      "lastSeen": "2026-11-10",
+      "lastSeen": "2026-11-11",
       "flag": null
     },
     {
@@ -570,7 +521,7 @@
       "summary": "Welcome to a property that doesn't ask you to choose between a home, a retreat, and country living - you get all three. Set among the Placerville foothills, 3538 Wildwood Lane is a place to swim, garden, gather and spread out. The two-story main home offers a private ground-level guest suite with its own entrance and full bath, plus a two-car garage and full basement access. Upstairs, the living s",
       "notes": "",
       "firstSeen": "2026-08-27",
-      "lastSeen": "2026-11-10",
+      "lastSeen": "2026-11-11",
       "priceHistory": [
         {
           "date": "2026-08-27",
@@ -587,7 +538,7 @@
       ],
       "secondSource": {
         "name": "the MLSListings.com MLS sheet",
-        "checkedOn": "2026-11-10",
+        "checkedOn": "2026-11-11",
         "url": "https://www.mlslistings.com/property/ME226107286",
         "confirmed": [
           "price",
@@ -649,10 +600,8 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-11-10",
-      "lastSeen": "2026-11-10",
-      "isNew": true,
-      "newThisRun": true,
-      "flag": "new"
+      "lastSeen": "2026-11-11",
+      "flag": null
     }
   ],
   "pending": [],
@@ -900,7 +849,17 @@
       "missing": "only 0.205 acres"
     }
   ],
-  "dropped": [],
+  "dropped": [
+    {
+      "address": "5551 Saddlehorn Road",
+      "city": "Shingle Springs",
+      "mls": "226083864",
+      "lastPrice": 1200000,
+      "firstSeen": "2026-07-26",
+      "droppedOn": "2026-11-11",
+      "reason": "Gone from the MetroList active and pending indexes, and its own MetroListPRO detail page (226083864) now answers 404 - a departure from its board of record, not silence from a mirror. Corroborated the same day by the Coldwell Banker IDX sweep (406 records across the three cities), which does not carry it either. Last seen Active at $1,200,000 on 2026-11-10; 10.11 acres with a built-in pool, tracked since 2026-07-26. Two independent sources agree it left the market, so it is dropped rather than held."
+    }
+  ],
   "rejected": [
     {
       "address": "4262 Cameron Rd, Cameron Park",
