@@ -181,12 +181,34 @@ const fresh = listings.filter((l) => l.isNew);
 // top section, and the standing sections carry only what was already on the board last run.
 const heldActive = activeList.filter((l) => !l.isNew);
 const heldPending = pendingList.filter((l) => !l.isNew);
-const dropped = data.dropped || [];
+/* `dropped` is a cumulative ledger in listings.json — mls-compose.py seeds it from the stored
+   board so a departure is remembered past the run that saw it (README "A drop record with a
+   one-run memory"). The page must not read that ledger as this run's news: on 2026-11-12 the
+   2026-11-11 departure of 5551 Saddlehorn Road rendered under "Removed this run (1)" and in the
+   "1 Removed" headline stat, on a run that removed nothing. Keep the memory, scope the claim. */
+const droppedAll = data.dropped || [];
+const dropped = droppedAll.filter((d) => d.droppedOn === data.lastRun);
+const droppedEarlier = droppedAll.filter((d) => d.droppedOn !== data.lastRun);
 const nearMiss = data.nearMisses || [];
 const priceMoves = (data.runSummary && data.runSummary.priceChanges) || [];
 // A property crossing between the active board and the pending list counts as movement.
 // Without this the banner reports "Nothing moved" on a run where the active count fell.
 const statusMoves = (data.runSummary && data.runSummary.statusChanges) || [];
+/* `to`/`from` carry the MLS's own spelling — `Active`, `Pending`, `Contingent - Show` — because
+   mls-compose.py copies `mlsStatus` straight through. This used to test `s.to === 'pending'`, a
+   value no composer has ever written, so EVERY status change took the else branch and a property
+   going under contract was announced as "back on the active board … the deal appears to have
+   fallen through" — the exact opposite of what happened. Found live on 2026-11-12 on
+   4071 Voyager Way. Decide from the bucket the composer actually put the listing in, not from a
+   status string's spelling: that is the same reasoning status_key() encodes one level up, and it
+   cannot drift as the MLS invents new status words. */
+const pendingMlsIds = new Set((data.pending || []).map((l) => String(l.mls)));
+const activeMlsIds = new Set((data.listings || []).map((l) => String(l.mls)));
+const wentPending = (s) => (pendingMlsIds.has(String(s.mls))
+  ? true
+  : activeMlsIds.has(String(s.mls))
+    ? false
+    : !/^(active|for sale)\b/i.test(String(s.to || '')));
 // The pool-less table moves independently of the board — a house with the right land, beds and
 // baths but no pool never touches `listings`. Before this, a run where that table gained a row,
 // cut two prices and lost one to the market still printed "Nothing moved".
@@ -299,13 +321,19 @@ const poollessSummary = poollessMoved ? `${[
 const cheapest = activeList.length ? Math.min(...activeList.map((l) => l.currentPrice)) : null;
 const mostLand = activeList.length ? Math.max(...activeList.map((l) => l.acres)) : null;
 
-// scrape.js writes dropped records as `{ address: "Street, City", priorPrice, reason, droppedOn }` —
-// city is already embedded in `address`, the price key is `priorPrice`, and there is no `mls` field
-// (a departure means the MLS record is gone). Reading `d.city`, `d.lastPrice`, `d.mls` produced
-// "Street, Cityblank | — | — | …" rows every run.
-const droppedRows = dropped.map((d) => `
-    <tr><td>${esc(d.address)}</td><td>${d.priorPrice ? money(d.priorPrice) : '—'}</td>
-        <td>${esc(d.droppedOn || '—')}</td><td>${esc(d.reason)}</td></tr>`).join('');
+/* Two composers have written this bucket with different field names: scrape.js used
+   `{ address: "Street, City", priorPrice }`, mls-compose.py writes `{ address, city, lastPrice }`.
+   Reading only one shape is what produced "Street, Cityblank | — | …" rows before; reading only
+   the other blanked the price column for every mls-compose drop. Accept both. */
+const dropRows = (rows) => rows.map((d) => {
+  const where = d.city && !String(d.address).includes(d.city) ? `${d.address}, ${d.city}` : d.address;
+  const price = d.priorPrice || d.lastPrice;
+  return `
+    <tr><td>${esc(where)}</td><td>${price ? money(price) : '—'}</td>
+        <td>${esc(d.droppedOn || '—')}</td><td>${esc(d.reason)}</td></tr>`;
+}).join('');
+const droppedRows = dropRows(dropped);
+const droppedEarlierRows = dropRows(droppedEarlier);
 
 // scrape.js writes near-miss records as `{ baths, missing, ... }`. Reading `n.fullBaths` and
 // `n.reason` rendered "undefined full ba" and an empty "Why it is not in the list" column.
@@ -582,7 +610,7 @@ const html = `<!DOCTYPE html>
         ${money(delta)}</strong> (${pct}%), ${money(p.from)} &rarr; ${money(p.to)}. It was already on
         the board, so it is listed with the standing matches below rather than as a new find.</li>`;
     }).join('\n    ')}
-    ${statusMoves.map((s) => (s.to === 'pending'
+    ${statusMoves.map((s) => (wentPending(s)
       ? `<li><strong>${esc(s.address)}, ${esc(s.city)} has gone under contract.</strong> It was on
          the active board last run and is now Sale Pending on the MLS of record. Still worth
          watching — pending sales do fall through — but it is no longer available to offer on.</li>`
@@ -658,6 +686,17 @@ re-reported as fresh finds if a stale copy of the listing turns up in a future s
 <table>
   <thead><tr><th>Property</th><th>Last price</th><th>Removed</th><th>Why removed</th></tr></thead>
   <tbody>${droppedRows}
+  </tbody>
+</table>
+</div>` : ''}
+
+${droppedEarlier.length ? `<h2>Removed on earlier runs <span class="count">(${droppedEarlier.length})</span></h2>
+<p class="sectnote">Left the market before this run. Kept so a stale copy resurfacing in a later
+search is not mistaken for a new find — not part of this run's news.</p>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Property</th><th>Last price</th><th>Removed</th><th>Why removed</th></tr></thead>
+  <tbody>${droppedEarlierRows}
   </tbody>
 </table>
 </div>` : ''}
@@ -802,7 +841,8 @@ test counts full baths only; and <strong>MetroList MLS number prefixes encode th
 <footer>
   <p>Generated from <code>listings.json</code> by <code>build.js</code>.
   ${listings.length} properties tracked &middot; ${activeList.length} active &middot;
-  ${pendingList.length} pending &middot; ${dropped.length} removed this run.
+  ${pendingList.length} pending &middot; ${dropped.length} removed this run${droppedEarlier.length
+    ? ` &middot; ${droppedEarlier.length} removed earlier` : ''}.
   Data from MetroList MLS via IDX; listing photos are the copyright of the listing brokerages and are
   hotlinked here for private use. Verify all figures with your agent before acting on them.</p>
 </footer>

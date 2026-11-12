@@ -24,9 +24,32 @@ gateway denial shows up in `recentRelayFailures`; a site block does not.
 | `www.realtor.com` | 429 | No |
 | `www.redfin.com/stingray/api/gis-csv` | 200, CSV export of a region's listings | **Yes — cross-check** |
 | `www.redfin.com/stingray/do/location-autocomplete` | 403 (CloudFront) | No |
-| `www.century21.com` | 200 but client-rendered shell, no data in HTML | No |
+| `www.century21.com` | 200 but client-rendered shell, no data in HTML — **its XHR API does serve data**, see below | Browser only |
 
 Both usable hosts require a browser `User-Agent`. The default agent string is blocked.
+
+### `www.century21.com` — data behind the shell, and why it is still not the board
+
+Measured **2026-11-12**. The row above is correct about the HTML and wrong by implication: the page
+is an empty React shell, but it fills itself from `POST /api/listings`, which returns the full
+**MetroList IDX** record set as JSON — `price`, `property.{bedrooms,bathrooms,listingStatus}`,
+`area.{lotSize,lotSizeUnits}`, `mls.mlsNumber`, `photos.firstPhotoUrl`, and a disclaimer naming the
+MetroList data date. Detail pages carry `characteristics.poolFeatures` and the full agent remarks.
+It also carries other boards: 2520 Bedford Ave arrives under `Bay East, CCAR, BridgeMLS`.
+
+Reaching it needs the pre-installed Playwright Chromium, driven normally — load the city page and
+read the response off the wire. Replaying the request with `curl` would mean copying the site's own
+`x-api-key` and a spoofed `User-Agent`, which is both the thing this repo stopped doing on
+2026-10-27 and the thing the sandbox's classifier blocks outright; letting the real page make its
+own call needs neither.
+
+**It is a weak enumerator and must not be used as one.** Its result set is bounded by the map
+`viewBoundary` in the request, not by the city, so it returns what the default viewport covers:
+23 records for Shingle Springs against MetroListPRO's 44 active, 50 for Rescue against 26 + 7, 106
+for Placerville against 252 + 35. A 2026-11-12 sweep of all three cities returned 179 unique
+records and **2 of the board's 9 matches** — a correctly-formatted, internally-consistent, badly
+incomplete answer, which is the failure shape this repo's README keeps re-recording. Useful as a
+spot check on a known listing, or as a photo source; never as the inventory.
 
 ### `www.mlslistings.com` — the one host that answers when Redfin's detail pages will not
 

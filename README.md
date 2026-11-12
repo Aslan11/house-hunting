@@ -82,6 +82,25 @@ chunks of a three-chunk page. A truncated sweep reports clean — there is no ma
 saying inventory was left unread — which is why the scripted enumerators are the board and an
 ad-hoc tool sweep is only ever a cross-check.
 
+Fourth time on **2026-11-12**, same `2026-07-26` base — so four consecutive scheduled runs have
+started from it and this is simply what the clone is, not a recurring accident. What is worth
+adding is how it was caught, because it was not the `ls-remote` above: that run went straight into
+research, found a live MetroList IDX route, swept the three cities and had a filtered candidate
+list before it ever looked at the remote. The thing that gave it away was a **`WebSearch` result
+that returned this page** — `aslan11.github.io/house-hunting` — describing matches and pool
+verdicts the run's own `listings.json` had never heard of.
+
+That is a lucky catch, and it also measures the cost of the trap precisely. The ad-hoc Century 21
+sweep that run built found **2 of the board's 9 matches**. It was not wrong about those two; it was
+blind to the other seven, and nothing in its output said so — 3 candidates from 179 records reads
+exactly like a complete thin-inventory result. A from-scratch route that corroborates the board is
+the 2026-11-09 warning; a from-scratch route that quietly sees a fifth of it is worse, because the
+board it would have replaced was the only thing that knew the difference.
+
+So the ordering lesson stands unchanged and the first command of a run is still `git ls-remote`.
+The new part is for the moment *after* that check fails to happen: **a search result naming your
+own published page is a stale-base alarm.** Stop and diff, do not reconcile.
+
 ## Criteria
 
 | Requirement | Value |
@@ -1634,6 +1653,64 @@ already written the bad "gone"; recomposing after the fix then reported Abbey Ro
 ```bash
 git checkout origin/gh-pages -- listings.json     # then re-run compose -> verify -> build
 ```
+
+#### A sixth way: the banner narrated a status change backwards
+
+Found on **2026-11-12**, live on the published page. 4071 Voyager Way went Active →
+`Contingent - Show`, and `mls-compose.py` moved it off the board into `pending` correctly. The
+banner then announced:
+
+> **4071 Voyager Way, Shingle Springs is back on the active board.** It was Sale Pending last run
+> and the MLS of record now reports it For Sale again — the deal appears to have fallen through.
+
+The exact opposite of what happened, in the one paragraph the reader trusts to say what moved.
+
+`build.js` chose between its two sentences with `s.to === 'pending'`. The composer copies
+`mlsStatus` straight through, so `to` holds the MLS's own spelling — `Active`, `Pending`,
+`Contingent - Show` — and the lowercase literal `'pending'` is a value **no composer has ever
+written**. The test could therefore only ever be false, and *every* status change, in either
+direction, took the else branch. The branch had presumably never fired before: a board that only
+ever gains pendings never exercises it, so the bug sat behind a condition that was always wrong and
+usually unvisited.
+
+This is the fourth entry in this section and the same root as the first three — *comparing how a
+source spells something instead of what it says* — but with a sharper edge, because `status_key()`
+already exists one level up for exactly this reason and `build.js` did not use it. The fix does not
+reach for a better string match: it reads the bucket the composer put the listing in
+(`data.pending` vs `data.listings`), which is a decision already made against normalised statuses
+and cannot drift as the MLS invents new status words. The status string is a fallback only for a
+listing in neither bucket.
+
+The general rule, and it is worth keeping separate from the spelling lesson: **a two-branch
+narration where one branch is unreachable is not a 50/50 bug — it is a guarantee.** When the page
+states a direction, derive it from the data that already encodes the direction.
+
+#### "Removed this run" outlived the run
+
+Same run, same section of the page. The 2026-11-12 board removed nothing, and the page published a
+**1 Removed** headline stat and a *"Removed this run (1)"* table holding 5551 Saddlehorn Road —
+which left the market on **2026-11-11** and had been reported, correctly, on that run's page.
+
+Both halves of this are defensible on their own. `mls-compose.py` seeds `dropped` from the stored
+board (`dropped = list(board.get("dropped") or [])`) so a departure is remembered past the run that
+saw it — that is the deliberate answer to *"A drop record with a one-run memory"* above, which
+argued the record should outlive one run. `build.js` then rendered that whole ledger under a
+heading that says **this run**. Memory was added underneath a claim that was scoped to the run, and
+nothing in between re-scoped it.
+
+So this is *"A summary that reported the previous run's news"* arriving through the fix for a
+different bug, which is the part worth recording: **when a bucket stops being run-scoped, every
+reader of that bucket has to be re-read.** `build.js` now filters on `droppedOn === lastRun` for
+the stat, the banner line and the "Removed this run" table, and renders the older entries in a
+separate *"Removed on earlier runs"* table — so the ledger stays visible, which is what the earlier
+entry wanted, without any of it being claimed as today's news.
+
+One more field-name drift surfaced while fixing it: the drop-row renderer read `d.priorPrice` and
+an address with the city already embedded, which is `scrape.js`'s shape. `mls-compose.py` writes
+`lastPrice` and a separate `city`, so every mls-compose drop rendered with a blank price column and
+no city — Saddlehorn's $1,200,000 was missing from the published table. The renderer accepts both
+shapes now. Same lesson as the entry above, one layer down: two producers, one consumer, and only
+one of them was ever read.
 
 #### A stamp that is never refreshed is a date the page cannot justify
 
