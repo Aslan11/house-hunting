@@ -1895,6 +1895,51 @@ The general shape is the one this repo keeps rediscovering: **a check degrades i
 something distinguishes "looked and found nothing" from "never looked."** `verify.py` and
 `mls-enumerate.py` already make that distinction; this one did not.
 
+### Two stampers in parallel, and the lost write that kept yesterday's date
+
+Recorded **2026-11-13**. `cb-crosscheck.py --stamp` and `rg-crosscheck.js --stamp` were started as
+two background jobs at the same time, to save the fifteen minutes the CB sweep takes. Both scripts
+do the same thing at the end: read `listings.json`, add their own key under `dataQuality`, write the
+whole file back. The RealGeeks job finished second, so it wrote a copy it had read **before** the CB
+job stamped — and `dataQuality.idxCrossCheck` went back to the previous run's value.
+
+What makes this one worth a section is how well it hid. The CB sweep genuinely ran, read 408 records
+and printed a correct, complete report to the terminal. The stamp it lost happened to be
+byte-identical to 2026-11-12's — same `rowsScanned: 408`, same `clearedBedsBathsPrice: 44`, same
+`poolAndAcreageHits: 9`, because the inventory had not moved. So the published page carried this
+run's real numbers under **yesterday's date**, and every number on the row was right. Only `ranOn`
+was wrong, and only a check of the local clock against the stamp showed it.
+
+That is the repo's recurring shape arriving from a new direction. The usual version is *a check
+degrades into a claim unless something distinguishes "looked and found nothing" from "never
+looked."* Here the run did look, and the page still mis-stated when — which is the same defect for a
+reader, because the whole point of the provenance table is that a date on it means a read happened
+that day. A stale date on fresh data is indistinguishable from fresh data that was never refreshed.
+
+Two rules follow:
+
+- **Run the stampers one at a time.** Every `--stamp` script is a read-modify-write of the single
+  board file and none of them lock it. The documented order in this section is sequential for
+  reasons beyond rate limits; concurrency silently drops whichever stamp lands first.
+- **Check `ranOn` against today's date before committing.** The counts can be right while the date
+  is not. `grep ranOn listings.json` is the whole check, and on a board that has not moved it is the
+  only thing that separates a cross-check that ran from one that did not.
+
+### `--help` is not a safe way to ask what a script does
+
+Same run. `mls-enumerate.py` and `mls-compose.py` parse `sys.argv` by hand and ignore anything they
+do not recognise, so `python3 mls-compose.py --help` does not print usage — it **composes the board**
+and writes `listings.json`. Worse, a compose with no `--foreign` argument is a compose that drops
+2520 Bedford Ave and 3538 Wildwood Ln, exactly as the docstring says it should. Asking two scripts
+what their arguments were therefore ran a full MetroListPRO enumeration and rewrote the board with
+the two foreign-MLS cards removed.
+
+Nothing was lost — `git checkout -- listings.json` put it back, and the enumeration it performed was
+the one the run needed anyway — but the near-miss is the familiar one: the destructive path and the
+"just tell me the usage" path are the same command. Read the docstring with `sed -n '1,40p'`, which
+is also where the `--foreign` syntax actually is. The guard `refresh.py` carries
+(`--i-know-this-is-superseded`) is the pattern worth copying if these scripts ever grow one.
+
 ### Exploratory fetches spend the same quota the pipeline needs
 
 The 2026-10-22 run started before reading this file and spent its first half probing Redfin by hand
