@@ -1,534 +1,790 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>House Hunt — Shingle Springs · Rescue · Placerville</title>
-<meta name="description" content="Verified MLS listings matching 4BR+, 3BA+, pool, 2.5+ acres, under $1.5M in Shingle Springs, Rescue and Placerville, CA.">
+<meta name="description" content="Tracked 4BR+/3BA+ homes with a pool on 2.5+ acres under $1.5M in Shingle Springs, Rescue and Placerville, CA.">
 <style>
   :root{
-    --bg:#f6f7f4; --panel:#fff; --ink:#1b2019; --muted:#5f6b60; --line:#e2e6de;
-    --accent:#2f6b45; --accent-soft:#e8f2ea; --gold:#b07d2a; --gold-soft:#fdf5e6;
-    --warn:#8a5a12; --warnbg:#fdf3e0; --okbg:#e8f2ea; --ok:#2f6b45;
-    --shadow:0 1px 2px rgba(20,30,20,.05),0 8px 24px -12px rgba(20,30,20,.18);
-    --radius:14px;
+    --bg:#f6f4f0; --card:#fff; --ink:#1c1a17; --muted:#6b665e;
+    --line:#e2ddd4; --accent:#2f6b4f; --accent-soft:#e6f0ea;
+    --new:#1d5fa8; --new-soft:#e3edf9;
+    --warn:#8a6d1f; --warn-soft:#f8f0d8; --miss:#8a4b3a; --miss-soft:#f7e7e2;
+    --tile:#ece7de;
   }
-  @media (prefers-color-scheme:dark){
-    :root:not([data-theme="light"]){
-      --bg:#141714; --panel:#1c211d; --ink:#e8ece6; --muted:#9aa89c; --line:#2b332c;
-      --accent:#7fc49a; --accent-soft:#1e2a22; --gold:#e0b367; --gold-soft:#2a2316;
-      --warn:#e0b367; --warnbg:#2a2316; --okbg:#1e2a22; --ok:#7fc49a;
-      --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -14px rgba(0,0,0,.7);
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#16181a; --card:#1f2225; --ink:#eceae6; --muted:#a09a91;
+      --line:#31363a; --accent:#7fc4a1; --accent-soft:#1e2f27;
+      --new:#8fbdec; --new-soft:#1a2634;
+      --warn:#d9bd6a; --warn-soft:#2e2819; --miss:#e0a08c; --miss-soft:#2e211d;
+      --tile:#282c30;
     }
   }
-  :root[data-theme="dark"]{
-    --bg:#141714; --panel:#1c211d; --ink:#e8ece6; --muted:#9aa89c; --line:#2b332c;
-    --accent:#7fc49a; --accent-soft:#1e2a22; --gold:#e0b367; --gold-soft:#2a2316;
-    --warn:#e0b367; --warnbg:#2a2316; --okbg:#1e2a22; --ok:#7fc49a;
-  }
   *{box-sizing:border-box}
-  html{-webkit-text-size-adjust:100%}
-  body{
-    margin:0; background:var(--bg); color:var(--ink);
-    font:16px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  }
-  .wrap{max-width:1120px;margin:0 auto;padding:0 16px 72px}
-  a{color:var(--accent)}
-  h1,h2,h3{line-height:1.2;margin:0}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:1140px;margin:0 auto;padding:40px 20px 72px}
+  header{border-bottom:1px solid var(--line);padding-bottom:24px;margin-bottom:8px}
+  h1{font-size:2rem;margin:0 0 8px;letter-spacing:-.025em}
+  .sub{color:var(--muted);margin:0}
+  .criteria{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .chip{background:var(--card);border:1px solid var(--line);border-radius:999px;
+    padding:5px 12px;font-size:.82rem;color:var(--muted)}
+  h2{font-size:1.2rem;margin:44px 0 6px;letter-spacing:-.015em}
+  h2 .count{color:var(--muted);font-weight:500}
+  .sectnote{color:var(--muted);font-size:.9rem;margin:0 0 18px;max-width:70ch}
 
-  header.top{padding:40px 0 22px;border-bottom:1px solid var(--line);margin-bottom:28px}
-  header.top h1{font-size:clamp(25px,4.6vw,38px);letter-spacing:-.02em}
-  header.top .where{color:var(--muted);margin-top:7px;font-size:15px}
-  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:16px}
-  .chip{background:var(--accent-soft);color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 26%,transparent);
-        padding:4px 11px;border-radius:999px;font-size:12.5px;font-weight:600;white-space:nowrap}
-  .meta{margin-top:16px;color:var(--muted);font-size:13px}
-  .meta b{color:var(--ink)}
+  /* headline strip */
+  .stats{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin:26px 0 4px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:14px 16px}
+  .stat b{display:block;font-size:1.5rem;letter-spacing:-.02em;line-height:1.15}
+  .stat span{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
 
-  section{margin:40px 0 0}
-  section>h2{font-size:21px;letter-spacing:-.01em;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
-  .count{background:var(--accent);color:#fff;border-radius:999px;font-size:12px;padding:2px 9px;font-weight:700}
-  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .count{color:#10150f}}
-  p.sub{color:var(--muted);font-size:14px;margin:8px 0 18px;max-width:72ch}
+  .grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    overflow:hidden;display:flex;flex-direction:column}
+  .card.is-new{border-color:var(--new);box-shadow:0 0 0 1px var(--new)}
+  .card.is-pending{opacity:.94}
+  .body{padding:18px 20px 20px;display:flex;flex-direction:column;flex:1}
 
-  /* spotlight */
-  .spotlight{background:var(--gold-soft);border:1px solid color-mix(in srgb,var(--gold) 38%,transparent);
-    border-radius:var(--radius);padding:20px 22px;margin:0 0 8px}
-  .spotlight h2{font-size:19px;color:var(--gold);display:flex;align-items:center;gap:9px;flex-wrap:wrap}
-  .spotlight h2 .count{background:var(--gold);color:#fff}
-  .spotlight p{color:var(--muted);font-size:13.5px;margin:6px 0 0}
-  .spotlight-empty h2{color:var(--muted)}
-  .newlist{list-style:none;margin:16px 0 0;padding:0;display:grid;gap:8px}
-  .newlist li{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 11px;
-    background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 13px}
-  .newlist a{font-weight:650;text-decoration:none}
-  .newlist a:hover{text-decoration:underline}
-  .nl-city{color:var(--muted);font-size:13px}
-  .nl-price{font-variant-numeric:tabular-nums;font-weight:700;margin-left:auto}
-  .nl-spec{color:var(--muted);font-size:12.5px;width:100%}
-  @media(min-width:620px){.nl-spec{width:auto;margin-left:0}}
+  .media{position:relative;background:var(--tile);border-bottom:1px solid var(--line);
+    aspect-ratio:3/2}
+  .fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    text-decoration:none;color:var(--muted);font-weight:600;font-size:.9rem;
+    background:repeating-linear-gradient(45deg,transparent,transparent 12px,
+      rgba(128,128,128,.05) 12px,rgba(128,128,128,.05) 24px)}
+  .fallback:hover{color:var(--accent);background-color:var(--accent-soft)}
+  .strip{position:relative;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;height:100%;
+    scrollbar-width:none}
+  .strip:empty{display:none}
+  .strip::-webkit-scrollbar{display:none}
+  .strip img{flex:0 0 100%;width:100%;height:100%;object-fit:cover;display:block;scroll-snap-align:center}
+  .shots{position:absolute;right:10px;bottom:10px;background:rgba(0,0,0,.62);color:#fff;
+    font-size:.72rem;font-weight:600;padding:3px 9px;border-radius:999px;pointer-events:none}
+  .media:has(.strip:empty) .shots{display:none}
 
-  /* cards */
-  .grid{display:grid;gap:20px;margin-top:20px;grid-template-columns:1fr}
-  @media(min-width:760px){.grid{grid-template-columns:repeat(2,1fr)}}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
-        overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column;position:relative}
-  .card-new{border-color:color-mix(in srgb,var(--gold) 55%,transparent)}
-  .newflag{position:absolute;top:12px;left:12px;z-index:2;background:var(--gold);color:#fff;
-    font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:4px 9px;border-radius:6px}
-  .shot{display:block;position:relative;aspect-ratio:16/10;background:var(--accent-soft);overflow:hidden;text-decoration:none}
-  .shot img{width:100%;height:100%;object-fit:cover;display:block}
-  .shot-fb{display:none;position:absolute;inset:0;align-items:center;justify-content:center;
-    color:var(--accent);font-weight:600;font-size:14px}
-  .shot-fallback .shot-fb{display:flex}
-  .body{padding:16px 17px 17px;display:flex;flex-direction:column;flex:1}
-  .pricerow{display:flex;align-items:center;gap:10px;justify-content:space-between}
-  .price{font-size:24px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-  .badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
-  .badge-ok{background:var(--okbg);color:var(--ok)}
-  .badge-warn{background:var(--warnbg);color:var(--warn)}
-  .delta{display:inline-block;margin-top:5px;font-size:12.5px;font-weight:600}
-  .delta-down{color:var(--ok)} .delta-up{color:#b3261e}
-  .card h3{margin-top:9px;font-size:17px}
-  .card h3 a{text-decoration:none;color:var(--ink)}
-  .card h3 a:hover{text-decoration:underline}
-  .loc{color:var(--muted);font-size:12.5px;margin-top:3px}
-  .specs{display:flex;gap:7px;margin:14px 0 0;flex-wrap:wrap}
-  .spec{background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:7px 10px;
-        text-align:center;min-width:62px;flex:1}
-  .spec b{display:block;font-size:15px;font-variant-numeric:tabular-nums}
-  .spec span{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
-  .extras{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin:14px 0 0;font-size:13px}
-  .extras dt{color:var(--muted)} .extras dd{margin:0}
-  .desc{color:var(--muted);font-size:13.5px;margin:13px 0 0}
-  .hist{margin-top:10px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
-  .foot{margin-top:auto;padding-top:14px;display:flex;gap:10px;align-items:baseline;
-        justify-content:space-between;border-top:1px solid var(--line);margin-top:15px}
-  .agent{color:var(--muted);font-size:11.5px}
-  .link{font-size:13px;font-weight:650;text-decoration:none;white-space:nowrap}
-  .link:hover{text-decoration:underline}
+  .tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .tag{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.06em;
+    text-transform:uppercase;padding:3px 8px;border-radius:5px}
+  .tag.ok{background:var(--accent-soft);color:var(--accent)}
+  .tag.new{background:var(--new-soft);color:var(--new)}
+  .tag.pend{background:var(--warn-soft);color:var(--warn)}
 
-  /* table */
-  .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel)}
-  table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:660px}
-  th,td{padding:10px 13px;text-align:left;border-bottom:1px solid var(--line)}
-  th{background:var(--bg);font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700}
-  tr:last-child td{border-bottom:0}
-  td.n{font-variant-numeric:tabular-nums;white-space:nowrap}
-  td a{text-decoration:none;font-weight:600}
+  .price{font-size:1.5rem;font-weight:650;letter-spacing:-.025em;margin:0}
+  .pricechg{display:block;font-size:.8rem;font-weight:700;margin-top:3px}
+  .pricechg.down{color:var(--accent)} .pricechg.up{color:var(--miss)}
+  .addr{font-weight:600;margin:6px 0 2px}
+  .city{color:var(--muted);font-size:.88rem;margin:0 0 14px}
+  .facts{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  .fact{background:var(--bg);border:1px solid var(--line);border-radius:6px;
+    padding:3px 9px;font-size:.79rem}
+  .fact.pool{background:var(--accent-soft);border-color:transparent;color:var(--accent);font-weight:600}
+  .fact.acres.pref{background:var(--accent-soft);border-color:transparent;color:var(--accent);font-weight:600}
+  .pooldetail{font-size:.8rem;color:var(--accent);margin:0 0 12px;font-weight:600}
+  .note{font-size:.88rem;color:var(--muted);margin:0 0 14px;flex:1}
+  .flagnote{font-size:.8rem;color:var(--warn);background:var(--warn-soft);
+    border-radius:7px;padding:8px 10px;margin:0 0 14px}
+
+  .micro{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 14px;margin:0 0 16px;
+    padding-top:14px;border-top:1px solid var(--line)}
+  .micro div{min-width:0}
+  .micro dt{font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  .micro dd{margin:1px 0 0;font-size:.84rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  .links{display:flex;gap:8px;flex-wrap:wrap}
+  a.btn{display:inline-block;text-decoration:none;color:#fff;background:var(--accent);font-weight:600;
+    font-size:.87rem;border:1px solid var(--accent);border-radius:8px;padding:8px 13px}
+  a.btn.ghost{background:transparent;color:var(--accent);border-color:var(--line)}
+  a.btn:hover{filter:brightness(1.07)}
+
+  .banner{background:var(--new-soft);border:1px solid var(--line);border-left:4px solid var(--new);
+    border-radius:10px;padding:16px 18px;margin:26px 0 8px;font-size:.92rem}
+  .banner h3{margin:0 0 6px;font-size:1rem}
+  .banner p{margin:0;color:var(--muted)}
+  .banner p + p{margin-top:8px}
+  .banner ul{margin:8px 0 0;padding-left:20px;color:var(--muted)}
+
+  .tablewrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:12px}
+  table{width:100%;border-collapse:collapse;font-size:.87rem}
+  th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  td a{color:var(--accent);font-weight:600;text-decoration:none}
   td a:hover{text-decoration:underline}
-  .yes{color:var(--ok);font-weight:700} .no{color:var(--muted)}
-  .short{color:var(--muted)}
-
-  .dropped{list-style:none;padding:0;margin:0;display:grid;gap:7px}
-  .dropped li{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;background:var(--panel);
-    border:1px solid var(--line);border-radius:9px;padding:9px 13px;font-size:13.5px}
-  .da{font-weight:600} .dp{color:var(--muted);font-size:12.5px}
-
-  .note{margin-top:44px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);
-        border-radius:10px;padding:16px 18px;font-size:13.5px;color:var(--muted)}
-  .note h3{font-size:14px;color:var(--ink);margin-bottom:7px}
-  .note ul{margin:7px 0 0;padding-left:19px} .note li{margin:4px 0}
-  footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:12.5px}
+  footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);
+    color:var(--muted);font-size:.84rem}
+  footer code{background:var(--card);padding:1px 5px;border-radius:4px}
+  @media (max-width:520px){ h1{font-size:1.6rem} .wrap{padding:28px 14px 56px} }
 </style>
 </head>
 <body>
 <div class="wrap">
 
-<header class="top">
-  <h1>House Hunt</h1>
-  <div class="where">Shingle Springs · Rescue · Placerville, California</div>
-  <div class="chips"><span class="chip">4+ beds</span><span class="chip">3+ baths</span><span class="chip">Pool required</span><span class="chip">2.5+ acres (5+ preferred)</span><span class="chip">≤ $1.5M</span></div>
-  <div class="meta">
-    Last run <b>Nov 14, 2026</b> ·
-    <b>6</b> active matches · <b>1</b> under contract ·
-    <b>341</b> active listings scanned · 
-    verified against <b>MetroList MLS</b>
+<header>
+  <h1>House Hunt: El Dorado County</h1>
+  <p class="sub">Shingle Springs &middot; Rescue &middot; Placerville — updated
+    <strong>2026-11-14</strong> (previous run 2026-11-13)</p>
+  <div class="criteria">
+    <span class="chip">4+ bedrooms</span>
+    <span class="chip">3+ full bathrooms</span>
+    <span class="chip">Pool required</span>
+    <span class="chip">2.5+ acres (5+ preferred)</span>
+    <span class="chip">Max $1.5M</span>
   </div>
 </header>
 
+<div class="stats">
+  <div class="stat"><b>8</b><span>Active matches</span></div>
+  <div class="stat"><b>0</b><span>New this run</span></div>
+  <div class="stat"><b>$0.789M</b><span>Entry price</span></div>
+  <div class="stat"><b>40 ac</b><span>Most land</span></div>
+  <div class="stat"><b>0</b><span>Removed</span></div>
+</div>
 
-<section class="spotlight">
-  <div class="spotlight-head">
-    <h2>★ New this run <span class="count">7</span></h2>
-    <p>Added on Nov 14, 2026 — not on the previous list.</p>
-  </div>
-  <ol class="newlist">
-    <li>
-      <a href="https://www.metrolistpro.com/homes/2/6/4770-FELDSPAR-LANE-PLACERVILLE-CA-95667/226119678" target="_blank" rel="noopener noreferrer">4770 Feldspar Lane</a>
-      <span class="nl-city">Placerville</span>
-      <span class="nl-price">$789,000</span>
-      <span class="nl-spec">4bd · 3ba · 5 ac · pool</span>
-      
-    </li><li>
-      <a href="https://www.metrolistpro.com/homes/2/6/1315-ARROWBEE-DR-PLACERVILLE-CA-95667/226085035" target="_blank" rel="noopener noreferrer">1315 Arrowbee Dr</a>
-      <span class="nl-city">Placerville</span>
-      <span class="nl-price">$899,000</span>
-      <span class="nl-spec">4bd · 3ba · 5 ac · pool</span>
-      
-    </li><li>
-      <a href="https://www.metrolistpro.com/homes/2/6/3720-FOUR-SPRINGS-DRIVE-RESCUE-CA-95672/226083791" target="_blank" rel="noopener noreferrer">3720 Four Springs Drive</a>
-      <span class="nl-city">Rescue</span>
-      <span class="nl-price">$1,115,000</span>
-      <span class="nl-spec">4bd · 3ba · 5.86 ac · pool</span>
-      
-    </li><li>
-      <a href="https://www.metrolistpro.com/homes/2/6/4071-VOYAGER-WAY-SHINGLE-SPRINGS-CA-95682/226082753" target="_blank" rel="noopener noreferrer">4071 Voyager Way</a>
-      <span class="nl-city">Shingle Springs</span>
-      <span class="nl-price">$1,275,000</span>
-      <span class="nl-spec">4bd · 3ba · 5.03 ac · pool</span>
-      <span class="badge badge-warn">Under contract</span>
-    </li><li>
-      <a href="https://www.metrolistpro.com/homes/2/6/1815-WOODSMAN-COURT-PLACERVILLE-CA-95667/226134101" target="_blank" rel="noopener noreferrer">1815 Woodsman Court</a>
-      <span class="nl-city">Placerville</span>
-      <span class="nl-price">$1,299,000</span>
-      <span class="nl-spec">4bd · 4.5ba · 3 ac · pool</span>
-      
-    </li><li>
-      <a href="https://www.metrolistpro.com/homes/2/6/6881-SAGITTARIUS-DRIVE-PLACERVILLE-CA-95667/226064449" target="_blank" rel="noopener noreferrer">6881 Sagittarius Drive</a>
-      <span class="nl-city">Placerville</span>
-      <span class="nl-price">$1,389,000</span>
-      <span class="nl-spec">4bd · 4ba · 40 ac · pool</span>
-      
-    </li><li>
-      <a href="https://www.metrolistpro.com/homes/2/6/4800-ABBEY-ROAD-PLACERVILLE-CA-95667/226133530" target="_blank" rel="noopener noreferrer">4800 Abbey Road</a>
-      <span class="nl-city">Placerville</span>
-      <span class="nl-price">$1,500,000</span>
-      <span class="nl-spec">4bd · 5ba · 11.04 ac · pool</span>
-      
-    </li>
-  </ol>
-</section>
-
-<section>
-  <h2>Matches <span class="count">7</span></h2>
-  <p class="sub">Every property below clears all five criteria. Acreage and pool come from the MLS <em>Lot Size in Acres</em> and <em>Has a Pool</em> fields; status comes from the MLS status badge on the listing detail page.</p>
-  <div class="grid">
-    <article class="card card-new">
-  <div class="newflag">New this run</div>
-  <a class="shot" href="https://www.metrolistpro.com/homes/2/6/4770-FELDSPAR-LANE-PLACERVILLE-CA-95667/226119678" target="_blank" rel="noopener noreferrer">
-        <img src="https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/10/01/724e3dda-02f0-4894-aa5a-0ad7c4ca40be.jpg" alt="4770 Feldspar Lane, Placerville" loading="lazy" referrerpolicy="no-referrer"
-             onerror="this.closest('.shot').classList.add('shot-fallback');this.remove();">
-        <span class="shot-fb">View listing photos →</span>
-      </a>
-  <div class="body">
-    <div class="pricerow">
-      <div class="price">$789,000</div>
-      <span class="badge badge-ok">Active</span>
-    </div>
-    
-    <h3><a href="https://www.metrolistpro.com/homes/2/6/4770-FELDSPAR-LANE-PLACERVILLE-CA-95667/226119678" target="_blank" rel="noopener noreferrer">4770 Feldspar Lane</a></h3>
-    <div class="loc">Placerville, CA 95667 · MLS #226119678</div>
-    <div class="specs"><div class="spec"><b>4</b><span>bd</span></div><div class="spec"><b>3</b><span>ba</span></div><div class="spec"><b>2,512</b><span>sq ft</span></div><div class="spec"><b>5</b><span>acres</span></div></div>
-    <dl class="extras">
-      <dt>Pool</dt><dd>Built-In</dd><dt>Built</dt><dd>1992</dd><dt>View</dt><dd>Hills</dd><dt>Horse property</dt><dd>Yes</dd><dt>Schools</dt><dd>El Dorado</dd>
-    </dl>
-    <p class="desc">Tucked away in Gold Hill on five golden acres, this single story ranch style home offers the kind of setting that makes you want to slow down and stay a while. Surrounded by rolling, oak studded terrain with beautiful valley and mountain views, the property combines privacy, space and effortless indoor/outdoor living. At the heart of the …</p>
-    
-    <div class="foot">
-      <span class="agent">Carla Ferrante — RE/MAX Gold</span>
-      <a class="link" href="https://www.metrolistpro.com/homes/2/6/4770-FELDSPAR-LANE-PLACERVILLE-CA-95667/226119678" target="_blank" rel="noopener noreferrer">MLS listing →</a>
-    </div>
-  </div>
-</article>
-<article class="card card-new">
-  <div class="newflag">New this run</div>
-  <a class="shot" href="https://www.metrolistpro.com/homes/2/6/1315-ARROWBEE-DR-PLACERVILLE-CA-95667/226085035" target="_blank" rel="noopener noreferrer">
-        <img src="https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/08/05/e4b5af55-5543-4e2a-bcdb-15b03e17c63b.jpg" alt="1315 Arrowbee Dr, Placerville" loading="lazy" referrerpolicy="no-referrer"
-             onerror="this.closest('.shot').classList.add('shot-fallback');this.remove();">
-        <span class="shot-fb">View listing photos →</span>
-      </a>
-  <div class="body">
-    <div class="pricerow">
-      <div class="price">$899,000</div>
-      <span class="badge badge-ok">Active</span>
-    </div>
-    
-    <h3><a href="https://www.metrolistpro.com/homes/2/6/1315-ARROWBEE-DR-PLACERVILLE-CA-95667/226085035" target="_blank" rel="noopener noreferrer">1315 Arrowbee Dr</a></h3>
-    <div class="loc">Placerville, CA 95667 · MLS #226085035</div>
-    <div class="specs"><div class="spec"><b>4</b><span>bd</span></div><div class="spec"><b>3</b><span>ba</span></div><div class="spec"><b>2,780</b><span>sq ft</span></div><div class="spec"><b>5</b><span>acres</span></div></div>
-    <dl class="extras">
-      <dt>Pool</dt><dd>Built-In, Gunite Construction</dd><dt>Built</dt><dd>1971</dd><dt>View</dt><dd>Pasture</dd><dt>Horse property</dt><dd>Yes</dd><dt>Schools</dt><dd>El Dorado</dd>
-    </dl>
-    <p class="desc">Welcome to this charming mini ranch with an ADU, tucked behind a gated entrance at the end of a paved driveway, offering privacy, versatility, and lovely views in a peaceful country setting. The single-story ranch home design welcomes you into a light-filled living room where vaulted ceilings and expansive picture windows showcase the sce…</p>
-    
-    <div class="foot">
-      <span class="agent">Kristina Agustin — Vista Sotheby&#39;s International Realty</span>
-      <a class="link" href="https://www.metrolistpro.com/homes/2/6/1315-ARROWBEE-DR-PLACERVILLE-CA-95667/226085035" target="_blank" rel="noopener noreferrer">MLS listing →</a>
-    </div>
-  </div>
-</article>
-<article class="card card-new">
-  <div class="newflag">New this run</div>
-  <a class="shot" href="https://www.metrolistpro.com/homes/2/6/3720-FOUR-SPRINGS-DRIVE-RESCUE-CA-95672/226083791" target="_blank" rel="noopener noreferrer">
-        <img src="https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/07/02/0ba833f1-ea07-4d9e-8926-3f59fb5bf4cd.jpg" alt="3720 Four Springs Drive, Rescue" loading="lazy" referrerpolicy="no-referrer"
-             onerror="this.closest('.shot').classList.add('shot-fallback');this.remove();">
-        <span class="shot-fb">View listing photos →</span>
-      </a>
-  <div class="body">
-    <div class="pricerow">
-      <div class="price">$1,115,000</div>
-      <span class="badge badge-ok">Active</span>
-    </div>
-    
-    <h3><a href="https://www.metrolistpro.com/homes/2/6/3720-FOUR-SPRINGS-DRIVE-RESCUE-CA-95672/226083791" target="_blank" rel="noopener noreferrer">3720 Four Springs Drive</a></h3>
-    <div class="loc">Rescue, CA 95672 · MLS #226083791</div>
-    <div class="specs"><div class="spec"><b>4</b><span>bd</span></div><div class="spec"><b>3</b><span>ba</span></div><div class="spec"><b>2,506</b><span>sq ft</span></div><div class="spec"><b>5.86</b><span>acres</span></div></div>
-    <dl class="extras">
-      <dt>Pool</dt><dd>Built-In, On Lot, Pool Sweep, Gunite Construction</dd><dt>Built</dt><dd>1989</dd><dt>View</dt><dd>City Lights, Pasture, Hills, Woods</dd><dt>Horse property</dt><dd>Yes</dd><dt>Schools</dt><dd>El Dorado</dd>
-    </dl>
-    <p class="desc">Major price reduction! Sought-after area. Minutes from shopping, schools. Country living at its finest. Don&#39;t miss the approx. 750SF ultimate entertainment hub: game room plus extra room &amp; bath situated above the detached three-car garage. Connected to the main house by a breeze-catching walkway, this private extra space makes a perfect t…</p>
-    
-    <div class="foot">
-      <span class="agent">Anna Boyd — eXp Realty of Northern California, Inc.</span>
-      <a class="link" href="https://www.metrolistpro.com/homes/2/6/3720-FOUR-SPRINGS-DRIVE-RESCUE-CA-95672/226083791" target="_blank" rel="noopener noreferrer">MLS listing →</a>
-    </div>
-  </div>
-</article>
-<article class="card card-new card-uc">
-  <div class="newflag">New this run</div>
-  <a class="shot" href="https://www.metrolistpro.com/homes/2/6/4071-VOYAGER-WAY-SHINGLE-SPRINGS-CA-95682/226082753" target="_blank" rel="noopener noreferrer">
-        <img src="https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/08/10/47f4ef91-d85c-41e4-b932-b0ea0656de23.jpg" alt="4071 Voyager Way, Shingle Springs" loading="lazy" referrerpolicy="no-referrer"
-             onerror="this.closest('.shot').classList.add('shot-fallback');this.remove();">
-        <span class="shot-fb">View listing photos →</span>
-      </a>
-  <div class="body">
-    <div class="pricerow">
-      <div class="price">$1,275,000</div>
-      <span class="badge badge-warn" title="Accepted offer; backup offers may still be considered">Under contract</span>
-    </div>
-    
-    <h3><a href="https://www.metrolistpro.com/homes/2/6/4071-VOYAGER-WAY-SHINGLE-SPRINGS-CA-95682/226082753" target="_blank" rel="noopener noreferrer">4071 Voyager Way</a></h3>
-    <div class="loc">Shingle Springs, CA 95682 · MLS #226082753</div>
-    <div class="specs"><div class="spec"><b>4</b><span>bd</span></div><div class="spec"><b>3</b><span>ba</span></div><div class="spec"><b>3,132</b><span>sq ft</span></div><div class="spec"><b>5.03</b><span>acres</span></div></div>
-    <dl class="extras">
-      <dt>Pool</dt><dd>Built-In, Salt Water</dd><dt>Built</dt><dd>2003</dd><dt>View</dt><dd>Panoramic, Forest, Valley, Hills</dd><dt>Schools</dt><dd>El Dorado</dd>
-    </dl>
-    <p class="desc">Escape the hustle and bustle and discover your own private retreat in Shingle Springs. Set on approximately 5 private acres with sweeping hillside views, this single-story custom home offers over 3,000 sq. ft. of thoughtfully designed living space with 4 bedrooms, 3 full baths and an impressive 4-car garage. The outdoor setting is where t…</p>
-    
-    <div class="foot">
-      <span class="agent">Melissa Roybal — Gateway Properties</span>
-      <a class="link" href="https://www.metrolistpro.com/homes/2/6/4071-VOYAGER-WAY-SHINGLE-SPRINGS-CA-95682/226082753" target="_blank" rel="noopener noreferrer">MLS listing →</a>
-    </div>
-  </div>
-</article>
-<article class="card card-new">
-  <div class="newflag">New this run</div>
-  <a class="shot" href="https://www.metrolistpro.com/homes/2/6/1815-WOODSMAN-COURT-PLACERVILLE-CA-95667/226134101" target="_blank" rel="noopener noreferrer">
-        <img src="https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/11/05/25654ee1-afbe-4570-9b5f-54e4cd9d1426.jpg" alt="1815 Woodsman Court, Placerville" loading="lazy" referrerpolicy="no-referrer"
-             onerror="this.closest('.shot').classList.add('shot-fallback');this.remove();">
-        <span class="shot-fb">View listing photos →</span>
-      </a>
-  <div class="body">
-    <div class="pricerow">
-      <div class="price">$1,299,000</div>
-      <span class="badge badge-ok">Active</span>
-    </div>
-    
-    <h3><a href="https://www.metrolistpro.com/homes/2/6/1815-WOODSMAN-COURT-PLACERVILLE-CA-95667/226134101" target="_blank" rel="noopener noreferrer">1815 Woodsman Court</a></h3>
-    <div class="loc">Placerville, CA 95667 · MLS #226134101</div>
-    <div class="specs"><div class="spec"><b>4</b><span>bd</span></div><div class="spec"><b>4.5</b><span>ba</span></div><div class="spec"><b>3,560</b><span>sq ft</span></div><div class="spec"><b>3</b><span>acres</span></div></div>
-    <dl class="extras">
-      <dt>Pool</dt><dd>Built-In, Gunite Construction</dd><dt>Built</dt><dd>1993</dd><dt>View</dt><dd>Canyon, Panoramic, Garden/Greenbelt, Mountains</dd><dt>Horse property</dt><dd>Yes</dd><dt>Schools</dt><dd>El Dorado</dd>
-    </dl>
-    <p class="desc">Welcome to 1815 Woodsman Court, an exceptional private estate nestled at the end of a peaceful cul-de-sac within the highly coveted, gated community of Greenstone Country. Blending timeless foothills charm with refined living, this impressive home opens to light-filled interior spaces defined by soaring ceilings, expansive windows, and a …</p>
-    
-    <div class="foot">
-      <span class="agent">Ronald Ramos — Realty One Group Complete</span>
-      <a class="link" href="https://www.metrolistpro.com/homes/2/6/1815-WOODSMAN-COURT-PLACERVILLE-CA-95667/226134101" target="_blank" rel="noopener noreferrer">MLS listing →</a>
-    </div>
-  </div>
-</article>
-<article class="card card-new">
-  <div class="newflag">New this run</div>
-  <a class="shot" href="https://www.metrolistpro.com/homes/2/6/6881-SAGITTARIUS-DRIVE-PLACERVILLE-CA-95667/226064449" target="_blank" rel="noopener noreferrer">
-        <img src="https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/06/13/d79c0859-8ae3-4dff-b00a-be12a307ced8.jpg" alt="6881 Sagittarius Drive, Placerville" loading="lazy" referrerpolicy="no-referrer"
-             onerror="this.closest('.shot').classList.add('shot-fallback');this.remove();">
-        <span class="shot-fb">View listing photos →</span>
-      </a>
-  <div class="body">
-    <div class="pricerow">
-      <div class="price">$1,389,000</div>
-      <span class="badge badge-ok">Active</span>
-    </div>
-    
-    <h3><a href="https://www.metrolistpro.com/homes/2/6/6881-SAGITTARIUS-DRIVE-PLACERVILLE-CA-95667/226064449" target="_blank" rel="noopener noreferrer">6881 Sagittarius Drive</a></h3>
-    <div class="loc">Placerville, CA 95667 · MLS #226064449</div>
-    <div class="specs"><div class="spec"><b>4</b><span>bd</span></div><div class="spec"><b>4</b><span>ba</span></div><div class="spec"><b>5,351</b><span>sq ft</span></div><div class="spec"><b>40</b><span>acres</span></div></div>
-    <dl class="extras">
-      <dt>Pool</dt><dd>Built-In, On Lot, Pool House, Pool Sweep, Salt Water, Other</dd><dt>Built</dt><dd>2005</dd><dt>View</dt><dd>Panoramic, Ridge, Other, Mountains</dd><dt>Horse property</dt><dd>Yes</dd><dt>Schools</dt><dd>El Dorado</dd>
-    </dl>
-    <p class="desc">Crafted as the builder&#39;s own residence, this extraordinary European Country-inspired estate was designed without compromise. From its commanding setting on 40 acres with sweeping Sierra foothill views and timeless architectural details, every aspect of the property reflects quality and enduring elegance. From the moment you arrive, the ho…</p>
-    
-    <div class="foot">
-      <span class="agent">Kristen Haus — Real Broker Technologies</span>
-      <a class="link" href="https://www.metrolistpro.com/homes/2/6/6881-SAGITTARIUS-DRIVE-PLACERVILLE-CA-95667/226064449" target="_blank" rel="noopener noreferrer">MLS listing →</a>
-    </div>
-  </div>
-</article>
-<article class="card card-new">
-  <div class="newflag">New this run</div>
-  <a class="shot" href="https://www.metrolistpro.com/homes/2/6/4800-ABBEY-ROAD-PLACERVILLE-CA-95667/226133530" target="_blank" rel="noopener noreferrer">
-        <img src="https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/10/31/dd389d1a-1a54-4fb5-b371-fe4a690ff5bf.jpg" alt="4800 Abbey Road, Placerville" loading="lazy" referrerpolicy="no-referrer"
-             onerror="this.closest('.shot').classList.add('shot-fallback');this.remove();">
-        <span class="shot-fb">View listing photos →</span>
-      </a>
-  <div class="body">
-    <div class="pricerow">
-      <div class="price">$1,500,000</div>
-      <span class="badge badge-ok">Active</span>
-    </div>
-    
-    <h3><a href="https://www.metrolistpro.com/homes/2/6/4800-ABBEY-ROAD-PLACERVILLE-CA-95667/226133530" target="_blank" rel="noopener noreferrer">4800 Abbey Road</a></h3>
-    <div class="loc">Placerville, CA 95667 · MLS #226133530</div>
-    <div class="specs"><div class="spec"><b>4</b><span>bd</span></div><div class="spec"><b>5</b><span>ba</span></div><div class="spec"><b>5,821</b><span>sq ft</span></div><div class="spec"><b>11.04</b><span>acres</span></div></div>
-    <dl class="extras">
-      <dt>Pool</dt><dd>Built-In, On Lot, Pool Sweep</dd><dt>Built</dt><dd>1989</dd><dt>View</dt><dd>Canyon, Panoramic, City Lights, Pasture, Ridge, Forest, Vineyard, Hills, Woods</dd><dt>Schools</dt><dd>El Dorado</dd>
-    </dl>
-    <p class="desc">THE ULTIMATE RESORT COMPOUND 11+ ACRES MULTI-GENERATIONAL ESTATE Perched atop 11 private acres on a gated hilltop above Placerville, 4800 Abbey Road is a world-class compound framing miles of panoramic Central Valley views. Engineered for automotive enthusiasts, multi-generational living, or estate hospitality, this combined 5,800+ SF mas…</p>
-    
-    <div class="foot">
-      <span class="agent">Sarah Stone-Francisco — Century 21 Cornerstone Realty</span>
-      <a class="link" href="https://www.metrolistpro.com/homes/2/6/4800-ABBEY-ROAD-PLACERVILLE-CA-95667/226133530" target="_blank" rel="noopener noreferrer">MLS listing →</a>
-    </div>
-  </div>
-</article>
-  </div>
-</section>
-
-
-<section>
-  <h2>Near misses <span class="count">12</span></h2>
-  <p class="sub">Active MLS listings that clear 4bd / 3ba / $1.5M but fail acreage or pool. Listed so a later price cut or correction is easy to spot.</p>
-  <div class="tablewrap">
-  <table>
-    <thead><tr><th>Address</th><th>Price</th><th>Bd/Ba</th><th>Sq ft</th><th>Acres</th><th>Pool</th><th>Falls short on</th></tr></thead>
-    <tbody>
-      <tr>
-        <td><a href="https://www.metrolistpro.com/homes/2/6/2610-RANCH-ROAD-PLACERVILLE-CA-95667/226132045" target="_blank" rel="noopener noreferrer">2610 Ranch Road, Placerville</a></td>
-        <td class="n">$499,000</td>
-        <td class="n">6/4</td>
-        <td class="n">2,536</td>
-        <td class="n">6.3</td>
-        <td><span class="no">No</span></td>
-        <td class="short">no pool</td>
-      </tr><tr>
-        <td><a href="https://www.metrolistpro.com/homes/2/6/2550-TOLOWA-TRAIL-PLACERVILLE-CA-95667/226112236" target="_blank" rel="noopener noreferrer">2550 Tolowa Trail, Placerville</a></td>
-        <td class="n">$575,000</td>
-        <td class="n">4/3</td>
-        <td class="n">1,992</td>
-        <td class="n">5.02</td>
-        <td><span class="no">No</span></td>
-        <td class="short">no pool</td>
-      </tr><tr>
-        <td><a href="https://www.metrolistpro.com/homes/2/6/6560-AGAPE-COURT-PLACERVILLE-CA-95667/226070903" target="_blank" rel="noopener noreferrer">6560 Agape Court, Placerville</a></td>
-        <td class="n">$599,000</td>
-        <td class="n">4/3</td>
-        <td class="n">2,562</td>
-        <td class="n">5.02</td>
-        <td><span class="no">No</span></td>
-        <td class="short">no pool</td>
-      </tr><tr>
-        <td><a href="https://www.metrolistpro.com/homes/2/6/1635-COUNTRY-CLUB-DRIVE-PLACERVILLE-CA-95667/226029772" target="_blank" rel="noopener noreferrer">1635 Country Club Drive, Placerville</a></td>
-        <td class="n">$599,900</td>
-        <td class="n">4/3</td>
-        <td class="n">2,414</td>
-        <td class="n">0.61</td>
-        <td><span class="yes">Yes</span></td>
-        <td class="short">only 0.61 acres</td>
-      </tr><tr>
-        <td><a href="https://www.metrolistpro.com/homes/2/6/2805-AQUAMARINE-CIRCLE-RESCUE-CA-95672/226063967" target="_blank" rel="noopener noreferrer">2805 Aquamarine Circle, Rescue</a></td>
-        <td class="n">$629,000</td>
-        <td class="n">4/3</td>
-        <td class="n">2,288</td>
-        <td class="n">0.205</td>
-        <td><span class="yes">Yes</span></td>
-        <td class="short">only 0.205 acres</td>
-      </tr><tr>
-        <td><a href="https://www.metrolistpro.com/homes/2/6/2562-STARBUCK-ROAD-RESCUE-CA-95672/226129627" target="_blank" rel="noopener noreferrer">2562 Starbuck Road, Rescue</a></td>
-        <td class="n">$688,000</td>
-        <td class="n">4/3</td>
-        <td class="n">2,010</td>
-        <td class="n">0.35</td>
-        <td><span class="yes">Yes</span></td>
-        <td class="short">only 0.35 acres</td>
-      </tr><tr>
-        <td><a href="https://www.metrolistpro.com/homes/2/6/5681-HONEYCOMB-LANE-SHINGLE-SPRINGS-CA-95682/226068369" target="_blank" rel="noopener noreferrer">5681 Honeycomb Lane, Shingle Springs</a></td>
-        <td class="n">$899,000</td>
-        <td class="n">4/4.5</td>
-        <td class="n">3,210</td>
-        <td class="n">5</td>
-        <td><span class="no">No</span></td>
-        <td class="short">no pool</td>
-      </tr><tr>
-        <td><a href="https://www.metrolistpro.com/homes/2/6/4661-HOLM-ROAD-PLACERVILLE-CA-95667/226083194" target="_blank" rel="noopener noreferrer">4661 Holm Road, Placerville</a></td>
-        <td class="n">$899,900</td>
-        <td class="n">4/4.5</td>
-        <td class="n">4,525</td>
-        <td class="n">5.12</td>
-        <td><span class="no">No</span></td>
-        <td class="short">no pool</td>
-      </tr><tr>
-        <td><a href="https://www.metrolistpro.com/homes/2/6/1300-LARGE-OAK-DRIVE-PLACERVILLE-CA-95667/226137636" target="_blank" rel="noopener noreferrer">1300 Large Oak Drive, Placerville</a></td>
-        <td class="n">$1,099,000</td>
-        <td class="n">4/4</td>
-        <td class="n">4,870</td>
-        <td class="n">6.72</td>
-        <td><span class="no">No</span></td>
-        <td class="short">no pool</td>
-      </tr><tr>
-        <td><a href="https://www.metrolistpro.com/homes/2/6/3291-TEXAS-HILL-ROAD-PLACERVILLE-CA-95667/226066603" target="_blank" rel="noopener noreferrer">3291 Texas Hill Road, Placerville</a></td>
-        <td class="n">$1,299,000</td>
-        <td class="n">4/4</td>
-        <td class="n">3,837</td>
-        <td class="n">1.76</td>
-        <td><span class="yes">Yes</span></td>
-        <td class="short">only 1.76 acres</td>
-      </tr><tr>
-        <td><a href="https://www.metrolistpro.com/homes/2/6/1777-CARL-ROAD-RESCUE-CA-95672/226104225" target="_blank" rel="noopener noreferrer">1777 Carl Road, Rescue</a></td>
-        <td class="n">$1,389,000</td>
-        <td class="n">4/3</td>
-        <td class="n">2,896</td>
-        <td class="n">5.2</td>
-        <td><span class="no">No</span></td>
-        <td class="short">no pool</td>
-      </tr><tr>
-        <td><a href="https://www.metrolistpro.com/homes/2/6/6310-BUTTERFIELD-WAY-PLACERVILLE-CA-95667/226123031" target="_blank" rel="noopener noreferrer">6310 Butterfield Way, Placerville</a></td>
-        <td class="n">$1,390,000</td>
-        <td class="n">5/3</td>
-        <td class="n">2,576</td>
-        <td class="n">3.67</td>
-        <td><span class="no">No</span></td>
-        <td class="short">no pool</td>
-      </tr>
-    </tbody>
-  </table>
-  </div>
-</section>
-
-
-<section>
-  <h2>Dropped this run <span class="count">6</span></h2>
-  <p class="sub">Previously tracked, no longer in MetroList active inventory — sold or withdrawn. Kept here only so they are not re-surfaced.</p>
-  <ul class="dropped">
-    <li><span class="da">1601 Velvet Horn Ln, Rescue</span><span class="dp">last seen at $1,100,000</span></li><li><span class="da">4100 Black Oak Dr, Shingle Springs</span><span class="dp">last seen at $1,250,000</span></li><li><span class="da">5856 Fernwood Dr, Shingle Springs</span><span class="dp">last seen at $1,490,000</span></li><li><span class="da">1527 Velvet Horn Ln, Rescue</span></li><li><span class="da">5400 Horizon Ct, Placerville</span><span class="dp">last seen at $998,999</span></li><li><span class="da">4280 Leisure Ln, Placerville</span><span class="dp">last seen at $1,173,000</span></li>
-  </ul>
-</section>
-
-<div class="note">
-  <h3>How this list is built</h3>
+<div class="banner">
+  <h3>What changed this run</h3>
   <ul>
-    <li>Source of record: <a href="https://www.metrolistpro.com/" target="_blank" rel="noopener noreferrer">MetroListPRO</a>, the official public search site of MetroList MLS — the MLS for El Dorado County.</li>
-    <li>Status, lot acreage and pool are read from each listing's MLS detail page. Search-engine summaries are never used for status: they index sold listings as "For Sale" for years.</li>
-    <li>Independent second IDX returned 49 / 26 / 263 active for Shingle Springs / Rescue / Placerville vs 50 / 25 / 266 captured here — coverage complete.</li>
-    <li>Listings that leave active inventory are dropped, not carried forward. Price changes on tracked properties are shown on the card.</li>
-    <li>Photos are hotlinked from MetroList and are the copyright of the listing brokerage — fine for private use, don't republish.</li>
+    
+    <li><strong>1315 Arrowbee Dr, Placerville cut its price by
+        $31,000</strong> (3.3%), $930,000 &rarr; $899,000. It was already on
+        the board, so it is listed with the standing matches below rather than as a new find.</li>
+    
+    
+    
+    
+    
   </ul>
 </div>
 
+
+
+<h2>Still active from earlier runs <span class="count">(8)</span></h2>
+<p class="sectnote">Already on the board last run and re-checked today.
+6 of the 8 are confirmed
+<strong>Active</strong> on MetroList as of 2026-11-14. 2 exceptions — <strong>2520 Bedford Ave</strong>, <strong>3538 Wildwood Ln</strong> — are not MetroList's to confirm; their cards say what
+       was read instead. Any
+price movement since it was first seen is shown on the card.</p>
+<div class="grid">
+  <article class="card">
+    <div class="media">
+      <a class="fallback" href="https://www.metrolistpro.com/homes/2/6/4800-ABBEY-ROAD-PLACERVILLE-CA-95667/226133530" rel="noopener">View photos &rarr;</a>
+      <div class="strip">
+      <img src="https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/10/31/dd389d1a-1a54-4fb5-b371-fe4a690ff5bf.jpg" alt="4800 Abbey Road — photo 1 of 6"
+           loading="eager" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/10/31/30a5e399-9e6a-48b1-9a8b-b96a8dc792c9.jpg" alt="4800 Abbey Road — photo 2 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/10/31/828a03ab-c269-4718-a746-137e328dbae2.jpg" alt="4800 Abbey Road — photo 3 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/10/31/1ab5a927-dc38-417e-bb87-c4ad8d13c10b.jpg" alt="4800 Abbey Road — photo 4 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/10/31/d9f8cccf-3c04-4e1b-a962-af772ce8521d.jpg" alt="4800 Abbey Road — photo 5 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/10/31/8d2e9265-d210-4da9-99f6-930cd36c8f36.jpg" alt="4800 Abbey Road — photo 6 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()"></div>
+      <span class="shots">6 photos &middot; swipe</span>
+    </div>
+    <div class="body">
+      <div class="tags"><span class="tag ok">Active</span></div>
+      <p class="price">$1,500,000</p>
+      <p class="addr">4800 Abbey Road</p>
+      <p class="city">Placerville, CA 95667 &middot; MLS 226133530</p>
+      <div class="facts"><span class="fact">4 bd</span><span class="fact">4 full + 2 half ba</span><span class="fact">5,821 sqft</span><span class="fact acres pref">11.04 acres</span><span class="fact pool">Pool</span></div>
+      <p class="pooldetail">Built-In, On Lot, Pool Sweep</p>
+      <p class="note">THE ULTIMATE RESORT COMPOUND 11+ ACRES MULTI-GENERATIONAL ESTATE Perched atop 11 private acres on a gated hilltop above Placerville, 4800 Abbey Road is a world-class compound framing miles of panoramic Central Valley views. Engineered for automotive enthusiasts, multi-generational living, or estate hospitality, this combined 6,400+ SF masterpiece features 4-5 bedrooms across 2 grand wings under a </p>
+      
+      <dl class="micro">
+        <div><dt>Per acre</dt><dd>$135,870</dd></div>
+        <div><dt>Water</dt><dd>—</dd></div>
+        <div><dt>Sewer</dt><dd>—</dd></div>
+        <div><dt>HOA</dt><dd>None</dd></div>
+      </dl>
+      <div class="links">
+        <a class="btn" href="https://www.metrolistpro.com/homes/2/6/4800-ABBEY-ROAD-PLACERVILLE-CA-95667/226133530" rel="noopener">Listing &amp; photos &rarr;</a>
+        
+      </div>
+    </div>
+  </article>
+
+  <article class="card">
+    <div class="media">
+      <a class="fallback" href="https://www.metrolistpro.com/homes/2/6/6881-SAGITTARIUS-DRIVE-PLACERVILLE-CA-95667/226064449" rel="noopener">View photos &rarr;</a>
+      <div class="strip">
+      <img src="https://m.cbhomes.com/p/371/226064449/d1EFFADd18624f4/m23cc.webp" alt="6881 Sagittarius Drive — photo 1 of 6"
+           loading="eager" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226064449/A4DAD1CE3D25422/m23cc.webp" alt="6881 Sagittarius Drive — photo 2 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226064449/A89aB686728049c/m23cc.webp" alt="6881 Sagittarius Drive — photo 3 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226064449/baC1d4b8Cd63425/m23cc.webp" alt="6881 Sagittarius Drive — photo 4 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226064449/d475Cc42E60C4e6/m23cc.webp" alt="6881 Sagittarius Drive — photo 5 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226064449/DfCc19f787db472/m23cc.webp" alt="6881 Sagittarius Drive — photo 6 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()"></div>
+      <span class="shots">6 photos &middot; swipe</span>
+    </div>
+    <div class="body">
+      <div class="tags"><span class="tag ok">Active</span></div>
+      <p class="price">$1,389,000
+      <span class="pricechg down">&darr;
+      $100,000 from $1,489,000</span></p>
+      <p class="addr">6881 Sagittarius Drive</p>
+      <p class="city">Placerville, CA 95667 &middot; MLS 226064449</p>
+      <div class="facts"><span class="fact">4 bd</span><span class="fact">4 full ba</span><span class="fact">5,351 sqft</span><span class="fact acres pref">40 acres</span><span class="fact pool">Pool</span><span class="fact">Built 2005</span></div>
+      <p class="pooldetail">Built-In, On Lot, Pool House, Pool Sweep, Salt Water, Other</p>
+      <p class="note">Crafted as the builder&#39;s own residence, this extraordinary European Country-inspired estate was designed without compromise. From its commanding setting on 40 acres with sweeping Sierra foothill views and timeless architectural details, every aspect of the property reflects quality and enduring elegance. From the moment you arrive, the home makes a striking impression, thoughtfully designed to fra</p>
+      
+      <dl class="micro">
+        <div><dt>Per acre</dt><dd>$34,725</dd></div>
+        <div><dt>Water</dt><dd>Well</dd></div>
+        <div><dt>Sewer</dt><dd>Septic System</dd></div>
+        <div><dt>HOA</dt><dd>None</dd></div>
+      </dl>
+      <div class="links">
+        <a class="btn" href="https://www.metrolistpro.com/homes/2/6/6881-SAGITTARIUS-DRIVE-PLACERVILLE-CA-95667/226064449" rel="noopener">Listing &amp; photos &rarr;</a>
+        
+      </div>
+    </div>
+  </article>
+
+  <article class="card">
+    <div class="media">
+      <a class="fallback" href="https://www.metrolistpro.com/homes/2/6/1815-WOODSMAN-COURT-PLACERVILLE-CA-95667/226134101" rel="noopener">View photos &rarr;</a>
+      <div class="strip">
+      <img src="https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/11/05/25654ee1-afbe-4570-9b5f-54e4cd9d1426.jpg" alt="1815 Woodsman Court — photo 1 of 6"
+           loading="eager" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/11/05/6b0564db-bdc0-4db7-bc23-d681d96ea507.jpg" alt="1815 Woodsman Court — photo 2 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/11/05/f46decce-4946-4b67-91a6-b7713c730bb9.jpg" alt="1815 Woodsman Court — photo 3 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/11/05/ca408efc-744d-4066-bffe-0c82b7df4f2a.jpg" alt="1815 Woodsman Court — photo 4 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/11/05/f17700d5-6c18-4cac-aa13-762e587847cf.jpg" alt="1815 Woodsman Court — photo 5 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/11/05/3faae5b4-e807-48b3-a9b5-3d186f9b7332.jpg" alt="1815 Woodsman Court — photo 6 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()"></div>
+      <span class="shots">6 photos &middot; swipe</span>
+    </div>
+    <div class="body">
+      <div class="tags"><span class="tag ok">Active</span></div>
+      <p class="price">$1,299,000</p>
+      <p class="addr">1815 Woodsman Court</p>
+      <p class="city">Placerville, CA 95667 &middot; MLS 226134101</p>
+      <div class="facts"><span class="fact">4 bd</span><span class="fact">4 full + 1 half ba</span><span class="fact">3,560 sqft</span><span class="fact acres">3 acres</span><span class="fact pool">Pool</span></div>
+      <p class="pooldetail">Built-In, Gunite Construction</p>
+      <p class="note">Welcome to 1815 Woodsman Court, an exceptional private estate nestled at the end of a peaceful cul-de-sac within the highly coveted, gated community of Greenstone Country. Blending timeless foothills charm with refined living, this impressive home opens to light-filled interior spaces defined by soaring ceilings, expansive windows, and a seamless layout designed for both everyday comfort and grand</p>
+      
+      <dl class="micro">
+        <div><dt>Per acre</dt><dd>$433,000</dd></div>
+        <div><dt>Water</dt><dd>—</dd></div>
+        <div><dt>Sewer</dt><dd>—</dd></div>
+        <div><dt>HOA</dt><dd>None</dd></div>
+      </dl>
+      <div class="links">
+        <a class="btn" href="https://www.metrolistpro.com/homes/2/6/1815-WOODSMAN-COURT-PLACERVILLE-CA-95667/226134101" rel="noopener">Listing &amp; photos &rarr;</a>
+        
+      </div>
+    </div>
+  </article>
+
+  <article class="card">
+    <div class="media">
+      <a class="fallback" href="https://www.coldwellbankerhomes.com/ca/placerville/2520-bedford-ave/pid_74058780/" rel="noopener">View photos &rarr;</a>
+      <div class="strip">
+      <img src="https://m.cbhomes.com/p/308/41150059/8cA936c91F2d40b/m23cc.webp" alt="2520 Bedford Ave — photo 1 of 6"
+           loading="eager" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/308/41150059/ECC51560810D4c0/m23cc.webp" alt="2520 Bedford Ave — photo 2 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/308/41150059/5CE5ebD008914e7/m23cc.webp" alt="2520 Bedford Ave — photo 3 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/308/41150059/F1dBB134F018437/m23cc.webp" alt="2520 Bedford Ave — photo 4 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/308/41150059/E1Ef1888EEcb4FD/m23cc.webp" alt="2520 Bedford Ave — photo 5 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/308/41150059/3AcAAC2bFD8A41f/m23cc.webp" alt="2520 Bedford Ave — photo 6 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()"></div>
+      <span class="shots">6 photos &middot; swipe</span>
+    </div>
+    <div class="body">
+      <div class="tags"><span class="tag ok">Active</span></div>
+      <p class="price">$1,275,000</p>
+      <p class="addr">2520 Bedford Ave</p>
+      <p class="city">Placerville, CA 95667 &middot; MLS 41150059</p>
+      <div class="facts"><span class="fact">5 bd</span><span class="fact">3 full ba</span><span class="fact acres pref">16.74 acres</span><span class="fact pool">Pool</span><span class="fact">Built 2001</span></div>
+      <p class="pooldetail">In Ground, Fenced, On Lot, Pool/Spa Combo</p>
+      <p class="note">This is an exceptional property, fully permitted &amp; short-term rental permitted (Airbnb &amp; other short-term rentals). Welcome to this majestic luxury estate situated on over 16.74 acres. The large lot provides opportunities for an additional home. Positioned atop the serene Bedford Canyon, this estate boasts sweeping panoramic views that capture the natural beauty of sunrises, sunsets &amp; stargazing. </p>
+      <p class="flagnote">Listed in MAX, not MetroList — so MetroListPRO, the site this tracker verifies against, has no record of it and never will. That is a gap in the checking route, not a doubt about the listing. The MLSListings.com MLS sheet was read on 2026-11-14 and agrees with the board on price, beds, full baths, lot size, pool — it reads Active there too.</p>
+      <dl class="micro">
+        <div><dt>Per acre</dt><dd>$76,165</dd></div>
+        <div><dt>Water</dt><dd>Well, Other (Irrigation)</dd></div>
+        <div><dt>Sewer</dt><dd>Septic Tank, Septic Connected, Septic System</dd></div>
+        <div><dt>HOA</dt><dd>None</dd></div>
+      </dl>
+      <div class="links">
+        <a class="btn" href="https://www.coldwellbankerhomes.com/ca/placerville/2520-bedford-ave/pid_74058780/" rel="noopener">Listing &amp; photos &rarr;</a>
+        
+      </div>
+    </div>
+  </article>
+
+  <article class="card">
+    <div class="media">
+      <a class="fallback" href="https://www.metrolistpro.com/homes/2/6/3720-FOUR-SPRINGS-DRIVE-RESCUE-CA-95672/226083791" rel="noopener">View photos &rarr;</a>
+      <div class="strip">
+      <img src="https://m.cbhomes.com/p/371/226083791/edAee246F02340d/m23cc.webp" alt="3720 Four Springs Drive — photo 1 of 6"
+           loading="eager" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226083791/F5ACA996aC1C400/m23cc.webp" alt="3720 Four Springs Drive — photo 2 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226083791/26b1693C05Ad41d/m23cc.webp" alt="3720 Four Springs Drive — photo 3 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226083791/B26472A278f54cA/m23cc.webp" alt="3720 Four Springs Drive — photo 4 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226083791/AAA3F5FD3Da745C/m23cc.webp" alt="3720 Four Springs Drive — photo 5 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226083791/c1F68F3987C3486/m23cc.webp" alt="3720 Four Springs Drive — photo 6 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()"></div>
+      <span class="shots">6 photos &middot; swipe</span>
+    </div>
+    <div class="body">
+      <div class="tags"><span class="tag ok">Active</span></div>
+      <p class="price">$1,115,000
+      <span class="pricechg down">&darr;
+      $10,000 from $1,125,000</span></p>
+      <p class="addr">3720 Four Springs Drive</p>
+      <p class="city">Rescue, CA 95672 &middot; MLS 226083791</p>
+      <div class="facts"><span class="fact">4 bd</span><span class="fact">3 full ba</span><span class="fact">2,506 sqft</span><span class="fact acres pref">5.86 acres</span><span class="fact pool">Pool</span><span class="fact">Built 1989</span></div>
+      <p class="pooldetail">Built-In, On Lot, Pool Sweep, Gunite Construction</p>
+      <p class="note">Major price reduction!  Sought-after area. Minutes from shopping, schools. Country living at its finest. Don&#39;t miss the approx. 750SF ultimate entertainment hub: game room plus extra room &amp; bath situated above the detached three-car garage. Connected to the main house by a breeze-catching walkway, this private extra space makes a perfect teen hangout or man cave.  Situated in a serene, park-like s</p>
+      
+      <dl class="micro">
+        <div><dt>Per acre</dt><dd>$190,273</dd></div>
+        <div><dt>Water</dt><dd>Well</dd></div>
+        <div><dt>Sewer</dt><dd>Septic System</dd></div>
+        <div><dt>HOA</dt><dd>None</dd></div>
+      </dl>
+      <div class="links">
+        <a class="btn" href="https://www.metrolistpro.com/homes/2/6/3720-FOUR-SPRINGS-DRIVE-RESCUE-CA-95672/226083791" rel="noopener">Listing &amp; photos &rarr;</a>
+        
+      </div>
+    </div>
+  </article>
+
+  <article class="card">
+    <div class="media">
+      <a class="fallback" href="https://www.metrolistpro.com/homes/2/6/1315-ARROWBEE-DR-PLACERVILLE-CA-95667/226085035" rel="noopener">View photos &rarr;</a>
+      <div class="strip">
+      <img src="https://m.cbhomes.com/p/371/226085035/0A1b20073C4D4FD/m23cc.webp" alt="1315 Arrowbee Dr — photo 1 of 6"
+           loading="eager" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226085035/5Dc482F1fC9A4c0/m23cc.webp" alt="1315 Arrowbee Dr — photo 2 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226085035/A096416DC394486/m23cc.webp" alt="1315 Arrowbee Dr — photo 3 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226085035/43bD407F2161411/m23cc.webp" alt="1315 Arrowbee Dr — photo 4 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226085035/596e6049253f498/m23cc.webp" alt="1315 Arrowbee Dr — photo 5 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226085035/09dD7B42eBd84b8/m23cc.webp" alt="1315 Arrowbee Dr — photo 6 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()"></div>
+      <span class="shots">6 photos &middot; swipe</span>
+    </div>
+    <div class="body">
+      <div class="tags"><span class="tag ok">Active</span></div>
+      <p class="price">$899,000
+      <span class="pricechg down">&darr;
+      $31,000 from $930,000</span></p>
+      <p class="addr">1315 Arrowbee Dr</p>
+      <p class="city">Placerville, CA 95667 &middot; MLS 226085035</p>
+      <div class="facts"><span class="fact">4 bd</span><span class="fact">3 full ba</span><span class="fact">2,780 sqft</span><span class="fact acres pref">5 acres</span><span class="fact pool">Pool</span><span class="fact">Built 1971</span></div>
+      <p class="pooldetail">Built-In, Gunite Construction</p>
+      <p class="note">Welcome to this charming mini ranch with an ADU, tucked behind a gated entrance at the end of a paved driveway, offering privacy, versatility, and lovely views in a peaceful country setting. The single-story ranch home design welcomes you into a light-filled living room where vaulted ceilings and expansive picture windows showcase the scenery beyond. The updated kitchen features granite countertop</p>
+      
+      <dl class="micro">
+        <div><dt>Per acre</dt><dd>$179,800</dd></div>
+        <div><dt>Water</dt><dd>Public</dd></div>
+        <div><dt>Sewer</dt><dd>Septic System</dd></div>
+        <div><dt>HOA</dt><dd>None</dd></div>
+      </dl>
+      <div class="links">
+        <a class="btn" href="https://www.metrolistpro.com/homes/2/6/1315-ARROWBEE-DR-PLACERVILLE-CA-95667/226085035" rel="noopener">Listing &amp; photos &rarr;</a>
+        
+      </div>
+    </div>
+  </article>
+
+  <article class="card">
+    <div class="media">
+      <a class="fallback" href="https://www.coldwellbankerhomes.com/ca/placerville/3538-wildwood-ln/pid_73278772/" rel="noopener">View photos &rarr;</a>
+      <div class="strip">
+      <img src="https://m.cbhomes.com/p/73/226107286/433b190543004Ac/m23cc.webp" alt="3538 Wildwood Ln — photo 1 of 6"
+           loading="eager" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/73/226107286/dF36bA9eE4f740D/m23cc.webp" alt="3538 Wildwood Ln — photo 2 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/73/226107286/7F45DE845c0F4a8/m23cc.webp" alt="3538 Wildwood Ln — photo 3 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/73/226107286/C9bF82ED0846417/m23cc.webp" alt="3538 Wildwood Ln — photo 4 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/73/226107286/bfEB92bEB3104C9/m23cc.webp" alt="3538 Wildwood Ln — photo 5 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/73/226107286/B7f6774BD6E14c9/m23cc.webp" alt="3538 Wildwood Ln — photo 6 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()"></div>
+      <span class="shots">6 photos &middot; swipe</span>
+    </div>
+    <div class="body">
+      <div class="tags"><span class="tag ok">Active</span></div>
+      <p class="price">$829,000
+      <span class="pricechg down">&darr;
+      $60,000 from $889,000</span></p>
+      <p class="addr">3538 Wildwood Ln</p>
+      <p class="city">Placerville, CA 95667 &middot; MLS 226107286</p>
+      <div class="facts"><span class="fact">4 bd</span><span class="fact">3 full ba</span><span class="fact acres pref">5 acres</span><span class="fact pool">Pool</span><span class="fact">Built 1962</span></div>
+      <p class="pooldetail">Gunite Construction, Pool Sweep, Pool Cover, On Lot, Built-In</p>
+      <p class="note">Welcome to a property that doesn&#39;t ask you to choose between a home, a retreat, and country living - you get all three. Set among the Placerville foothills, 3538 Wildwood Lane is a place to swim, garden, gather and spread out. The two-story main home offers a private ground-level guest suite with its own entrance and full bath, plus a two-car garage and full basement access. Upstairs, the living s</p>
+      <p class="flagnote">Listed in BAREIS, not MetroList — so MetroListPRO, the site this tracker verifies against, has no record of it and never will. That is a gap in the checking route, not a doubt about the listing. The MLSListings.com MLS sheet was read on 2026-11-14 and agrees with the board on price, beds, full baths, lot size, pool — it reads Active there too.</p>
+      <dl class="micro">
+        <div><dt>Per acre</dt><dd>$165,800</dd></div>
+        <div><dt>Water</dt><dd>Well, Storage Tank, Public</dd></div>
+        <div><dt>Sewer</dt><dd>Septic System</dd></div>
+        <div><dt>HOA</dt><dd>None</dd></div>
+      </dl>
+      <div class="links">
+        <a class="btn" href="https://www.coldwellbankerhomes.com/ca/placerville/3538-wildwood-ln/pid_73278772/" rel="noopener">Listing &amp; photos &rarr;</a>
+        
+      </div>
+    </div>
+  </article>
+
+  <article class="card">
+    <div class="media">
+      <a class="fallback" href="https://www.metrolistpro.com/homes/2/6/4770-FELDSPAR-LANE-PLACERVILLE-CA-95667/226119678" rel="noopener">View photos &rarr;</a>
+      <div class="strip">
+      <img src="https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/10/01/724e3dda-02f0-4894-aa5a-0ad7c4ca40be.jpg" alt="4770 Feldspar Lane — photo 1 of 6"
+           loading="eager" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/10/01/ca1a85b9-87ad-418d-bfbf-023a4e72ed8e.jpg" alt="4770 Feldspar Lane — photo 2 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/10/01/3ea83ffa-c81b-43b3-85b5-7a65fafc2be6.jpg" alt="4770 Feldspar Lane — photo 3 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/10/01/e28a7f6c-6915-4649-98f3-ff2eefe1a374.jpg" alt="4770 Feldspar Lane — photo 4 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/10/01/a36062d8-592f-4789-9cf6-48503cd4185f.jpg" alt="4770 Feldspar Lane — photo 5 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://mediarem.metrolist.net/metrolist/listingpics/bigphoto/2026/10/01/b2515688-6863-4399-8833-32f97efa76eb.jpg" alt="4770 Feldspar Lane — photo 6 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()"></div>
+      <span class="shots">6 photos &middot; swipe</span>
+    </div>
+    <div class="body">
+      <div class="tags"><span class="tag ok">Active</span></div>
+      <p class="price">$789,000</p>
+      <p class="addr">4770 Feldspar Lane</p>
+      <p class="city">Placerville, CA 95667 &middot; MLS 226119678</p>
+      <div class="facts"><span class="fact">4 bd</span><span class="fact">3 full ba</span><span class="fact">2,512 sqft</span><span class="fact acres pref">5 acres</span><span class="fact pool">Pool</span><span class="fact">Built 1992</span></div>
+      <p class="pooldetail">Built-In</p>
+      <p class="note">Tucked away in Gold Hill on five golden acres, this single story ranch style home offers the kind of setting that makes you want to slow down and stay a while. Surrounded by rolling, oak studded terrain with beautiful valley and mountain views, the property combines privacy, space and effortless indoor/outdoor living. At the heart of the home, a vaulted great room is filled with natural light from a dramatic wall of arched windows that frame the landscape beyond. A gas stove adds warmth and character, while French doors open to the view over the deck. The kitchen features granite countertops, light wood cabinetry, a tumbled stone backsplash and gas cooktop, with an adjoining dining area. The spacious primary suite offers its own peaceful retreat, including a freestanding soaking tub beneath a sunlit corner window, separate walk-in shower and dual sink vanity. Three additional bedrooms include a Jack n Jill set up and one near the garage entry providing plenty of flexibility for family and/or guests. There is a dedicated office/den as well. Go outside and see how the property truly shines. A fenced in-ground pool and generous patio create a fabulous setting for summer afternoons and gatherings, all against a backdrop of sweeping valley, mountain views and sunsets. Natural landscaping, a welcoming covered front porch and five acres provide room to enjoy the outdoors without sacrificing privacy. There is plenty of room here to park all the things necessary to enjoy foothill life; boat, RV or trailers. The land is usable with lots of space to plant a garden and for the chicken coop and whatever else your heart desires. This serene property brings together comfortable single story living, beautiful surroundings and the space to enjoy it all right in the heart of Gold HIll.</p>
+      
+      <dl class="micro">
+        <div><dt>Per acre</dt><dd>$157,800</dd></div>
+        <div><dt>Water</dt><dd>Public</dd></div>
+        <div><dt>Sewer</dt><dd>Septic</dd></div>
+        <div><dt>HOA</dt><dd>None</dd></div>
+      </dl>
+      <div class="links">
+        <a class="btn" href="https://www.metrolistpro.com/homes/2/6/4770-FELDSPAR-LANE-PLACERVILLE-CA-95667/226119678" rel="noopener">Listing &amp; photos &rarr;</a>
+        
+      </div>
+    </div>
+  </article>
+</div>
+
+<h2>Sale pending <span class="count">(1)</span></h2>
+<p class="sectnote">Meets every criterion but already under contract. Kept on the board because
+pending sales fall through often enough to be worth watching — they move back up automatically if
+they return to Active.</p>
+<div class="grid">
+  <article class="card">
+    <div class="media">
+      <a class="fallback" href="https://www.metrolistpro.com/homes/2/6/4071-VOYAGER-WAY-SHINGLE-SPRINGS-CA-95682/226082753" rel="noopener">View photos &rarr;</a>
+      <div class="strip">
+      <img src="https://m.cbhomes.com/p/371/226082753/174d2448488d4C7/m23cc.webp" alt="4071 Voyager Way — photo 1 of 6"
+           loading="eager" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226082753/50843B5EC3D94bd/m23cc.webp" alt="4071 Voyager Way — photo 2 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226082753/11e01b187E1144B/m23cc.webp" alt="4071 Voyager Way — photo 3 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226082753/9cdf364E011e4f4/m23cc.webp" alt="4071 Voyager Way — photo 4 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226082753/5EcCf88500cF441/m23cc.webp" alt="4071 Voyager Way — photo 5 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()">
+      <img src="https://m.cbhomes.com/p/371/226082753/b4Cbc88b251b422/m23cc.webp" alt="4071 Voyager Way — photo 6 of 6"
+           loading="lazy" referrerpolicy="no-referrer"
+           onerror="this.remove()"></div>
+      <span class="shots">6 photos &middot; swipe</span>
+    </div>
+    <div class="body">
+      <div class="tags"><span class="tag ok">Active</span></div>
+      <p class="price">$1,275,000
+      <span class="pricechg down">&darr;
+      $24,000 from $1,299,000</span></p>
+      <p class="addr">4071 Voyager Way</p>
+      <p class="city">Shingle Springs, CA 95682 &middot; MLS 226082753</p>
+      <div class="facts"><span class="fact">4 bd</span><span class="fact">3 full ba</span><span class="fact">3,132 sqft</span><span class="fact acres pref">5.03 acres</span><span class="fact pool">Pool</span><span class="fact">Built 2003</span></div>
+      <p class="pooldetail">Built-In, Salt Water</p>
+      <p class="note">Escape the hustle and bustle and discover your own private retreat in Shingle Springs. Set on approximately 5 private acres with sweeping hillside views, this single-story custom home offers over 3,000 sq. ft. of thoughtfully designed living space with 4 bedrooms, 3 full baths and an impressive 4-car garage.    The outdoor setting is where this property truly shines. A stunning infinity-edge saltw</p>
+      
+      <dl class="micro">
+        <div><dt>Per acre</dt><dd>$253,479</dd></div>
+        <div><dt>Water</dt><dd>Well</dd></div>
+        <div><dt>Sewer</dt><dd>Septic System</dd></div>
+        <div><dt>HOA</dt><dd>None</dd></div>
+      </dl>
+      <div class="links">
+        <a class="btn" href="https://www.metrolistpro.com/homes/2/6/4071-VOYAGER-WAY-SHINGLE-SPRINGS-CA-95682/226082753" rel="noopener">Listing &amp; photos &rarr;</a>
+        
+      </div>
+    </div>
+  </article>
+</div>
+
+<h2>Near misses <span class="count">(5)</span></h2>
+<p class="sectnote">Clears everything except one criterion, by a small margin. Shown so the call is
+yours rather than the script's.</p>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Property</th><th>Price</th><th>Land</th><th>Size</th><th>Why it is not in the list</th></tr></thead>
+  <tbody>
+    <tr><td><a href="https://www.metrolistpro.com/homes/2/6/1234-RISING-HILL-W-ROAD-PLACERVILLE-CA-95667/226079329" rel="noopener">1234 Rising Hill W Road</a>, Placerville</td>
+        <td>$685,000</td><td>2.66 ac</td>
+        <td>4 bd / 2 ba</td><td>only 2 full baths (+ 1 half)</td></tr>
+    <tr><td><a href="https://www.metrolistpro.com/homes/2/6/3291-TEXAS-HILL-ROAD-PLACERVILLE-CA-95667/226066603" rel="noopener">3291 Texas Hill Road</a>, Placerville</td>
+        <td>$1,299,000</td><td>1.76 ac</td>
+        <td>4 bd / 4 ba</td><td>only 1.76 acres</td></tr>
+    <tr><td><a href="https://www.metrolistpro.com/homes/2/6/1635-COUNTRY-CLUB-DRIVE-PLACERVILLE-CA-95667/226029772" rel="noopener">1635 Country Club Drive</a>, Placerville</td>
+        <td>$599,900</td><td>0.61 ac</td>
+        <td>4 bd / 3 ba</td><td>only 0.61 acres</td></tr>
+    <tr><td><a href="https://www.metrolistpro.com/homes/2/6/2562-STARBUCK-ROAD-RESCUE-CA-95672/226129627" rel="noopener">2562 Starbuck Road</a>, Rescue</td>
+        <td>$688,000</td><td>0.35 ac</td>
+        <td>4 bd / 3 ba</td><td>only 0.35 acres</td></tr>
+    <tr><td><a href="https://www.metrolistpro.com/homes/2/6/2805-AQUAMARINE-CIRCLE-RESCUE-CA-95672/226063967" rel="noopener">2805 Aquamarine Circle</a>, Rescue</td>
+        <td>$629,000</td><td>0.205 ac</td>
+        <td>4 bd / 3 ba</td><td>only 0.205 acres</td></tr>
+  </tbody>
+</table>
+</div>
+
+
+
+<h2>Removed on earlier runs <span class="count">(1)</span></h2>
+<p class="sectnote">Left the market before this run. Kept so a stale copy resurfacing in a later
+search is not mistaken for a new find — not part of this run's news.</p>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Property</th><th>Last price</th><th>Removed</th><th>Why removed</th></tr></thead>
+  <tbody>
+    <tr><td>5551 Saddlehorn Road, Shingle Springs</td><td>$1,200,000</td>
+        <td>2026-11-11</td><td>Gone from the MetroList active and pending indexes, and its own MetroListPRO detail page (226083864) now answers 404 - a departure from its board of record, not silence from a mirror. Corroborated the same day by the Coldwell Banker IDX sweep (406 records across the three cities), which does not carry it either. Last seen Active at $1,200,000 on 2026-11-10; 10.11 acres with a built-in pool, tracked since 2026-07-26. Two independent sources agree it left the market, so it is dropped rather than held.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>Right land, no pool <span class="count">(11)</span></h2>
+<p class="sectnote">The pool is the binding constraint on this search, not the budget — so these are
+worth a look. Each one is <strong>on the market now</strong> and clears bedrooms, full baths, acreage
+and price; MetroList simply records no pool. On this much land a pool is an addable feature, and
+several of these sit far enough under $1.5M to fund one. Sorted by acreage; 3 are already under contract, so check the status column.</p>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Property</th><th>Price</th><th>Land</th><th>Size</th><th>Sqft</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td><a href="https://www.metrolistpro.com/homes/2/6/7991-S-SHINGLE-ROAD-SHINGLE-SPRINGS-CA-95682/226067744" rel="noopener">7991 S Shingle Road</a>, Shingle Springs</td>
+        <td>$1,250,000</td><td>21.15 ac</td>
+        <td>4 bd / 3 full ba</td>
+        <td>2,808</td>
+        <td>Pending</td></tr>
+    <tr><td><a href="https://www.metrolistpro.com/homes/2/6/2500-HIGHWAY-50-PLACERVILLE-CA-95667/226113066" rel="noopener">2500 Highway 50</a>, Placerville</td>
+        <td>$1,115,000</td><td>8.9 ac</td>
+        <td>4 bd / 4 full ba</td>
+        <td>2,498</td>
+        <td>Pending</td></tr>
+    <tr><td><a href="https://www.metrolistpro.com/homes/2/6/1300-LARGE-OAK-DRIVE-PLACERVILLE-CA-95667/226137636" rel="noopener">1300 Large Oak Drive</a>, Placerville</td>
+        <td>$1,099,000</td><td>6.72 ac</td>
+        <td>4 bd / 4 full ba</td>
+        <td>4,870</td>
+        <td>Active</td></tr>
+    <tr><td><a href="https://www.metrolistpro.com/homes/2/6/2610-RANCH-ROAD-PLACERVILLE-CA-95667/226132045" rel="noopener">2610 Ranch Road</a>, Placerville</td>
+        <td>$499,000</td><td>6.3 ac</td>
+        <td>6 bd / 4 full ba</td>
+        <td>2,536</td>
+        <td>Active</td></tr>
+    <tr><td><a href="https://www.metrolistpro.com/homes/2/6/1777-CARL-ROAD-RESCUE-CA-95672/226104225" rel="noopener">1777 Carl Road</a>, Rescue</td>
+        <td>$1,389,000</td><td>5.2 ac</td>
+        <td>4 bd / 3 full ba</td>
+        <td>2,896</td>
+        <td>Active</td></tr>
+    <tr><td><a href="https://www.metrolistpro.com/homes/2/6/4661-HOLM-ROAD-PLACERVILLE-CA-95667/226083194" rel="noopener">4661 Holm Road</a>, Placerville</td>
+        <td>$899,900</td><td>5.12 ac</td>
+        <td>4 bd / 4 full ba</td>
+        <td>4,525</td>
+        <td>Contingent - Show</td></tr>
+    <tr><td><a href="https://www.metrolistpro.com/homes/2/6/2550-TOLOWA-TRAIL-PLACERVILLE-CA-95667/226112236" rel="noopener">2550 Tolowa Trail</a>, Placerville</td>
+        <td>$575,000</td><td>5.02 ac</td>
+        <td>4 bd / 3 full ba</td>
+        <td>1,992</td>
+        <td>Active</td></tr>
+    <tr><td><a href="https://www.metrolistpro.com/homes/2/6/6560-AGAPE-COURT-PLACERVILLE-CA-95667/226070903" rel="noopener">6560 Agape Court</a>, Placerville</td>
+        <td>$599,000</td><td>5.02 ac</td>
+        <td>4 bd / 3 full ba</td>
+        <td>2,562</td>
+        <td>Active</td></tr>
+    <tr><td><a href="https://www.metrolistpro.com/homes/2/6/4810-ROBLEDO-DRIVE-PLACERVILLE-CA-95667/226129641" rel="noopener">4810 Robledo Drive</a>, Placerville</td>
+        <td>$999,900</td><td>5 ac</td>
+        <td>5 bd / 4 full ba</td>
+        <td>4,313</td>
+        <td>Pending</td></tr>
+    <tr><td><a href="https://www.metrolistpro.com/homes/2/6/5681-HONEYCOMB-LANE-SHINGLE-SPRINGS-CA-95682/226068369" rel="noopener">5681 Honeycomb Lane</a>, Shingle Springs</td>
+        <td>$899,000</td><td>5 ac</td>
+        <td>4 bd / 4 full ba</td>
+        <td>3,210</td>
+        <td>Active</td></tr>
+    <tr><td><a href="https://www.metrolistpro.com/homes/2/6/6310-BUTTERFIELD-WAY-PLACERVILLE-CA-95667/226123031" rel="noopener">6310 Butterfield Way</a>, Placerville</td>
+        <td>$1,390,000</td><td>3.67 ac</td>
+        <td>5 bd / 3 full ba</td>
+        <td>2,576</td>
+        <td>Active</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>Ruled out on the facts</h2>
+<p class="sectnote">Checked in earlier runs and failed a hard criterion regardless of availability.</p>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Address</th><th>Price</th><th>Why not</th></tr></thead>
+  <tbody>
+    <tr><td>4262 Cameron Rd, Cameron Park</td><td>$1,049,000</td><td>Outside the three target cities, and flagged rather than hidden because it fails only on that. Found on 2026-11-04 by a ZIP-keyed MLSListings sweep of 95682 — the Shingle Springs ZIP — which Cameron Park shares; the city-keyed enumerations this board runs on cannot see it. Verified on MetroListPRO (its board of record) the same day: Active, Has a Pool: Yes, Lot Size in Acres 5.9, SFR; MLSListings adds 4bd/3ba, 2,348 sqft, 7 days on market, gated Cameron Estates with ~500 ft of year-round Deer Creek frontage, two minutes from Hwy 50. It clears every other criterion — pool, 4bd, 3 full baths, 5.9 acres, $1,049,000. Say the word if Cameron Park counts and a future run can promote it to the board.</td></tr>
+    <tr><td>3784 Cattle Drive, Shingle Springs</td><td>$1,050,000</td><td>Surfaced on 2026-10-31 by the new Coldwell Banker IDX cross-check (cb-crosscheck.py), which reads it as ACTIVE at $1,050,000, 4bd, 5.0 acres, 101 days on market, with remarks describing a &#39;custom Milton Estates pool home&#39;. It is a MetroList-format number and the feed files its photos under the MetroList bucket, so MetroListPRO is its own board of record — and MetroListPRO does not carry it: absent from the Shingle Springs active index (45 records) and the pending index (12), and /homes/2/6/x/226092223 serves the generic unknown-id page. The MLS-keyed realgeeks mirror 404s on it. A control listing (4071 Voyager Way, 226082753) resolves at both. Per README &#39;A 404 from a listing&#39;s own board is a departure; silence from a mirror is not&#39;, that is a departure and the IDX row is stale — the MLS of record wins. Recorded so a future run does not re-derive it; if MetroListPRO ever indexes it, treat it as a relist and verify before promoting.</td></tr>
+    <tr><td>3476 Buena Vista Dr, Shingle Springs</td><td>$860,000</td><td>Surfaced only by the Redfin county cross-check, not by the IDX feed or MetroListPRO — it is a For-Sale-by-Owner listing sourced from FSBO.com, so no MLS carries it. It came back with an empty LOT SIZE in the CSV (the trap the README warns about) and had to be read by hand: the detail page gives 0.79 acres, against a 2.5 acre minimum. 4bd/3ba, 2,444 sqft, no pool in the record or the description. Fails acreage.</td></tr>
+    <tr><td>1781 Springvale Rd, Placerville</td><td>$1,150,000</td><td>Tracked as a relist after dropping from $1.5M; cut again to $1,150,000 (MetroListPRO list price on 2026-10-09, was $1,200,000). Resolved against MetroListPRO (MLS 226100125): Property Subtype is Triplex — multi-unit residential income, three dwellings (3bd/2ba main, 1bd/1ba ADU, studio pool house) on 10.27 acres. No single unit meets the 4BR/3BA minimum, and the MLS pool field reads No even though the remarks describe a 150,000-gallon pool. Re-confirmed Active, Triplex, Has a Pool: No on 2026-10-09. Retired from tracking; further price cuts do not change the subtype.</td></tr>
+    <tr><td>1601 Velvet Horn Ln, Rescue</td><td>$1,100,000</td><td>Went PENDING between the 2026-10-08 and 2026-10-09 runs — MetroListPRO (MLS 226060031) reads Status: Pending at $1,100,000. 5 acres with a built-in sports pool, but 3 bd / 3 ba, under the 4BR minimum, so it was never a candidate; recorded here because the previous note asserted it was still actively listed.</td></tr>
+    <tr><td>5135 Bryant Rd, Shingle Springs</td><td>$1,690,000</td><td>Over budget; status unverified</td></tr>
+    <tr><td>1900 Deer Valley Rd, Rescue</td><td>$1,200,000</td><td>3bd/2ba, no pool</td></tr>
+    <tr><td>Howard Dr, Rescue (5.94 acres)</td><td>$2,275,000</td><td>Over budget</td></tr>
+    <tr><td>3359 Saint Ives Ct, Shingle Springs</td><td>$2,199,500</td><td>Over budget, only 4bd</td></tr>
+    <tr><td>765 Sierra View Ct, Shingle Springs</td><td>$3,499,999</td><td>Far over budget</td></tr>
+    <tr><td>5037 Milton Ranch Rd, Shingle Springs</td><td>$4,388,888</td><td>Far over budget</td></tr>
+    <tr><td>5040 Milton Ranch Rd, Shingle Springs</td><td>—</td><td>Not for sale — sold 2019 for $1.4M</td></tr>
+    <tr><td>5457 Bryant Rd, Shingle Springs</td><td>—</td><td>Not for sale — sold 2020 for $1,405,000</td></tr>
+    <tr><td>2800 La Paz Rd, Placerville</td><td>$995,000</td><td>4bd/2ba — under both minimums</td></tr>
+    <tr><td>2931 Texas Hill Rd, Placerville</td><td>—</td><td>4bd/2.5ba — under both minimums</td></tr>
+    <tr><td>4370 Hillwood Dr, Shingle Springs</td><td>$699,000</td><td>0.25 acres</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>How this list is built</h2>
+<p class="sectnote">Earlier runs of this tracker had no way to read a live listing page and inferred
+status from search-engine text, which produced four confident matches that were all off market. That
+failure mode is now closed off.</p>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Step</th><th>What happens</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Enumerate</strong></td><td>Every listing in the three cities is pulled from <a href="https://www.metrolistpro.com/" rel="noopener">MetroListPRO</a>&rsquo;s own city indexes — the MLS of record itself, active and pending alike — 367 properties this run, not a search-result sample.</td></tr>
+    <tr><td><strong>Filter</strong></td><td>Hard criteria applied to structured MLS fields, never to prose: 31 cleared beds/baths/price, then acreage and pool narrowed it to 9.</td></tr>
+    <tr><td><strong>Verify</strong></td><td>Each survivor is re-read from <strong>MetroListPRO</strong>, the official MetroList MLS site, and price, beds, full baths, acreage and pool must match.
+      7 agreed, checked 2026-11-14. 2 listings are carried by a
+                  different MLS — <strong>2520 Bedford Ave</strong> (MAX), <strong>3538 Wildwood Ln</strong> (BAREIS)
+                  — so MetroListPRO has no record of them and never will. They are confirmed against the MLSListings.com MLS sheet instead.</td></tr>
+    
+    
+    <tr><td><strong>Cover other boards</strong></td><td>MetroListPRO speaks for MetroList and is blind to
+      every other MLS, so a <em>new</em> listing on another board could not be found by it at all. The
+      <strong>Coldwell Banker IDX</strong> closes that: it answers an ordinary request &mdash; no browser
+      impersonation &mdash; and carries other boards, including the one match MetroListPRO has never indexed.
+      It swept 404 records across the three cities, 44 cleared
+      beds, baths and price, and 9 cleared acreage with a pool in the remarks &mdash;
+      none of them missing from the board.
+      Checked 2026-11-14.</td></tr>
+    <tr><td><strong>Ask for the pool directly</strong></td><td>Every other sweep here clears beds, baths
+      and price first and then opens hundreds of listing pages to find out which have a pool, because no search
+      payload carries one. One feed &mdash; a <strong>RealGeeks MetroList IDX site</strong> &mdash; filters on the
+      MLS's own structured pool field <em>server-side</em>, so the qualifying set arrives already narrowed:
+      14 rows county-wide, 8 in the three towns,
+      8 clearing the 2.5-acre minimum with
+      the pool field set &mdash; and nothing in it that the page was not already tracking.
+      It reads MetroList only, so it corroborates rather than closing the gap above, and its bath count is
+      full + half combined, so it never settles the full-bath minimum. Checked 2026-11-14.</td></tr>
+    <tr><td><strong>Resolve</strong></td><td>Where sources disagree, the MLS of record wins and the disagreement is printed on the card rather than hidden.</td></tr>
+  </tbody>
+</table>
+</div>
+<p class="sectnote" style="margin-top:14px"><strong>What this run could not cover.</strong>
+Closed for this run. MetroListPRO enumerates MetroList only, so it is blind to a new listing on another MLS. The Coldwell Banker IDX cross-check (cb-crosscheck.py, plain request, no User-Agent spoof) carries other boards — it sees both known foreign listings, including 3538 Wildwood Ln, which MetroListPRO has never indexed — and it swept 404 records across the three cities this run, finding no qualifying candidate the board did not already track. It is a cross-check, not the board: it has no structured pool field, its bath count cannot resolve the 3-full-bath minimum, and it carries stale ACTIVE rows, so the MLS of record still decides every promotion.</p>
+<p class="sectnote" style="margin-top:14px">Two things that bite here and are handled explicitly:
+<strong>half baths</strong> — some sites report 2 full + 1 half as &ldquo;3 baths&rdquo;, so the bath
+test counts full baths only; and <strong>MetroList MLS number prefixes encode the listing year</strong>
+(<code>226…</code> = 2026), which makes a stale listing easy to spot. Every MetroList-carried property on this page has one; the single exception is <strong>2520 Bedford Ave</strong> (MLS 41150059, MAX), numbered by a
+    different MLS, so the year cannot be read off it this way
+    and its card says how it was checked instead.</p>
+
 <footer>
-  Generated Nov 14, 2026 by <code>build.js</code> from <code>listings.json</code>.
-  Listing data © MetroList Services, Inc. Information deemed reliable but not guaranteed — verify with the listing agent.
+  <p>Generated from <code>listings.json</code> by <code>build.js</code>.
+  9 properties tracked &middot; 8 active &middot;
+  1 pending &middot; 0 removed this run &middot; 1 removed earlier.
+  Data from MetroList MLS via IDX; listing photos are the copyright of the listing brokerages and are
+  hotlinked here for private use. Verify all figures with your agent before acting on them.</p>
 </footer>
 
 </div>

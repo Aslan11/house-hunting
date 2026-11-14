@@ -1,360 +1,850 @@
 #!/usr/bin/env node
 /**
- * build.js — renders index.html from listings.json
+ * Builds index.html from listings.json.
  *
- * No dependencies.  Run:  node build.js
- * Never hand-edit index.html; edit listings.json and rebuild.
+ * Future runs should edit listings.json ONLY, then run `node build.js`.
+ *
+ * Layout contract (per the standing brief):
+ *   - New-since-last-run listings are called out FIRST, at the top of the page.
+ *   - Anything sold or withdrawn is dropped off the board and recorded in "Removed this run".
+ *   - Nothing is re-surfaced as new unless its price moved.
  */
-'use strict';
-
 const fs = require('fs');
 const path = require('path');
 
-const ROOT = __dirname;
-const data = JSON.parse(fs.readFileSync(path.join(ROOT, 'listings.json'), 'utf8'));
+const data = JSON.parse(fs.readFileSync(path.join(__dirname, 'listings.json'), 'utf8'));
 
-/* ---------- helpers ---------- */
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-const esc = s => String(s == null ? '' : s)
-  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+const money = (n) => (n == null ? '—' : '$' + n.toLocaleString('en-US'));
 
-const money = n => n == null ? '—' : '$' + Number(n).toLocaleString('en-US');
-const moneyShort = n => {
-  if (n == null) return '—';
-  if (n >= 1e6) return '$' + (n / 1e6).toFixed(n % 1e6 === 0 ? 1 : 3).replace(/0+$/, '').replace(/\.$/, '') + 'M';
-  return '$' + Math.round(n / 1000) + 'K';
-};
-const num = n => n == null ? '—' : Number(n).toLocaleString('en-US');
-const acresTxt = a => a == null ? '—' : (Number.isInteger(a) ? a : a) + ' ac';
-const bathsTxt = b => b == null ? '—' : String(b).replace(/\.0$/, '');
+/* The IDX status field spells "under contract" three ways. Kept in step with `underContract`
+   in scrape.js — matching one spelling here is what let a Contingent row read as unqualified. */
+const UNDER_CONTRACT = /^(pending|pending sale|sale pending|contingent|active under contract)$/i;
+const short = (n) => (n == null ? '—' : '$' + (n / 1e6).toFixed(3).replace(/0+$/, '').replace(/\.$/, '') + 'M');
 
-const prettyDate = iso => {
-  if (!iso) return '—';
-  const [y, m, d] = iso.split('-').map(Number);
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  return `${months[m - 1]} ${d}, ${y}`;
+// MetroList reports baths as "full | half". Half baths are shown but never counted toward the
+// 3-bath minimum, because "2 full + 1 half" is a 2.5-bath house however other sites label it.
+const bathLabel = (l) => {
+  const h = l.partialBaths ? ` + ${l.partialBaths} half` : '';
+  return `${l.fullBaths} full${h} ba`;
 };
 
-/* ---------- card ---------- */
+const ppa = (l) => (l.acres ? Math.round(l.currentPrice / l.acres) : null);
 
-function statusBadge(l) {
-  if (l.status === 'under-contract') {
-    return `<span class="badge badge-warn" title="Accepted offer; backup offers may still be considered">Under contract</span>`;
-  }
-  return `<span class="badge badge-ok">Active</span>`;
+/**
+ * Photo strip: scroll-snap gallery over hotlinked MLS photos.
+ *
+ * A "View photos" link sits *behind* the strip at all times. When the images load they cover it
+ * completely; if a CDN blocks the hotlink the failed <img> removes itself and the link shows
+ * through, so a card can never degrade into an empty grey box.
+ */
+function media(l) {
+  const shots = (l.photos || []).slice(0, 6);
+  const fallback = `<a class="fallback" href="${esc(l.url)}" rel="noopener">View photos &rarr;</a>`;
+  if (!shots.length) return `<div class="media nophoto">${fallback}</div>`;
+
+  const imgs = shots.map((src, i) => `
+      <img src="${esc(src)}" alt="${esc(l.address)} — photo ${i + 1} of ${shots.length}"
+           loading="${i === 0 ? 'eager' : 'lazy'}" referrerpolicy="no-referrer"
+           onerror="this.remove()">`).join('');
+  return `<div class="media">
+      ${fallback}
+      <div class="strip">${imgs}</div>
+      <span class="shots">${shots.length} photos &middot; swipe</span>
+    </div>`;
 }
 
-function priceDelta(l) {
-  if (l.priceChange == null || l.priceChange === 0) return '';
-  const down = l.priceChange < 0;
-  const abs = money(Math.abs(l.priceChange));
-  return `<span class="delta ${down ? 'delta-down' : 'delta-up'}">${down ? '▼' : '▲'} ${abs} since last run</span>`;
+function priceBlock(l) {
+  const hist = l.priceHistory || [];
+  if (hist.length > 1) {
+    const prev = hist[hist.length - 2].price;
+    const now = l.currentPrice;
+    const down = now < prev;
+    return `<p class="price">${money(now)}
+      <span class="pricechg ${down ? 'down' : 'up'}">${down ? '&darr;' : '&uarr;'}
+      ${money(Math.abs(now - prev))} from ${money(prev)}</span></p>`;
+  }
+  return `<p class="price">${money(l.currentPrice)}</p>`;
 }
 
-function photoTile(l) {
-  const alt = esc(l.address + ', ' + l.city);
-  if (l.photos && l.photos.length) {
-    const src = esc(l.photos[0]);
-    return `<a class="shot" href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">
-        <img src="${src}" alt="${alt}" loading="lazy" referrerpolicy="no-referrer"
-             onerror="this.closest('.shot').classList.add('shot-fallback');this.remove();">
-        <span class="shot-fb">View listing photos →</span>
-      </a>`;
+function facts(l) {
+  const f = [
+    `<span class="fact">${l.beds} bd</span>`,
+    `<span class="fact">${bathLabel(l)}</span>`,
+  ];
+  if (l.sqft) f.push(`<span class="fact">${l.sqft.toLocaleString('en-US')} sqft</span>`);
+  f.push(`<span class="fact acres${l.acres >= 5 ? ' pref' : ''}">${l.acres} acres</span>`);
+  f.push(`<span class="fact pool">Pool</span>`);
+  if (l.yearBuilt) f.push(`<span class="fact">Built ${esc(l.yearBuilt)}</span>`);
+  if (l.horse === 'Yes') f.push(`<span class="fact">Horse property</span>`);
+  return f.join('');
+}
+
+/* Which enumeration ran this time. `scrape.js` reads the Coldwell Banker IDX feed and needs a
+   spoofed User-Agent to do it; `mls-enumerate.py` + `mls-compose.py` read MetroListPRO, which
+   answers an ordinary request. Several sentences below name their sources, and naming the wrong
+   one credits a read that did not happen — so they all branch on this rather than assuming. */
+const idxEnumerated = /IDX/i.test((data.source && data.source.name) || '');
+
+/* The card note for a listing the MLS of record structurally cannot cover — it belongs to a
+   different MLS, so MetroListPRO answers 404 forever and no waiting closes the gap.
+
+   Composed here rather than stamped by verify.py because it has to state what the second source
+   actually confirmed, and that stamp (`secondSource`) is written by foreign-verify.py, which runs
+   after verify.py. A note written one step early describes the previous run's evidence. With no
+   stamp at all the note says the confirmation is outstanding: on a listing that cannot be checked
+   against the MLS of record, an unearned "a second source agrees" is the only thing between the
+   reader and a single unverified feed. */
+const FIELD_LABELS = { mls: 'MLS number', price: 'price', beds: 'beds',
+  fullBaths: 'full baths', acres: 'lot size', pool: 'pool' };
+
+function foreignNote(l) {
+  const entry = foreignMls.find((a) => a.mls === l.mls);
+  if (!entry) return null;
+  const head = `Listed in ${entry.source}, not MetroList — so MetroListPRO, the site this tracker `
+    + `verifies against, has no record of it and never will. That is a gap in the checking route, `
+    + `not a doubt about the listing`;
+  const ss = l.secondSource;
+  if (!ss) {
+    return `${head}, but the second confirmation is still outstanding: only the IDX feed has been `
+      + `read. Treat it as single-sourced until that is closed.`;
   }
-  return `<a class="shot shot-fallback" href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">
-      <span class="shot-fb">View listing photos →</span></a>`;
+  const label = (f) => FIELD_LABELS[f] || f;
+  const ok = (ss.confirmed || []).map(label);
+  const bad = (ss.disagreed || []).map(label);
+  /* Name only the sources this run actually read. The note used to open "The IDX feed and
+     <second source> were read independently", which was true while scrape.js ran every run —
+     and false the first time it could not, because the IDX feed is reachable only with a
+     spoofed User-Agent. A card that credits a read nobody performed is the exact failure the
+     verification gate exists to prevent, so the phrasing follows the run's enumeration source. */
+  const read = idxEnumerated
+    ? `The IDX feed and ${ss.name || 'a second source'} were read independently on ${ss.checkedOn}`
+    : `${(ss.name || 'A second source').replace(/^the /, 'The ')} was read on ${ss.checkedOn}`;
+  let note = `${head}. ${read} and ${idxEnumerated ? 'agree' : 'agrees with the board'} on `
+    + `${ok.length ? ok.join(', ') : 'nothing'}`;
+  note += ss.status ? ` — it reads ${ss.status} there too.` : '.';
+  if (bad.length) {
+    note += ` They disagree on ${bad.join(', ')} — per the verification gate that disagreement is `
+      + `printed rather than resolved; settle it with the listing agent.`;
+  }
+  return note;
 }
 
 function card(l) {
-  const specs = [
-    [l.beds, 'bd'], [bathsTxt(l.baths), 'ba'],
-    [num(l.sqft), 'sq ft'], [l.acres, 'acres'],
-  ].map(([v, k]) => `<div class="spec"><b>${esc(v)}</b><span>${k}</span></div>`).join('');
+  const pending = l.status === 'pending';
+  const statusNote = l.statusNote || foreignNote(l);
+  const tags = [];
+  if (l.isNew) tags.push(`<span class="tag new">New this run</span>`);
+  tags.push(pending
+    ? `<span class="tag pend">Sale pending</span>`
+    : `<span class="tag ok">Active</span>`);
 
-  const extras = [];
-  if (l.poolDetail) extras.push(['Pool', l.poolDetail]);
-  if (l.yearBuilt) extras.push(['Built', l.yearBuilt]);
-  if (l.view) extras.push(['View', l.view]);
-  if (l.horseProperty) extras.push(['Horse property', 'Yes']);
-  if (l.schoolDistrict) extras.push(['Schools', l.schoolDistrict]);
-
-  const hist = (l.priceHistory || []).length > 1
-    ? `<div class="hist">${l.priceHistory.map(h => `${prettyDate(h.date)}: ${money(h.price)}`).join(' → ')}</div>`
-    : '';
-
-  return `<article class="card${l.isNew ? ' card-new' : ''}${l.status === 'under-contract' ? ' card-uc' : ''}">
-  ${l.isNew ? '<div class="newflag">New this run</div>' : ''}
-  ${photoTile(l)}
-  <div class="body">
-    <div class="pricerow">
-      <div class="price">${money(l.currentPrice)}</div>
-      ${statusBadge(l)}
+  const perAcre = ppa(l);
+  return `
+  <article class="card${pending ? ' is-pending' : ''}${l.isNew ? ' is-new' : ''}">
+    ${media(l)}
+    <div class="body">
+      <div class="tags">${tags.join('')}</div>
+      ${priceBlock(l)}
+      <p class="addr">${esc(l.address)}</p>
+      <p class="city">${esc(l.city)}, CA ${esc(l.zip)} &middot; MLS ${esc(l.mls)}</p>
+      <div class="facts">${facts(l)}</div>
+      <p class="pooldetail">${esc(l.poolDetail)}</p>
+      <p class="note">${esc(l.summary)}</p>
+      ${statusNote ? `<p class="flagnote">${esc(statusNote)}</p>` : ''}
+      <dl class="micro">
+        ${perAcre ? `<div><dt>Per acre</dt><dd>${money(perAcre)}</dd></div>` : ''}
+        <div><dt>Water</dt><dd>${esc(l.water || '—')}</dd></div>
+        <div><dt>Sewer</dt><dd>${esc(l.sewer || '—')}</dd></div>
+        <div><dt>HOA</dt><dd>${esc(l.hoa || 'None')}</dd></div>
+      </dl>
+      <div class="links">
+        <a class="btn" href="${esc(l.url)}" rel="noopener">Listing &amp; photos &rarr;</a>
+        ${l.mlsUrl ? `<a class="btn ghost" href="${esc(l.mlsUrl)}" rel="noopener">MLS record</a>` : ''}
+      </div>
     </div>
-    ${priceDelta(l)}
-    <h3><a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">${esc(l.address)}</a></h3>
-    <div class="loc">${esc(l.city)}, CA ${esc(l.zip)} · MLS #${esc(l.mls)}</div>
-    <div class="specs">${specs}</div>
-    <dl class="extras">
-      ${extras.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}
-    </dl>
-    ${l.desc ? `<p class="desc">${esc(l.desc.slice(0, 340))}${l.desc.length > 340 ? '…' : ''}</p>` : ''}
-    ${hist}
-    <div class="foot">
-      <span class="agent">${esc(l.agent || '')}</span>
-      <a class="link" href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">MLS listing →</a>
-    </div>
-  </div>
-</article>`;
+  </article>`;
 }
 
-/* ---------- sections ---------- */
+const activeList = data.listings || [];
+const pendingList = data.pending || [];
+// Normalise the new-this-run flag. scrape.js writes `newThisRun`; earlier code and this file both
+// read `isNew`. A mismatch here would silently empty the top "New this run" section — the whole
+// point of the brief — while runSummary correctly said something moved. Coalesce at read time.
+for (const l of activeList.concat(pendingList)) l.isNew = !!(l.isNew || l.newThisRun);
+const listings = activeList.concat(pendingList);
+const fresh = listings.filter((l) => l.isNew);
 
-const C = data.criteria;
-const listings = data.listings || [];
-const newOnes = listings.filter(l => l.isNew);
-const active = listings.filter(l => l.status === 'match');
-const uc = listings.filter(l => l.status === 'under-contract');
+// Sections are mutually exclusive so no property is ever rendered twice: anything new goes in the
+// top section, and the standing sections carry only what was already on the board last run.
+const heldActive = activeList.filter((l) => !l.isNew);
+const heldPending = pendingList.filter((l) => !l.isNew);
+/* `dropped` is a cumulative ledger in listings.json — mls-compose.py seeds it from the stored
+   board so a departure is remembered past the run that saw it (README "A drop record with a
+   one-run memory"). The page must not read that ledger as this run's news: on 2026-11-12 the
+   2026-11-11 departure of 5551 Saddlehorn Road rendered under "Removed this run (1)" and in the
+   "1 Removed" headline stat, on a run that removed nothing. Keep the memory, scope the claim. */
+const droppedAll = data.dropped || [];
+const dropped = droppedAll.filter((d) => d.droppedOn === data.lastRun);
+const droppedEarlier = droppedAll.filter((d) => d.droppedOn !== data.lastRun);
+const nearMiss = data.nearMisses || [];
+const priceMoves = (data.runSummary && data.runSummary.priceChanges) || [];
+// A property crossing between the active board and the pending list counts as movement.
+// Without this the banner reports "Nothing moved" on a run where the active count fell.
+const statusMoves = (data.runSummary && data.runSummary.statusChanges) || [];
+/* `to`/`from` carry the MLS's own spelling — `Active`, `Pending`, `Contingent - Show` — because
+   mls-compose.py copies `mlsStatus` straight through. This used to test `s.to === 'pending'`, a
+   value no composer has ever written, so EVERY status change took the else branch and a property
+   going under contract was announced as "back on the active board … the deal appears to have
+   fallen through" — the exact opposite of what happened. Found live on 2026-11-12 on
+   4071 Voyager Way. Decide from the bucket the composer actually put the listing in, not from a
+   status string's spelling: that is the same reasoning status_key() encodes one level up, and it
+   cannot drift as the MLS invents new status words. */
+const pendingMlsIds = new Set((data.pending || []).map((l) => String(l.mls)));
+const activeMlsIds = new Set((data.listings || []).map((l) => String(l.mls)));
+const wentPending = (s) => (pendingMlsIds.has(String(s.mls))
+  ? true
+  : activeMlsIds.has(String(s.mls))
+    ? false
+    : !/^(active|for sale)\b/i.test(String(s.to || '')));
+// The pool-less table moves independently of the board — a house with the right land, beds and
+// baths but no pool never touches `listings`. Before this, a run where that table gained a row,
+// cut two prices and lost one to the market still printed "Nothing moved".
+const pl = (data.runSummary && data.runSummary.poollessChanges) || {};
+const plPriced = pl.priceChanges || [];
+/* scrape.js keys the pool-less diff on `mls || address`, so a property relisted under a fresh MLS
+   number lands in `added` and `gone` at once. The 2026-10-20 run reported 4810 Robledo Dr as one
+   addition and one removal while it sat in the table throughout at the same price. Each half is
+   true of the MLS record and neither is true of the property, so they collapse into a relist
+   instead of being counted twice in opposite directions. */
+const plKey = (p) => `${p.address}|${p.city}`;
+const plGoneBy = new Map((pl.gone || []).map((p) => [plKey(p), p]));
+const plAddedBy = new Map((pl.added || []).map((p) => [plKey(p), p]));
+/* The diff's `added` projection carries no `mls` field, so the new number is read back off the
+   rendered table rather than printed as an empty parenthetical. */
+const poollessBy = new Map((data.poolless || []).map((p) => [plKey(p), p]));
+const plRelisted = (pl.added || [])
+  .filter((p) => plGoneBy.has(plKey(p)))
+  .map((p) => ({
+    ...p,
+    priorPrice: plGoneBy.get(plKey(p)).price,
+    mls: p.mls || (poollessBy.get(plKey(p)) || {}).mls || null,
+    priorMls: plGoneBy.get(plKey(p)).mls || null,
+  }));
+const plAdded = (pl.added || []).filter((p) => !plGoneBy.has(plKey(p)));
+const plGone = (pl.gone || []).filter((p) => !plAddedBy.has(plKey(p)));
+/* Going under contract is the most actionable thing that can happen to a row on this list, and
+   until 2026-10-18 it had no category — a `Contingent` listing fell out of the table entirely
+   and was reported as "off the table". It is counted here so the banner cannot call that run
+   quiet. */
+const plStatus = pl.statusChanges || [];
+const poollessMoved = plAdded.length + plPriced.length + plGone.length + plStatus.length +
+  plRelisted.length;
+// Shown in both banner branches, so it is built once. Phrased to keep the distinction the
+// whole page rests on: these are not matches, they are the add-a-pool list.
+const poollessItems = [
+  // An addition that is already under contract is not an opportunity, so it never reads as one.
+  ...plAdded.map((p) => `<strong>${esc(p.address)}, ${esc(p.city)}</strong> — ${money(p.price)},
+     ${esc(p.acres)} acres, ${p.beds} bd / ${p.fullBaths} full ba, no pool${
+       UNDER_CONTRACT.test((p.status || '').trim())
+         ? ` — <strong>already ${esc((p.status || '').toLowerCase())}</strong>` : ''}`),
+  ...plPriced.map((p) => `<strong>${esc(p.address)}, ${esc(p.city)}</strong> —
+     ${money(p.from)} → ${money(p.to)}`),
+  // Names the status actually read, rather than flattening every escrow word to "pending".
+  ...plStatus.map((p) => `<strong>${esc(p.address)}, ${esc(p.city)}</strong> — ${money(p.price)},
+     now <strong>${esc(p.to)}</strong>${UNDER_CONTRACT.test((p.to || '').trim())
+       ? ' (under contract)' : ''}, was ${esc(p.from)}`),
+  ...plGone.map((p) => `<strong>${esc(p.address)}, ${esc(p.city)}</strong> — off the table
+     (last ${money(p.price)}); no longer an active or under-contract listing clearing the other criteria`),
+  // Still on the list, still no pool — what moved is the MLS number, so it reads as a relist.
+  ...plRelisted.map((p) => `<strong>${esc(p.address)}, ${esc(p.city)}</strong> — relisted under
+     a new MLS number${p.mls ? ` (${esc(p.mls)}${p.priorMls ? `, was ${esc(p.priorMls)}` : ''})` : ''}
+     at ${money(p.price)}${p.priorPrice && p.priorPrice !== p.price
+       ? `, was ${money(p.priorPrice)}` : ', unchanged in price'}; it stays on this list`),
+];
+// The near-miss table ("one criterion short") moves independently of both the board and the
+// pool-less list, and had no banner category at all: on 2026-09-28 it swapped a row while the
+// banner said "Nothing moved on the board". Same treatment as the pool-less block above.
+const nm = (data.runSummary && data.runSummary.nearMissChanges) || {};
+const nmAdded = nm.added || [], nmPriced = nm.priceChanges || [], nmGone = nm.gone || [];
+const nearMissMoved = nmAdded.length + nmPriced.length + nmGone.length;
+/* A row can leave the near-miss table because it went under contract — that table carries
+   active listings only. When the pool-less diff recorded exactly that for the same address,
+   the reason is known and the generic four-way guess below would be throwing it away. */
+const plStatusBy = new Map(plStatus.map((p) => [`${p.address}|${p.city}`, p]));
+const nearMissItems = [
+  // Each row says what it is short of, so nothing here reads as a match.
+  ...nmAdded.map((p) => `<strong>${esc(p.address)}, ${esc(p.city)}</strong> — ${money(p.price)},
+     ${esc(p.acres)} acres, ${p.beds} bd / ${p.baths} ba — <em>${esc(p.missing)}</em>`),
+  ...nmPriced.map((p) => `<strong>${esc(p.address)}, ${esc(p.city)}</strong> —
+     ${money(p.from)} → ${money(p.to)}`),
+  ...nmGone.map((p) => {
+    const known = plStatusBy.get(`${p.address}|${p.city}`);
+    return `<strong>${esc(p.address)}, ${esc(p.city)}</strong> — off the list
+     (last ${money(p.price)}${p.missing ? `, <em>${esc(p.missing)}</em>` : ''}); ${known
+       ? `now <strong>${esc(known.to)}</strong> — this table carries active listings only`
+       : `sold, under contract, repriced, or pushed past the table's cap`}`;
+  }),
+];
+/* Out-of-area flags: a property that clears every criterion except the city. It cannot go on the
+   board without redefining the search area, and it must not be silently dropped either — so it is
+   its own category in the brief and a persistent row in `rejected`. It lives in `rejected` rather
+   than `nearMisses` on purpose: `mls-compose.py` rebuilds `nearMisses` from the three-city
+   enumeration every run, so an out-of-area row placed there would vanish next run and be reported
+   as "gone" — the exact bug class "A row that matches no bucket is reported gone" describes. */
+const outOfArea = (data.runSummary && data.runSummary.outOfAreaFlagged) || [];
+const outOfAreaItems = outOfArea.map((p) =>
+  `<strong>${esc(p.address)}</strong> — ${money(p.price)}${p.mls ? `, MLS ${esc(p.mls)}` : ''}.
+   ${esc(p.note || '')} Not on the board: it is outside the three target cities, which is a
+   criterion like any other. Say the word and a future run can include it.`);
 
-const criteriaChips = [
-  `${C.beds} beds`, `${C.baths} baths`, 'Pool required',
-  `${C.minAcres}+ acres (${C.preferredAcres}+ preferred)`,
-  `≤ ${moneyShort(C.maxPrice)}`,
-].map(c => `<span class="chip">${esc(c)}</span>`).join('');
+const nearMissSummary = nearMissMoved ? `${[
+  nmAdded.length ? `${nmAdded.length} added` : '',
+  nmPriced.length ? `${nmPriced.length} price ${nmPriced.length === 1 ? 'change' : 'changes'}` : '',
+  nmGone.length ? `${nmGone.length} removed` : '',
+].filter(Boolean).join(', ')}` : '';
 
-const newBanner = newOnes.length ? `
-<section class="spotlight">
-  <div class="spotlight-head">
-    <h2>★ New this run <span class="count">${newOnes.length}</span></h2>
-    <p>Added on ${prettyDate(data.lastRun)} — not on the previous list.</p>
-  </div>
-  <ol class="newlist">
-    ${newOnes.map(l => `<li>
-      <a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">${esc(l.address)}</a>
-      <span class="nl-city">${esc(l.city)}</span>
-      <span class="nl-price">${money(l.currentPrice)}</span>
-      <span class="nl-spec">${esc(l.beds)}bd · ${esc(bathsTxt(l.baths))}ba · ${esc(l.acres)} ac · pool</span>
-      ${l.status === 'under-contract' ? '<span class="badge badge-warn">Under contract</span>' : ''}
-    </li>`).join('')}
-  </ol>
-</section>` : `
-<section class="spotlight spotlight-empty">
-  <h2>No new listings this run</h2>
-  <p>Everything below was already on the list as of ${prettyDate(data.lastRun)}.</p>
-</section>`;
+/* Every category counted by `poollessMoved` must also be *named* here, or the heading renders
+   its parenthetical empty — "The pool-less list did move ()" — which is how the 2026-10-18 run
+   first rendered a status-only change. A count and its label are one thing; adding a bucket to
+   one and not the other produces a page that says something moved and declines to say what. */
+const poollessSummary = poollessMoved ? `${[
+  plAdded.length ? `${plAdded.length} added` : '',
+  plPriced.length ? `${plPriced.length} price ${plPriced.length === 1 ? 'change' : 'changes'}` : '',
+  plStatus.length ? `${plStatus.length} under contract` : '',
+  plRelisted.length ? `${plRelisted.length} relisted` : '',
+  plGone.length ? `${plGone.length} removed` : '',
+].filter(Boolean).join(', ')}` : '';
 
-const nm = data.nearMisses || [];
-const nearMissSection = nm.length ? `
-<section>
-  <h2>Near misses <span class="count">${nm.length}</span></h2>
-  <p class="sub">Active MLS listings that clear 4bd / 3ba / ${moneyShort(C.maxPrice)} but fail acreage or pool. Listed so a later price cut or correction is easy to spot.</p>
-  <div class="tablewrap">
-  <table>
-    <thead><tr><th>Address</th><th>Price</th><th>Bd/Ba</th><th>Sq ft</th><th>Acres</th><th>Pool</th><th>Falls short on</th></tr></thead>
-    <tbody>
-      ${nm.map(x => `<tr>
-        <td><a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${esc(x.address.replace(/,\s*CA\s*9\d{4}$/, ''))}</a></td>
-        <td class="n">${money(x.price)}</td>
-        <td class="n">${esc(x.beds)}/${esc(bathsTxt(x.baths))}</td>
-        <td class="n">${num(x.sqft)}</td>
-        <td class="n">${esc(x.acres)}</td>
-        <td>${x.pool ? '<span class="yes">Yes</span>' : '<span class="no">No</span>'}</td>
-        <td class="short">${esc(x.missing)}</td>
-      </tr>`).join('')}
-    </tbody>
-  </table>
-  </div>
-</section>` : '';
+const cheapest = activeList.length ? Math.min(...activeList.map((l) => l.currentPrice)) : null;
+const mostLand = activeList.length ? Math.max(...activeList.map((l) => l.acres)) : null;
 
-const dropped = data.droppedThisRun || [];
-const droppedSection = dropped.length ? `
-<section>
-  <h2>Dropped this run <span class="count">${dropped.length}</span></h2>
-  <p class="sub">Previously tracked, no longer in MetroList active inventory — sold or withdrawn. Kept here only so they are not re-surfaced.</p>
-  <ul class="dropped">
-    ${dropped.map(x => `<li><span class="da">${esc(x.address)}</span>${x.lastPrice ? `<span class="dp">last seen at ${money(x.lastPrice)}</span>` : ''}</li>`).join('')}
-  </ul>
-</section>` : '';
+/* Two composers have written this bucket with different field names: scrape.js used
+   `{ address: "Street, City", priorPrice }`, mls-compose.py writes `{ address, city, lastPrice }`.
+   Reading only one shape is what produced "Street, Cityblank | — | …" rows before; reading only
+   the other blanked the price column for every mls-compose drop. Accept both. */
+const dropRows = (rows) => rows.map((d) => {
+  const where = d.city && !String(d.address).includes(d.city) ? `${d.address}, ${d.city}` : d.address;
+  const price = d.priorPrice || d.lastPrice;
+  return `
+    <tr><td>${esc(where)}</td><td>${price ? money(price) : '—'}</td>
+        <td>${esc(d.droppedOn || '—')}</td><td>${esc(d.reason)}</td></tr>`;
+}).join('');
+const droppedRows = dropRows(dropped);
+const droppedEarlierRows = dropRows(droppedEarlier);
 
-/* ---------- page ---------- */
+// scrape.js writes near-miss records as `{ baths, missing, ... }`. Reading `n.fullBaths` and
+// `n.reason` rendered "undefined full ba" and an empty "Why it is not in the list" column.
+const nearRows = nearMiss.map((n) => `
+    <tr><td><a href="${esc(n.url)}" rel="noopener">${esc(n.address)}</a>, ${esc(n.city)}</td>
+        <td>${money(n.price)}</td><td>${esc(n.acres)} ac</td>
+        <td>${n.beds} bd / ${n.baths ?? n.fullBaths ?? '—'} ba</td><td>${esc(n.missing || n.reason || '')}</td></tr>`).join('');
 
-const html = `<!doctype html>
+const poolless = data.poolless || [];
+// Rendered from the data rather than asserted in prose: the count of pending rows here
+// changes run to run, and a hardcoded "one is already pending" goes wrong the moment it does.
+/* Same category, several spellings — see `underContract` in scrape.js. Matching only
+   /pending/ here would undercount the "already under contract" caveat the intro prints,
+   and a caveat that silently omits a row is the failure this table already fixed once. */
+const poollessPending = poolless.filter((r) => UNDER_CONTRACT.test((r.status || '').trim())).length;
+const poollessRows = poolless.map((r) => `
+    <tr><td><a href="${esc(r.url)}" rel="noopener">${esc(r.address)}</a>, ${esc(r.city)}</td>
+        <td>${money(r.price)}</td><td>${esc(r.acres)} ac</td>
+        <td>${r.beds} bd / ${r.fullBaths} full ba</td>
+        <td>${r.sqft ? r.sqft.toLocaleString('en-US') : '—'}</td>
+        <td>${esc(r.status)}</td></tr>`).join('');
+
+// verify.py stamps mlsVerifiedOn only when every record agreed with the MLS of record.
+// If it did not run this time, say so on the page rather than repeating a blanket "all
+// agreed" that nothing tested — the whole point of the verification gate is that the
+// claim on the page matches the work actually done.
+const verifiedOn = data.source && data.source.mlsVerifiedOn;
+const verifiedToday = verifiedOn === data.lastRun;
+// Records the MLS site had not indexed when verify.py ran. Recorded rather than treated as a
+// disagreement — see verify.py — so the caveat lands on those cards instead of the whole board.
+const awaitingIndex = (data.source && data.source.mlsAwaitingIndex) || [];
+// Records the MLS of record will never carry, because they belong to a different MLS. Distinct
+// from awaitingIndex: waiting resolves that one and cannot resolve this one.
+const foreignMls = (data.source && data.source.mlsForeignSource) || [];
+/* Split by whether foreign-verify.py actually landed its stamp. The summary row below used to
+   say "confirmed against the IDX feed and Redfin" for every foreign-MLS listing unconditionally,
+   while `foreignNote()` on the very same page told the reader the second confirmation was still
+   outstanding. On 2026-10-21 Redfin was rate-limiting detail pages, foreign-verify.py stamped
+   0 of 2, and the two statements contradicted each other — the summary claiming the check that
+   the cards said had not run. Same rule as every other row here: describe what happened. */
+const foreignConfirmed = foreignMls.filter((a) =>
+  listings.some((l) => l.mls === a.mls && l.secondSource));
+/* Name the source that actually signed off, rather than the one that usually does. This row used
+   to say "the IDX feed and Redfin" unconditionally; on 2026-10-23 Redfin's detail pages were
+   unavailable and `mlsl-verify.py` supplied the confirmation instead, so the sentence named a
+   source that had not been read. Same rule as every other claim on this page: describe what
+   happened. */
+const foreignSourceNames = [...new Set(foreignConfirmed
+  .map((a) => (listings.find((l) => l.mls === a.mls) || {}).secondSource)
+  .map((ss) => (ss && ss.name) || 'a second source'))];
+const foreignSourcePhrase = foreignSourceNames.length
+  ? foreignSourceNames.length === 1
+    ? foreignSourceNames[0]
+    : foreignSourceNames.slice(0, -1).join(', ') + ' and ' + foreignSourceNames.slice(-1)
+  : 'a second source';
+const foreignOutstanding = foreignMls.filter((a) => !foreignConfirmed.includes(a));
+const nameList = (arr) =>
+  arr.map((a) => `<strong>${esc(a.address)}</strong> (${esc(a.source)})`).join(', ');
+// Records whose MLS re-read could not be attempted, because the MLS site did not answer. A third
+// kind of gap again: waiting fixes awaitingIndex, nothing fixes foreignMls, and this one is fixed
+// by the next run. It must never read as a confirmation, and it is not a contradiction either.
+const unreachable = (data.source && data.source.mlsUnreachable) || [];
+
+/* The three gaps above are all reasons the MLS of record did not sign off on a particular listing,
+   and each already lands a caveat on that listing's own card. A section heading that says every
+   property below it is "confirmed Active on MetroList" sits one altitude above those cards and
+   quietly re-asserts what they disclaim — the same failure the verification gate exists to catch,
+   moved up a level: the claim is broader than the check that was run. So the headings count the
+   exceptions out loud and point at the cards that carry the detail. */
+function mlsClaimGaps(list) {
+  const gapped = [...foreignMls, ...unreachable, ...awaitingIndex];
+  return list.filter((l) => gapped.some((a) => a.mls === l.mls));
+}
+
+function mlsClaimCaveat(list) {
+  const out = mlsClaimGaps(list);
+  if (!out.length) return '';
+  const names = out.map((l) => `<strong>${esc(l.address)}</strong>`).join(', ');
+  return out.length === 1
+    ? ` One exception — ${names} — is not MetroList's to confirm; its card says what was read instead.`
+    : ` ${out.length} exceptions — ${names} — are not MetroList's to confirm; their cards say what
+       was read instead.`;
+}
+
+/* "All of them" is wrong when one was never eligible for the check, so the subject of the claim is
+   counted against what the MLS of record actually answered for. Returns the subject phrase and its
+   number, because the two call sites need different verbs ("are confirmed", "have been checked"). */
+function mlsClaimSubject(list) {
+  const covered = list.length - mlsClaimGaps(list).length;
+  if (covered === list.length) {
+    return list.length === 1 ? { text: 'It', plural: false } : { text: 'All', plural: true };
+  }
+  if (covered === 0) return { text: 'None', plural: false };
+  if (covered === 1) return { text: `One of the ${list.length}`, plural: false };
+  return { text: `${covered} of the ${list.length}`, plural: true };
+}
+
+// Optional second enumeration straight from the MLS of record. Present only on runs that did one.
+const indep = (data.dataQuality || {}).independentEnumeration;
+// Optional third source: a Redfin sweep run independently of both the IDX feed and MetroListPRO.
+// scrape.js rebuilds dataQuality wholesale, so this key only survives when the check was stamped
+// after it — which is what keeps the row honest: it renders on the runs that actually ran one.
+const rfx = (data.dataQuality || {}).redfinCrossCheck;
+// Optional fourth source: the Coldwell Banker IDX, the one plain-request enumeration that is not
+// MetroList-only, so it is the route that can see a NEW foreign-MLS listing. Stamped by
+// cb-crosscheck.py --stamp, which runs after mls-compose.py and overwrites its coverageGap note.
+const idx = (data.dataQuality || {}).idxCrossCheck;
+// Optional fifth source: the one feed that filters on the MLS pool field server-side, so its
+// candidate set arrives narrowed rather than recovered from hundreds of detail reads. Stamped by
+// rg-crosscheck.js --stamp. MetroList-only, so it corroborates but cannot close coverageGap.
+const pfx = (data.dataQuality || {}).poolFilteredCrossCheck;
+// What the run could NOT cover. mls-compose.py has always written this and its docstring has
+// always said build.js prints it; it did not, so the page stayed silent about its own blind spot
+// on every MetroList-only run. Rendered below the table now.
+const coverageGap = (data.dataQuality || {}).coverageGap;
+
+const rejectedRows = (data.rejected || []).map((r) => `
+    <tr><td>${esc(r.address)}</td><td>${r.price ? money(r.price) : '—'}</td><td>${esc(r.reason)}</td></tr>`).join('');
+
+const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>House Hunt — Shingle Springs · Rescue · Placerville</title>
-<meta name="description" content="Verified MLS listings matching 4BR+, 3BA+, pool, 2.5+ acres, under $1.5M in Shingle Springs, Rescue and Placerville, CA.">
+<meta name="description" content="Tracked 4BR+/3BA+ homes with a pool on 2.5+ acres under $1.5M in Shingle Springs, Rescue and Placerville, CA.">
 <style>
   :root{
-    --bg:#f6f7f4; --panel:#fff; --ink:#1b2019; --muted:#5f6b60; --line:#e2e6de;
-    --accent:#2f6b45; --accent-soft:#e8f2ea; --gold:#b07d2a; --gold-soft:#fdf5e6;
-    --warn:#8a5a12; --warnbg:#fdf3e0; --okbg:#e8f2ea; --ok:#2f6b45;
-    --shadow:0 1px 2px rgba(20,30,20,.05),0 8px 24px -12px rgba(20,30,20,.18);
-    --radius:14px;
+    --bg:#f6f4f0; --card:#fff; --ink:#1c1a17; --muted:#6b665e;
+    --line:#e2ddd4; --accent:#2f6b4f; --accent-soft:#e6f0ea;
+    --new:#1d5fa8; --new-soft:#e3edf9;
+    --warn:#8a6d1f; --warn-soft:#f8f0d8; --miss:#8a4b3a; --miss-soft:#f7e7e2;
+    --tile:#ece7de;
   }
-  @media (prefers-color-scheme:dark){
-    :root:not([data-theme="light"]){
-      --bg:#141714; --panel:#1c211d; --ink:#e8ece6; --muted:#9aa89c; --line:#2b332c;
-      --accent:#7fc49a; --accent-soft:#1e2a22; --gold:#e0b367; --gold-soft:#2a2316;
-      --warn:#e0b367; --warnbg:#2a2316; --okbg:#1e2a22; --ok:#7fc49a;
-      --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -14px rgba(0,0,0,.7);
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#16181a; --card:#1f2225; --ink:#eceae6; --muted:#a09a91;
+      --line:#31363a; --accent:#7fc4a1; --accent-soft:#1e2f27;
+      --new:#8fbdec; --new-soft:#1a2634;
+      --warn:#d9bd6a; --warn-soft:#2e2819; --miss:#e0a08c; --miss-soft:#2e211d;
+      --tile:#282c30;
     }
   }
-  :root[data-theme="dark"]{
-    --bg:#141714; --panel:#1c211d; --ink:#e8ece6; --muted:#9aa89c; --line:#2b332c;
-    --accent:#7fc49a; --accent-soft:#1e2a22; --gold:#e0b367; --gold-soft:#2a2316;
-    --warn:#e0b367; --warnbg:#2a2316; --okbg:#1e2a22; --ok:#7fc49a;
-  }
   *{box-sizing:border-box}
-  html{-webkit-text-size-adjust:100%}
-  body{
-    margin:0; background:var(--bg); color:var(--ink);
-    font:16px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  }
-  .wrap{max-width:1120px;margin:0 auto;padding:0 16px 72px}
-  a{color:var(--accent)}
-  h1,h2,h3{line-height:1.2;margin:0}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:1140px;margin:0 auto;padding:40px 20px 72px}
+  header{border-bottom:1px solid var(--line);padding-bottom:24px;margin-bottom:8px}
+  h1{font-size:2rem;margin:0 0 8px;letter-spacing:-.025em}
+  .sub{color:var(--muted);margin:0}
+  .criteria{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .chip{background:var(--card);border:1px solid var(--line);border-radius:999px;
+    padding:5px 12px;font-size:.82rem;color:var(--muted)}
+  h2{font-size:1.2rem;margin:44px 0 6px;letter-spacing:-.015em}
+  h2 .count{color:var(--muted);font-weight:500}
+  .sectnote{color:var(--muted);font-size:.9rem;margin:0 0 18px;max-width:70ch}
 
-  header.top{padding:40px 0 22px;border-bottom:1px solid var(--line);margin-bottom:28px}
-  header.top h1{font-size:clamp(25px,4.6vw,38px);letter-spacing:-.02em}
-  header.top .where{color:var(--muted);margin-top:7px;font-size:15px}
-  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:16px}
-  .chip{background:var(--accent-soft);color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 26%,transparent);
-        padding:4px 11px;border-radius:999px;font-size:12.5px;font-weight:600;white-space:nowrap}
-  .meta{margin-top:16px;color:var(--muted);font-size:13px}
-  .meta b{color:var(--ink)}
+  /* headline strip */
+  .stats{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin:26px 0 4px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:14px 16px}
+  .stat b{display:block;font-size:1.5rem;letter-spacing:-.02em;line-height:1.15}
+  .stat span{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
 
-  section{margin:40px 0 0}
-  section>h2{font-size:21px;letter-spacing:-.01em;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
-  .count{background:var(--accent);color:#fff;border-radius:999px;font-size:12px;padding:2px 9px;font-weight:700}
-  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .count{color:#10150f}}
-  p.sub{color:var(--muted);font-size:14px;margin:8px 0 18px;max-width:72ch}
+  .grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    overflow:hidden;display:flex;flex-direction:column}
+  .card.is-new{border-color:var(--new);box-shadow:0 0 0 1px var(--new)}
+  .card.is-pending{opacity:.94}
+  .body{padding:18px 20px 20px;display:flex;flex-direction:column;flex:1}
 
-  /* spotlight */
-  .spotlight{background:var(--gold-soft);border:1px solid color-mix(in srgb,var(--gold) 38%,transparent);
-    border-radius:var(--radius);padding:20px 22px;margin:0 0 8px}
-  .spotlight h2{font-size:19px;color:var(--gold);display:flex;align-items:center;gap:9px;flex-wrap:wrap}
-  .spotlight h2 .count{background:var(--gold);color:#fff}
-  .spotlight p{color:var(--muted);font-size:13.5px;margin:6px 0 0}
-  .spotlight-empty h2{color:var(--muted)}
-  .newlist{list-style:none;margin:16px 0 0;padding:0;display:grid;gap:8px}
-  .newlist li{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 11px;
-    background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 13px}
-  .newlist a{font-weight:650;text-decoration:none}
-  .newlist a:hover{text-decoration:underline}
-  .nl-city{color:var(--muted);font-size:13px}
-  .nl-price{font-variant-numeric:tabular-nums;font-weight:700;margin-left:auto}
-  .nl-spec{color:var(--muted);font-size:12.5px;width:100%}
-  @media(min-width:620px){.nl-spec{width:auto;margin-left:0}}
+  .media{position:relative;background:var(--tile);border-bottom:1px solid var(--line);
+    aspect-ratio:3/2}
+  .fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    text-decoration:none;color:var(--muted);font-weight:600;font-size:.9rem;
+    background:repeating-linear-gradient(45deg,transparent,transparent 12px,
+      rgba(128,128,128,.05) 12px,rgba(128,128,128,.05) 24px)}
+  .fallback:hover{color:var(--accent);background-color:var(--accent-soft)}
+  .strip{position:relative;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;height:100%;
+    scrollbar-width:none}
+  .strip:empty{display:none}
+  .strip::-webkit-scrollbar{display:none}
+  .strip img{flex:0 0 100%;width:100%;height:100%;object-fit:cover;display:block;scroll-snap-align:center}
+  .shots{position:absolute;right:10px;bottom:10px;background:rgba(0,0,0,.62);color:#fff;
+    font-size:.72rem;font-weight:600;padding:3px 9px;border-radius:999px;pointer-events:none}
+  .media:has(.strip:empty) .shots{display:none}
 
-  /* cards */
-  .grid{display:grid;gap:20px;margin-top:20px;grid-template-columns:1fr}
-  @media(min-width:760px){.grid{grid-template-columns:repeat(2,1fr)}}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
-        overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column;position:relative}
-  .card-new{border-color:color-mix(in srgb,var(--gold) 55%,transparent)}
-  .newflag{position:absolute;top:12px;left:12px;z-index:2;background:var(--gold);color:#fff;
-    font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:4px 9px;border-radius:6px}
-  .shot{display:block;position:relative;aspect-ratio:16/10;background:var(--accent-soft);overflow:hidden;text-decoration:none}
-  .shot img{width:100%;height:100%;object-fit:cover;display:block}
-  .shot-fb{display:none;position:absolute;inset:0;align-items:center;justify-content:center;
-    color:var(--accent);font-weight:600;font-size:14px}
-  .shot-fallback .shot-fb{display:flex}
-  .body{padding:16px 17px 17px;display:flex;flex-direction:column;flex:1}
-  .pricerow{display:flex;align-items:center;gap:10px;justify-content:space-between}
-  .price{font-size:24px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-  .badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
-  .badge-ok{background:var(--okbg);color:var(--ok)}
-  .badge-warn{background:var(--warnbg);color:var(--warn)}
-  .delta{display:inline-block;margin-top:5px;font-size:12.5px;font-weight:600}
-  .delta-down{color:var(--ok)} .delta-up{color:#b3261e}
-  .card h3{margin-top:9px;font-size:17px}
-  .card h3 a{text-decoration:none;color:var(--ink)}
-  .card h3 a:hover{text-decoration:underline}
-  .loc{color:var(--muted);font-size:12.5px;margin-top:3px}
-  .specs{display:flex;gap:7px;margin:14px 0 0;flex-wrap:wrap}
-  .spec{background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:7px 10px;
-        text-align:center;min-width:62px;flex:1}
-  .spec b{display:block;font-size:15px;font-variant-numeric:tabular-nums}
-  .spec span{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
-  .extras{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin:14px 0 0;font-size:13px}
-  .extras dt{color:var(--muted)} .extras dd{margin:0}
-  .desc{color:var(--muted);font-size:13.5px;margin:13px 0 0}
-  .hist{margin-top:10px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
-  .foot{margin-top:auto;padding-top:14px;display:flex;gap:10px;align-items:baseline;
-        justify-content:space-between;border-top:1px solid var(--line);margin-top:15px}
-  .agent{color:var(--muted);font-size:11.5px}
-  .link{font-size:13px;font-weight:650;text-decoration:none;white-space:nowrap}
-  .link:hover{text-decoration:underline}
+  .tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .tag{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.06em;
+    text-transform:uppercase;padding:3px 8px;border-radius:5px}
+  .tag.ok{background:var(--accent-soft);color:var(--accent)}
+  .tag.new{background:var(--new-soft);color:var(--new)}
+  .tag.pend{background:var(--warn-soft);color:var(--warn)}
 
-  /* table */
-  .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel)}
-  table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:660px}
-  th,td{padding:10px 13px;text-align:left;border-bottom:1px solid var(--line)}
-  th{background:var(--bg);font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700}
-  tr:last-child td{border-bottom:0}
-  td.n{font-variant-numeric:tabular-nums;white-space:nowrap}
-  td a{text-decoration:none;font-weight:600}
+  .price{font-size:1.5rem;font-weight:650;letter-spacing:-.025em;margin:0}
+  .pricechg{display:block;font-size:.8rem;font-weight:700;margin-top:3px}
+  .pricechg.down{color:var(--accent)} .pricechg.up{color:var(--miss)}
+  .addr{font-weight:600;margin:6px 0 2px}
+  .city{color:var(--muted);font-size:.88rem;margin:0 0 14px}
+  .facts{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  .fact{background:var(--bg);border:1px solid var(--line);border-radius:6px;
+    padding:3px 9px;font-size:.79rem}
+  .fact.pool{background:var(--accent-soft);border-color:transparent;color:var(--accent);font-weight:600}
+  .fact.acres.pref{background:var(--accent-soft);border-color:transparent;color:var(--accent);font-weight:600}
+  .pooldetail{font-size:.8rem;color:var(--accent);margin:0 0 12px;font-weight:600}
+  .note{font-size:.88rem;color:var(--muted);margin:0 0 14px;flex:1}
+  .flagnote{font-size:.8rem;color:var(--warn);background:var(--warn-soft);
+    border-radius:7px;padding:8px 10px;margin:0 0 14px}
+
+  .micro{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 14px;margin:0 0 16px;
+    padding-top:14px;border-top:1px solid var(--line)}
+  .micro div{min-width:0}
+  .micro dt{font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  .micro dd{margin:1px 0 0;font-size:.84rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  .links{display:flex;gap:8px;flex-wrap:wrap}
+  a.btn{display:inline-block;text-decoration:none;color:#fff;background:var(--accent);font-weight:600;
+    font-size:.87rem;border:1px solid var(--accent);border-radius:8px;padding:8px 13px}
+  a.btn.ghost{background:transparent;color:var(--accent);border-color:var(--line)}
+  a.btn:hover{filter:brightness(1.07)}
+
+  .banner{background:var(--new-soft);border:1px solid var(--line);border-left:4px solid var(--new);
+    border-radius:10px;padding:16px 18px;margin:26px 0 8px;font-size:.92rem}
+  .banner h3{margin:0 0 6px;font-size:1rem}
+  .banner p{margin:0;color:var(--muted)}
+  .banner p + p{margin-top:8px}
+  .banner ul{margin:8px 0 0;padding-left:20px;color:var(--muted)}
+
+  .tablewrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:12px}
+  table{width:100%;border-collapse:collapse;font-size:.87rem}
+  th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  td a{color:var(--accent);font-weight:600;text-decoration:none}
   td a:hover{text-decoration:underline}
-  .yes{color:var(--ok);font-weight:700} .no{color:var(--muted)}
-  .short{color:var(--muted)}
-
-  .dropped{list-style:none;padding:0;margin:0;display:grid;gap:7px}
-  .dropped li{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;background:var(--panel);
-    border:1px solid var(--line);border-radius:9px;padding:9px 13px;font-size:13.5px}
-  .da{font-weight:600} .dp{color:var(--muted);font-size:12.5px}
-
-  .note{margin-top:44px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);
-        border-radius:10px;padding:16px 18px;font-size:13.5px;color:var(--muted)}
-  .note h3{font-size:14px;color:var(--ink);margin-bottom:7px}
-  .note ul{margin:7px 0 0;padding-left:19px} .note li{margin:4px 0}
-  footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:12.5px}
+  footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);
+    color:var(--muted);font-size:.84rem}
+  footer code{background:var(--card);padding:1px 5px;border-radius:4px}
+  @media (max-width:520px){ h1{font-size:1.6rem} .wrap{padding:28px 14px 56px} }
 </style>
 </head>
 <body>
 <div class="wrap">
 
-<header class="top">
-  <h1>House Hunt</h1>
-  <div class="where">Shingle Springs · Rescue · Placerville, California</div>
-  <div class="chips">${criteriaChips}</div>
-  <div class="meta">
-    Last run <b>${prettyDate(data.lastRun)}</b> ·
-    <b>${active.length}</b> active match${active.length === 1 ? '' : 'es'}${uc.length ? ` · <b>${uc.length}</b> under contract` : ''} ·
-    ${data.dataQuality && data.dataQuality.inventoryScanned ? `<b>${num(data.dataQuality.inventoryScanned)}</b> active listings scanned · ` : ''}
-    verified against <b>MetroList MLS</b>
+<header>
+  <h1>House Hunt: El Dorado County</h1>
+  <p class="sub">Shingle Springs &middot; Rescue &middot; Placerville — updated
+    <strong>${esc(data.lastRun)}</strong>${data.previousRun ? ` (previous run ${esc(data.previousRun)})` : ''}</p>
+  <div class="criteria">
+    <span class="chip">4+ bedrooms</span>
+    <span class="chip">3+ full bathrooms</span>
+    <span class="chip">Pool required</span>
+    <span class="chip">2.5+ acres (5+ preferred)</span>
+    <span class="chip">Max $1.5M</span>
   </div>
 </header>
 
-${newBanner}
-
-<section>
-  <h2>Matches <span class="count">${listings.length}</span></h2>
-  <p class="sub">Every property below clears all five criteria. Acreage and pool come from the MLS <em>Lot Size in Acres</em> and <em>Has a Pool</em> fields; status comes from the MLS status badge on the listing detail page.</p>
-  <div class="grid">
-    ${listings.map(card).join('\n')}
-  </div>
-</section>
-
-${nearMissSection}
-
-${droppedSection}
-
-<div class="note">
-  <h3>How this list is built</h3>
-  <ul>
-    <li>Source of record: <a href="https://www.metrolistpro.com/" target="_blank" rel="noopener noreferrer">MetroListPRO</a>, the official public search site of MetroList MLS — the MLS for El Dorado County.</li>
-    <li>Status, lot acreage and pool are read from each listing's MLS detail page. Search-engine summaries are never used for status: they index sold listings as "For Sale" for years.</li>
-    ${data.dataQuality && data.dataQuality.coverageCrossCheck ? `<li>${esc(data.dataQuality.coverageCrossCheck)}</li>` : ''}
-    <li>Listings that leave active inventory are dropped, not carried forward. Price changes on tracked properties are shown on the card.</li>
-    <li>Photos are hotlinked from MetroList and are the copyright of the listing brokerage — fine for private use, don't republish.</li>
-  </ul>
+<div class="stats">
+  <div class="stat"><b>${activeList.length}</b><span>Active matches</span></div>
+  <div class="stat"><b>${fresh.length}</b><span>New this run</span></div>
+  <div class="stat"><b>${cheapest ? short(cheapest) : '—'}</b><span>Entry price</span></div>
+  <div class="stat"><b>${mostLand ? mostLand + ' ac' : '—'}</b><span>Most land</span></div>
+  <div class="stat"><b>${dropped.length}</b><span>Removed</span></div>
 </div>
 
+<div class="banner">
+  <h3>What changed this run</h3>
+  ${fresh.length || priceMoves.length || dropped.length || statusMoves.length || outOfArea.length ? `<ul>
+    ${fresh.length ? `<li><strong>${fresh.length} new ${fresh.length === 1 ? 'listing' : 'listings'}</strong> meeting every hard criterion — see the top section.</li>` : ''}
+    ${priceMoves.map((p) => {
+      const down = p.to < p.from;
+      const delta = Math.abs(p.to - p.from);
+      const pct = Math.round((delta / p.from) * 1000) / 10;
+      return `<li><strong>${esc(p.address)}, ${esc(p.city)} ${down ? 'cut' : 'raised'} its price by
+        ${money(delta)}</strong> (${pct}%), ${money(p.from)} &rarr; ${money(p.to)}. It was already on
+        the board, so it is listed with the standing matches below rather than as a new find.</li>`;
+    }).join('\n    ')}
+    ${statusMoves.map((s) => (wentPending(s)
+      ? `<li><strong>${esc(s.address)}, ${esc(s.city)} has gone under contract.</strong> It was on
+         the active board last run and is now Sale Pending on the MLS of record. Still worth
+         watching — pending sales do fall through — but it is no longer available to offer on.</li>`
+      : `<li><strong>${esc(s.address)}, ${esc(s.city)} is back on the active board.</strong> It was
+         Sale Pending last run and the MLS of record now reports it For Sale again — the deal
+         appears to have fallen through.</li>`)).join('\n    ')}
+    ${dropped.length ? `<li><strong>${dropped.length} previously tracked ${dropped.length === 1 ? 'property' : 'properties'} removed</strong> — no longer on the market. Listed at the bottom.</li>` : ''}
+    ${poollessMoved ? `<li><strong>Pool-less table:</strong> ${esc(poollessSummary)} — see
+      &ldquo;Right land, no pool&rdquo; below.</li>` : ''}
+    ${nearMissMoved ? `<li><strong>Near-miss table:</strong> ${esc(nearMissSummary)} — see
+      &ldquo;Close, but one criterion short&rdquo; below.</li>` : ''}
+    ${outOfAreaItems.map((i) => `<li>${i}</li>`).join('\n    ')}
+  </ul>` : `<p><strong>Nothing moved on the board.</strong> No new matches, no price changes, and
+  nothing left the board since ${esc(data.previousRun)}. ${verifiedToday
+    ? `All ${activeList.length} active matches and ${pendingList.length} pending were re-verified
+       against the MLS of record today and are unchanged — same prices, same status. The board below
+       is current, not stale.`
+    : `The board was re-enumerated from the IDX feed today; the last field-by-field check against
+       the MLS of record was ${esc(verifiedOn || 'never run')}.`}</p>
+  ${poollessMoved ? `<p><strong>The pool-less list did move</strong>
+    (${esc(poollessSummary)}) — properties with the right land, beds and baths but no pool:</p>
+  <ul>${poollessItems.map((i) => `\n    <li>${i}</li>`).join('')}
+  </ul>` : ''}
+  ${nearMissMoved ? `<p><strong>The near-miss list did move</strong>
+    (${esc(nearMissSummary)}) — properties one criterion short of the bar:</p>
+  <ul>${nearMissItems.map((i) => `\n    <li>${i}</li>`).join('')}
+  </ul>` : ''}
+  ${outOfArea.length ? `<p><strong>One find outside the search area</strong> — it clears every
+    criterion except the city, so it is flagged rather than listed:</p>
+  <ul>${outOfAreaItems.map((i) => `\n    <li>${i}</li>`).join('')}
+  </ul>` : ''}`}
+</div>
+
+${fresh.length ? `<h2>New this run <span class="count">(${fresh.length})</span></h2>
+<p class="sectnote">Every one of these clears 4+ bedrooms, 3+ full baths, a pool, 2.5+ acres and the
+$1.5M ceiling. ${mlsClaimSubject(fresh).text} ${mlsClaimSubject(fresh).plural ? 'have' : 'has'} been
+checked field-by-field against ${mlsClaimSubject(fresh).plural ? 'their' : 'its'} MetroList MLS
+record.${mlsClaimCaveat(fresh)} Sale-pending properties are included but marked — worth a call,
+since pendings do fall through.</p>
+<div class="grid">${fresh.map(card).join('\n')}
+</div>` : ''}
+
+${heldActive.length ? `<h2>Still active from earlier runs <span class="count">(${heldActive.length})</span></h2>
+<p class="sectnote">Already on the board last run and re-checked today.
+${mlsClaimSubject(heldActive).text} ${mlsClaimSubject(heldActive).plural ? 'are' : 'is'} confirmed
+<strong>Active</strong> on MetroList as of ${esc(data.lastRun)}.${mlsClaimCaveat(heldActive)} Any
+price movement since it was first seen is shown on the card.</p>
+<div class="grid">${heldActive.map(card).join('\n')}
+</div>` : ''}
+
+${heldPending.length ? `<h2>Sale pending <span class="count">(${heldPending.length})</span></h2>
+<p class="sectnote">Meets every criterion but already under contract. Kept on the board because
+pending sales fall through often enough to be worth watching — they move back up automatically if
+they return to Active.</p>
+<div class="grid">${heldPending.map(card).join('\n')}
+</div>` : ''}
+
+${nearMiss.length ? `<h2>Near misses <span class="count">(${nearMiss.length})</span></h2>
+<p class="sectnote">Clears everything except one criterion, by a small margin. Shown so the call is
+yours rather than the script's.</p>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Property</th><th>Price</th><th>Land</th><th>Size</th><th>Why it is not in the list</th></tr></thead>
+  <tbody>${nearRows}
+  </tbody>
+</table>
+</div>` : ''}
+
+${dropped.length ? `<h2>Removed this run <span class="count">(${dropped.length})</span></h2>
+<p class="sectnote">Tracked previously, gone from the live MLS feed now. Recorded here so they are not
+re-reported as fresh finds if a stale copy of the listing turns up in a future search.</p>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Property</th><th>Last price</th><th>Removed</th><th>Why removed</th></tr></thead>
+  <tbody>${droppedRows}
+  </tbody>
+</table>
+</div>` : ''}
+
+${droppedEarlier.length ? `<h2>Removed on earlier runs <span class="count">(${droppedEarlier.length})</span></h2>
+<p class="sectnote">Left the market before this run. Kept so a stale copy resurfacing in a later
+search is not mistaken for a new find — not part of this run's news.</p>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Property</th><th>Last price</th><th>Removed</th><th>Why removed</th></tr></thead>
+  <tbody>${droppedEarlierRows}
+  </tbody>
+</table>
+</div>` : ''}
+
+${poolless.length ? `<h2>Right land, no pool <span class="count">(${poolless.length})</span></h2>
+<p class="sectnote">The pool is the binding constraint on this search, not the budget — so these are
+worth a look. Each one is <strong>on the market now</strong> and clears bedrooms, full baths, acreage
+and price; MetroList simply records no pool. On this much land a pool is an addable feature, and
+several of these sit far enough under $1.5M to fund one. Sorted by acreage${poollessPending ? `; ${poollessPending === 1 ? 'one is' : `${poollessPending} are`} already under contract, so check the status column` : ''}.</p>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Property</th><th>Price</th><th>Land</th><th>Size</th><th>Sqft</th><th>Status</th></tr></thead>
+  <tbody>${poollessRows}
+  </tbody>
+</table>
+</div>` : ''}
+
+${rejectedRows ? `<h2>Ruled out on the facts</h2>
+<p class="sectnote">${esc(data.rejectedNote || 'Checked in earlier runs and failed a hard criterion regardless of availability.')}</p>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Address</th><th>Price</th><th>Why not</th></tr></thead>
+  <tbody>${rejectedRows}
+  </tbody>
+</table>
+</div>` : ''}
+
+<h2>How this list is built</h2>
+<p class="sectnote">Earlier runs of this tracker had no way to read a live listing page and inferred
+status from search-engine text, which produced four confident matches that were all off market. That
+failure mode is now closed off.</p>
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Step</th><th>What happens</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Enumerate</strong></td><td>Every listing in the three cities is pulled from ${
+      idxEnumerated
+        ? 'an IDX feed carrying MetroList data'
+        : '<a href="https://www.metrolistpro.com/" rel="noopener">MetroListPRO</a>&rsquo;s own city indexes — the MLS of record itself, active and pending alike'
+      } — ${data.source ? data.source.inventoryScanned : '—'} properties this run, not a search-result sample.</td></tr>
+    <tr><td><strong>Filter</strong></td><td>Hard criteria applied to structured MLS fields, never to prose: ${data.source ? data.source.passedBedsBathsPrice : '—'} cleared beds/baths/price, then acreage and pool narrowed it to ${listings.length}.</td></tr>
+    <tr><td><strong>Verify</strong></td><td>Each survivor is re-read from <strong>MetroListPRO</strong>, the official MetroList MLS site, and price, beds, full baths, acreage and pool must match.
+      ${verifiedToday
+        ? `${/* Never fall back to listings.length here. verify.py counts the records that actually
+               read back clean, and 0 is a real count — a run where every survivor was in a foreign
+               MLS or unreachable confirms nothing. The old `|| listings.length` turned exactly that
+               case into "5 agreed", which is the unearned claim this whole section exists to stop. */
+            typeof (data.source || {}).mlsVerifiedCount === 'number'
+              ? data.source.mlsVerifiedCount : listings.length} agreed, checked ${esc(verifiedOn)}.${
+            awaitingIndex.length
+              ? ` ${awaitingIndex.length === 1 ? 'One listing is' : `${awaitingIndex.length} listings are`} too new for
+                  MetroListPRO to have indexed — ${awaitingIndex.map((a) => `<strong>${esc(a.address)}</strong>`).join(', ')}
+                  — and ${awaitingIndex.length === 1 ? 'is' : 'are'} carried on a second independent source until the MLS
+                  catches up. That is a missing confirmation, not a contradiction; the card says so.`
+              : ''}${
+            foreignMls.length
+              ? ` ${foreignMls.length === 1 ? 'One listing is' : `${foreignMls.length} listings are`} carried by a
+                  different MLS — ${nameList(foreignMls)}
+                  — so MetroListPRO has no record of ${foreignMls.length === 1 ? 'it' : 'them'} and never will.${
+                  foreignConfirmed.length
+                    ? ` ${foreignConfirmed.length === foreignMls.length
+                        ? (foreignMls.length === 1 ? 'It is' : 'They are')
+                        : nameList(foreignConfirmed) + (foreignConfirmed.length === 1 ? ' is' : ' are')
+                      } confirmed against ${idxEnumerated ? `the IDX feed and ${foreignSourcePhrase}` : foreignSourcePhrase} instead.`
+                    : ''}${
+                  foreignOutstanding.length
+                    ? ` ${foreignOutstanding.length === foreignMls.length
+                        ? (foreignMls.length === 1 ? 'The second' : 'A second')
+                        : nameList(foreignOutstanding) + ' still has no second'
+                      } confirmation${foreignOutstanding.length === foreignMls.length ? ' is still outstanding' : ''} —
+                      only the IDX feed has been read, so treat
+                      ${foreignOutstanding.length === 1 ? 'it' : 'them'} as single-sourced. The card${
+                      foreignOutstanding.length === 1 ? '' : 's'} say${
+                      foreignOutstanding.length === 1 ? 's' : ''} so.`
+                    : ''}`
+              : ''}${
+            unreachable.length
+              ? ` MetroListPRO did not answer for ${unreachable.length === 1 ? '' : `${unreachable.length} records — `}${unreachable.map((a) => `<strong>${esc(a.address)}</strong>`).join(', ')}${unreachable.length === 1 ? ' —' : ''}
+                  so ${unreachable.length === 1 ? 'that re-read' : 'those re-reads'} did not happen this run.
+                  ${unreachable.length === 1 ? 'That card carries' : 'Those cards carry'} the IDX figures unconfirmed
+                  and ${unreachable.length === 1 ? 'says' : 'say'} so; it is a check that could not run, not a disagreement.`
+              : ''}`
+        : `<strong>Last confirmed ${esc(verifiedOn || 'never')}</strong>, not on this run — treat the listings below as verified as of that date.`}</td></tr>
+    ${indep ? `<tr><td><strong>Cross-enumerate</strong></td><td>The three cities were listed again straight from
+      <strong>MetroListPRO's own city indexes</strong> — ${indep.activeRecords} active and ${indep.pendingRecords} pending MLS
+      records, a wider net than the IDX feed. All ${indep.recordsPulledBeyondIdxSweep} were pulled and filtered
+      independently${indep.singleFamilyRead ? `: ${indep.singleFamilyRead} houses read field by field, ${indep.excludedByType} excluded
+      as land, commercial or multi-unit` : ''}; ${indep.additionalMatchesFound === 0
+        ? 'none qualified beyond what is already on the board, so this board is complete against the MLS of record, not just against the feed'
+        : `${indep.additionalMatchesFound} qualified and were added`}. Checked ${esc(indep.ranOn)}.</td></tr>` : ''}
+    ${rfx ? `<tr><td><strong>Third source</strong></td><td>A <strong>Redfin</strong> sweep run independently of both
+      the feed and the MLS &mdash; ${rfx.rowsScanned} ${esc(rfx.scope || 'active listings')}, narrowed to
+      ${rfx.candidatesAfterFilters} candidates, each one's pool read from the structured MLS field
+      <code>POOL_PRIVATE_YN</code> rather than from page text. It returned the same
+      ${rfx.poolConfirmed} pool matches and ${rfx.additionalMatchesFound === 0
+        ? 'nothing the board was missing'
+        : `${rfx.additionalMatchesFound} the board was missing`}.${rfx.confirmedUnindexedListing
+        ? ` It is also what independently confirms <strong>${esc(rfx.confirmedUnindexedListing)}</strong>,
+            the one match MetroListPRO has not indexed.` : ''} Checked ${esc(rfx.ranOn)}.</td></tr>` : ''}
+    ${idx ? `<tr><td><strong>Cover other boards</strong></td><td>MetroListPRO speaks for MetroList and is blind to
+      every other MLS, so a <em>new</em> listing on another board could not be found by it at all. The
+      <strong>Coldwell Banker IDX</strong> closes that: it answers an ordinary request &mdash; no browser
+      impersonation &mdash; and carries other boards, including the one match MetroListPRO has never indexed.
+      It swept ${idx.rowsScanned} records across the three cities, ${idx.clearedBedsBathsPrice} cleared
+      beds, baths and price, and ${idx.poolAndAcreageHits} cleared acreage with a pool in the remarks &mdash;
+      ${(idx.missingFromBoard || []).length === 0
+        ? 'none of them missing from the board'
+        : `${(idx.missingFromBoard || []).length} not already tracked, each sent for an MLS read before it could qualify`}.
+      Checked ${esc(idx.ranOn)}.</td></tr>` : ''}
+    ${pfx ? `<tr><td><strong>Ask for the pool directly</strong></td><td>Every other sweep here clears beds, baths
+      and price first and then opens hundreds of listing pages to find out which have a pool, because no search
+      payload carries one. One feed &mdash; a <strong>RealGeeks MetroList IDX site</strong> &mdash; filters on the
+      MLS's own structured pool field <em>server-side</em>, so the qualifying set arrives already narrowed:
+      ${pfx.countyRowsWithPool} rows county-wide, ${pfx.inTargetCities} in the three towns,
+      ${pfx.clearedLandAndPool} clearing the ${esc(String((data.criteria || {}).minAcres || ''))}-acre minimum with
+      the pool field set &mdash; ${(pfx.missingFromBoard || []).length === 0
+        ? 'and nothing in it that the page was not already tracking'
+        : `${(pfx.missingFromBoard || []).length} not already tracked, each sent for an MLS read before it could qualify`}.
+      It reads MetroList only, so it corroborates rather than closing the gap above, and its bath count is
+      full + half combined, so it never settles the full-bath minimum. Checked ${esc(pfx.ranOn)}.</td></tr>` : ''}
+    <tr><td><strong>Resolve</strong></td><td>Where sources disagree, the MLS of record wins and the disagreement is printed on the card rather than hidden.</td></tr>
+  </tbody>
+</table>
+</div>
+${coverageGap ? `<p class="sectnote" style="margin-top:14px"><strong>What this run could not cover.</strong>
+${esc(coverageGap)}</p>` : ''}
+<p class="sectnote" style="margin-top:14px">Two things that bite here and are handled explicitly:
+<strong>half baths</strong> — some sites report 2 full + 1 half as &ldquo;3 baths&rdquo;, so the bath
+test counts full baths only; and <strong>MetroList MLS number prefixes encode the listing year</strong>
+(<code>226…</code> = 2026), which makes a stale listing easy to spot. ${(() => {
+  const shown = [...activeList, ...pendingList];
+  const other = shown.filter(l => !/^226/.test(String(l.mls || '')));
+  if (!other.length) return 'Every property on this page carries a 226 number.';
+  const names = other.map(l => `<strong>${esc(l.address)}</strong> (MLS ${esc(String(l.mls))}${
+    l.mlsSource ? `, ${esc(l.mlsSource)}` : ''})`).join(' and ');
+  return `Every MetroList-carried property on this page has one; the ${other.length === 1
+    ? 'single exception is' : `${other.length} exceptions are`} ${names}, numbered by a
+    different MLS, so the year cannot be read off ${other.length === 1 ? 'it' : 'them'} this way
+    and ${other.length === 1 ? 'its' : 'their'} card says how ${other.length === 1 ? 'it was' : 'they were'} checked instead.`;
+})()}</p>
+
 <footer>
-  Generated ${prettyDate(data.lastRun)} by <code>build.js</code> from <code>listings.json</code>.
-  Listing data © MetroList Services, Inc. Information deemed reliable but not guaranteed — verify with the listing agent.
+  <p>Generated from <code>listings.json</code> by <code>build.js</code>.
+  ${listings.length} properties tracked &middot; ${activeList.length} active &middot;
+  ${pendingList.length} pending &middot; ${dropped.length} removed this run${droppedEarlier.length
+    ? ` &middot; ${droppedEarlier.length} removed earlier` : ''}.
+  Data from MetroList MLS via IDX; listing photos are the copyright of the listing brokerages and are
+  hotlinked here for private use. Verify all figures with your agent before acting on them.</p>
 </footer>
 
 </div>
@@ -362,5 +852,6 @@ ${droppedSection}
 </html>
 `;
 
-fs.writeFileSync(path.join(ROOT, 'index.html'), html);
-console.log(`index.html written — ${listings.length} matches (${active.length} active, ${uc.length} under contract), ${nm.length} near misses, ${dropped.length} dropped.`);
+fs.writeFileSync(path.join(__dirname, 'index.html'), html);
+console.log(`Built index.html — ${fresh.length} new, ${activeList.length} active, ` +
+            `${pendingList.length} pending, ${dropped.length} removed.`);

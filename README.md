@@ -2,146 +2,2072 @@
 
 Automated house-hunt tracker for **Shingle Springs**, **Rescue**, and **Placerville, CA**.
 
-Published list: <https://aslan11.github.io/house-hunting/>
+Published from the `gh-pages` branch.
+
+## Start here: `gh-pages` is the trunk
+
+There is no `main` or `master` on this repo. **`gh-pages` holds both the published page and the
+entire pipeline**, and it is the only branch that is current. Before doing anything else:
+
+```bash
+git fetch origin gh-pages && git checkout -B <your-branch> origin/gh-pages
+```
+
+Recorded **2026-11-09**, because that run did not start there. A scheduled run gets a working
+branch cut from whatever commit the clone lands on, and that one was based on the **2026-07-26**
+state — four months and a hundred-odd commits stale, back when the board had six off-market
+properties, no verification gate and a 5BR minimum. Working forward from it, the run rediscovered
+MetroListPRO from scratch, rebuilt a worse copy of `mls-enumerate.py` + `mls-compose.py`, and was
+one `git push` away from replacing this board with a nine-match page that had seven matches on it.
+
+What it would have destroyed is the part worth noting: the two **foreign-MLS** cards. A
+from-scratch MetroList enumeration cannot see 2520 Bedford Ave (MAXEBRDI) or 3538 Wildwood Ln
+(BAREIS), so a rebuild drops them silently and *looks* complete — the same blind spot
+*"'Not found' is not 'does not match'"* describes, arriving this time as a whole-repo regression
+rather than a single bad row. The rebuild also re-derived the MetroListPRO route independently and
+got the same 7 MetroList matches at the same prices, which is real corroboration and also exactly
+what made the regression look like a success.
+
+So: **check what `gh-pages` already does before building anything**, and never force-push this
+board from a branch you have not first rebased onto it.
+
+It happened again on **2026-11-10** — same stale `2026-07-26` base, same clone, so this is the
+default a scheduled run gets rather than a one-off. The warning above worked, but only because the
+run checked `git ls-remote` before writing anything, and it is worth being honest about how close
+that was: by the time it looked, it had already spent most of a session re-deriving an enumeration
+route from scratch (Trulia price bands for discovery, `about.mlslistings.com` sheets for
+verification) against a board that had the answer. That independent route did corroborate the board
+exactly — same 7 MetroList matches at the same prices, `Pool - No` on both 1777 Carl Rd and 5681
+Honeycomb Ln, and it found **4770 Feldspar Lane** too — which is reassuring about the pipeline and
+says nothing good about the order of operations.
+
+The cheap check is the first command of the run, before any research:
+
+```bash
+git ls-remote origin refs/heads/gh-pages && git log -1 --format=%cd HEAD
+```
+
+Two dates that far apart mean stop and rebase. Also worth knowing for next time: a `gh-pages`
+README section that says "start here" cannot be read by a run that never fetched `gh-pages`.
+
+Third time on **2026-11-11**, same `2026-07-26` base. The run went further down the wrong road than
+either predecessor: it rebuilt `listings.json`, `build.js` and `README.md` from scratch, committed
+them, and pushed the branch — it only looked at `gh-pages` when it went to publish the page, and the
+`ls-remote` above would have caught it in one command. What saved it was that publishing *is* the
+`gh-pages` step, so the trap has a natural backstop as long as nobody force-pushes.
+
+Worth recording because the rebuild corroborated the board rather than contradicting it, which is
+the failure mode the 2026-11-09 entry warns about. Coming in blind from the Coldwell Banker IDX —
+read through the `WebFetch` tool, which is served normally where `curl` and Playwright both get the
+F5 "Request Rejected" body — it swept all 310 city-index rows, carried 48 past beds/baths/price,
+and read every one of their detail pages. It reproduced **9 of the board's 10 matches at identical
+prices, acreage and pool fields**, including both foreign-MLS cards, because the CB feed carries
+other boards. So the independent route works and agrees.
+
+The two places it came out *worse* than the board are both things the board already knew:
+
+- It counted **1234 Rising Hill W Rd** a match on the MLS's combined "3 total baths". That is
+  2 full + 1 half, and the board has had it in `nearMisses` as *"only 2 full baths"* since the
+  bedroom relaxation. `ba(comb)` in `cb-crosscheck.py` output means combined for this reason.
+- It missed **5551 Saddlehorn Road** entirely — and then, because the sweep came back without it,
+  would have published a board with no mention of a property that had been tracked since July.
+  Silently dropping a match is the same error shape as silently adding one. (It happens that
+  Saddlehorn really did leave the market this run — confirmed below — but the sweep did not
+  establish that, it just failed to see it.)
+
+The blind spot behind the miss is mechanical and applies to any `WebFetch` enumeration: **a CB city
+index runs ~200K characters and `WebFetch` returns 100K per call**, so each page needs `offset: 0`
+*and* `offset: 100000`, and a 216K page needs a third call at `offset: 200000`. The run read two
+chunks of a three-chunk page. A truncated sweep reports clean — there is no marker in the result
+saying inventory was left unread — which is why the scripted enumerators are the board and an
+ad-hoc tool sweep is only ever a cross-check.
+
+Fourth time on **2026-11-12**, same `2026-07-26` base — so four consecutive scheduled runs have
+started from it and this is simply what the clone is, not a recurring accident. What is worth
+adding is how it was caught, because it was not the `ls-remote` above: that run went straight into
+research, found a live MetroList IDX route, swept the three cities and had a filtered candidate
+list before it ever looked at the remote. The thing that gave it away was a **`WebSearch` result
+that returned this page** — `aslan11.github.io/house-hunting` — describing matches and pool
+verdicts the run's own `listings.json` had never heard of.
+
+That is a lucky catch, and it also measures the cost of the trap precisely. The ad-hoc Century 21
+sweep that run built found **2 of the board's 9 matches**. It was not wrong about those two; it was
+blind to the other seven, and nothing in its output said so — 3 candidates from 179 records reads
+exactly like a complete thin-inventory result. A from-scratch route that corroborates the board is
+the 2026-11-09 warning; a from-scratch route that quietly sees a fifth of it is worse, because the
+board it would have replaced was the only thing that knew the difference.
+
+So the ordering lesson stands unchanged and the first command of a run is still `git ls-remote`.
+The new part is for the moment *after* that check fails to happen: **a search result naming your
+own published page is a stale-base alarm.** Stop and diff, do not reconcile.
 
 ## Criteria
 
 | Requirement | Value |
 |---|---|
 | Bedrooms | 4+ |
-| Bathrooms | 3+ |
+| Bathrooms | 3+ **full** (half baths don't count toward the minimum) |
 | Pool | Required |
 | Lot size | 2.5 acres minimum, 5+ preferred |
 | Max price | $1,500,000 |
 
-> Note: the bedroom minimum was 5+ through the 2026-07-26 run and was lowered to 4+ on 2026-11-14.
+The bedroom minimum was 5+ through the 2026-07-26 run and was relaxed to 4+ on 2026-08-15.
 
-## Data source — MetroListPRO
+## Where the data comes from
 
-**Source of record: <https://www.metrolistpro.com/> — the official public search site of MetroList
-MLS, the MLS for El Dorado County.** It is served by iHomefinder, renders without JavaScript gates,
-and does not bot-block this environment.
+Direct portal access is still blocked in practice — Zillow, Movoto, Homes.com and RE/MAX return
+`403` to this environment, and Redfin serves a **decoy page for a different state** rather than an
+error, which is worse than a refusal because it looks like success. Do not trust Redfin from here.
 
-Per-city active-inventory entry points:
+That warning is about Redfin as an *enumerator*, and it is worth being precise, because Redfin is
+still what `mls-status.js` and `crosscheck.js` read for the second-opinion status check. Redfin's
+`/zipcode/<zip>/filter/…` search does return genuine El Dorado County listings — a 2026-08-17 spot
+check pulled 18 in the three zips and every field agreed with the IDX feed and MetroList. It is
+nonetheless **not safe as the source of the board**, because it is silently incomplete: that same
+search returned 12 listings for 95667 against the IDX feed's 220, and it missed an active tracked
+match (1315 Arrowbee Dr). Use Redfin to contradict a status, never to establish the inventory.
 
-| City | URL |
+A 2026-08-22 sweep run as an independent check pulled 19 listings across the three cities at 4bd /
+3ba / 2.5ac / $1.5M and found the same six pool matches the IDX board carried — useful corroboration,
+and still not enumeration: 19 against the feed's 299. Two Redfin quirks worth knowing if you run one
+of these again: `/city/<id>/…` URLs redirect by id, and a wrong id silently serves a **different
+city** (17151 is San Francisco, not Shingle Springs) — `/zipcode/<zip>/…` has no such failure mode.
+And under load Redfin answers **202 with a stub body** rather than 429, so treat a short body as
+retryable and back off; the sweep took several minutes for this reason.
+
+### Why the earlier Redfin sweeps came back thin
+
+The 2026-08-23 run traced the "silently incomplete" problem to the URL, not to Redfin. The
+`/filter/…` path is the culprit: those pages render a nearly empty result set, which is why a sweep
+returned 12 listings for 95667 and missed a tracked match. **A bare `/zipcode/<zip>` page does
+not.** It embeds the full GIS search payload — every active listing in the region with beds, baths,
+price, lot size, MLS number and status — inside `te.InitialContext`. That path returned 238 rows for
+95667, 152 for 95682 and 37 for 95672 (321 in the three target cities after filtering on the `city`
+field, against the IDX feed's 298), and found the same six pool matches and the same twelve
+pool-less near-misses the board carried.
+
+So Redfin *can* enumerate, via `scripts/parse_search.py`. It still is not the board: the IDX feed
+plus MetroListPRO remains the source of record, and the gate is unchanged. But a full second
+enumeration is cheap and it earns its keep — this one caught a stale price the IDX feed was
+carrying (below).
+
+#### "Nearly empty" is the wrong reason to avoid `/filter/`, and the right rule survives it
+
+The 2026-09-27 run measured the `/filter/…` path again and it is **not** nearly empty. A server-side
+`min-beds=4,min-baths=3,max-price=1.5M,min-lot-size=2.5-acre` returned a populated, correctly
+filtered result set — 4 rows for Shingle Springs, 10 for Placerville, 2 for 95672 — with the full
+GIS payload embedded exactly as the bare `/zipcode/<zip>` page carries it, and the city and ZIP
+variants of each query agreed row for row. Read against the board, those 16 rows contained **5 of
+the 6 pool matches**; the miss was 1315 Arrowbee Dr, which is Pending and therefore correctly
+outside an `status=9` active-only result.
+
+So the operative rule stands and is worth restating with its real justification: **`/filter/` is
+unsafe for enumeration because it is narrow, not because it is empty.** 16 rows against the MLS's
+402 residential records is a small, server-chosen slice; it happened to contain almost every match
+today, which is exactly what makes it seductive. The 2026-08-23 sweep's 12-rows-for-95667 was a real
+measurement of that narrowness, and "nearly empty" over-generalised from it — a page that returns
+plausible, correct, *incomplete* data is the more dangerous failure, because nothing about the
+result looks wrong.
+
+The practical warning for a future run: a `/filter/` sweep that finds the matches already on the
+board will look like a successful completeness check and is not one. Corroboration needs a source
+that enumerates — `parse_search.py` on the bare ZIP pages, `gis-csv`, or `mls-enumerate.py`.
+
+Each query is capped at **350 rows**, and a payload that comes back at the cap is silently truncated;
+`parse_search.py` warns when that happens. Treat a result set at the cap as incomplete.
+
+#### A cleaner route than parsing the page: `gis-csv`
+
+The 2026-09-07 run found that the same GIS payload is served **as CSV**, which removes the HTML
+parsing step entirely:
+
+```
+https://www.redfin.com/stingray/api/gis-csv?al=1&max_price=1500000&min_beds=4
+  &num_homes=350&ord=redfin-recommended-asc&page_number=1
+  &region_id=<ID>&region_type=2&sf=1,2,3,5,6,7&status=9&uipt=1,2,3,4,5,6,7,8&v=8
+```
+
+`status=9` is active-only and `region_type=2` is a ZIP. Region IDs for the target ZIPs:
+**95682 = 39806, 95672 = 39796, 95667 = 39791**. Send a browser `User-Agent` and a `Referer` of the
+matching `https://www.redfin.com/zipcode/<ZIP>` page. Columns include address, city, price, beds,
+baths, sqft, lot size, status, MLS number, days on market and the listing URL.
+
+Three things to know before using it:
+
+- **Get region IDs from `/zipcode/<ZIP>`**, which embeds `regionId=<N>`. `location-autocomplete`
+  answered 200 on 2026-10-07 (see below) but had been CloudFront-blocked (403) before that, so
+  `/zipcode/<ZIP>` remains the route that has always worked. `/city/<id>/…` IDs are not guessable —
+  a wrong one silently serves a different city, the same decoy failure the section above warns
+  about.
+- **Never filter lot size server-side.** A listing with an empty `LOT SIZE` is dropped silently.
+  Filter locally (`LOT SIZE` is square feet; divide by 43,560) and check the empty ones by hand. On
+  2026-09-07 one row came back with no lot size and had to be read individually.
+- **The CSV has no pool column**, so each survivor's listing page still has to be opened. Read
+  `POOL_PRIVATE_YN` from the `"Pool Information"` amenity group and cross-check it against Redfin's
+  own `hasPrivatePool` flag; they agreed on all 23 candidates that run.
+
+**Do not grep a Redfin listing page for "pool".** The page embeds marketing copy for similar and
+nearby homes, and that text bleeds across properties: on 2026-09-07 a 150,000-gallon-pool
+description belonging to 1781 Springvale Rd appeared on the page for 4773 Jacarah Rd, and Cameron
+Park and Loomis listings appeared in the `listingRemarks` of Placerville homes. Free text produced a
+false positive on nearly every listing; the structured field produced none. For the subject
+property's own description use the JSON-LD block (`"@type":["Product","RealEstateListing"]`) or the
+`<meta name="description">` tag, and match photos by MLS number in the filename
+(`genMid.<MLS>_<i>_<j>.jpg`) — the same `propertyId` discipline `parse_detail.py` already applies.
+
+That run scanned 414 rows, narrowed to 23 candidates, and returned the same six pool matches the
+board carried — including **3538 Wildwood Ln**, which MetroListPRO still has not indexed, so this is
+the second source that card's note depends on. Under load Redfin answers **202 with an empty body**
+rather than 429; back off a few seconds and retry rather than treating it as a failure.
+
+##### The `/stingray/api/*` endpoints answer directly now — `redfin-csv.py`
+
+Measured on **2026-10-07**: the endpoints this repo had recorded as CloudFront-blocked return 200 to
+this environment. `redfin.py`'s header still says they must be dug out of the search page's
+`ReactServerAgent.cache.dataCache`, and the bullet above still says `location-autocomplete` 403s.
+Both were true when written. Today:
+
+| Endpoint | Result |
 |---|---|
-| Shingle Springs | `/lbc/2/873/6/193/Shingle-Springs-Real-Estate-For-Sale` |
-| Rescue | `/lbc/2/765/6/193/Rescue-Real-Estate-For-Sale` |
-| Placerville | `/lbc/2/720/6/193/Placerville-Real-Estate-For-Sale` |
+| `do/location-autocomplete` | 200 — region ids, as `"<type>_<id>"` (type 2 = city, 4 = ZIP) |
+| `api/gis-csv` | 200 — the CSV export described above |
+| `api/home/details/aboveTheFold` | 200 — live status, latest price, real photo URLs |
+| `api/home/details/belowTheFold` | 200 — the MLS amenity record, property history |
 
-County index (all El Dorado cities, with active counts):
-`/cbc/2/6/193/El-Dorado-County-Real-Estate-For-Sale`
+The two detail endpoints matter more than the convenience, because they close the hole the
+"do not grep a listing page for pool" warning above exists to work around. Both take an explicit
+`propertyId` and `listingId` and return **only that property's record**, so there is no scope
+ambiguity to guard against — no comparable-homes payload to leak a neighbour's pool status, and no
+regex to get wrong. `belowTheFold` → `payload.amenitiesInfo.superGroups[].amenityGroups[]
+.amenityEntries[]` carries `POOL_PRIVATE_YN`, `POOL_FEATURES` and `SPA_YN`; `aboveTheFold` →
+`payload.addressSectionInfo.status.displayValue` carries `Active` / `Pending` / `Sold` and
+`payload.mediaBrowserInfo.photos[]` the photo URLs. Both responses are prefixed `{}&&` to defeat
+JSON hijacking; strip it before parsing. `listingId` is not in the CSV — scrape it off the listing
+page with `"listingId":(\d+)`, which is the one HTML read still needed.
 
-Each listing detail page is at `/homes/2/6/<ADDRESS-SLUG>/<MLS#>` and exposes exactly the fields
-this tracker needs, as labelled `Key: Value` lines:
+`redfin-csv.py` is this route packaged as the repeatable third-source sweep, replacing the
+hand-rolled one the 2026-09-07 run did:
 
-- `$1,275,000 (CONTINGENT)` — **price and live MLS status** in the page heading
-- `Has a Pool: Yes` / `Pool Description: Built-In, Salt Water`
-- `Lot Size in Acres: 5.03`
-- `Year Built`, `View Description`, `Is a Horse Property`, `School District`, agent and brokerage
-- Full-size photos on `mediarem.metrolist.net` (filter out `/agentpics/`)
+```bash
+python3 redfin-csv.py                 # sweep, read each candidate's MLS pool field, diff the board
+python3 redfin-csv.py --stamp         # also record dataQuality.redfinCrossCheck for build.js
+```
 
-Fetch with the pre-installed Playwright Chromium (`require('playwright')`, `chromium.launch()`).
-Plain `curl` and `WebFetch` are not reliable against it.
+It sweeps seven regions (the three target ZIPs plus 95619 and 95623, plus the two city regions as
+belt-and-braces), filters on the `CITY` column rather than the ZIP queried, takes pool **only** from
+`POOL_PRIVATE_YN`, and diffs against `listings.json` in the one direction that proves anything: a
+match it has that the board lacks. The reverse proves nothing, because the CSV export omits listings
+whose MLS forbids download. `--stamp` refuses to write if the sweep came back under 200 rows, so a
+truncated sweep cannot publish a completeness claim.
 
-## ⚠️ Verification gate — read before reporting anything
+The 2026-10-07 run: 362 unique rows, 16 cleared beds/baths/price/acres, 8 pool-confirmed and active
+— the same 8 the board carries, no price disagreement, nothing missing.
 
-The 2026-07-26 run reported four properties as matches. **All four were off market.**
+One thing it deliberately does not decide. Redfin's `BATHS` column is full + half and cannot be
+decomposed: 2.5 is certainly 2 full, but 5.0 might be 5 full or 4 full + 2 half. So it excludes
+fractional rows under the 3-full minimum, flags the ones it cannot resolve, and leaves the full-bath
+count to the IDX/MetroList field the board uses. Four rows were flagged this run (4661 Holm Rd,
+4810 Robledo Dr, 4020 Saddlehorn Ct, 5681 Honeycomb Ln) and all four are already on the pool-less
+list, so nothing turned on it.
 
-Root cause: listing status was inferred from search-engine result text. Search engines index
-listing pages that keep "For Sale" in the `<title>` for years after the sale closes, so stale
-listings read as active. A second failure compounded it — search snippets conflated two different
-properties on the same street, producing a listing with the wrong MLS number, bed count and price.
+**None of this promotes Redfin to the board.** It is the third source, same as before: the IDX feed
+enumerates, MetroListPRO speaks for the MLS of record, and if the direct endpoints start 403ing
+again the fallback is `redfin.py` and `scripts/fetch.sh`, which read the same data out of the page
+HTML.
 
-**Rules that follow from this:**
+##### One county call instead of three ZIP calls
 
-1. A property may only be given `status: "match"` when its active status is confirmed on its
-   **MetroListPRO detail page**. Search-result text is **not** sufficient.
-2. MetroList MLS numbers encode the listing year: `221…` = 2021, `223…` = 2023, `225…` = 2025,
-   `226…` = 2026. A prefix older than the current year is strong evidence the listing is stale.
-3. Read acreage from `Lot Size in Acres` and pool from `Has a Pool`, never from the marketing
-   description — descriptions say things like "room to **add a pool**" that keyword matching reads
-   as a pool. (1777 Carl Rd was exactly this trap.)
-4. Prefer *under*-reporting. An empty result is correct and useful; a fabricated match is not.
+The 2026-09-15 run found that `gis-csv` takes a **county** region the same way it takes a ZIP:
+`region_type=5`, `region_id=311` is El Dorado County, and it covers all three target cities plus
+their neighbours in a single request. `num_beds`, `num_baths` and `max_price` are honoured
+server-side; **`min_lot_size` is accepted and silently ignored**, which is the same trap the ZIP
+section warns about, so keep filtering acreage locally either way.
 
-## Coverage — do not trust a single portal
+Two cautions. The 350-row cap still applies and `page_number` does **not** paginate past it — an
+unfiltered county pull returns 350 identical rows on every page, so a county call is only safe with
+the bed/bath/price filters narrow enough to come back under the cap (at 4bd / 3ba / $1.5M it
+returned 177). And it is still Redfin, so it stays a cross-check: that run's 177 rows filtered to
+30 in the three cities, 19 of those at 2.5+ acres, and 6 with a pool — the five on the board plus
+**1781 Springvale Rd**, which is the false positive the "do not grep for pool" rule above predicts.
+Its MLS pool fields are blank, the 150,000-gallon-pool copy came from bleed-through marketing text,
+and MetroListPRO records it as a **Triplex with no pool** (already retired in `rejected`). The
+structured field was blank and the prose was wrong; the MLS of record settled it, exactly as the
+gate requires.
 
-Portals under-report badly. On the 2026-11-14 run, for the same three cities:
+###### The county call also surfaces listings no MLS carries
 
-| Source | Shingle Springs | Rescue | Placerville |
-|---|---|---|---|
-| Century21.com city pages | 22 | 49¹ | 104¹ |
-| **MetroListPRO (MLS)** | **50** | **25** | **266** |
-| Second IDX cross-check | 49 | 26 | 263 |
+The 2026-09-26 run found the one row in that county pull that neither the IDX feed nor
+MetroListPRO knew about: **3476 Buena Vista Dr, Shingle Springs**, 4bd/3ba, $860,000, 52 days on
+market. Its `MLS#` was not an MLS number at all but a Redfin internal id
+(`cmsfk6lj404c1s601hr3c84qk`), its `SOURCE` read **FSBO.com** and its `SALE TYPE`
+**For-Sale-by-Owner Listing**. That is the explanation for a gap the board cannot otherwise close:
+an MLS-derived enumeration is complete over the MLS, and a for-sale-by-owner listing is by
+definition outside it. Redfin syndicates those; the IDX feed and MetroListPRO structurally cannot.
 
-¹ Century21's city pages bleed in neighbouring cities (El Dorado Hills appeared under Rescue) while
-still missing in-city listings — 4071 Voyager Way, a full match, was absent from its Shingle Springs
-page entirely.
+So the county call earns its keep for a second reason beyond catching stale prices, and the check
+to run on its output is: **any row whose `MLS#` is not a MetroList-style number is off-MLS
+inventory, and no amount of MLS verification will ever confirm or deny it.** Read it by hand.
 
-**Always cross-check the MLS count against a second IDX** before concluding inventory is thin.
-Paginate to the end: confirm the captured price range spans the full list top to bottom.
+This one also arrived with an empty `LOT SIZE`, exactly as the ZIP section warns, so it survived
+the local acreage filter by having no acreage to filter on. The detail page settled it: **0.79
+acres** against a 2.5 acre minimum, and no pool in the record or the description. Rejected on
+land, and recorded in `rejected` so the next run does not spend the fetch re-deriving it.
 
-## Blocked sources (do not retry)
+Note what the verification gate implies for a listing like this if one ever does qualify. There is
+no MLS of record to re-read, so the gate cannot be satisfied the usual way and the listing cannot
+join the board as a verified match on Redfin's say-so alone. Carry it as a flagged candidate with
+its source named, the way `3538 Wildwood Ln` is carried for being in BAREIS rather than MetroList.
 
-Egress is open (`selective: false`, no proxy relay failures), so these are **site-level** bot
-blocks on this datacenter IP, not network policy. Do not attempt to defeat them:
+### Pool-less rows carry unverified prices
 
-| Blocked | Response |
+`verify.py` only reads matches and pendings, so everything in `poolless` and `nearMisses` carries
+whatever the IDX feed said, with no MLS confirmation. On 2026-08-23 the Redfin sweep flagged 6287
+Oak Hill Rd at $574,900 where the board said $599,000; MetroList confirmed $574,900, so the board
+had been carrying a stale price. It only mattered a little — the property has no pool and was never
+a candidate — but a pool-less listing is exactly what a price cut could turn into a near-miss worth
+a second look, so the number should be right. Either widen the verify step or keep running the
+Redfin sweep as the cross-check.
+
+Two hosts do serve real, current El Dorado County data and are what the pipeline runs on:
+
+1. **`www.coldwellbankerhomes.com`** — an IDX site carrying the **MetroList** feed. City pages embed
+   every active listing as JSON-LD (`ItemList` → `RealEstateListing`), and detail pages carry the
+   full MLS field table as `LocationFeatureSpecification` pairs: `Pool`, `Pool Description`,
+   `Lot Size (Acres)`, `Full Bathrooms`, `Half Bathrooms`, `Status`, `Source`.
+2. **`www.metrolistpro.com`** — the **official MetroList MLS** search site, used for verification.
+   Only the MLS number in the URL matters, so any record resolves directly:
+   `https://www.metrolistpro.com/homes/2/6/x/<MLS>`
+
+### MetroListPRO can also enumerate
+
+The 2026-08-26 run found that MetroListPRO is not only a per-MLS lookup. It serves **server-rendered
+city indexes** listing every record in a city, which makes it the one source that can both enumerate
+*and* speak for the MLS of record. Redfin and homefinder.com cannot do the first; the IDX feed is a
+republisher, not the source, for the second.
+
+```
+# every ACTIVE record in a city
+https://www.metrolistpro.com/lbc/2/<cityId>/6/193/<City-Name>-Real-Estate-For-Sale
+# every PENDING record in a city
+https://www.metrolistpro.com/lbc/2/<cityId>/6/193/<City-Name>-Real-Estate-Pending-Sale?pending=1
+```
+
+City IDs for the target area: **Shingle Springs 873, Rescue 765, Placerville 720** (El Dorado County
+is `193`; the county-level index at `/cbc/2/6/193/...` links every city). Each page is a flat list of
+`/homes/2/6/<SLUG>/<MLS>` links with no pagination — the whole city is on one page. Slugs beginning
+`0-` are vacant land and can be skipped.
+
+On 2026-08-26 this returned **358 active + 63 pending** records across the three cities against the
+IDX feed's **296 active**, so the feed is meaningfully narrower than the MLS. Pulling all 284 records
+the IDX sweep hadn't covered turned up **zero** additional matches, which is the strongest
+completeness check this tracker has run — stronger than the Redfin cross-sweep, because it is the
+MLS of record rather than another republisher. Detail pages carry the same field table used for
+verification (`Status`, `Lot Size in Acres`, `Has a Pool`, `Bathrooms: <full> | <half>`) plus MLS
+photo URLs on `mediarem.metrolist.net`, which hotlink cleanly.
+
+Worth doing when a run reports thin inventory or no movement, at ~350 fetches and a few minutes at 8
+concurrent. It is scripted as **`mls-enumerate.py`** since 2026-08-31 — `--stamp` records the result
+under `dataQuality.independentEnumeration` and `build.js` puts a "Cross-enumerate" row on the page.
+
+#### "Unreadable" has to mean the parser failed, and nothing else
+
+The first version of `mls-enumerate.py` reported **122 of 387 records unreadable** — 31% of the MLS
+— and still printed its match list as though the sweep had covered the three cities. It had not, and
+a completeness check that cannot say what it missed is worth very little: the whole point of this
+sweep is to prove no house slipped through, and a third of the records were in a bucket labelled
+"don't know".
+
+None of the 122 was a house. Broken down, they were **91 land parcels**, **23 commercial listings**
+and **8 multi-unit residential** records. Land and commercial pages carry no bed/bath header at all,
+so the single-family header regex found nothing and the record fell through to the error bucket.
+
+Two parsing details caused it, both worth knowing before touching this file:
+
+- **The `0-` slug rule only catches some land.** `0-HAWK-TRAIL/…` is obviously a parcel, but plenty
+  of land carries a street number — `10 Big Oak Court` is 9.8 acres of dirt. Type has to be read
+  from the page, not guessed from the URL.
+- **The header's `Type:` and the field table's `Property Type:` disagree by design.** The header
+  says `Lots / Land` and `Commercial`; the field table says the MLS codes `LL` and `COM`. Matching
+  only the readable spelling classified every one of them as unreadable, because `field()` finds
+  `Property Type:` first and it wins. `classify()` now checks both spellings.
+- **The unit table does not always start at "Unit 1".** Two records begin at `Unit 2` / `Unit 3`,
+  so an anchored `Unit 1 Features:` regex missed them; it matches any index now, and falls back to
+  the `RI` code and the header's "Multi-Unit Residential".
+
+After the fix: 265 houses read field by field, 114 land/commercial and 8 multi-unit excluded **by
+type**, **0 unreadable** — and the same 8 records the board already carried, 0 new. That is a real
+completeness statement; the first one was not.
+
+Multi-unit records are excluded rather than dropped: they state beds per unit, so the filter cannot
+see a whole-home bed count. Any that clear the lot, price and pool tests are printed as
+"needs a human read" instead of being silently discarded — the 1781 Springvale Rd case above is
+exactly this shape.
+
+The general rule, and it is the same one the verification gate encodes one level up: **an error
+bucket that collects normal cases stops being an error signal.** If a category can be recognised,
+recognise it — "excluded because it is a parking lot" and "I could not read this page" must never
+share a counter.
+
+A third source is available if either of the above breaks: **`www.homefinder.com`** serves MetroList
+records through the Move/realtor.com pipeline, embedded as JSON in `<script id="__NEXT_DATA__">`
+(`source.name === "MetroList"`, with `list_price`, `description.beds`, `baths_consolidated`,
+`lot_sqft` and `status`). It is independent of both the IDX feed and Redfin. Its limitation is the
+same as Redfin's: it renders roughly 40 listings per city and ignores path filters and pagination, so
+it can confirm or contradict a known listing but must never be used to enumerate inventory.
+
+A fourth, found on 2026-09-02 and the best of the fallbacks: **`www.exprealty.com`**. City pages at
+`/<city>-ca-real-estate` (`?page=N`, 26 per page) carry the whole result set in
+`<script id="__NEXT_DATA__">` under `props.pageProps.props.listings`, one flat object per listing
+with `mls`, `price`, `bedrooms`, `bathrooms`, `standardStatus`, `on_market_date` and — the useful
+part — **`pool` as a structured boolean on the search card**, which no other source gives without a
+detail fetch. A sweep of the three cities returned 306 records against the IDX feed's 294 that day,
+and agreed with the board on every hard field for all seven MLS-verified matches.
+
+Two limits. It lists **active records only**, so absence there means "active or gone", never
+"pending" — 2565 Stagecoach Rd was missing from the city sweep and its detail page carried
+`standardStatus: 10`, matching the board's Pending. And its index has holes: 1988 Cold Springs Rd
+(MLS 226033527) was absent from both the sweep and its own address URL, which answered
+`missingAddress`, while the IDX feed, MetroListPRO and Zillow all carried it. So it corroborates
+well and enumerates *nearly* — treat a gap there as an indexing gap, not a status change, and
+confirm against MetroListPRO before acting on it.
+
+All of these need a normal browser `User-Agent`; the default agent string gets blocked.
+
+```bash
+UA="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 \
+(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+curl -sSL -A "$UA" https://www.coldwellbankerhomes.com/ca/shingle-springs/
+```
+
+Pagination is `/p_2/`, `/p_3/`… and repeats the last page once it runs out, so stop when a page
+yields no new IDs rather than trusting a page count.
+
+## The verification gate
+
+The 2026-07-26 run reported four properties as matches and **all four were off market**, because
+status was inferred from search-engine snippets. Search engines keep sold listings indexed with
+"For Sale" in the title for years. The rules that follow still stand:
+
+1. A listing may only be presented as a match once price, beds, full baths, acreage and pool have
+   been confirmed against **MetroListPRO**. The IDX feed alone is not sufficient. The one standing
+   exception is a listing carried by a *different* MLS, which MetroListPRO cannot hold a record of
+   at all — it needs two other independent sources agreeing, and the card must name the MLS it
+   actually belongs to. See "A 404 that no amount of waiting will fix" below.
+2. Where two sources disagree, **the MLS of record wins**, and the disagreement gets printed on the
+   card rather than quietly resolved. The 2026-08-15 run hit exactly one: 1988 Cold Springs Rd read
+   Active on the IDX and Pending on MetroList. It is shown as Pending.
+3. MetroList MLS numbers encode the listing year — `221…` = 2021, `225…` = 2025, `226…` = 2026. A
+   prefix older than the current year is strong evidence of a stale listing.
+4. Never trust search-result text for bed/bath/acreage either. It routinely conflates neighbouring
+   properties: one search this run attributed 1234 Rising Hill's 2.69-acre lot to 6881 Sagittarius,
+   which actually sits on 40 acres.
+5. Prefer under-reporting. An empty result is useful; a fabricated match is not.
+
+### When a listing contradicts itself
+
+Rule 2 covers two sources disagreeing. 2026-08-23 turned up the harder case: a single listing
+disagreeing with *itself*. 1781 Springvale Rd (MLS 226100125, Placerville, $1.25M, 10.27 acres) is
+recorded `Has a Pool: No` by both MetroList and the IDX feed, while its own MLS remarks describe
+"an extraordinary 150,000-gallon swimming pool, one of the largest residential pools in the county"
+with an adjacent pool bathroom and a studio pool house.
+
+The structured field wins, so it is not on the board. But the resolution is not to silently drop it:
+it sits in **Near misses** with the contradiction spelled out, because a human can settle it with one
+phone call and the script cannot. Two things make the field plausibly wrong rather than the copy:
+it is a `RI` (residential income) listing, a property type where amenity fields are often left
+unset, and its bed count — 4 across three separate structures, the main house being 3bd/2ba — means
+it would need a judgement call from the reader anyway.
+
+Generalising: **a structured field that contradicts the listing's own remarks is a flag, not a
+verdict.** Filter on the field, then surface the conflict rather than resolving it quietly.
+
+### "Not found" is not "does not match"
+
+`verify.py` was all-or-nothing: any record that didn't read back clean suppressed the verification
+stamp for every other record. On 2026-08-27 that fired on a listing published the same day —
+3538 Wildwood Ln, MLS 226107286, one day on market. MetroListPRO answers `404 Listing #226107286
+Not Found`, and its Placerville active index (259 records) doesn't carry it either, so the absence is
+consistent across both of that site's surfaces. The MLS simply hasn't ingested it yet.
+
+The old code counted that as a disagreement, which had two consequences, both wrong. The page would
+have said *"Last confirmed 2026-08-26, not on this run"* — discarding the eight records that had just
+been re-read clean. And it would have given a brand-new listing the same signal as a genuine
+contradiction, which is the signal reserved for a listing the MLS actively refutes.
+
+The two now have separate paths. A "Not Found" body is recorded as `source.mlsAwaitingIndex` and a
+per-card `statusNote`; a field mismatch still vetoes the stamp as before. So the stamp reflects the
+records that were checked, and the caveat lands on the one card it applies to instead of on the whole
+board. `verify.py` clears the note once the record does get indexed, so it can't outlive its cause.
+
+An unverifiable listing is not dropped, but it does not get to look as solid as the rest. This one
+was carried because a second independent source agreed on every hard criterion: Redfin returns the
+same MLS number, price, bed and full-bath count and a 5.00-acre lot, plus the MLS amenity table
+(`POOL_PRIVATE_YN: Yes`, Gunite) and captioned pool photos. That is two sources agreeing with the
+third pending, and the card says exactly that.
+
+The general rule: **absence of a record and contradiction by a record are different findings, and a
+gate that collapses them will either hide new inventory or discredit good data.** When a check can't
+run, say which check and on which item — don't downgrade everything it would have covered.
+
+#### An excuse with no expiry date
+
+"Too new for the MLS to have indexed it" is a fair reading on day one. 3538 Wildwood Ln was still
+unindexed on 2026-08-31, five days after listing, and the card was still saying the listing had
+"gone live too recently" — a claim that gets weaker every day it repeats while looking exactly as
+confident as it did on day one.
+
+`verify.py` now records `since` (the date a record was first seen unindexed) alongside each entry in
+`source.mlsAwaitingIndex` and carries it across runs. Under a week the note reads as before. Past a
+week it stops asserting a cause it can no longer support and says what is actually observed —
+missing since date X, longer than indexing normally takes, worth a call to the listing agent. A
+record absent for that long is likelier withdrawn or mis-keyed than newly published, and that is a
+different thing for a reader to act on.
+
+Generalising: **a caveat that explains away a gap needs a clock on it.** Any note of the form "this
+will resolve itself shortly" should be written so it expires on its own, because the case where it
+stops being true is precisely the case worth surfacing.
+
+#### …and the clock has to be wound by something that outlives the run
+
+The clock above was fitted on 2026-08-31 and could never have struck. `verify.py` reads the previous
+`since` out of `listings.json` — but it runs as step 2, *after* `scrape.js` has already rewritten
+that file, and `scrape.js` builds `source` literally with no spread precisely because of the
+carry-forward rule three sections up. `mlsAwaitingIndex` was not in the rebuilt object, so
+`prior_awaiting` was empty on every run, `since` fell back to `TODAY`, and 3538 Wildwood Ln reported
+**0 days unindexed** on 2026-09-01 — its sixth consecutive day missing from the MLS. The `days < 7`
+branch was unreachable code: the note could repeat forever while the counter under it stayed at
+zero.
+
+`scrape.js` now carries `mlsAwaitingIndex` forward alongside `mlsVerifiedOn`, and the same run then
+reported the true **5 days**. Restoring the baseline value by hand and re-running step 2 was enough
+to confirm the whole path, because `verify.py` recomputes `days` from `since` every time.
+
+Note what makes this the exception to the rebuild-every-run rule rather than a violation of it.
+`since` looks like run metadata — it lives in `source`, it is written by the pipeline, it is a date.
+It is not: it is a clock on **one property**, the same kind of fact as `firstSeen` on a listing, and
+those have always been carried. The rule's real subject is *values that describe the run that just
+happened*, and `inventoryScanned` is one while `since` is not.
+
+Two things generalise, and the second is the sharper one:
+
+- **A carried value read after the thing that rebuilds it is not carried at all.** Two rules that
+  are each correct in isolation — "rebuild what describes a run", "carry the clock across runs" —
+  cancelled out because of step order. When state has to survive a run, check *which* artefact the
+  reader sees, at the point in the sequence it reads it.
+- **A counter that resets is worse than no counter**, because the expiry it feeds looks like it is
+  working. Nothing failed loudly here: the note rendered, the pipeline reported success, the page
+  read as confident on day six as on day one. Any threshold on an accumulating value deserves one
+  check that it can actually be crossed — if no run can reach the branch, the branch is decoration.
+
+#### A 404 that no amount of waiting will fix
+
+The expiry fired on 2026-09-08, twelve days in, and the note it produced was worse than the one it
+replaced: *missing from the MLS site since 2026-08-27, longer than indexing normally takes, worth a
+call to the listing agent to confirm it is still on the market.* Every clause was true and the
+conclusion was wrong. **3538 Wildwood Ln is not a MetroList listing.** Its IDX detail page reads
+`Source: BAREIS`, and Redfin's `gis-csv` row for MLS 226107286 says `BAREIS` in the source column
+too. MetroListPRO answers 404 because MetroList never had the record — not because anything is late.
+No amount of waiting resolves that, and the reader was being sent to phone an agent about a listing
+sitting exactly where it belongs, in another MLS.
+
+The IDX site republishes several feeds; `Source` says which, and nothing in the pipeline had ever
+read it. `scrape.js` now captures it as `mlsSource`, the `matches.json` step passes it through, and
+`verify.py` splits the 404s into two buckets: unknown or MetroList source stays `mlsAwaitingIndex`
+with its clock, a different MLS becomes `mlsForeignSource` with **no clock**, because there is
+nothing to wait for. The card and the *Verify* row say which MLS carries it and that confirmation
+comes from the IDX feed and Redfin instead.
+
+The sharper lesson, and it is the third correction to this same note: **an expiry answers "how long
+has this lasted", never "why".** Three runs in a row fitted better and better instrumentation to the
+waiting — record the date, carry it across runs, escalate the wording past a week — while nobody
+checked the premise that the record was in that MLS at all. A timer on a wrong explanation makes the
+wrong explanation more insistent, on a schedule. When a caveat is about to escalate, re-derive its
+cause before sharpening its wording: the escalation is evidence the original reading was wrong.
+
+#### A check that never ran, reported as a contradiction
+
+The three buckets above — clean, absent, contradicted — were still missing the case where the
+**check itself fails**. `verify.py`'s `text_of` shelled out to `curl` and read only its stdout,
+ignoring both the exit status and the HTTP code. A timeout or a reset therefore returned an empty
+string, an empty string parses as every field absent, and the comparison rendered that as
+
+```
+5551 Saddlehorn Rd  MLS226083864 ml_status=None | PRICE None vs 1200000 BEDS None vs 4 …
+```
+
+which is the exact shape of a listing the MLS refutes on all five criteria. On 2026-09-12 it
+vetoed the stamp for the whole board — discarding four records that had just read back clean —
+over one record MetroListPRO served correctly, at 200 with the right price, on a manual retry
+seconds later. This host sees intermittent timeouts against `metrolistpro.com`; two of the three
+hosts probed at the start of that run returned `000` once and `200` immediately after.
+
+`text_of` now returns an explicit `(title, text, error)` and retries three times with backoff,
+treating only `200` and `404` as answers — `404` because that is how the site *says* a record is
+not indexed, which is real information. A record that still cannot be fetched goes into a fourth
+bucket, `source.mlsUnreachable`, which:
+
+- earns **no** confirmation (it is not counted in `mlsVerifiedCount`),
+- casts **no** doubt on the record (it does not veto the stamp for records that were read),
+- puts the caveat on that one card, saying the re-read did not happen and the figures are one
+  confirmation short, and
+- leaves `mlsVerifiedOn` untouched when *every* record was unreachable, so the page falls back to
+  "last confirmed <earlier date>, not on this run" instead of dating a check that never ran.
+
+Fixing that exposed a second unearned claim one line over in `build.js`:
+`mlsVerifiedCount || listings.length`. Zero is a real count — a run where every survivor sits in a
+foreign MLS or was unreachable confirms nothing — and `||` turned precisely that case into
+"5 agreed". It now tests for a number instead.
+
+The lesson is a sharper form of the one two sections up. That one said absence and contradiction
+are different findings. This one adds the third: **"I could not look" is not "I looked and saw
+nothing", and neither is "I looked and saw something else."** A verifier that reads a transport
+fault as evidence about the subject will report its own outage as the world's news — and it will
+do so in the most alarming direction available, because a blank response fails every comparison at
+once. Any check that crosses a network needs the failure to be a distinct return value, never the
+absence of a value.
+
+And per the standing rule about branches that cannot be reached: both new paths were exercised
+before publishing, by pointing `HTTPS_PROXY` at a dead port and confirming the bucket filled, the
+date held at its previous value, and the page rendered the caveat.
+
+### Half baths
+
+MetroList reports baths as `full | half`. Some sites render `2 | 1` as "3 baths", which will
+silently pass a 3-bath filter with a 2.5-bath house. **Filter on `Full Bathrooms` only.** This
+dropped 1234 Rising Hill W Rd (2 full + 1 half) from the 2026-08-15 matches; it is listed under
+"Near misses" instead.
+
+#### …except it wasn't, for two and a half weeks
+
+That last sentence was false from the day it was written until 2026-09-02. The near-miss branch in
+`scrape.js` has always had a `only N baths` case, but it lives in the loop over **candidates**, and
+the card-level filter above it cut anything under the full-bath minimum. A listing failing on baths
+was dropped one stage before the stage that would have recorded it as a near miss. The line was
+unreachable, so 1234 Rising Hill W Rd — pool, 2.66 acres, $685,000, the **cheapest pool-on-acreage
+listing in the three towns** — appeared nowhere on the page at all.
+
+The card filter now admits `full >= MIN_BATHS - 1` when the rounded total still clears the bar, so a
+one-half-bath-short listing reaches the detail stage and lands in Near misses. The match test is
+untouched: `bathsOk` still requires full baths, so a half bath cannot reach the board or the
+pool-less section. Cost is about 25 extra detail fetches a run (34 candidates → 59).
+
+The near-miss text names full baths now too. "only 3 baths" on a 2-full-plus-1-half house describes
+a house that meets the minimum, which is the exact confusion the half-bath rule exists to prevent;
+it reads `only 2 full baths (+ 1 half)`.
+
+Two things generalise:
+
+- **A filter that excludes is also a filter that hides.** Every stage that drops a record decides
+  what the later stages are allowed to say about it. When an early cut is the enforcement of a
+  criterion, ask what still needs to *report* on the thing being cut — the exclusion rule and the
+  explanation rule need different, wider, gates.
+- **A README sentence is not a test.** This one asserted a page state confidently for eighteen runs
+  while the page never had it. Where the docs claim a property is on the page, the cheapest possible
+  check is to look for it there.
+
+#### The same trap, in the one field an IDX enumeration gives you for free
+
+2026-10-30 ran a full `coldwellbankerhomes.com` enumeration as a blind cross-check and it reported
+**eight** matches against the board's seven. The extra one was 1234 Rising Hill W Rd again.
+
+The cause is worth recording because it is specific to enumerating from the IDX *city* pages rather
+than its detail pages. The JSON-LD on a city page carries `numberOfBathroomsTotal`,
+`numberOfFullBathrooms` and `numberOfPartialBathrooms`, but only the first is populated on the
+search payload — and it is the rounded-up total, so a 2-full-plus-1-half house reads `3`. The
+detail page's `Full Bathrooms` field, which the section above says to filter on, is correct; the
+list payload simply does not have it.
+
+So the rule "filter on `Full Bathrooms` only" has a corollary for anything enumerating from a search
+payload: **the cheap list field and the authoritative detail field have the same name in prose and
+different meanings in fact.** A bath count that arrives without a half-bath count beside it has not
+been decomposed and cannot clear a full-bath minimum on its own — exactly the limit `redfin-csv.py`
+already records for Redfin's `BATHS` column. Treat it as a candidate filter, never as the test.
+
+### A criterion that silently matched nothing
+
+Renaming `criteria.baths` to `criteria.fullBaths` on 2026-08-15 broke `scrape.js`, which still read
+`C.baths`. `parseInt(undefined)` is `NaN`, every comparison against `NaN` is false, and so the card
+filter rejected **all 297 listings** on 2026-08-16 while printing a perfectly calm
+`0 clear beds/baths/price`. The board still looked right, because the Redfin relist rescue re-found
+the seven properties already on it — the failure was invisible in the output and would only have
+shown up as new inventory never appearing again. Fixed by reading `fullBaths` with `baths` as a
+fallback, and by routing every threshold through `threshold()`, which throws on a missing or
+unparseable criterion instead of returning `NaN`.
+
+Two habits this argues for, both cheap:
+
+- **Rename a criterion, grep for the old key.** `listings.json` is read by `scrape.js`, `build.js`
+  and the Python helpers, and none of them fail loudly on a key that isn't there.
+- **Treat a zero-candidate stage as a bug until proven otherwise.** The three towns always carry a
+  few hundred active listings; "0 of 297 cleared" is a parser regression, not a quiet market. Any
+  count that collapses to zero between stages deserves a look before the run is published.
+
+### A summary that reported the previous run's news
+
+`scrape.js` builds its output as `{...prior, …}` and never set `runSummary`, so the key was carried
+forward untouched — while `build.js` renders it as the "What changed this run" banner. The 2026-08-17
+run legitimately recorded `{new: [], priceChanges: [], dropped: [], unchanged: 10}`. On 2026-08-19
+that stale object would have published "nothing moved" over a run that actually found a $24,900 price
+cut on 3720 Four Springs Dr and lost 3784 Cattle Dr from the market.
+
+This is the same shape of bug as the `previousRun` carry-forward already commented in `scrape.js`:
+spreading `prior` preserves *everything*, including the fields that describe the previous run rather
+than the data. `scrape.js` now recomputes `runSummary` from this run's own listings before writing.
+
+The general rule: **anything in `listings.json` that describes a run rather than a property must be
+rewritten every run, not spread forward.** Today that is `lastRun`, `previousRun`, `source`,
+`dataQuality` and `runSummary`.
+
+### A run summary with no category for the thing that happened
+
+`runSummary` tracked four kinds of movement — `new`, `priceChanges`, `dropped`, `relisted` — and a
+property going into escrow is none of them. On 2026-08-25 2565 Stagecoach Rd moved from the active
+board to the pending list: all four arrays were legitimately empty, so `build.js` published
+**"Nothing moved"** on a run where the active count fell from 6 to 5 and the headline stat above the
+banner already said `5`. The page contradicted itself.
+
+Note the difference from the two bugs above: nothing was stale and nothing was carried forward. The
+summary was correctly recomputed and correctly empty. The gap was in the *vocabulary* — there was no
+category for a property crossing between sections, so a real event had nowhere to be recorded.
+
+`scrape.js` now diffs each property's section against the prior run and writes `statusChanges`
+(`{address, city, mls, from, to}`), which `build.js` renders in the banner in both directions —
+under contract, and back on the market after a deal falls through. Going pending is the most
+actionable thing that can happen to a property someone is watching, so it must never be silent.
+
+The general rule: **when a summary reports "nothing happened", check that it has a category for
+everything that can happen.** An empty array is only good news if something would have filled it.
+
+### …and the same gap, one table over
+
+The rule above got a category for a property crossing between the active board and the pending list.
+It did not get one for the section *next* to the board. `runSummary` has only ever described
+`listings` and `pending`, so on 2026-09-10 all five arrays were correctly empty and the banner
+published **"Nothing moved"** on a run where the pool-less table gained **2500 Hwy 50** (Placerville,
+12.4 acres, 4bd/4 full ba, $1,115,000), cut 4181 Thunderbird Ln from $799,000 to $749,000, and lost
+**5000 Reservation Rd** from the market. (The near-miss table moved the same run — 2805 Aquamarine
+Cir $674,000 → $650,000 — and is still not covered; it is a 0.2-acre lot, so nothing there can reach
+the board on a price move alone. `poolless` is the section where a change is actionable.)
+
+That table is not a footnote. It is the "right land, right house, add a pool" list, and the page's own
+copy tells the reader several of its rows sit far enough under the ceiling to fund a pool. A new
+12-acre entry $385,000 below budget is precisely what someone opens this page to find. A pool-less
+listing can never touch `listings`, so every one of its movements was invisible to the summary by
+construction.
+
+`scrape.js` now diffs `poolless` against the prior run into `runSummary.poollessChanges`
+(`added` / `priceChanges` / `gone`), and `build.js` renders it in both banner branches — as one line
+in the list when the board also moved, and as a named sub-list under "Nothing moved **on the board**"
+when it didn't. The wording keeps the distinction the page rests on: these are not matches.
+
+`gone` says only that the row is no longer an active or pending listing clearing the other criteria.
+The table is rebuilt from live detail reads, so absence is the only signal available — sold,
+withdrawn and repriced-out are indistinguishable from here, and the note says that rather than
+picking one.
+
+The general rule is the one from the section above, and it needed restating because fixing it once
+did not fix it: **"nothing happened" is a claim about everything the page shows, not about the part
+the summary happens to iterate.** Each time this bug has appeared, the arrays were correct and empty
+and the vocabulary was short one word. When a new section is added to the page, ask what its movement
+would be called before asking how to render it.
+
+#### …and once it had a category, it dropped the one field that qualified it
+
+The section above got `poollessChanges` rendering into the banner. It carried `address`, `city`,
+`price`, `acres`, `beds`, `fullBaths` and `url` — everything except `status`. The table those rows
+come from has rendered a status column since it was built, and its own intro counts the pending
+rows ("one is already under contract, so check the status column"), because that table has always
+held both active and pending listings. The banner inherited the rows and not the caveat.
+
+On 2026-09-25 the banner announced **5000 Reservation Rd** — Placerville, 5 acres, 4bd/4 full ba,
+$799,000, $701,000 under the ceiling — as a new entry on the add-a-pool list. The same run's own
+detail read had it **Pending**. Every number in the sentence was right and the sentence was still
+wrong, because the one field that decides whether a reader should act on it was not in the object.
+The row three inches below it said `Pending` correctly the whole time.
+
+`scrape.js` now carries `status` on each `added` row and `build.js` appends **already pending**
+when it is set. Two things generalise:
+
+- **A summary line inherits the caveats of the table it summarises, or it overstates it.** The
+  banner is the part people read; it is the last place that should carry less qualification than
+  the detail it points at.
+- **"Correct fields, wrong conclusion" is the failure mode a field-by-field check cannot see.**
+  Every value in that item matched the source. What was missing was not wrong data but absent
+  data, and absent data has no value to compare against. When a projection is built by picking
+  keys, the question is not whether the picked keys are right — it is what the reader will infer
+  from the ones that were left out.
+
+#### …and the third time, the missing category was a word in the status field
+
+The two sections above added a category for a property crossing between sections, then another for
+the table next door. Both took for granted that the pipeline could *name* the status it was sorting
+on. It could not. The IDX `Status:` field is free text and carries `Pending`, `Contingent` and
+`Active Under Contract` for the same real-world event, and `scrape.js` only ever branched on
+`Pending` — so a listing that went **contingent** matched no branch anywhere: not the board, not
+`pending`, not the pool-less table, not the near-miss table.
+
+On 2026-10-18 that was **4661 Holm Rd**, Placerville — 5.12 acres, 4bd / 4 full ba, $899,900, on
+the pool-less "right land, add a pool" list. Its detail read that run said `status=Contingent`, in
+the run log, in plain sight. The page built from that run — caught before publishing, and the
+only reason this entry is not a post-mortem — said *"off the table (last $899,900); no longer an
+active or pending listing clearing the other criteria"*, and the near-miss line offered the reader
+four guesses: *sold, under contract, repriced, or pushed past the table's cap*. The run had already
+measured which one it was.
+
+Note how this differs from the two sections above it. There the arrays were correct and the
+vocabulary was short a word for an *event*. Here the vocabulary was short a word for a **state**,
+which is worse in one specific way: the generic "gone" wording exists precisely because sold,
+withdrawn and repriced-out are genuinely indistinguishable from the feed — it is honest when the
+status is unknown, and it quietly launders a known status into an unknown one when a branch is
+missing. A hedge is only honest if nothing upstream knew better.
+
+`scrape.js` now matches the category rather than the spelling, through one predicate
+(`underContract`, `/^(pending|contingent|active under contract)$/i`) used at all three branch
+points, and carries the observed word through so the card and the status column say `Contingent`
+rather than flattening it to `Pending`. `build.js`'s "already under contract" count in the
+pool-less intro matched `/pending/i` for the same reason and is widened to the same set.
+
+The fix then surfaced two more instances of the same shape downstream, both caught by looking at
+the rendered page rather than the data:
+
+- `poollessMoved` counted the new category and `poollessSummary` did not *name* it, so the heading
+  rendered **"The pool-less list did move ()"** — a page announcing movement and declining to say
+  what kind. A count and its label are one object; extend both or neither.
+- The near-miss table carries active listings only, so the row legitimately left it — and the
+  generic four-way guess fired there too, on the same run, three lines below a banner item that
+  had just named the status. When one diff knows the cause of another's removal, pass it across:
+  the near-miss line now reads *now Contingent — this table carries active listings only*.
+
+Three things generalise:
+
+- **Match the category, not the first spelling of it you saw.** A free-text field from an upstream
+  feed will eventually use a synonym, and an equality test against one value fails open — silently,
+  into whichever branch collects everything else, or into none at all.
+- **A hedge is a claim about what you know.** "Sold, withdrawn, or repriced — can't tell from here"
+  is good writing when it is true and a bug when the answer is sitting in the same run's log. When
+  a page offers the reader a disjunction, check that nothing upstream could have collapsed it.
+- **Fixing a classification is not done until every reader of it is fixed.** The predicate, the
+  counter, the label and the prose each had their own copy of the old assumption. Grep for the
+  thing you widened, then read the rendered output — two of these three were invisible in the JSON
+  and obvious on the page.
+
+### The same carry-forward, two keys over
+
+The rule above was written but only `runSummary` was fixed. `source` and `dataQuality` were still
+built as `{ ...prior.source, … }` and `{ ...prior.dataQuality, … }`, so every key the spread didn't
+happen to overwrite stayed frozen. By 2026-08-22 `source` carried `scanned: 301` and
+`verifiedMatches: 10` from a sweep that had since been superseded by `inventoryScanned: 299` and
+`verifiedActiveMatches: 6` — two pairs of keys for the same two facts, disagreeing — and
+`dataQuality.note` still described a status disagreement on 1988 Cold Springs Rd that MetroList had
+long since resolved.
+
+Both are now constructed literally in `scrape.js` from that run's own counters, with no spread. The
+duplicate `scanned`/`verifiedMatches` keys are gone. If you add a field that describes the run, add
+it there and give it a value every time.
+
+#### …and a third time, in the composer the no-spoof path actually uses
+
+`mls-compose.py` had learned half of this. It writes `source.passedBedsBathsPrice` from its own
+enumeration with a comment explaining exactly why — "carried over unchanged it reported the previous
+run's funnel against this run's totals" — and then left `activeScanned` and `pendingScanned`
+untouched two lines below, beside the `inventoryScanned` it *does* recompute. On 2026-10-30 the
+board therefore published `inventoryScanned: 377` next to `activeScanned: 354` and
+`pendingScanned: 51 … 55`: this run's total, last run's split, and the two did not add up. The same
+spread also carried `source.thisRunMethod` and `dataQuality.note` forward, so the board described a
+Trulia cross-check that this run had not run.
+
+All three are fixed the way the sections above prescribe — the two counters are written from the
+enumeration, and the two prose fields are **popped** rather than overwritten, so a run that does not
+restate what it did leaves them empty instead of inheriting a predecessor's account of itself.
+
+The reason this keeps recurring is worth naming: the fix has been applied per *field* each time, and
+the bug is per *writer*. Every composer that opens the existing board and writes some keys into it
+inherits the whole class again. When adding one, the question is not "did I update the counters" but
+**"which keys in this object describe a run, and does this writer set every one of them?"**
+
+### A verification claim nothing had tested
+
+`build.js` rendered a flat "All N agreed" in the *Verify* row of "How this list is built", with no
+date and no input from the step that does the verifying. `scrape.js` never contacts MetroListPRO, so
+on any run where step 2 was skipped the page still asserted a check that had not happened — and
+`source.mlsVerifiedOn` sat at 2026-08-17 while the page implied today.
+
+The date is now written by the code that earns it: `verify.py` stamps `source.mlsVerifiedOn` and
+`mlsVerifiedCount` into `listings.json`, and **only when every record read back clean**. `build.js`
+compares that date against `lastRun` and, when they differ, says the board was re-enumerated but not
+re-verified, naming the date it last was. A skipped step 2 is now visible on the page instead of
+being papered over.
+
+The general form of this one: **a page that makes a claim about process should render it from the
+artefact that process leaves behind, never from a hardcoded sentence.** A hardcoded sentence cannot
+tell the difference between a check that passed and a check that never ran.
+
+### The last section still riding the carry-forward
+
+The rule above was applied to `runSummary`, then to `source` and `dataQuality`. `poolless` was
+missed, and it was the one that mattered most, because it is the only section whose rows carry
+MLS-confirmed fields. `scrape.js` never wrote the key at all, so `{...prior}` had been serving the
+same thirteen rows since whichever run last built them by hand.
+
+On 2026-08-28 it showed **4661 Holm Rd at $935,000**, with an `mlsPrice` of $935,000 beside it
+implying the MLS had confirmed that number. The IDX feed said $899,900 and a MetroListPRO read
+agreed — a $35,100 cut the board had been carrying stale, on exactly the section the "pool-less rows
+carry unverified prices" note above is about. The same frozen list still carried **2730 Golden Fawn
+Trail**, which had since **closed**: its IDX detail page reads `Status: Closed` and MetroListPRO
+answers 404 for MLS 226091151.
+
+`scrape.js` now rebuilds `poolless` in the candidate loop from that run's own detail reads, for
+Active *and* Pending listings, so a poolless property going into escrow shows in its status column
+instead of dropping out silently. The MLS-confirmed fields (`mlsPrice`, `mlsPool`, `reason`) are
+carried forward **only while the price they were read against still holds**; once the price moves
+they are dropped rather than left to vouch for a number that no longer exists.
+
+Two things generalise. First: the carry-forward rule needs a list, not a memory — the fields that
+describe a run are `lastRun`, `previousRun`, `source`, `dataQuality`, `runSummary`, and every
+derived section (`nearMisses`, `poolless`). Second, and sharper: **a stale value is worse when it
+travels with a provenance stamp.** A stale price is a wrong number; a stale price next to `mlsPrice`
+is a wrong number wearing a badge that says it was checked. When a fact goes stale, its confirmation
+has to go with it.
+
+While fixing it, the same shape turned up in prose: `build.js` ended the section's note with a
+hardcoded "check the status column, one is already pending" — true when written, and silently wrong
+the moment the count changed. It is rendered from the data now.
+
+### A drop record with a one-run memory
+
+**Open — found 2026-09-13, not yet fixed.** Dedupe rule 3 has always said a dropped property is
+recorded "so a stale copy resurfacing later isn't mistaken for a new find". The code does not do
+that. `dropped` is rebuilt empty every run — correctly, by the carry-forward rule, since "Removed
+**this run**" is a statement about the run — but nothing else remembers the property either:
+`merge()` seeds `priorById` from `pending`, `relisted` and `listings`, and never from `dropped`. So
+the record lives for exactly one run and then leaves the file entirely. On 2026-09-13 that dropped
+2565 Stagecoach Rd, reported removed the day before, with nothing left behind.
+
+This is the same shape as the two buckets above — `relisted` and `pending` were each seeded into
+that map after a property vanished through the gap — and it is the last bucket still outside it. The
+difference is that those two held *live* inventory, so the loss showed up as a property disappearing
+mid-hunt. This one holds dead inventory, so the failure is quieter and later: a house that sold in
+September and comes back on the market in March is announced as a new find, in the section the
+reader trusts to mean "this wasn't here before".
+
+Not fixed on the run that found it, deliberately. The fix is a cumulative ledger (`everSeen`, or
+seeding `priorById` from a retained archive) so a return lands in `relisted` instead of `new` — and
+that changes what the page's headline number means. Per the standing rule about branches that cannot
+be reached: nothing relisted on 2026-09-13, so the new path could not have been exercised before
+publishing, and an untested change to the definition of "new" is worse than a documented gap.
+
+The narrower lesson, since this is the third bucket to fall through the same hole: **"rebuild what
+describes a run" and "remember what happened" are not in conflict, but they need different homes.**
+Each time this has come up, the run-scoped array was right to be cleared and the mistake was
+assuming it was also the memory. A bucket that is both a report and a record is neither for long.
+
+### One property, counted as both an arrival and a departure
+
+**Fixed 2026-10-20.** `scrape.js` keys the pool-less diff on `mls || address`, which is the right
+key for telling two listings apart and the wrong key for telling one property from itself. When
+4810 Robledo Dr was relisted under a fresh MLS number (226083409 → 226129641) at an unchanged
+$999,900, the new number was absent from the prior map and the old one was absent from the current
+map, so the same row was reported as `added` **and** `gone` on a run where it never left the table.
+The banner read "1 added, 2 removed" about a table that gained nothing and lost one.
+
+`build.js` now collapses an address appearing on both sides into a third category, `relisted`, and
+names it as such. Two details worth keeping:
+
+- Neither projection carries every field the sentence needs. `added` has no `mls`, so the new number
+  is read back off `data.poolless`; `gone` has no `mls` either, so the old number simply is not
+  printed rather than printed as an empty parenthetical. A diff written for counting does not
+  automatically support describing.
+- The fix belongs in the composer, not the key. Making the key address-only would merge two genuinely
+  different listings at one address — the thing the MLS number is there to prevent.
+
+The shape generalises past this table: **a diff keyed on an identifier reports identifier changes as
+inventory changes.** Any bucket keyed on an MLS number will say a property arrived and left on the
+day it was relisted, and that sentence is wrong in both directions at once.
+
+### A caveat the card carried and the heading above it denied
+
+**Fixed 2026-09-17.** The foreign-MLS machinery above works: `verify.py` records that 3538 Wildwood
+Ln is a BAREIS listing MetroListPRO can never confirm, `foreign-verify.py` reads a second source,
+and `foreignNote()` prints all of that on the card. The "How this list is built" table said it too.
+But the heading directly above the card read *"Already on the board last run and still confirmed
+**Active** on MetroList as of 2026-09-17"* — over a set of five, one of which MetroList had never
+been asked about and never could be.
+
+Nothing was mis-verified and no field was wrong. The defect is one of altitude: the check ran on
+four properties and the sentence introducing all five claimed it for all five. A reader who takes
+the section header at face value — which is what a section header is for — is told something no
+check performed, and the card's own disclaimer two inches below reads as a footnote rather than a
+correction. The "New this run" note had the same blanket phrasing and would have failed the same way
+the first time a foreign-MLS listing landed there.
+
+The fix is `mlsClaimGaps()` / `mlsClaimSubject()` / `mlsClaimCaveat()` in `build.js`: both headings
+now count their own exceptions — foreign-MLS, unreachable, and awaiting-index alike, since all three
+are reasons the MLS of record did not sign off — and name them. The section now reads "4 of the 5
+are confirmed Active on MetroList … One exception — 3538 Wildwood Ln — is not MetroList's to
+confirm; its card says what was read instead."
+
+The general lesson, and it is the verification gate one level up: **a per-item caveat does not
+survive a summary written over the items.** Every aggregate sentence on the page — headings, counts,
+the methodology table — is a claim in its own right, and it has to be generated from the same
+records the per-item caveats come from, not written once against the case where nothing is
+exceptional. Grep for a blanket "every"/"each"/"all" in `build.js` before adding one.
+
+### …and the same gap, one table further over
+
+**Fixed 2026-09-28.** The pool-less table got its category on 2026-09-10 and the rule was written
+down: *a summary that says nothing happened needs a category for everything that can happen.* The
+near-miss table — "Close, but one criterion short" — never got one. So on 2026-09-28 `runSummary`'s
+five board arrays and all three `poollessChanges` arrays were correctly empty, the banner published
+**"Nothing moved on the board"**, and the published near-miss table quietly swapped a row: **2500 Hwy
+50** (Placerville, 12.4 acres, $1,115,000) left it and **4351 Rossler Rd** (Placerville, 10 acres,
+$585,000) took its place. Both tables on the page were right; the sentence introducing them was not.
+
+`nearMissChanges` in `scrape.js` now mirrors `poollessChanges` — added, price changes, gone — and
+`build.js` renders it in both banner branches. Two details worth keeping:
+
+- It diffs the **published** list (`publishedNear`, the capped 14), not the full near-miss set. A
+  report about rows the page does not show would be worse than none. The cost is that a row can be
+  reported as arriving or leaving because the cap shifted under it, so every reported row carries
+  what it is short of rather than being announced as inventory.
+- Near-miss rows carry no MLS number, so the address is the key. That is weaker than
+  `poollessChanges`' `mls || address` and will mis-key a re-addressed listing; there is nothing
+  better in the row as built.
+
+That is now every table on the page with a category of its own. The next one added needs one on the
+same day, or the banner will lie about it.
+
+### One status, two answers on the same page
+
+**Fixed 2026-09-28.** `scrape.js` reads a listing's status from the detail page into `d.realStatus`,
+then upgrades it to `Pending` when the Redfin cross-check finds the listing in escrow while the feed
+still calls it Active — the correction the file's own header comment exists for. The corrected value
+lives in `realStatus`, and the match, pending and pool-less branches all read it.
+
+The near-miss branch read `d.realStatus`, the raw value. So a listing the same run had just
+established was under contract was still published as an active near miss. On 2026-09-27 that was
+**2500 Hwy 50**: carried in the near-miss table as for sale, and shown `Pending` in the pool-less
+table one section below — the same property, two statuses, one page, from one run's data.
+
+It survived because nothing on the page compared the two tables, and because the near-miss branch is
+the `else` of a chain whose earlier arms use the corrected name — the inconsistency is invisible
+unless the arms are read against each other. `realStatus` is now used throughout. **When a value is
+corrected into a new variable, the old name is a live trap for every later reader**; the correction
+belongs in the variable everything already reads, or the raw one should be renamed to make an
+accidental read obvious.
+
+### A universal claim the board had already outgrown
+
+**Fixed 2026-10-08.** The "How this list is built" footnote explained the MLS year prefix and then
+closed with a flat assertion: *"Every property on this page carries a 226 number."* It was hardcoded
+prose, true when written, and false from **2026-10-02** onward — the run that added **2520 Bedford
+Ave**, MLS `41150059`, carried by MAX (bridgeMLS / Bay East / Contra Costa AOR). For six consecutive
+runs the page taught the reader a staleness test and, in the same breath, told them every row passed
+it, while one row was not even numbered in that scheme.
+
+The sentence is now computed from the rendered set: it names the exceptions, their MLS number and
+their MLS, and points at the card that says how each was checked instead. With the current board it
+reads *"the single exception is 2520 Bedford Ave (MLS 41150059, MAX)"*. Note that 3538 Wildwood Ln is
+**not** an exception here even though it is a foreign-MLS listing — its number, `226107286`, is in
+MetroList's 2026 space and does pass the prefix test. Which MLS *carries* a listing and which MLS
+*numbered* it are different questions, and this footnote is only about the second.
+
+The lesson is narrow and keeps recurring in this file: **a universal quantifier over the board is a
+claim that has to be recomputed every run.** "Every property here…" was correct for every run that
+had been published when it was typed, which is exactly why nobody re-read it. Any sentence of the
+form *all / every / none* belongs in a template expression over the data it quantifies, not in prose
+beside it — otherwise the data moves and the sentence does not, and the page keeps asserting it with
+undiminished confidence.
+
+### What MetroList's own index says about the foreign-MLS pair
+
+Also **2026-10-08**, and it closes the loop on the section above about Wildwood's 404. Until this run
+the foreign-MLS conclusion rested on two labels — the IDX page's `Source` field and Redfin's CSV
+`SOURCE` column — and labels can share an upstream. `mls-enumerate.py` now supplies the positive
+form of the evidence: a full sweep of MetroListPRO's own city indexes, **391 residential records**
+across the three cities, contains **neither** 3538 Wildwood Ln nor 2520 Bedford Ave at any MLS
+number. The same sweep found all six MetroList-carried matches.
+
+So the 404s are not a keying accident or an indexing delay on a record MetroList holds; the records
+are absent from the MLS of record's own enumeration. That is the difference between *"the site says
+not found"* and *"the MLS does not carry this"*, and only the second justifies a caveat with no
+clock on it. Worth knowing for the next listing that 404s: **check the enumerator before accepting a
+per-record 404 as structural**, because the per-record lookup and the index are two surfaces of the
+same site and agreeing is not guaranteed.
+
+One incidental finding from the same Redfin sweep, recorded in case it misleads a later run: the
+`226…` prefix does **not** imply Redfin will report `MetroList` in its source column. 2913 Bedford
+Ave (MLS `226123189`) reads `BAREIS` there while 2750 Bedford Ave (MLS `226103546`) reads
+`MetroList`. Redfin's column names the feed it received the listing through, not the MLS that issued
+the number — so it corroborates *which feed carries a listing* and must not be read as evidence
+about the numbering scheme.
+
+## Photos
+
+Photos are hotlinked from `m.cbhomes.com`, pulled off each detail page in document order:
+
+```
+https://m.cbhomes.com/p/371/<MLS>/<hash>/<rendition>.webp    # ~20-45 photos per listing
+```
+
+The JSON-LD hands over `full.webp`. Renditions worth knowing, because the choice is worth ~7 MB:
+
+| Rendition | Size | Notes |
+|---|---|---|
+| `original` | 1500x1125 | 4:3, 170-450 KB |
+| `full` | ~1486x1111 | 4:3, 74-375 KB — what the feed gives |
+| `m23cc` | 600x400 | 3:2, **centre-cropped** — what the cards use, ~50 KB |
+| `s23cc` | 308x205 | 3:2 centre-cropped thumbnail |
+| `pdl23tp` / `pdm23tp` / `pds23tp` | 3:2 | **Padded**, not cropped — white bars under `object-fit:cover` |
+
+The card's photo box is 3:2 and ~340 CSS px wide, so `full` was shipping roughly four times the
+pixels it could show: six per card across nine cards came to **9.4 MB**, against **2.0 MB** for
+`m23cc`, which needs no cropping at render time because it is already the right shape. `scrape.js`
+rewrites `full.webp` to `m23cc.webp` and leaves any URL that doesn't match that shape alone. All 54
+photos on the 2026-08-28 board had the rendition; if one ever doesn't, the card's `onerror` handler
+uncovers the "View photos" link behind it rather than leaving a hole.
+
+### A no-spoof run had no photo source at all, and the card showed it
+
+`scrape.js` is what fills `photos`, and it needs the spoofed `User-Agent` the Coldwell Banker
+*detail* pages require. On the no-spoof route (`mls-enumerate.py` → `mls-compose.py`) nothing did,
+so **2026-11-10**'s new card rendered with an empty photo tile and no description beside nine cards
+that had both. `mls-compose.py` is right not to write those fields — they are display-only and not
+the gate's business — but "not the gate's business" is not the same as "nobody's".
+
+Two routes were measured before picking one:
+
+- **The Coldwell Banker city index** (`cb-crosscheck.py` already fetches it, plain request) carries
+  exactly **one** photo per record, on `images-listings.coldwellbanker.com` — not the ~20-45 the
+  detail page's JSON-LD gives. One photo is not a gallery.
+- **MetroListPRO's detail page** carries the full set on `mediarem.metrolist.net`, answers an
+  ordinary request, and hotlinks cleanly: all six URLs returned 200 on a `GET`.
+
+So `mlp-enrich.py` reads the second. One rendition caveat, the mirror image of the `m23cc` lesson
+above: `mediarem` has **no small rendition**. `bigphoto` is the only path that resolves —
+`medphoto`, `smallphoto`, `thumbnail` and friends all 404 — and the images run 160-330 KB each, so a
+MetroListPRO-sourced card is roughly 1.5 MB against ~300 KB for a `cbhomes` one. Acceptable for one
+card on a private page; if several accumulate, either cap the count for `mediarem` cards or fill
+them from `scrape.js` on the next spoofed run.
+
+Document order matters more than it looks. The listing's primary photo is the first in the markup,
+so the photos are read in document order and de-duplicated in place. An earlier draft of this used
+`sorted(set(...))` while exploring the page and put an arbitrary interior shot on the card — sorting
+by a UUID filename is sorting by nothing. `agentpics` URLs on the same host are the listing agent's
+headshot, not the property, and are excluded by path.
+
+### Pin the CDN host, or every diff is noise
+
+The feed serves the same photo from `m.cbhomes.com` and `m1.cbhomes.com` at random — byte-identical,
+verified by checksum on 2026-08-30. Taking whichever host the feed happened to hand over meant a
+dozen photo URLs were rewritten on *every* run, so a "nothing moved" run still produced a 30-line
+diff and the CDN churn sat in the same commit as any real change. `scrape.js` now normalises
+`m<n>.cbhomes.com` to `m.cbhomes.com`, and the 2026-08-30 run's diff went to zero lines outside the
+date stamps.
+
+Worth generalising, because this repo's whole review model is reading the run diff: **a value that
+changes on its own is noise, and noise in a diff is not free — it is cover for a real change nobody
+looks at twice.** Normalise anything that varies without meaning.
+
+- The CDN **rejects `HEAD`** — a `404` from `curl -I` means nothing. Verify with a `GET`.
+- This container's headless Chromium has no outbound egress (even `example.com` fails), so a local
+  browser render will show every image broken. That is a container limitation, not a page bug.
+  Check image URLs with `curl` instead.
+- Each card keeps a "View photos" link *behind* the photo strip. Loaded images cover it; failed ones
+  remove themselves and the link shows through, so a card can never render as an empty box.
+
+MLS photos are the copyright of the listing brokerage. Fine for a private hunting page; don't
+republish more broadly.
+
+### The same noise, one encoding layer down: em-dashes flipped on every run
+
+Found **2026-11-10**, and it is the "normalise anything that varies without meaning" rule applied to
+the file rather than to a URL. Every Python writer here called `json.dump(..., indent=2)`, which
+defaults to `ensure_ascii=True` and escapes each `—` in a `notes` or `coverageGap` string to
+`—`. `rg-crosscheck.js` writes the same file with `JSON.stringify`, which does not escape.
+
+Both are valid JSON and both load identically, so nothing ever failed. What they produced was a
+diff that depended on **which script happened to write last**: a run ending on `rg-crosscheck.js`
+left literal dashes, a run ending on a Python stamp left escapes, and the long prose values in
+`dataQuality` flipped wholesale between the two. That is a dozen-plus changed lines of pure noise
+sitting in the same commit as the real change, which is the exact cover this repo's review model
+(read the run diff) cannot afford.
+
+Every Python writer of `listings.json` now passes `ensure_ascii=False`, matching what the one JS
+writer already did: `mls-compose.py`, `cb-crosscheck.py`, `mlsl-verify.py`, `verify.py`,
+`redfin-csv.py`, `mls-enumerate.py`, `mlp-enrich.py`. The 2026-11-10 diff went from 123 changed
+lines to the dates, four counters and the one new card.
+
+The general shape, since this is the second time it has shown up: **two writers of the same file
+must agree on its formatting, or the file's diff reports the pipeline's execution order instead of
+its content.**
+
+### City-keyed enumeration is blind to the other town in the ZIP
+
+Found **2026-11-04**. Every enumeration this repo runs is keyed on *city* — MetroListPRO's
+`/lbc/2/<cityId>/…` indexes, the Coldwell Banker city pages, exprealty's `/<city>-ca-real-estate`.
+All of them filter on the `CITY` field, which is exactly right for a board defined by three cities,
+and it means none of them can see a property one street outside one.
+
+A ZIP-keyed sweep of **95682** that run returned **4262 Cameron Rd** — 4bd / 3 full ba, 5.9 acres,
+pool, $1,049,000, 7 days on market, verified Active on MetroListPRO. 95682 is the Shingle Springs
+ZIP; the property's city is **Cameron Park**. It clears every criterion on the list except the one
+in the heading, and no city-keyed run could ever have surfaced it.
+
+Two things follow:
+
+- **It is not a bug in the filters.** Cameron Park is not one of the three cities, so excluding it
+  is correct. What was missing was any way to *know* about it, and a criterion the reader cannot
+  revisit is a criterion they are stuck with.
+- **An out-of-area find goes in `rejected`, not `nearMisses`.** `mls-compose.py` rebuilds
+  `nearMisses` from the three-city enumeration on every run, so a Cameron Park row placed there
+  would disappear on the next run and be reported as *gone* — the same failure
+  "A row that matches no bucket is reported gone" describes. `rejected` is carried forward
+  untouched, which is what a standing flag needs. `runSummary.outOfAreaFlagged` carries it into the
+  brief, and `build.js` renders that category on both the moved and the quiet path.
+
+Worth re-running the ZIP sweep periodically: 95682 spans Shingle Springs and Cameron Park, 95667
+spans Placerville, Diamond Springs and Coloma. `https://www.mlslistings.com/search/result/zip/<zip>`
+answers a plain request and the result cards carry status, beds, baths, price and lot size.
+
+#### A second route to the same data, for when MetroListPRO is down
+
+MLSListings.com enumerates as well as it verifies, which the repo had not recorded — it was only
+ever used for per-MLS sheets (`mlsl-verify.py`). `/search/result/city/<City>` and
+`/search/result/zip/<zip>` are **active-only** and server-rendered, and both answer curl's default
+User-Agent. A 2026-11-04 sweep pulled 428 unique active records across the three cities and the
+three ZIPs and found the same board, with no spoofing anywhere in the path.
+
+Pagination is the one trap. The page-link hrefs carry a gzipped base64 `criteria` token
+(`/Search/Result/<slug>/<n>?view=list&criteria=…`); **follow those hrefs**. Constructing the bare
+`/Search/Result/<slug>/<n>` form instead returns `200` and silently serves the site's home page —
+no listings, no error, which parses as "this city has no inventory".
+
+And the result card's **"Acres Lot" field sometimes carries square feet**: a value of `7405` means
+0.17 acres, not 7,405. Treat anything over ~500 as sqft and divide by 43,560. Three quarter-acre
+lots cleared the 2.5-acre filter before this was handled.
+
+## Dedupe rules for future runs
+
+**Read the baseline from `origin/gh-pages`, not from your working branch.** Each run is published to
+`gh-pages`, and development branches are cut fresh from an older default branch — so the copy of
+`listings.json` you start with is very likely stale. The 2026-08-15 run began from a branch stuck at
+2026-07-26 and, on that basis, was about to report all ten properties as brand new and drop six that
+were never gone. The live lineage was three runs further along and already tracked exactly those ten.
+
+```bash
+git fetch origin gh-pages
+git show origin/gh-pages:listings.json > baseline.json
+```
+
+Then compare against `baseline.json` before reporting anything.
+
+1. A property already in `listings` is a duplicate — don't re-surface it. Set `isNew: false`.
+2. Exception: a price different from `currentPrice` *is* worth reporting. Append to `priceHistory`
+   and update `currentPrice`; the card renders the delta automatically.
+3. Sold or withdrawn properties move to `dropped` and off the board — the page shows them in
+   "Removed this run". Note what that does **not** do: `dropped` is a run-scoped bucket, rebuilt
+   empty every run like `runSummary`, and `merge()` seeds its prior map from `listings`, `pending`
+   and `relisted` only. So the record survives exactly one run, and a property that comes back
+   months later is reported as a new find rather than a return. See "A drop record with a one-run
+   memory" below.
+4. Anything in `rejected` stays rejected unless a price change or criteria change brings it back.
+   When the criteria change, re-read the stored reasons: several were written against the old 5+
+   bedroom rule and had to be corrected.
+5. Update `lastSeen` on confirmed-active properties and `lastRun` on every run.
+
+### A near miss can become a match without anything new being listed
+
+Measured **2026-11-06**. `4800 Abbey Road, Placerville` (MLS 226133530) entered the board as a
+**new match** on this run, and no new listing appeared: it had been carried in `nearMisses` since
+2026-11-01 with `"missing": "MLS bedroom count is 3 (record states 5 possible); 3 full baths +
+1 half"`. On 2026-11-06 the same MLS record reads **4 bedrooms and 4 full baths** (5 possible beds,
+2 half baths). The listing agent corrected the record; the house did not change.
+
+Two things follow, and the second is the one worth keeping:
+
+1. **Re-read the near-miss table's fields every run, not just its membership.** The enumeration
+   does this already — it re-derives every row from the detail page rather than trusting the
+   stored `missing` string — which is why the promotion happened automatically. A cheaper design
+   that only checked whether a near miss was *still listed* would have carried the stale 3-bedroom
+   reading indefinitely, and the property would never have surfaced.
+2. **A promotion out of `nearMisses` is a real find and should read like one.** It arrives through
+   the same `runSummary.new` channel as a brand-new listing, so the page and the notification both
+   describe it as new. That is correct — it is new *to the board* — but the reason differs, and a
+   run that says only "2 new listings" when one of them is a corrected record is slightly off. The
+   card and the run note say which it was.
+
+Corroboration, since a field flip is exactly the kind of single-source reading the gate exists to
+catch: MLSListings.com returned `4800 Abbey Rd … 4 Beds | 4/2 Baths (Active) - ME226133530`,
+agreeing with MetroListPRO on both counts and on status.
+
+`cb-crosscheck.py` flagged the same property under "pool wording, not a determination" — *no 'pool'
+in remarks but water/resort wording present*. That flag is about **free text**, and the gate reads
+**structured fields**: MetroListPRO carries `Has a Pool: Yes` with `Built-In, On Lot, Pool Sweep`,
+and MLSListings carries three photos categorised `Pool`. The flag is worth keeping — it is how
+spa-only and "room for a pool" records get caught — but it does not outrank the structured field,
+and a run should not demote a match on remarks alone.
+
+### The whole board can be built without claiming to be a browser
+
+Measured **2026-10-27**. Every script in this repo sent a Chrome `User-Agent`, because the portals
+it reads bot-block datacenter IPs and that is what gets past them. A run that will not make that
+claim therefore had no step 1 at all: the 2026-10-26 run recorded exactly this and fell back to
+re-reading the seven matches one at a time.
+
+It turns out two of the sources need nothing of the kind. **MetroListPRO and MLSListings.com both
+answer an ordinary request** — curl's and urllib's own default `User-Agent`, no `Referer`, no
+cookie — and between them they cover the enumeration *and* the foreign-MLS confirmation:
+
+| Host | Default-UA result | What it gives |
+|---|---|---|
+| `www.metrolistpro.com` | 200, server-rendered | Every active and pending record in a city, plus each detail page's `Status`, `Has a Pool`, `Lot Size in Acres`, full baths, and photo URLs |
+| `www.mlslistings.com` | 200, server-rendered | `/property/<prefix><mls>` sheets, including the boards MetroList does not carry (`BE` = MAXEBRDI, `ME` = MetroList) |
+| `www.zillow.com`, `www.homes.com`, `www.movoto.com`, `www.trulia.com`, `www.remax.com` | 403 | — |
+| `www.redfin.com` | 302 → `ratelimited.redfin.com`, "Are You a Robot?" | — |
+| `www.coldwellbankerhomes.com` | 200 with a "Request Rejected" body | — |
+| `www.realtor.com` | 429 | — |
+
+`mls-enumerate.py` and `mlsl-verify.py` no longer send a spoofed `UA`; both were re-run against the
+live sites after the change and returned the same records as before. The egress proxy itself is
+open (`selective: false`, empty `recentRelayFailures`), so every 403 above is the site's own
+defense, not the gateway's — see `NETWORK.md`.
+
+This is not a degraded fallback. MetroListPRO is the MLS of record *and* it enumerates, so for a
+MetroList listing this one source satisfies the gate by itself. The 2026-10-27 run read 382 records
+across the three cities — more than the IDX feed's usual ~300 — and found the same five MetroList
+matches the board carried, at the same prices, with nothing new.
+
+#### Three more hosts answer a plain request — and all three share the same blind spot
+
+Measured **2026-10-28**, while looking for a route that could close the `coverageGap` above. Three
+MetroList IDX mirrors also answer an ordinary request, and one of them is addressable by MLS number:
+
+| Host | What it gives |
 |---|---|
-| Zillow, Trulia, Movoto | 403 "Press & Hold to confirm you are a human" |
-| Redfin | 429 "Are You a Robot?" |
-| Homes.com, LandWatch, LandAndFarm | 403 Akamai "Access Denied" |
-| Realtor.com | 429 |
-| Coldwell Banker, BHHS, KW, Point2, eXp | 403 / Cloudflare challenge |
-| LandSearch | 403 "network restricted" |
-| RE/MAX | 202 human-verification interstitial |
+| `plumaslakeproperties.realgeeks.com/property/<MLS>/` | Status, price, beds/baths, acreage, pool, **photo URLs** — keyed directly on the MLS number, no slug needed |
+| `cherielliott.com/homes-for-sale-in-<city>-ca` | City inventory **with acreage in the result list**; paginate `?display_page=N&lpp=20`. No Placerville page |
+| `ownplacer.com/<city>-homes-for-sale/<band>/` | Placerville and Rescue inventory, price-band filtered (`600000-700000`, `over-1000000`); paginate `?p=2` |
 
-Accessible and useful: **metrolistpro.com** (primary), century21.com, compass.com,
-carlamovesyou.com, homefinder.com, xome.com.
+A run built on these alone reproduced the five MetroList matches at the same prices and found nothing
+new — so they corroborate MetroListPRO, which is worth something. What they do **not** do is close
+the coverage gap, and the way that surfaced is the trap this repo keeps re-learning:
+
+> On 2026-10-28 a sweep of `ownplacer`'s $800–900k Placerville band did not contain 3538 Wildwood Ln,
+> and the run initially recorded it as **off market**. It is Active at $829,000. The listing is on
+> BAREIS, and every host in the table above republishes **MetroList only**, so the absence meant
+> "this feed does not carry it" and nothing more.
+
+That is README *"'Not found' is not 'does not match'"* arriving through a new door, and it is the
+same shape as the `--foreign` rule in `mls-compose.py`: a foreign-MLS listing that a MetroList
+source cannot see must be **read on its own board or dropped as unverified — never inferred gone
+from silence.** 2520 Bedford Ave (MAXEBRDI) was invisible to the same sweep for the same reason.
+
+So these hosts are useful as a corroborating enumeration and as the cheapest source of photo URLs.
+They are not a second opinion on whether a non-MetroList listing still exists. For that there is
+still only `mlsl-verify.py` reading the listing's own board.
+
+#### A fourth host answers a plain request — and it is *not* MetroList-only
+
+Measured **2026-10-31**, and it closes the `coverageGap` the three hosts above could not.
+
+`www.coldwellbanker.com` answers curl's default `User-Agent` with HTTP 200 and serves complete city
+inventory. What makes it different from every other plain-request source this repo has found is
+that it **carries other boards**: 2520 Bedford Ave appears under a `CRMLS` photo bucket and 3538
+Wildwood Ln under `CABAREIS` — the latter being the listing MetroListPRO has still never indexed.
+So it is the one no-spoof route that could see a *new* foreign-MLS listing, which is exactly the
+hole `mls-compose.py`'s docstring has described since 2026-10-27.
+
+Note the distinction from `www.coldwellbankerhomes.com`, which the table above records as 200 with
+a "Request Rejected" body. Different host, different answer; the `homes` subdomain is still blocked.
+
+Each city page embeds `<script id="__NEXT_DATA__">` with
+`props.pageProps.propertiesData.properties[]` — `markerPrice`, `beds`, `baths`, `squareFeet`,
+`mlsId`, `standardStatus`, `daysOnMarket`, `officeName`, `photos[].mediaUrl` and
+`propertyDetailsRoutePath`. Page with `?page=N`, 32 per page. The detail page carries
+`rawPropertyDetails.property.characteristics.lotSizeAcres` and
+`propertyDetails.about.description`. The 2026-10-31 sweep read 406 records (62 + 52 + 292).
+
+`cb-crosscheck.py` is this packaged as the repeatable sweep. Four cautions, all of them this
+repo's existing lessons arriving at a new host:
+
+- **`price` is a formatted string** (`"$1,275,000"`); the number is `markerPrice`. A numeric filter
+  on `price` throws per row and drops the lot silently — it returned 0 candidates out of 406 the
+  first time, which looks exactly like "no inventory matches" and is not.
+- **`baths` is full + half combined and cannot be decomposed**, the same limit `redfin-csv.py`
+  records for Redfin's `BATHS`. 1234 Rising Hill W Road reads `3` here and is 2 full + 1 half on
+  the MLS — it is on `nearMisses` for precisely that reason. The script flags and does not decide.
+- **There is no structured pool field.** Pool comes from the agent's remarks, so a hit is a
+  candidate, never a determination. Unlike a Redfin detail page there is no comparable-homes
+  payload, so the text is correctly scoped — but the prose lies in both directions, and both
+  were live this run: 1777 Carl Rd reads "…build an ADU, or *add a pool* or barn" (no pool), and
+  rows with no "pool" at all are re-scanned for `spa|hot tub|swim|water feature|waterfall|resort`
+  so a pool described in other words is not missed. 4810 Robledo Dr is the one that hits that
+  second net, and its "waterfall" is decorative ponds and its "spa bath" a bathroom.
+- **It carries stale ACTIVE rows** — see immediately below.
+
+##### The first thing the new source found was a listing that is not there
+
+3784 Cattle Drive (MLS 226092223) reads ACTIVE at $1,050,000, 4bd, 5.0 acres, 101 days on market,
+with remarks describing a "custom Milton Estates pool home". On the feed's own numbers it clears
+every criterion, and it was the single row this sweep had that the board did not.
+
+It is not on the market. The number is a MetroList number and the feed files its photos under the
+MetroList bucket, so **MetroListPRO is its own board of record** — and MetroListPRO does not carry
+it: absent from the Shingle Springs active index (45 records) and the pending index (12), and
+`/homes/2/6/x/226092223` serves the generic unknown-id page. The MLS-keyed realgeeks mirror 404s on
+it. A control listing (4071 Voyager Way, 226082753) resolves at both.
+
+Per *"A 404 from a listing's own board is a departure; silence from a mirror is not"*, that is a
+departure and not mirror silence, so the gate resolves it the usual way: the MLS of record wins and
+the IDX row is stale. Recorded in `rejected` so a future run does not spend the fetches re-deriving
+it. Note which way round this cuts — the new source's first contribution was a **false positive it
+could not settle itself**, which is the argument for keeping it a cross-check rather than promoting
+it to the board.
+
+###### `build.js` had never printed the gap, though two docstrings said it did
+
+`mls-compose.py` has written `dataQuality.coverageGap` since 2026-10-27 and its docstring says
+"`build.js` prints it, because the point of this repo is that the page says what the run actually
+covered." `build.js` contained no reference to the key at all, so every MetroList-only run
+published a page that was silent about its own blind spot while the repo's own documentation
+asserted otherwise. That is the same shape as *"A verification claim nothing had tested"*, one file
+over. It renders now, under the "How this list is built" table.
+
+The gap note is also written twice on purpose, and by the script entitled to make each claim:
+`mls-compose.py` runs first and cannot know whether the cross-check will run, so it writes the open
+form and names the route that closes it; `cb-crosscheck.py --stamp` runs after and overwrites it
+with the closed form and the row counts that justify it. A run that skips the cross-check therefore
+publishes "open", which is the honest default.
+
+###### A board member reported as a candidate the board did not have
+
+`cb-crosscheck.py` matched the board by MLS number and nothing else. This feed appends the
+originating board to the number — **2520 Bedford Ave arrives as `41150059BE`** against the board's
+`41150059` — so on 2026-11-08 the row printed `NOT ON BOARD`, landed in `missingFromBoard`, and the
+page's "Cover other boards" sentence published *"1 not already tracked, each sent for an MLS read
+before it could qualify"*. The only candidate on that list was a **match sitting on the board**,
+re-verified the same run.
+
+Nothing failed. The sweep was complete, the row was correct, the diff direction was the right one,
+and the page still said something untrue — because the comparison was made on a string whose format
+is the feed's choice, not the property's. That is the same mistake as the three in the section below
+on street types, status words and dates, which is why the fix is the same shape: compare a
+normalised key, and have more than one way to recognise the same property. `tracked` is now keyed on
+digits-only MLS number **and** a folded street key, and it spans `listings`, `pending`, `poolless`,
+`nearMisses`, `rejected`, `relisted` and `dropped`.
+
+Two things generalise:
+
+- **An identifier that a source formats is not an identifier.** The MLS number is the property's;
+  `41150059BE` is this feed's rendering of it. Any cross-source join on an id needs the id
+  normalised first, and ideally a second, independent key to fall back on.
+- **A diff that only reports in the safe direction can still over-report in it.** The rule
+  "a candidate this feed has that the board lacks is worth an MLS read" is right, and it is exactly
+  the direction that turns a matching bug into a published claim. The cheap check is the one the
+  README keeps earning: when a diff says something moved, look for it in the thing it says it is
+  missing from.
+
+While fixing it, the printed label changed from `on board` to `tracked`, because the set it tests
+has always included `poolless`, `nearMisses` and `rejected`. 1234 Rising Hill W Road printed
+`on board` on every previous run and is a near miss, not a match.
+
+##### A fifth host — and the first one that will filter on the pool itself
+
+Measured **2026-11-08**. Every sweep above pays the same tax, and it is worth naming because it has
+shaped four scripts: **no search payload carries a pool field**, so each route clears
+beds/baths/price/city first and then opens one detail page per survivor to find out whether there is
+water in the ground. `mls-enumerate.py` reads 266 detail pages to confirm 7 matches;
+`cb-crosscheck.py` reads 42 and still has to guess from the agent's remarks because the Coldwell
+Banker feed has no structured pool field at all.
+
+`www.sellingnortherncalifornia.com` does not pay it. It is a **RealGeeks site carrying the MetroList
+IDX feed**, and its advanced search is a plain `GET` to `/search/results/` with every filter in the
+query string — including `pool=True` and `land_area_acres_min`:
+
+```
+https://www.sellingnortherncalifornia.com/search/results/?county=El+Dorado&city=all&type=res
+  &list_price_min=all&list_price_max=1500000&beds_min=4&baths_min=3
+  &land_area_acres_min=2&pool=True&page=1
+```
+
+One request returns the whole qualifying set for the county: **14 rows** on 2026-11-08, against
+`cb-crosscheck.py`'s 410 and `mls-enumerate.py`'s 375. Eight were in the three target cities, all
+eight cleared 2.5 acres with the pool field set, and all eight were already tracked — the seven
+MetroList matches on the board plus 1234 Rising Hill W Road, which is on `nearMisses`. Nothing the
+feed carried was missing.
+
+`rg-crosscheck.js` is this packaged as the repeatable sweep:
+
+```bash
+node rg-crosscheck.js            # sweep, filter, diff against listings.json
+node rg-crosscheck.js --stamp    # also write dataQuality.poolFilteredCrossCheck for build.js
+```
+
+Detail pages are server-rendered at `/property/<MLS>/` — keyed on the MLS number with no slug, the
+same convenience the realgeeks mirror in the table above has — and carry the MLS field table flat:
+`Status`, `Land Area (Acres)`, `Pool`, `Bedrooms`, `Bathrooms`, `List Price`, `City`, `Zip`, a
+`Price Change ▼ $N <n> days ago` line, and photo URLs on `property-images.realgeeks.com`.
+
+**The search *rows* need rendering; nothing else does.** The host answers curl's default
+`User-Agent` with HTTP 200, and the result page's `N Properties` count is in that HTML — but the
+rows themselves are built client-side from a payload deferred behind `window.rgDeferScript`, and
+there is no JSON endpoint behind them to call instead (a request trace shows only
+`/api/v2/search/autocomplete-options/`). So this one route uses the headless Chromium already
+installed in this environment. Note what that is and is not: the request carries Chromium's own
+`User-Agent`, because it *is* Chromium. It is not the spoof that README "The whole board can be
+built without claiming to be a browser" rules out — nothing here claims to be a browser it isn't.
+
+Four limits, each one a lesson this repo already learned at a different host:
+
+1. **`baths_min`, and the detail page's `Bathrooms`, are the combined count.** 1234 Rising Hill W
+   Road comes back under `baths_min=3` and is 2 full + 1 half on the MLS. That is README
+   "Half baths" and its corollary arriving at a fifth host, and it is the row that proves the sweep
+   cannot promote: the one listing in its output that is *not* a match is the one its bath field
+   cannot decompose. The script flags and leaves the full-bath call to the MLS of record.
+2. **MetroList only** — the same blind spot as MetroListPRO and the three mirrors. Both foreign-MLS
+   cards on the board are correctly absent from the sweep, so this does **not** close
+   `coverageGap`; `cb-crosscheck.py` remains the route that does.
+3. **`land_area_acres_min` has discrete steps** (…1, 2, 3, 4, 5, 10, 20, 40), so a 2.5-acre
+   minimum cannot be expressed server-side. Query at **2** and filter locally. The temptation is to
+   query at 3, and it would silently drop 1234 Rising Hill's 2.66 acres — the same shape as the
+   `min_lot_size` traps NETWORK.md records for Redfin, where a server-side land filter quietly
+   removes rows it should only have narrowed. **A server-side filter may be wider than the
+   criterion; it must never be narrower.**
+4. **The pool filter is a real negative, not just a missing positive**, and that was checked rather
+   than assumed. A control run with `pool=all` returned 46 rows; every extra row in the three
+   cities read with the `Pool` field *absent* from its detail page. So `pool=True` is the MLS's own
+   structured field and not a remarks match — which is what makes this the one sweep here that does
+   not need `cb-crosscheck.py`'s prose heuristics in either direction.
+
+One correction it hands back to `cb-crosscheck.py`. That script flagged **4800 Abbey Road** under
+*"no 'pool' in remarks but water/resort wording present"*. The flag is a false positive: the MLS
+remarks on this feed describe **"dual luxury pools (one with a custom waterfall slide; the second
+with a massive party deck, serving cabana, and gazebo half-bath)"**, and MetroListPRO carries
+`Has a Pool: Yes`. The Coldwell Banker feed's `about.description` is a shorter cut of the same
+remarks, so the wording the heuristic needed was simply not in the text it was given. Worth keeping
+the flag — it is how spa-only records get caught — but it is a flag about *one feed's copy of the
+prose*, never about the property.
+
+#### `mls-compose.py` — the board, from that enumeration alone
+
+`scrape.js` cannot run without the spoof, so the board had nowhere to come from. `mls-compose.py`
+is that path scripted, so it is repeatable rather than a hand edit:
+
+```bash
+python3 mls-enumerate.py                                    # 1. read MetroListPRO
+python3 mls-compose.py --foreign 41150059=Active:1275000 \
+                       --foreign 226107286=Active:829000    # 2. compose the board
+python3 mlsl-verify.py --refresh                            # 3. stamp the foreign-MLS reads
+python3 cb-crosscheck.py --stamp                            # 4. cover the other boards
+node rg-crosscheck.js --stamp                               # 4b. corroborate, pool-filtered
+python3 mlp-enrich.py                                       # 4c. photos + remarks for new cards
+node build.js                                               # 5. render
+```
+
+Step 4c is new on 2026-11-10 and only does work when the run composed a card this route cannot
+illustrate — see *"A no-spoof run had no photo source at all"* under **Photos**. It writes display
+fields only, so it is safe to run on every pass; with nothing to fill it prints `nothing to enrich`
+and exits.
+
+Step 4b is new on 2026-11-08 and is optional: it corroborates rather than covering a gap, and it is
+cheap (one search request plus one detail page per in-area row). Run it after step 4 and before
+step 5, for the same reason step 4 runs before step 5 — `build.js` renders the stamp.
+
+Step 4 is new on 2026-10-31 and is what makes this route complete rather than merely spoof-free.
+Steps 1–3 see MetroList only, so a **new** listing on another MLS is invisible to them; the
+Coldwell Banker IDX carries other boards and answers a plain request. Run it **after** step 2,
+because it overwrites the `coverageGap` note that step 2 writes, and **before** step 5, because
+`build.js` renders both the stamp and the note. Skip it and the page correctly publishes the open
+form of the gap rather than claiming a coverage it did not check.
+
+Where to get the `--foreign` values for step 2: read each listing's own board on MLSListings —
+`https://www.mlslistings.com/property/BE41150059` and `…/ME226107286`. The `<title>` carries the
+street, the MLS number and the status in parentheses, which is also the scope gate, and the price
+is in the body. A wrong prefix (`ME41150059`, `BE226107286`) serves the generic search page at
+HTTP 200 and is correctly rejected by that gate — so the title check is not optional.
+
+The `--foreign` arguments are the point, not a nuisance. MetroListPRO is structurally blind to a
+listing on another MLS, so a run that simply carried those two forward would be publishing last
+run's word as this run's check. Each one must name the status and price a live record was read at,
+and a foreign-MLS listing with no argument is **dropped, not assumed**.
+
+The gap this route cannot close is the mirror image: a *new* non-MetroList listing cannot be found
+by it at all. Both known ones were found by the IDX feed, and 2520 Bedford Ave arrived as recently
+as 2026-10-02. That is recorded in `dataQuality.coverageGap` and is the one reason to still want
+step 1 back.
+
+#### Three ways the page can report a change that did not happen
+
+Switching enumeration source made the diff report movement that was really vocabulary. All three
+are fixed in `mls-compose.py`, and all three are the same mistake — **comparing how a source
+spells something instead of what it says**:
+
+- **Street types.** The IDX feed writes `3291 Texas Hill Rd`; MetroList writes `Texas Hill Road`.
+  Keyed on the raw string, every row in both supporting tables left and arrived on the same run.
+  `addr_key()` normalises the type words before diffing.
+- **Status words.** The feed's `For Sale` is MetroList's `Active`. Nine pool-less rows reported a
+  status change on a run where none of them moved. `status_key()` folds the aliases, and also
+  folds `Contingent - Show` to `Contingent`.
+- **Table membership.** The near-miss table used to repeat every pool-less row, so tightening it to
+  "has the pool, short on exactly one of land or the third full bath" emptied nine rows out of it.
+  They moved table; they did not leave the market. `diff_tables(moved=…)` takes the crossover set
+  and counts neither side.
+
+A fourth was a plain parse bug the switch exposed: `field()` read the flattened page text with a
+lookahead for the next `Label:`, so `Status: Contingent - Show Is Short Sale: No` returned
+`Contingent -` — the lookahead matched inside the value's own words. It now reads the
+`<span class="listing-info-item-title">` markup, where the label and value have a real boundary.
+
+#### A fifth way: a row that matches no bucket is reported gone
+
+Found on **2026-11-02**. The 2026-11-01 run recorded 4800 Abbey Road (MLS 226133530) as a near
+miss — Active, $1,500,000, 11.04 acres, pool, 3 full baths, but `Bedrooms: 3` against
+`Possible Bedrooms: 5`, two houses on one lot. The next run regenerated `nearMisses` from the
+enumeration and published it as **gone**. It had not gone anywhere: its MetroListPRO detail page
+read `Status: Active` at the same price that same day.
+
+The cause was not a parse failure or a source disagreement. `near_miss()` admitted a pool property
+short on *land* or on the *third full bath*, and rejected anything under the bedroom minimum
+outright — so a pool property short **only** on bedrooms matched no bucket at all. Not `matches`,
+not `poolless` (it has a pool), not a near miss (too few bedrooms). It fell through every list, and
+a row that appears in no list is indistinguishable, to the diff, from a row that left the market.
+
+Two things follow, and the second is the general one:
+
+- `mls-enumerate.py` now parses **`Possible Bedrooms`** and admits a bedroom shortfall as a near
+  miss when the record's own possible count clears the minimum and land, baths and price all pass.
+  On acreage this disagreement is routine rather than exotic: a detached second dwelling, an in-law
+  apartment or an unpermitted conversion all leave the permitted count in the header.
+- **A near-miss taxonomy is a filter, and every filter needs a default.** The four earlier entries
+  in this section are about comparing spellings instead of meanings; this one is about a row that
+  was never compared at all. Dropping out of a bucket is not evidence of a status change, and the
+  diff must not read it as one — the same rule as *"'Not found' is not 'does not match'"*, applied
+  to this repo's own buckets rather than to a feed.
+
+One operational note from the same run, worth more than the bug: **`mls-compose.py` diffs against
+whatever `listings.json` currently holds**, so re-running it twice makes the second diff relative
+to the first run's output rather than to the previous published run. The first compose here had
+already written the bad "gone"; recomposing after the fix then reported Abbey Road as newly
+*added*. Neither statement was true. Restore the baseline before recomposing:
+
+```bash
+git checkout origin/gh-pages -- listings.json     # then re-run compose -> verify -> build
+```
+
+#### A sixth way: the banner narrated a status change backwards
+
+Found on **2026-11-12**, live on the published page. 4071 Voyager Way went Active →
+`Contingent - Show`, and `mls-compose.py` moved it off the board into `pending` correctly. The
+banner then announced:
+
+> **4071 Voyager Way, Shingle Springs is back on the active board.** It was Sale Pending last run
+> and the MLS of record now reports it For Sale again — the deal appears to have fallen through.
+
+The exact opposite of what happened, in the one paragraph the reader trusts to say what moved.
+
+`build.js` chose between its two sentences with `s.to === 'pending'`. The composer copies
+`mlsStatus` straight through, so `to` holds the MLS's own spelling — `Active`, `Pending`,
+`Contingent - Show` — and the lowercase literal `'pending'` is a value **no composer has ever
+written**. The test could therefore only ever be false, and *every* status change, in either
+direction, took the else branch. The branch had presumably never fired before: a board that only
+ever gains pendings never exercises it, so the bug sat behind a condition that was always wrong and
+usually unvisited.
+
+This is the fourth entry in this section and the same root as the first three — *comparing how a
+source spells something instead of what it says* — but with a sharper edge, because `status_key()`
+already exists one level up for exactly this reason and `build.js` did not use it. The fix does not
+reach for a better string match: it reads the bucket the composer put the listing in
+(`data.pending` vs `data.listings`), which is a decision already made against normalised statuses
+and cannot drift as the MLS invents new status words. The status string is a fallback only for a
+listing in neither bucket.
+
+The general rule, and it is worth keeping separate from the spelling lesson: **a two-branch
+narration where one branch is unreachable is not a 50/50 bug — it is a guarantee.** When the page
+states a direction, derive it from the data that already encodes the direction.
+
+#### "Removed this run" outlived the run
+
+Same run, same section of the page. The 2026-11-12 board removed nothing, and the page published a
+**1 Removed** headline stat and a *"Removed this run (1)"* table holding 5551 Saddlehorn Road —
+which left the market on **2026-11-11** and had been reported, correctly, on that run's page.
+
+Both halves of this are defensible on their own. `mls-compose.py` seeds `dropped` from the stored
+board (`dropped = list(board.get("dropped") or [])`) so a departure is remembered past the run that
+saw it — that is the deliberate answer to *"A drop record with a one-run memory"* above, which
+argued the record should outlive one run. `build.js` then rendered that whole ledger under a
+heading that says **this run**. Memory was added underneath a claim that was scoped to the run, and
+nothing in between re-scoped it.
+
+So this is *"A summary that reported the previous run's news"* arriving through the fix for a
+different bug, which is the part worth recording: **when a bucket stops being run-scoped, every
+reader of that bucket has to be re-read.** `build.js` now filters on `droppedOn === lastRun` for
+the stat, the banner line and the "Removed this run" table, and renders the older entries in a
+separate *"Removed on earlier runs"* table — so the ledger stays visible, which is what the earlier
+entry wanted, without any of it being claimed as today's news.
+
+One more field-name drift surfaced while fixing it: the drop-row renderer read `d.priorPrice` and
+an address with the city already embedded, which is `scrape.js`'s shape. `mls-compose.py` writes
+`lastPrice` and a separate `city`, so every mls-compose drop rendered with a blank price column and
+no city — Saddlehorn's $1,200,000 was missing from the published table. The renderer accepts both
+shapes now. Same lesson as the entry above, one layer down: two producers, one consumer, and only
+one of them was ever read.
+
+#### A stamp that is never refreshed is a date the page cannot justify
+
+`mlsl-verify.py` skipped any listing that already had a `secondSource` stamp, on the sound ground
+that `foreign-verify.py`'s Redfin read is better scoped and must not be overwritten. But the stamp
+carries the date the card prints. Both foreign cards were re-read on 2026-10-27 and both still said
+**"read independently on 2026-10-25"**, and nothing distinguished that from a check that had simply
+not been made. `--refresh` re-reads a stamp this script wrote itself; a `foreign-verify.py` stamp is
+still never touched.
+
+#### Aggregators had three different prices for a listing the MLS sheet settled
+
+Worth recording as a live example of why the gate exists. Searching for 3538 Wildwood Ln this run
+returned **$949,000** (Redfin, Movoto, RE/MAX), **$889,000** (Trulia, with "original $949,000"), and
+**$829,000** (Homes.com, price-drop tag) — plus a second MLS number, 226107571, for the same
+address. The board carried $829,000. The MLSListings MLS sheet reads `$829,000 (Active)`. The board
+was right and three of the four aggregator prices were stale; a run that had "corrected" the board
+from search results would have published a $60,000–$120,000 error.
+
+#### Claims on the page now name the source that was actually read
+
+Three sentences in `build.js` named the IDX feed unconditionally: the Enumerate row, the Verify
+row's foreign-MLS clause, and `foreignNote()` on each foreign card ("The IDX feed and the
+MLSListings.com MLS sheet were read independently on …"). On a run that never read the IDX feed all
+three credited work nobody did. They branch on `idxEnumerated`, derived from `source.name`, for the
+same reason the rest of this file keeps insisting on: **describe what happened.** `source
+.passedBedsBathsPrice` was also being carried forward, so the funnel line printed the previous
+run's 48 against this run's totals; `mls-enumerate.py` now counts it, and `mlsVerifiedCount` counts
+only the records MetroListPRO actually answered for — it said "7 agreed" one sentence before
+explaining that two of the seven are ones MetroListPRO has no record of and never will.
+
+#### A 404 from a listing's own board is a departure; silence from a mirror is not
+
+Recorded **2026-10-29**, when 1300 Large Oak Drive left the pool-less list. Three facts together:
+it was absent from the MetroListPRO active index, absent from the pending index, and its
+MetroListPRO detail page returned **404**.
+
+That looks like the *"'Not found' is not 'does not match'"* trap above, and it is the opposite of
+it. The distinction is **which board is being asked about whose listing**:
+
+| Situation | What absence means |
+|---|---|
+| A MetroList mirror has no record of a **BAREIS or MAXEBRDI** listing | The feed does not carry it. Says nothing about the listing. Re-read it on its own board or leave it unverified — never infer it gone. |
+| **MetroListPRO** 404s a **MetroList** listing, and both its indexes omit it | The record is no longer published. A real departure. |
+
+3538 Wildwood Ln is the standing example of the first row: it is on BAREIS, every enumerating host
+here republishes MetroList only, and a 2026-10-28 sweep briefly recorded it off market on exactly
+that absence. It was Active at $829,000 throughout.
+
+So the rule is not "absence proves nothing" — it is **absence proves nothing unless the source
+asked is the listing's own board.** Collapse the two and the board either carries sold property
+forever, or drops live listings on a mirror's blind spot. Both have happened here.
+
+## Running a refresh
+
+This is the full path, for a run that can reach the IDX feed and Redfin. A run that will not
+spoof a `User-Agent` cannot do step 1 and should use the MetroListPRO-only path in
+*"The whole board can be built without claiming to be a browser"* above instead.
+
+Three steps, in this order. **`scrape.js` does not perform the MetroListPRO check** — it verifies
+against Redfin's feed only. The page's "How this list is built" table states that every match was
+re-read from MetroListPRO, so skipping step 2 publishes a verification claim nothing tested.
+
+```bash
+node scrape.js                                    # 1. enumerate + filter + Redfin status check
+python3 verify.py                                 # 2. confirm against the MLS of record
+python3 foreign-verify.py                         # 2b. second source for other-MLS listings
+python3 mlsl-verify.py                            # 2c. fallback for whatever 2b could not reach
+node build.js                                     # 3. render index.html
+```
+
+Step 2 reads `matches.json`, which **step 1 now writes** (since 2026-10-09) as a projection of the
+matches and pendings it just wrote. That file is gitignored, and nothing in the repo used to create
+it, so on a fresh clone — which is what a scheduled run gets — step 2 died with
+`FileNotFoundError: matches.json` and the refresh stopped after step 1 with the board already
+rewritten. This section used to carry a `node -e` one-liner to rebuild it by hand; that worked and
+was easy to skip. The general shape is worth noting, because the repo has hit it before in
+*"…and the clock has to be wound by something that outlives the run"*: **a pipeline step that
+depends on an ignored file depends on a previous run having happened on the same disk.**
+
+Step 2c fills whatever step 2b could not. It is new on 2026-10-23, and it exists because step 2b
+had failed on three consecutive runs for the same reason: `foreign-verify.py` needs a Redfin
+**detail** page, Redfin throttles those independently of `gis-csv`, and a throttled detail page is
+202 with an empty body. On 2026-10-21, 2026-10-22 and 2026-10-23 it stamped 0 of 2, so both foreign
+cards carried only the IDX feed's word three runs running. A fallback that never runs when the
+primary works costs nothing; a gap that stays open for three runs is a standing hole in the gate.
+
+`mlsl-verify.py` reads **MLSListings.com**, which syndicates several boards — MetroList and
+MAXEBRDI among them — and serves a plain server-rendered MLS sheet: status in the `<title>`, the
+structured Pool field, price, beds, baths, lot size. It is not behind the defences Redfin's detail
+pages are, and it has no comparable-homes payload to leak a neighbour's data, so there is no
+free-text bleed to guard against. It **only fills gaps**: a listing step 2b already stamped is left
+alone, so the better-scoped Redfin amenity table still wins when it is reachable. Run it after 2b
+and before 3, for the same reason 2b runs before 3.
+
+Two things it is careful about, both of which are the repo's own lessons applied to a new host:
+
+- **The scope gate.** MLSListings answers an unknown id with its generic search page at HTTP 200 —
+  the same "valid-looking page for the wrong property" failure NETWORK.md records for Redfin's
+  `/city/<id>` URLs. So a sheet is accepted only when its `<title>` carries **both** the expected
+  street line and the MLS number asked for; anything else is discarded unread. Verified on
+  2026-10-23 against a bogus MLS number and against a real number with the wrong street — both
+  correctly rejected.
+- **The pool field.** MetroList sheets state `Pool - Yes` / `Pool - No` outright; a spot check of
+  four known pool-less matches on 2026-10-23 returned `Pool - No` on all four, so the field is a
+  real negative and not just a missing positive. MAXEBRDI sheets have no yes/no token and give a
+  feature list instead, rendering an absent field as an en dash — so a **construction** token
+  (`In Ground`, `Gunite`, …) is what distinguishes a real pool there. `Spa/Hot Tub` alone is
+  deliberately **not** such a token: a spa is not a pool, and a sheet carrying only that is left
+  unresolved rather than counted either way.
+
+On the run that introduced it, 2c confirmed both foreign cards on every field — price, beds, full
+baths, acreage and pool — and read `Active` on both. Note that MLSListings serves 3538 Wildwood Ln
+under a MetroList (`ME`) prefix even though the IDX feed records it as BAREIS; the scope gate, not
+the prefix, is what establishes it is the right property.
+
+Step 2b only does work when step 2 put something in `source.mlsForeignSource` — a listing carried
+by an MLS that is not MetroList, which MetroListPRO can never confirm. It reads that listing's
+Redfin MLS field table and stamps what agreed onto the card as `secondSource`. **It must run after
+step 2 and before step 3**: `verify.py` deliberately does not write the note (it would describe the
+previous run's evidence), and `build.js` composes it from the stamp at render time. Skip 2b and the
+card correctly says the second confirmation is outstanding rather than claiming one.
+
+Then, on any run reporting no movement, the completeness check — every MLS record in the three
+cities, straight from the MLS of record, filtered independently of the IDX feed:
+
+```bash
+python3 mls-enumerate.py --stamp                  # 4. cross-enumerate; run before step 3
+python3 redfin-csv.py --stamp                     # 5. third source; also run before step 3
+```
+
+`mls-enumerate.py` stamps nothing if any page failed to parse, and `redfin-csv.py` stamps nothing if
+its sweep came back short, so a partial sweep cannot publish a completeness claim either way. Run
+both before `build.js` if you want the "Cross-enumerate" and "Third source" rows on the page.
+
+Also available, and it caught a stale price on 2026-08-23 — a Redfin enumeration as a second
+cross-check:
+
+```bash
+scripts/fetch.sh search                                  # ZIP pages -> work/
+python3 scripts/parse_search.py work/rf_9566*.html work/rf_956*.html > work/all.json
+```
+
+Filter `all.json` on `city` (never on the ZIP fetched — Redfin spills nearby towns into the result),
+then compare the surviving set against `listings.json`. A property Redfin has that the board does
+not, or a price that disagrees, is worth a MetroListPRO read before publishing.
+
+Step 2 prints one line per property; every field must read back clean (`price beds baths acres
+pool`). Anything else is a disagreement, and per the verification gate the MLS of record wins and
+the disagreement belongs on the card.
+
+`verify.py` reads `matches.json` and writes `verified.json` — both intermediates, both gitignored —
+and, when **every** record reads back clean, stamps `source.mlsVerifiedOn` / `mlsVerifiedCount` into
+`listings.json`. That stamp is what `build.js` renders, so the order matters: run step 2 before step
+3, or the page will correctly report that the board was re-enumerated but not re-verified.
+
+### A cross-check that threw away its own sweep, and nearly published a hollow one
+
+`redfin-csv.py` enumerates first and then reads one detail page per surviving candidate for the
+pool field. On 2026-10-21 Redfin was rate-limiting detail pages (see NETWORK.md), and the script
+hit two separate faults in that path — the second only visible once the first was fixed:
+
+1. **It crashed after finishing the work.** `pool_of()`'s early return for a page with no
+   `listingId` carried only `pool` and `why`, so the reporting line died with
+   `KeyError: 'status'` — discarding a complete 363-row sweep over one unreadable page.
+2. **Once it no longer crashed, it blanked good data.** `c.update(pool_of(...))` overwrote the
+   price the CSV had already supplied with the detail API's `None`, and the same line died again
+   on `TypeError: unsupported format string passed to NoneType.__format__`.
+
+Both are now fixed — the early return carries the full record shape, and the update never lets a
+`None` overwrite a field the CSV filled.
+
+The third fault is the one worth remembering, because nothing would have reported it. The stamp
+guard only checked that **enumeration** was complete (`len(rows) < 200`). It did not check that the
+detail reads happened. With the crash fixed and nothing else changed, a run where every detail page
+returned a stub would have stamped `poolConfirmed: 0, additionalMatchesFound: 0` and rendered a
+"Third source" row on the page — a clean cross-check, published off a sweep that never read a single
+pool field. The guard now also refuses to stamp when any candidate's detail page would not load,
+and names them.
+
+The general shape is the one this repo keeps rediscovering: **a check degrades into a claim unless
+something distinguishes "looked and found nothing" from "never looked."** `verify.py` and
+`mls-enumerate.py` already make that distinction; this one did not.
+
+### Two stampers in parallel, and the lost write that kept yesterday's date
+
+Recorded **2026-11-13**. `cb-crosscheck.py --stamp` and `rg-crosscheck.js --stamp` were started as
+two background jobs at the same time, to save the fifteen minutes the CB sweep takes. Both scripts
+do the same thing at the end: read `listings.json`, add their own key under `dataQuality`, write the
+whole file back. The RealGeeks job finished second, so it wrote a copy it had read **before** the CB
+job stamped — and `dataQuality.idxCrossCheck` went back to the previous run's value.
+
+What makes this one worth a section is how well it hid. The CB sweep genuinely ran, read 408 records
+and printed a correct, complete report to the terminal. The stamp it lost happened to be
+byte-identical to 2026-11-12's — same `rowsScanned: 408`, same `clearedBedsBathsPrice: 44`, same
+`poolAndAcreageHits: 9`, because the inventory had not moved. So the published page carried this
+run's real numbers under **yesterday's date**, and every number on the row was right. Only `ranOn`
+was wrong, and only a check of the local clock against the stamp showed it.
+
+That is the repo's recurring shape arriving from a new direction. The usual version is *a check
+degrades into a claim unless something distinguishes "looked and found nothing" from "never
+looked."* Here the run did look, and the page still mis-stated when — which is the same defect for a
+reader, because the whole point of the provenance table is that a date on it means a read happened
+that day. A stale date on fresh data is indistinguishable from fresh data that was never refreshed.
+
+Two rules follow:
+
+- **Run the stampers one at a time.** Every `--stamp` script is a read-modify-write of the single
+  board file and none of them lock it. The documented order in this section is sequential for
+  reasons beyond rate limits; concurrency silently drops whichever stamp lands first.
+- **Check `ranOn` against today's date before committing.** The counts can be right while the date
+  is not. `grep ranOn listings.json` is the whole check, and on a board that has not moved it is the
+  only thing that separates a cross-check that ran from one that did not.
+
+### `--help` is not a safe way to ask what a script does
+
+Same run. `mls-enumerate.py` and `mls-compose.py` parse `sys.argv` by hand and ignore anything they
+do not recognise, so `python3 mls-compose.py --help` does not print usage — it **composes the board**
+and writes `listings.json`. Worse, a compose with no `--foreign` argument is a compose that drops
+2520 Bedford Ave and 3538 Wildwood Ln, exactly as the docstring says it should. Asking two scripts
+what their arguments were therefore ran a full MetroListPRO enumeration and rewrote the board with
+the two foreign-MLS cards removed.
+
+Nothing was lost — `git checkout -- listings.json` put it back, and the enumeration it performed was
+the one the run needed anyway — but the near-miss is the familiar one: the destructive path and the
+"just tell me the usage" path are the same command. Read the docstring with `sed -n '1,40p'`, which
+is also where the `--foreign` syntax actually is. The guard `refresh.py` carries
+(`--i-know-this-is-superseded`) is the pattern worth copying if these scripts ever grow one.
+
+### Exploratory fetches spend the same quota the pipeline needs
+
+The 2026-10-22 run started before reading this file and spent its first half probing Redfin by hand
+— `/filter/` sweeps across the three ZIPs, then detail pages for all 15 rows — to work out where
+listing data could be read at all. That probing was redundant twice over: the answer is in the
+section above, and it rediscovered the `/filter/` trap from scratch (15 rows, which happened to
+contain all 7 board matches at identical prices — exactly the seductive near-miss this file warns
+about).
+
+The cost was not the wasted time. Redfin began answering **202 with a stub body** and stayed that
+way for the whole run, so when `foreign-verify.py` came to read the two foreign-MLS listings — the
+one step in the documented order that *needs* Redfin — it hung on retries and had to be abandoned.
+The run published correctly, because `build.js` says a second confirmation is outstanding when no
+stamp is written, so 2520 Bedford Ave and 3538 Wildwood Ln were shown as single-sourced rather than
+falsely confirmed. But that degradation was self-inflicted, and it hit the two cards the gate
+already treats as weakest.
+
+The specific mechanism is worth recording, because "I probed too much" is the comfortable version
+and it is not what happened. One of those probes was a 15-listing detail scraper started in the
+background. It was abandoned as soon as this file was read and its approach shown to be wrong — and
+it **kept running for the rest of the session**, re-fetching Redfin detail pages with exponential
+backoff the entire time. `kill` was aimed at the shell that launched it, which is not the process
+doing the fetching: the shell died, the `node` child was reparented and carried on, and `pgrep -f`
+could not reveal it because the pattern matched the grepping shell's own command line and returned
+that instead. It surfaced only on a stray-process sweep after the run was already published. Once
+it was actually dead, `gis-csv` answered 200 within a minute; detail pages were still 202, which is
+why the retry of step 2b failed too.
+
+Three things follow, in increasing order of how much they generalise:
+
+- **Read this file before fetching anything.** The host table in `NETWORK.md` and the Redfin
+  sections above exist so a run does not have to re-derive them, and re-deriving them is not free.
+- **Rate limit is a shared, exhaustible resource across a run.** The pipeline's later steps have a
+  claim on it. An exploratory sweep against a host the pipeline depends on is borrowing from a step
+  that has not run yet, and the bill arrives after the board has been rewritten — too late to
+  choose differently.
+- **Abandoning an approach is not the same as stopping it.** A background job outlives the decision
+  that it was the wrong idea, and it goes on spending the shared resource while contributing
+  nothing. Kill the worker by PID, confirm `/proc/<pid>` is gone, and do not trust a `pgrep -f`
+  whose pattern appears in the command you are running. A run that ends without sweeping for its
+  own orphans cannot say what else was competing with it.
+
+### Do not refresh with `refresh.py`
+
+`refresh.py` is an older, parallel composer that reads plausibly and is wrong in four silent ways.
+The 2026-08-29 run tried it before checking the documented order, and it produced a board that
+rendered perfectly while stating the wrong thing:
+
+1. It treats a MetroListPRO "Not Found" as "the MLS says not active" and drops the listing. That
+   run it would have dropped **3538 Wildwood Ln** — an active, verified match — for the sole reason
+   that the MLS site has not indexed a listing this new. The section above exists precisely because
+   absence and contradiction are different findings; `verify.py` gets this right and `refresh.py`
+   does not.
+2. It never writes `pending`, so the previous run's escrow list is republished as if re-checked.
+3. It never writes `runSummary` or `poolless`, so the "What changed this run" banner and the
+   pool-less table keep the previous run's numbers.
+4. It writes `nearMisses` as a dict where `build.js` reads an array, silently emptying that table.
+
+It now refuses to run without `--i-know-this-is-superseded`. The general lesson is the same one the
+verification gate encodes: **a pipeline that fails silently is worse than one that fails loudly**,
+and a second composer that has to be kept in step with the first will drift.
 
 ## Files
 
 - **`listings.json`** — canonical data. Single source of truth.
+- **`scrape.js`** — refreshes `listings.json` from the IDX feed; handles dedupe, price history, drops.
+  Also writes `matches.json`, the input `verify.py` reads.
+- **`verify.py`** — independent MetroListPRO confirmation of every match and pending listing.
+- **`foreign-verify.py`** — the second source for listings MetroListPRO structurally cannot cover,
+  because another MLS carries them. Reads the Redfin MLS field table through `parse_detail.py`'s
+  subject-scope gate and stamps `secondSource` on the listing; resolves the Redfin URL by MLS
+  number through the ZIP's CSV feed rather than guessing it from the address, because Redfin's
+  slug does not always match the MLS street name.
+- **`mlsl-verify.py`** — the fallback for step 2b, reading MLSListings.com. Only fills listings
+  `foreign-verify.py` left unstamped, gates each sheet on street **and** MLS number appearing in
+  its `<title>`, and treats a spa-only pool field as unresolved rather than as a pool.
+- **`crosscheck.js`** / **`mls-status.js`** — the Redfin second opinion `scrape.js` calls to catch
+  listings the IDX feed still reports Active after they have gone into escrow.
 - **`build.js`** — renders `index.html` from `listings.json`. No dependencies: `node build.js`.
+- **`scripts/fetch.sh`** / **`scripts/parse_search.py`** / **`scripts/parse_detail.py`** — the
+  independent Redfin enumeration described above, run as a cross-check rather than as the board.
+  `fetch.sh search` pulls the ZIP pages, `parse_search.py` flattens the GIS payload, and
+  `parse_detail.py` reads the MLS amenity table off a listing page — asserting the `propertyId` in
+  each API blob matches the page requested, because a Redfin detail page also embeds comparable and
+  nearby-home payloads and a loose regex will happily return a neighbour's pool status.
+- **`mls-enumerate.py`** — independent second enumeration from MetroListPRO's own city indexes, the
+  only source that both enumerates and speaks for the MLS of record. Writes `mls-enumeration.json`;
+  `--stamp` records the result under `dataQuality.independentEnumeration`. Never touches the board.
+  Note the interaction with the no-spoof route, added 2026-11-08: on that route this script *is*
+  step 1, the board's own enumeration, so `mls-compose.py` deliberately drops the stamp — a
+  MetroListPRO enumeration cannot be its own independent cross-check, and the inherited stamp was
+  reporting a previous run's record counts beside this run's. Use `--stamp` on the spoofed route,
+  where `scrape.js` enumerates the IDX feed and this really is a second net.
+- **`cb-crosscheck.py`** — the Coldwell Banker IDX sweep: the only plain-request enumeration that
+  is not MetroList-only, so it is what covers other boards on a no-spoof run. Filters on
+  `markerPrice` (not the formatted `price`), leaves the 3-full-bath call to the MLS because the
+  feed's bath count is full + half combined, treats a pool in the remarks as a candidate rather
+  than a determination, and diffs against the board in the one direction that proves anything.
+  `--stamp` records `dataQuality.idxCrossCheck` and rewrites `dataQuality.coverageGap`; it refuses
+  to stamp on a short sweep or a failed city. Never touches the board.
+- **`rg-crosscheck.js`** — the RealGeeks MetroList IDX sweep, and the only route here that filters
+  on the MLS's structured **pool** field server-side, so the candidate set arrives narrowed instead
+  of being recovered from hundreds of detail reads. Queries acreage one step *below* the criterion
+  and filters locally, leaves the 3-full-bath call to the MLS because its bath count is combined,
+  and gates each detail page on the MLS number appearing in it. Renders the search rows with the
+  headless Chromium installed here — Chromium's own `User-Agent`, no spoof. MetroList-only, so it
+  corroborates and does **not** close `coverageGap`. `--stamp` records
+  `dataQuality.poolFilteredCrossCheck` and refuses to stamp when the rows scraped disagree with the
+  page's own result count. Never touches the board. **The one script here with an external
+  dependency** — everything else in this repo is Node/Python stdlib and there is no `package.json`.
+  The cloud runner ships Playwright and a matching Chromium preinstalled; on a host without them it
+  exits 2 with that said, and the page just omits the row.
+- **`mls-compose.py`** — composes the board from `mls-enumeration.json` alone, for runs that
+  cannot spoof a `User-Agent`. Needs a `--foreign` argument per other-MLS listing naming the live
+  status and price read this run; one without an argument is dropped rather than carried.
+- **`mlp-enrich.py`** — fills the display-only fields `mls-compose.py` leaves empty (photos, agent
+  remarks, year built, water, sewer) from the listing's MetroListPRO detail page, so a card composed
+  on the no-spoof route doesn't render as a blank tile. With no arguments it takes every match with
+  no photos; MLS numbers limit it to those. Gates each sheet on the MLS number appearing in its
+  `<title>`, skips non-MetroList listings outright, reads photos in **document order**, and writes
+  only display keys — nothing the criteria are judged on, so it cannot move a listing on or off
+  the board.
+- **`refresh.py`** — superseded composer, guarded so it can't be run by accident. See above.
+- **`ingest.js`** — merges listings pasted from a portal results page, applying the dedupe rules.
+  Kept as a manual fallback; the scrape path above supersedes it.
 - **`index.html`** — generated. Don't hand-edit; edit the JSON and rebuild.
-- **`ingest.js`** — merges listings pasted from a portal results page (manual fallback).
-
-### `listings.json` shape
-
-- `listings[]` — verified matches. `status` is `match` (active) or `under-contract`
-  (contingent/pending). `isNew` drives the "New this run" spotlight at the top of the page.
-- `nearMisses[]` — active listings clearing beds/baths/price but failing acreage or pool. Kept so a
-  later price cut or data correction is easy to spot.
-- `droppedThisRun[]` — previously tracked, now gone from active inventory.
-- `rejected[]` — long-term memory; do not re-surface unless a price change brings one into range.
-
-## Dedupe rules for future runs
-
-Read `listings.json` **before** reporting anything.
-
-1. A property already in `listings` is a **duplicate** — do not re-surface it as new.
-2. Exception: if the price differs from `currentPrice`, that *is* worth reporting. Append to
-   `priceHistory` and update `currentPrice`; the card renders the delta automatically.
-3. Set `isNew: false` on anything carried over, so the spotlight only shows genuine additions.
-4. Anything in `rejected` stays rejected unless a price change brings it into range.
-5. Drop listings absent from MLS active inventory into `droppedThisRun`.
-6. Update `lastSeen` on confirmed-active properties and `lastRun` on every run.
-
-## Photos
-
-Hotlinked from `mediarem.metrolist.net`; the **viewer's** browser fetches them. Each has an
-`onerror` handler that swaps in a "View listing photos" tile, so a dead URL never leaves a hole.
-MLS photos are the copyright of the listing brokerage — fine for a private hunting page, don't
-republish more broadly.
 
 ## Publishing
 
-Served from the `gh-pages` branch at repo root:
-
-```bash
-node build.js
-git add -A && git commit -m "Update listings"
-git push origin HEAD
-# then publish index.html to gh-pages
-```
+`index.html` is committed to the `gh-pages` branch at the repo root. Enable under
+**Settings → Pages → Source: `gh-pages` / `(root)`**.
