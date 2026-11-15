@@ -13,18 +13,18 @@
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-11-14",
-  "previousRun": "2026-11-13",
+  "lastRun": "2026-11-15",
+  "previousRun": "2026-11-14",
   "source": {
     "name": "MetroListPRO (MetroList MLS of record), complete city enumeration",
     "method": "Enumerated every active and pending residential record in the three cities from the MetroListPRO city indexes and read each detail page's Status, Has a Pool, Lot Size in Acres and full-bath fields. No User-Agent spoofing: MetroListPRO answers an ordinary request, which is why this route is available to every run. Listings on another MLS were each confirmed against a live record named in foreignVerifiedBy.",
-    "inventoryScanned": 367,
-    "activeScanned": 322,
-    "pendingScanned": 45,
-    "passedBedsBathsPrice": 31,
+    "inventoryScanned": 362,
+    "activeScanned": 318,
+    "pendingScanned": 44,
+    "passedBedsBathsPrice": 30,
     "verifiedActiveMatches": 7,
     "pendingMatches": 0,
-    "mlsVerifiedOn": "2026-11-14",
+    "mlsVerifiedOn": "2026-11-15",
     "mlsVerifiedCount": 7,
     "mlsForeignSource": [
       {
@@ -46,26 +46,26 @@
         "price": 1275000
       },
       "226107286": {
-        "status": "Active",
+        "status": "Contingent",
         "price": 829000
       }
     }
   },
   "dataQuality": {
-    "verifiedActiveListings": 8,
-    "coverageGap": "Closed for this run. MetroListPRO enumerates MetroList only, so it is blind to a new listing on another MLS. The Coldwell Banker IDX cross-check (cb-crosscheck.py, plain request, no User-Agent spoof) carries other boards — it sees both known foreign listings, including 3538 Wildwood Ln, which MetroListPRO has never indexed — and it swept 404 records across the three cities this run, finding no qualifying candidate the board did not already track. It is a cross-check, not the board: it has no structured pool field, its bath count cannot resolve the 3-full-bath minimum, and it carries stale ACTIVE rows, so the MLS of record still decides every promotion.",
+    "verifiedActiveListings": 7,
+    "coverageGap": "Closed for this run. MetroListPRO enumerates MetroList only, so it is blind to a new listing on another MLS. The Coldwell Banker IDX cross-check (cb-crosscheck.py, plain request, no User-Agent spoof) carries other boards — it sees both known foreign listings, including 3538 Wildwood Ln, which MetroListPRO has never indexed — and it swept 401 records across the three cities this run, finding no qualifying candidate the board did not already track. It is a cross-check, not the board: it has no structured pool field, its bath count cannot resolve the 3-full-bath minimum, and it carries stale ACTIVE rows, so the MLS of record still decides every promotion.",
     "idxCrossCheck": {
-      "ranOn": "2026-11-14",
+      "ranOn": "2026-11-15",
       "source": "Coldwell Banker IDX (coldwellbanker.com), plain request, no UA spoof",
-      "rowsScanned": 404,
-      "clearedBedsBathsPrice": 44,
-      "poolAndAcreageHits": 9,
+      "rowsScanned": 401,
+      "clearedBedsBathsPrice": 42,
+      "poolAndAcreageHits": 8,
       "missingFromBoard": [],
       "note": "Carries non-MetroList boards, so unlike the MetroList mirrors it can see a new foreign-MLS listing. Pool is read from agent remarks and reviewed by hand; combined baths cannot resolve the 3-full-bath minimum; and this feed carries stale ACTIVE rows, so the MLS of record still decides."
     },
     "multiUnitNote": "4800 Abbey Road (MLS 226133530) is on the board and reads 4 bedrooms / 4 full baths on MetroListPRO as of 2026-11-08, so the note this key used to carry — that its bed field read 3 and the enumerator therefore rejected it — no longer describes the record. The listing agent corrected it on 2026-11-06 (README \"A near miss can become a match without anything new being listed\"). The parser limitation it documented is NOT fixed and is the part worth keeping: this is a 2-houses-on-one-lot record with BOTH a populated whole-home bed field and a unit table, a shape classify() in mls-enumerate.py cannot see — it calls the record residential and qualifies() then judges it on the single bed field alone. It happens to pass now because the corrected field passes. The next record of this shape with an understated bed field will be rejected the same silent way.",
     "poolFilteredCrossCheck": {
-      "ranOn": "2026-11-14",
+      "ranOn": "2026-11-15",
       "source": "RealGeeks MetroList IDX (sellingnortherncalifornia.com), server-side pool filter, no UA spoof",
       "countyRowsWithPool": 14,
       "inTargetCities": 8,
@@ -76,22 +76,40 @@
   },
   "runSummary": {
     "new": [],
-    "priceChanges": [
+    "priceChanges": [],
+    "statusChanges": [
       {
-        "address": "1315 Arrowbee Dr",
+        "address": "3538 Wildwood Ln",
         "city": "Placerville",
-        "from": 930000,
-        "to": 899000
+        "mls": "226107286",
+        "from": "Active",
+        "to": "Contingent"
       }
     ],
-    "statusChanges": [],
     "relisted": [],
     "dropped": [],
     "poollessChanges": {
       "added": [],
       "priceChanges": [],
       "statusChanges": [],
-      "gone": []
+      "gone": [
+        {
+          "address": "5681 Honeycomb Lane",
+          "city": "Shingle Springs",
+          "price": 899000,
+          "beds": 4,
+          "baths": 4,
+          "fullBaths": 4,
+          "halfBaths": 1,
+          "acres": 5,
+          "sqft": 3210,
+          "mls": "226068369",
+          "status": "Active",
+          "url": "https://www.metrolistpro.com/homes/2/6/5681-HONEYCOMB-LANE-SHINGLE-SPRINGS-CA-95682/226068369",
+          "reason": "MetroList records no pool",
+          "mlsPool": "No"
+        }
+      ]
     },
     "nearMissChanges": {
       "added": [],
@@ -147,7 +165,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-11-06",
-      "lastSeen": "2026-11-14",
+      "lastSeen": "2026-11-15",
       "flag": null
     },
     {
@@ -200,7 +218,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-11-14",
+      "lastSeen": "2026-11-15",
       "flag": null
     },
     {
@@ -249,7 +267,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-11-06",
-      "lastSeen": "2026-11-14",
+      "lastSeen": "2026-11-15",
       "flag": null
     },
     {
@@ -293,7 +311,7 @@
       "summary": "This is an exceptional property, fully permitted & short-term rental permitted (Airbnb & other short-term rentals). Welcome to this majestic luxury estate situated on over 16.74 acres. The large lot provides opportunities for an additional home. Positioned atop the serene Bedford Canyon, this estate boasts sweeping panoramic views that capture the natural beauty of sunrises, sunsets & stargazing. ",
       "notes": "",
       "firstSeen": "2026-10-02",
-      "lastSeen": "2026-11-14",
+      "lastSeen": "2026-11-15",
       "priceHistory": [
         {
           "date": "2026-10-02",
@@ -302,7 +320,7 @@
       ],
       "secondSource": {
         "name": "the MLSListings.com MLS sheet",
-        "checkedOn": "2026-11-14",
+        "checkedOn": "2026-11-15",
         "url": "https://www.mlslistings.com/property/BE41150059",
         "confirmed": [
           "price",
@@ -376,7 +394,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-11-14",
+      "lastSeen": "2026-11-15",
       "flag": null
     },
     {
@@ -433,82 +451,8 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-09-08",
-      "lastSeen": "2026-11-14",
-      "flag": "price-change"
-    },
-    {
-      "id": "3538-wildwood-ln-placerville",
-      "address": "3538 Wildwood Ln",
-      "city": "Placerville",
-      "zip": "95667",
-      "mls": "226107286",
-      "currentPrice": 829000,
-      "beds": 4,
-      "baths": 3,
-      "fullBaths": 3,
-      "partialBaths": null,
-      "sqft": null,
-      "acres": 5,
-      "pool": true,
-      "poolDetail": "Gunite Construction, Pool Sweep, Pool Cover, On Lot, Built-In",
-      "yearBuilt": "1962",
-      "garageSpaces": "2",
-      "view": "Woods, Hills",
-      "water": "Well, Storage Tank, Public",
-      "sewer": "Septic System",
-      "propertyType": "Single Family",
-      "mlsStatus": "Active",
-      "mlsSource": "BAREIS",
-      "flag": null,
-      "listedOn": "2026-08-27",
-      "lat": 38.7133,
-      "lng": -120.8959,
-      "photos": [
-        "https://m.cbhomes.com/p/73/226107286/433b190543004Ac/m23cc.webp",
-        "https://m.cbhomes.com/p/73/226107286/dF36bA9eE4f740D/m23cc.webp",
-        "https://m.cbhomes.com/p/73/226107286/7F45DE845c0F4a8/m23cc.webp",
-        "https://m.cbhomes.com/p/73/226107286/C9bF82ED0846417/m23cc.webp",
-        "https://m.cbhomes.com/p/73/226107286/bfEB92bEB3104C9/m23cc.webp",
-        "https://m.cbhomes.com/p/73/226107286/B7f6774BD6E14c9/m23cc.webp"
-      ],
-      "url": "https://www.coldwellbankerhomes.com/ca/placerville/3538-wildwood-ln/pid_73278772/",
-      "gallery": "https://www.coldwellbankerhomes.com/ca/placerville/3538-wildwood-ln/pid_73278772/",
-      "status": "match",
-      "summary": "Welcome to a property that doesn't ask you to choose between a home, a retreat, and country living - you get all three. Set among the Placerville foothills, 3538 Wildwood Lane is a place to swim, garden, gather and spread out. The two-story main home offers a private ground-level guest suite with its own entrance and full bath, plus a two-car garage and full basement access. Upstairs, the living s",
-      "notes": "",
-      "firstSeen": "2026-08-27",
-      "lastSeen": "2026-11-14",
-      "priceHistory": [
-        {
-          "date": "2026-08-27",
-          "price": 949000
-        },
-        {
-          "date": "2026-09-17",
-          "price": 889000
-        },
-        {
-          "date": "2026-10-15",
-          "price": 829000
-        }
-      ],
-      "secondSource": {
-        "name": "the MLSListings.com MLS sheet",
-        "checkedOn": "2026-11-14",
-        "url": "https://www.mlslistings.com/property/ME226107286",
-        "confirmed": [
-          "price",
-          "beds",
-          "fullBaths",
-          "acres",
-          "pool"
-        ],
-        "disagreed": [],
-        "status": "Active",
-        "activeThere": true,
-        "poolFeatures": "Cover, Gunite, In Ground, Pool - Yes, Sweep",
-        "board": "ME"
-      }
+      "lastSeen": "2026-11-15",
+      "flag": null
     },
     {
       "id": "4770-feldspar-lane-placerville",
@@ -556,7 +500,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-11-10",
-      "lastSeen": "2026-11-14",
+      "lastSeen": "2026-11-15",
       "flag": null
     }
   ],
@@ -611,8 +555,82 @@
       "status": "match",
       "mlsStatus": "Contingent - Show",
       "firstSeen": "2026-08-13",
-      "lastSeen": "2026-11-14",
+      "lastSeen": "2026-11-15",
       "flag": null
+    },
+    {
+      "id": "3538-wildwood-ln-placerville",
+      "address": "3538 Wildwood Ln",
+      "city": "Placerville",
+      "zip": "95667",
+      "mls": "226107286",
+      "currentPrice": 829000,
+      "beds": 4,
+      "baths": 3,
+      "fullBaths": 3,
+      "partialBaths": null,
+      "sqft": null,
+      "acres": 5,
+      "pool": true,
+      "poolDetail": "Gunite Construction, Pool Sweep, Pool Cover, On Lot, Built-In",
+      "yearBuilt": "1962",
+      "garageSpaces": "2",
+      "view": "Woods, Hills",
+      "water": "Well, Storage Tank, Public",
+      "sewer": "Septic System",
+      "propertyType": "Single Family",
+      "mlsStatus": "Contingent",
+      "mlsSource": "BAREIS",
+      "flag": null,
+      "listedOn": "2026-08-27",
+      "lat": 38.7133,
+      "lng": -120.8959,
+      "photos": [
+        "https://m.cbhomes.com/p/73/226107286/433b190543004Ac/m23cc.webp",
+        "https://m.cbhomes.com/p/73/226107286/dF36bA9eE4f740D/m23cc.webp",
+        "https://m.cbhomes.com/p/73/226107286/7F45DE845c0F4a8/m23cc.webp",
+        "https://m.cbhomes.com/p/73/226107286/C9bF82ED0846417/m23cc.webp",
+        "https://m.cbhomes.com/p/73/226107286/bfEB92bEB3104C9/m23cc.webp",
+        "https://m.cbhomes.com/p/73/226107286/B7f6774BD6E14c9/m23cc.webp"
+      ],
+      "url": "https://www.coldwellbankerhomes.com/ca/placerville/3538-wildwood-ln/pid_73278772/",
+      "gallery": "https://www.coldwellbankerhomes.com/ca/placerville/3538-wildwood-ln/pid_73278772/",
+      "status": "match",
+      "summary": "Welcome to a property that doesn't ask you to choose between a home, a retreat, and country living - you get all three. Set among the Placerville foothills, 3538 Wildwood Lane is a place to swim, garden, gather and spread out. The two-story main home offers a private ground-level guest suite with its own entrance and full bath, plus a two-car garage and full basement access. Upstairs, the living s",
+      "notes": "",
+      "firstSeen": "2026-08-27",
+      "lastSeen": "2026-11-15",
+      "priceHistory": [
+        {
+          "date": "2026-08-27",
+          "price": 949000
+        },
+        {
+          "date": "2026-09-17",
+          "price": 889000
+        },
+        {
+          "date": "2026-10-15",
+          "price": 829000
+        }
+      ],
+      "secondSource": {
+        "name": "the MLSListings.com MLS sheet",
+        "checkedOn": "2026-11-15",
+        "url": "https://www.mlslistings.com/property/ME226107286",
+        "confirmed": [
+          "price",
+          "beds",
+          "fullBaths",
+          "acres",
+          "pool"
+        ],
+        "disagreed": [],
+        "status": "Contingent",
+        "activeThere": false,
+        "poolFeatures": "Cover, Gunite, In Ground, Pool - Yes, Sweep",
+        "board": "ME"
+      }
     }
   ],
   "poolless": [
@@ -757,22 +775,6 @@
       "mls": "226129641",
       "status": "Pending",
       "url": "https://www.metrolistpro.com/homes/2/6/4810-ROBLEDO-DRIVE-PLACERVILLE-CA-95667/226129641",
-      "reason": "MetroList records no pool",
-      "mlsPool": "No"
-    },
-    {
-      "address": "5681 Honeycomb Lane",
-      "city": "Shingle Springs",
-      "price": 899000,
-      "beds": 4,
-      "baths": 4,
-      "fullBaths": 4,
-      "halfBaths": 1,
-      "acres": 5,
-      "sqft": 3210,
-      "mls": "226068369",
-      "status": "Active",
-      "url": "https://www.metrolistpro.com/homes/2/6/5681-HONEYCOMB-LANE-SHINGLE-SPRINGS-CA-95682/226068369",
       "reason": "MetroList records no pool",
       "mlsPool": "No"
     },

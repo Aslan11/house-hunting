@@ -101,6 +101,40 @@ So the ordering lesson stands unchanged and the first command of a run is still 
 The new part is for the moment *after* that check fails to happen: **a search result naming your
 own published page is a stale-base alarm.** Stop and diff, do not reconcile.
 
+Fifth time on **2026-11-15**, same `2026-07-26` base. Caught at the publish step again, and the
+specific thing that caught it is worth naming because it is cheaper than either previous alarm:
+`git ls-remote --heads origin gh-pages` returned a branch, and `git ls-tree` on it listed
+**27 files against the working tree's 5**. A trunk with five times your file count is not a
+branch you are ahead of.
+
+This one is the clearest measurement yet of what the trap actually costs, because the ad-hoc route
+was *good*. Coming in blind through the Coldwell Banker IDX again, it enumerated all three cities,
+carried 52 rows past beds/baths/price, read every detail page, and — after finding that remarks-only
+pool detection missed 4800 Abbey Rd — cross-checked the structured MLS pool field on all 27
+acreage-qualified rows against MLSListings and the RealGeeks mirror. That is the right method,
+independently rederived, and it reproduced **7 of the board's 7 MetroList matches at identical
+prices, acreage and pool fields**, including both foreign-MLS cards.
+
+And it would still have published a worse board, in both directions at once:
+
+- **Two false promotions**, both of which the board had already resolved and written down.
+  **3784 Cattle Drive** reads ACTIVE in the CB feed and is in `rejected` since 2026-10-31 because
+  MetroListPRO — its own board of record — 404s it. **1234 Rising Hill W Rd** reads "3 baths"
+  combined and is in `nearMisses` because that is 2 full + 1 half. Both are *documented* traps
+  that the from-scratch run walked into in the same session, which is the point: the board is not
+  a cache of the answer, it is a cache of the **exclusions**, and those are the expensive part.
+- **One missed status change.** 3538 Wildwood Ln went Active → Contingent this run. The rebuild
+  had it as merely "pending" with no prior state to compare against, so it could not report the
+  change — the only actual news of the day would have shipped as an unremarked attribute.
+
+The rebuild also graded two of the board's `poolless` rows as "no pool" by reading remarks, which
+is right by luck: the board had already established 4800 Abbey Rd's pool appears **only** in the
+structured field. A run that trusts remarks gets that one wrong in the other direction.
+
+Restating the rule with the cheapest possible test, since four phrasings have now failed to stop a
+run before it spent a session: **before any research, run `git ls-remote --heads origin gh-pages`
+and compare the file count.** `0 new` on a board you did not start from is not a result.
+
 ## Criteria
 
 | Requirement | Value |
