@@ -135,6 +135,39 @@ Restating the rule with the cheapest possible test, since four phrasings have no
 run before it spent a session: **before any research, run `git ls-remote --heads origin gh-pages`
 and compare the file count.** `0 new` on a board you did not start from is not a result.
 
+Sixth time on **2026-11-17**, and this one broke the cheapest test, so it is worth recording what
+replaced it. The clone did **not** land on the `2026-07-26` state this time — the scheduled run was
+handed a working branch at the **2026-11-14** commit, three days old, with `listings.json`,
+`build.js`, `ingest.js` and `NETWORK.md` present and a plausible four-commit history. `git log`
+read like a current repo. The file-count tell from 2026-11-15 would still have fired (5 files
+against 27), but the run did not think to look, precisely because nothing about the base looked
+stale. **A recent-looking base is the dangerous one.** The 2026-07-26 base announces itself; a
+three-day-old branch does not.
+
+What caught it was `git worktree add` on `origin/gh-pages` at the publish step, listing 27 files
+where the working tree had 5. By then the run had spent its session rebuilding the pipeline from
+scratch — rediscovering MLSListings, rederiving the pagination, the `Sq Ft Lot` and `1 Day on Site`
+parse traps — and had already committed and pushed that rebuild to its own dev branch.
+
+The rebuild again corroborated the board and again would have published a worse one:
+
+- It found **8 matches** where the board carries 7, the extra being **1234 Rising Hill W Rd** —
+  the documented half-bath trap, 2 full + 1 half, already on `nearMisses` since the board learned
+  it. The rebuild flagged it as "borderline, your call", which is the same error wearing a hedge.
+- It had **no `pending` concept at all**, so **4071 Voyager Way** (Contingent, and the only
+  Shingle Springs property that has ever qualified) and **3538 Wildwood Ln** (Contingent) simply
+  did not exist on it. It then published the sentence *"Shingle Springs has none at all"*, which
+  is true of active inventory and false of the board.
+- It reported all 8 as **new this run**, because a board with no history has no other category.
+  The actual news of the day was that nothing moved.
+
+The one thing it did add is already folded in above: it independently measured that
+`www.mlslistings.com` serves complete city indexes, not just `/property/<id>` sheets, which is a
+route this repo had only ever used for single-listing verification.
+
+So the test stands, with the qualifier that makes it work on a base that looks fine:
+**run `git ls-remote --heads origin gh-pages` and diff the file list — not the dates, not the log.**
+
 ## Criteria
 
 | Requirement | Value |
