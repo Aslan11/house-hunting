@@ -168,6 +168,56 @@ route this repo had only ever used for single-listing verification.
 So the test stands, with the qualifier that makes it work on a base that looks fine:
 **run `git ls-remote --heads origin gh-pages` and diff the file list — not the dates, not the log.**
 
+Seventh time on **2026-11-18**, back on the `2026-07-26` base. The run did check the remote — but it
+checked it at the *publish* step, which is the backstop, not the test. Everything before that went
+into a from-scratch rebuild: a new enumeration route, a new `listings.json`, a rewritten `build.js`,
+a new `style.css`, a rewritten `README.md`, `NETWORK.md` deleted as obsolete, and all of it
+committed and pushed to the dev branch before `git ls-remote` was ever run. The 2026-11-15 file-count
+tell would have fired on the first command — 5 files against 27.
+
+The rebuild is worth recording for one reason: **the route it found is new to this repo.**
+
+#### `compass.com` enumerates, and nothing here had used it
+
+`www.compass.com` serves a JSON search API backed by an MLS/IDX feed, and it answers a stock
+Playwright Chromium with no `User-Agent` claim. Load the public search page and capture the
+`POST /homes-for-sale/search/<slug>/` response the page makes for itself:
+
+- Slugs are ZIP-keyed: `placerville-ca-95667`, `shingle-springs-ca-95682`, `rescue-ca-95672`.
+  **Use the ZIP slug, not the city slug** — the city polygon is narrower, and 95682 returns 137
+  records against the city's 47. This is the same city-vs-ZIP blindness
+  *"City-keyed enumeration is blind to the other town in the ZIP"* records for other hosts; Compass
+  has it too, and 4262 Cameron Rd (Cameron Park, in the 95682 ZIP) is the row that shows it.
+- Paginate with `/start=60/`, `/start=120/`, … until a page returns fewer than 60. A `start` past
+  the end silently re-serves page 1 rather than returning empty, so compare rows, not counts.
+- Each record carries price, beds, baths, sqft, lot size, property type, status and photo URLs.
+  406 records across the three ZIPs this run, against MetroListPRO's 352 and the CB IDX's 389.
+
+Two things make it a cross-check and not a board, and both are failures this repo has already
+written down in other words:
+
+- **It has no structured pool field.** Pool has to come from the remarks, and remarks-only
+  detection is exactly what *"the board had already established 4800 Abbey Rd's pool appears only in
+  the structured field"* warns about. It happened again and on a different card: this run's rebuild
+  graded **1815 Woodsman Court** pool-less from its remarks and dropped it, and MetroListPRO reads
+  `Has a Pool: Yes`. A rebuild that publishes would have silently removed a tracked match — the
+  Saddlehorn error shape from 2026-11-11, arriving from the opposite direction.
+- **Its bath count is combined.** Compass renders 4800 Abbey Rd as "6 ba" for MetroList's 4 full +
+  2 half, and 1234 Rising Hill W Rd as "3 ba" for 2 full + 1 half. The second is the documented
+  half-bath trap, and remarks-free arithmetic walks into it the same way every other feed does.
+
+Set against the board it was otherwise accurate: 6 of the 7 matches reproduced at identical prices,
+acreage and MLS numbers, **including 2520 Bedford Ave** — Compass carries other boards, so unlike
+MetroListPRO it is not blind to the foreign-MLS pair. Zero properties found that the board lacked.
+So it belongs with the CB IDX as a coverage-gap cross-check, and it is the first such route that
+needs neither a `User-Agent` claim nor a `WebFetch` offset dance.
+
+One operational note, because it cost the run time: Compass **rate-limits detail pages to 403 after
+roughly 13 rapid reads**. Pace them at 10–15 s with backoff. The search endpoint itself is not
+throttled this way. Do **not** replay the search `POST` directly and do **not** send a spoofed
+`User-Agent` — the sandbox classifier refuses both. Loading the public page and reading the
+response it makes is allowed and is what works.
+
 ## Criteria
 
 | Requirement | Value |
@@ -1391,6 +1441,7 @@ cookie — and between them they cover the enumeration *and* the foreign-MLS con
 | `www.mlslistings.com` | 200, server-rendered | `/property/<prefix><mls>` sheets, including the boards MetroList does not carry (`BE` = MAXEBRDI, `ME` = MetroList) |
 | `www.zillow.com`, `www.homes.com`, `www.movoto.com`, `www.trulia.com`, `www.remax.com` | 403 | — |
 | `www.redfin.com` | 302 → `ratelimited.redfin.com`, "Are You a Robot?" | — |
+| `www.compass.com` | 200 to a stock Chromium, no UA claim | ZIP-keyed JSON search API: price, beds, baths, sqft, lot size, status, photos. No pool field; combined bath count. See the 2026-11-18 entry |
 | `www.coldwellbankerhomes.com` | 200 with a "Request Rejected" body | — |
 | `www.realtor.com` | 429 | — |
 

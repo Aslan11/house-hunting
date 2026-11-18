@@ -13,18 +13,18 @@
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-11-17",
-  "previousRun": "2026-11-16",
+  "lastRun": "2026-11-18",
+  "previousRun": "2026-11-17",
   "source": {
     "name": "MetroListPRO (MetroList MLS of record), complete city enumeration",
     "method": "Enumerated every active and pending residential record in the three cities from the MetroListPRO city indexes and read each detail page's Status, Has a Pool, Lot Size in Acres and full-bath fields. No User-Agent spoofing: MetroListPRO answers an ordinary request, which is why this route is available to every run. Listings on another MLS were each confirmed against a live record named in foreignVerifiedBy.",
-    "inventoryScanned": 353,
-    "activeScanned": 309,
+    "inventoryScanned": 352,
+    "activeScanned": 308,
     "pendingScanned": 44,
     "passedBedsBathsPrice": 30,
     "verifiedActiveMatches": 7,
     "pendingMatches": 0,
-    "mlsVerifiedOn": "2026-11-17",
+    "mlsVerifiedOn": "2026-11-18",
     "mlsVerifiedCount": 7,
     "mlsForeignSource": [
       {
@@ -53,11 +53,11 @@
   },
   "dataQuality": {
     "verifiedActiveListings": 7,
-    "coverageGap": "Closed for this run. MetroListPRO enumerates MetroList only, so it is blind to a new listing on another MLS. The Coldwell Banker IDX cross-check (cb-crosscheck.py, plain request, no User-Agent spoof) carries other boards — it sees both known foreign listings, including 3538 Wildwood Ln, which MetroListPRO has never indexed — and it swept 391 records across the three cities this run, finding no qualifying candidate the board did not already track. It is a cross-check, not the board: it has no structured pool field, its bath count cannot resolve the 3-full-bath minimum, and it carries stale ACTIVE rows, so the MLS of record still decides every promotion.",
+    "coverageGap": "Closed for this run. MetroListPRO enumerates MetroList only, so it is blind to a new listing on another MLS. The Coldwell Banker IDX cross-check (cb-crosscheck.py, plain request, no User-Agent spoof) carries other boards — it sees both known foreign listings, including 3538 Wildwood Ln, which MetroListPRO has never indexed — and it swept 389 records across the three cities this run, finding no qualifying candidate the board did not already track. It is a cross-check, not the board: it has no structured pool field, its bath count cannot resolve the 3-full-bath minimum, and it carries stale ACTIVE rows, so the MLS of record still decides every promotion.",
     "idxCrossCheck": {
-      "ranOn": "2026-11-17",
+      "ranOn": "2026-11-18",
       "source": "Coldwell Banker IDX (coldwellbanker.com), plain request, no UA spoof",
-      "rowsScanned": 391,
+      "rowsScanned": 389,
       "clearedBedsBathsPrice": 42,
       "poolAndAcreageHits": 8,
       "missingFromBoard": [],
@@ -72,6 +72,16 @@
       "clearedLandAndPool": 8,
       "missingFromBoard": [],
       "note": "The only source this repo has found that filters on the MLS pool field server-side, so the candidate set arrives narrowed instead of being recovered from hundreds of detail reads. MetroList only, so it is blind to a foreign-MLS listing and does not close coverageGap; and its bath count is full + half combined, so it cannot resolve the 3-full-bath minimum. A cross-check, never the board."
+    },
+    "independentEnumeration": {
+      "ranOn": "2026-11-18",
+      "source": "MetroListPRO city indexes (the MLS of record)",
+      "activeRecords": 308,
+      "pendingRecords": 44,
+      "recordsPulledBeyondIdxSweep": 352,
+      "singleFamilyRead": 246,
+      "excludedByType": 106,
+      "additionalMatchesFound": 0
     }
   },
   "runSummary": {
@@ -82,7 +92,14 @@
     "dropped": [],
     "poollessChanges": {
       "added": [],
-      "priceChanges": [],
+      "priceChanges": [
+        {
+          "address": "2550 Tolowa Trail",
+          "city": "Placerville",
+          "from": 575000,
+          "to": 555000
+        }
+      ],
       "statusChanges": [],
       "gone": []
     },
@@ -140,7 +157,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-11-06",
-      "lastSeen": "2026-11-17",
+      "lastSeen": "2026-11-18",
       "flag": null
     },
     {
@@ -193,7 +210,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-11-17",
+      "lastSeen": "2026-11-18",
       "flag": null
     },
     {
@@ -242,7 +259,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-11-06",
-      "lastSeen": "2026-11-17",
+      "lastSeen": "2026-11-18",
       "flag": null
     },
     {
@@ -286,7 +303,7 @@
       "summary": "This is an exceptional property, fully permitted & short-term rental permitted (Airbnb & other short-term rentals). Welcome to this majestic luxury estate situated on over 16.74 acres. The large lot provides opportunities for an additional home. Positioned atop the serene Bedford Canyon, this estate boasts sweeping panoramic views that capture the natural beauty of sunrises, sunsets & stargazing. ",
       "notes": "",
       "firstSeen": "2026-10-02",
-      "lastSeen": "2026-11-17",
+      "lastSeen": "2026-11-18",
       "priceHistory": [
         {
           "date": "2026-10-02",
@@ -295,7 +312,7 @@
       ],
       "secondSource": {
         "name": "the MLSListings.com MLS sheet",
-        "checkedOn": "2026-11-17",
+        "checkedOn": "2026-11-18",
         "url": "https://www.mlslistings.com/property/BE41150059",
         "confirmed": [
           "price",
@@ -369,7 +386,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-11-17",
+      "lastSeen": "2026-11-18",
       "flag": null
     },
     {
@@ -426,7 +443,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-09-08",
-      "lastSeen": "2026-11-17",
+      "lastSeen": "2026-11-18",
       "flag": null
     },
     {
@@ -475,7 +492,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-11-10",
-      "lastSeen": "2026-11-17",
+      "lastSeen": "2026-11-18",
       "flag": null
     }
   ],
@@ -530,7 +547,7 @@
       "status": "match",
       "mlsStatus": "Contingent - Show",
       "firstSeen": "2026-08-13",
-      "lastSeen": "2026-11-17",
+      "lastSeen": "2026-11-18",
       "flag": null
     },
     {
@@ -574,7 +591,7 @@
       "summary": "Welcome to a property that doesn't ask you to choose between a home, a retreat, and country living - you get all three. Set among the Placerville foothills, 3538 Wildwood Lane is a place to swim, garden, gather and spread out. The two-story main home offers a private ground-level guest suite with its own entrance and full bath, plus a two-car garage and full basement access. Upstairs, the living s",
       "notes": "",
       "firstSeen": "2026-08-27",
-      "lastSeen": "2026-11-17",
+      "lastSeen": "2026-11-18",
       "priceHistory": [
         {
           "date": "2026-08-27",
@@ -591,7 +608,7 @@
       ],
       "secondSource": {
         "name": "the MLSListings.com MLS sheet",
-        "checkedOn": "2026-11-17",
+        "checkedOn": "2026-11-18",
         "url": "https://www.mlslistings.com/property/ME226107286",
         "confirmed": [
           "price",
@@ -708,7 +725,7 @@
     {
       "address": "2550 Tolowa Trail",
       "city": "Placerville",
-      "price": 575000,
+      "price": 555000,
       "beds": 4,
       "baths": 3,
       "fullBaths": 3,
