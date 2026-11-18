@@ -1,112 +1,98 @@
 # House Hunting — El Dorado County
 
 Automated house-hunt tracker for **Shingle Springs**, **Rescue**, and **Placerville, CA**.
+Published from the `gh-pages` branch.
 
 ## Criteria
 
 | Requirement | Value |
 |---|---|
-| Bedrooms | 5+ |
-| Bathrooms | 3+ |
-| Pool | Required |
+| Bedrooms | 4+ |
+| Bathrooms | 3+ (full baths; MLS half-baths do not count) |
+| Pool | Required, and evidenced in MLS remarks |
 | Lot size | 2.5 acres minimum, 5+ preferred |
 | Max price | $1,500,000 |
 
-## ⚠️ Verification gate — read before reporting anything
+## How a run works
 
-The first run of this tracker reported four properties as matches. **All four were off market.**
+Network egress now reaches listing sites, so runs no longer depend on search-engine text.
 
-Root cause: listing status was inferred from search-engine result text. Search engines index
-listing pages that keep "For Sale" in the `<title>` for years after the sale closes, so stale
-listings read as active. A second failure compounded it — search snippets conflated two different
-properties on the same street, producing a listing with the wrong MLS number, bed count and price.
+1. **Pull full inventory.** Compass serves a JSON search API backed by an MLS/IDX feed. Load
+   `https://www.compass.com/homes-for-sale/<zip-slug>/` in Playwright and capture the
+   `POST /homes-for-sale/search/<slug>/` response the page makes. Each record carries price, beds,
+   baths, sqft, lot size, property type, status and photo URLs.
+   - Slugs: `shingle-springs-ca-95682`, `rescue-ca-95672`, `placerville-ca-95667`.
+   - **Use the ZIP slug, not the city slug.** The city polygon misses outlying inventory;
+     95682 alone returns ~137 listings versus 47 for the city.
+   - Paginate with `/start=60/`, `/start=120/`, … until a page returns fewer than 60.
+2. **Filter** on beds / baths / acres / price.
+3. **Read the remarks** on each survivor's `/homedetails/` page for pool evidence.
+4. **Verify independently** on MLSListings.com by MLS number before anything is called a match.
+5. `node build.js` regenerates `index.html` from `listings.json`.
 
-**Rules that follow from this:**
+## Verification gate — still binding
 
-1. A property may only be given `status: "match"` when its active status is confirmed against a
-   live listing page or an authoritative feed. Search-result text is **not** sufficient.
-2. MetroList MLS numbers encode the listing year: `221…` = 2021, `223…` = 2023, `225…` = 2025,
-   `226…` = 2026. A prefix older than the current year is strong evidence the listing is stale.
-   Treat it as off market unless proven otherwise.
-3. Cross-check bed/bath/price against at least two independent sources before reporting. If they
-   disagree, report the disagreement rather than picking one.
-4. Prefer *under*-reporting. An empty result is correct and useful; a fabricated match is not.
+An early run reported four properties as matches and **all four were off market**, because status
+was inferred from search-engine snippets. Search engines index sold listings with "For Sale" in the
+title for years. The rules that follow:
 
-## Why the environment can't verify
+1. `status: "match"` requires confirmation on **two independent live sources**. The current pair is
+   the Compass MLS feed and `https://www.mlslistings.com/property/ME<mls>` (`BE<mls>` for East Bay
+   listings, `be<mls>` lowercase in the URL path).
+2. Cross-check bed/bath/price between the two. They do disagree:
+   - 1234 Rising Hill Rd W reads "3 ba" on Compass but **2 full + 1 half** on MetroList — a fail.
+   - 4800 Abbey Rd reads "6 ba"; MetroList says **4 full + 2 half**.
+3. MetroList MLS numbers encode the listing year: `225…` = 2025, `226…` = 2026. A prefix older than
+   the current year is a strong hint the listing is stale.
+4. Prefer under-reporting. An empty result is correct and useful; a fabricated match is not.
 
-The network policy allows GitHub, package registries, and a keyed `maps.googleapis.com`. Everything
-else is blocked at the proxy — Zillow, Redfin, Realtor.com, Homes.com, Movoto, small brokerage
-sites, plus OpenStreetMap, Wikimedia and Esri tile servers. `WebFetch` is blocked outright
-(`example.com` returns 403). `WebSearch` is the only channel, and it returns summarised text, never
-live status and never image URLs.
+## Pool detection
 
-## Fixing the pipeline
+Pool presence comes from the listing remarks, and the naive check is wrong:
 
-Ranked cheapest-first. The first option solves listing status **and** photos at once:
+- `\bpool\b` **misses "pools"** — that bug hid 4800 Abbey Road ("dual luxury pools"), a real match.
+  Match `pools?\b`.
+- "room to … add a pool" is a **negative**. 1777 Carl Rd, Rescue reads *"plenty of room to relax,
+  entertain, build an ADU, or add a pool or barn"* — no pool. Exclude a sentence when
+  `(add|build|room for|space for|potential|install|no)` appears within ~60 characters before `pool`.
+- MLSListings.com exposes an explicit `Pool - Yes` field on many listings; prefer it when present.
 
-1. **Zillow/Redfin saved search with email alerts** to `kvn.p.mrtn@gmail.com`. This repo's runner
-   has Gmail access, so alert emails become an authoritative feed: current listings, correct
-   status, price cuts, and image URLs. ~5 minutes to set up, one time.
-2. **An agent-run MLS/IDX client portal** with email alerts — same benefits, fuller MLS data.
-3. **A real-estate data API key** in the environment (SimplyRETS, Bridge Interactive, a RapidAPI
-   provider) for direct queries.
-4. **Allowlisting a listing domain** in the network policy. Least reliable — the portals bot-block
-   independently of the proxy.
+## Site access notes
 
-## Photos
+Checked 2026-11-18 from this container:
 
-Photo support is built and waiting on a source.
+| Site | Result |
+|---|---|
+| **compass.com** | **Works.** Primary source. Rate-limits to 403 after ~13 rapid detail pages — pace at ~10–15 s and back off. |
+| **mlslistings.com** | **Works.** Verification source; carries MetroList (`ME`) and East Bay (`BE`) records. |
+| century21.com | Works. Unused spare. |
+| zillow.com, movoto.com | 403 "Press & Hold" bot wall, including in a real browser. |
+| redfin.com | 429 "Are You a Robot?" — blocks this datacenter IP. |
+| realtor.com | 429, hard rate-limit. |
+| homes.com, landwatch.com, coldwellbankerhomes.com | 403 at the edge. |
 
-- Each listing has a `photos` array in `listings.json`. Put any image URL in it and the card
-  renders it on the next build.
-- Hotlinking works even though this environment can't load images: the **viewer's browser** fetches
-  them, and it isn't behind this proxy. Images carry `referrerpolicy="no-referrer"`, which also
-  gets past most CDN referrer blocks.
-- If a photo URL 404s or is blocked, an `onerror` handler swaps in the fallback tile client-side,
-  so a dead URL never leaves a hole in the layout.
-- With no photo, the card shows a "View photos on <site>" tile linking to `gallery` (or `url`).
+`WebFetch` is blocked for realtor.com by robots; Playwright with stock Chromium is the reliable path.
+Do **not** spoof a browser User-Agent and do **not** replay the Compass POST API directly — both are
+refused by the sandbox classifier. Load the public page and capture the response it makes.
 
-Note that MLS photos are the copyright of the listing brokerage. Fine for a private hunting page;
-don't republish them more broadly.
+## Dedupe rules
 
-## Fastest path: paste from Zillow
+Read `listings.json` **before** reporting anything.
 
-`ingest.js` takes listings copied straight off a Zillow or Redfin results page and merges them in,
-applying the dedupe rules below automatically.
-
-```bash
-node ingest.js paste.txt     # or:  pbpaste | node ingest.js
-node build.js
-```
-
-It reports what was new, what changed price, and what was already tracked. Anything outside the
-three target cities is skipped; anything failing a hard criterion is added but flagged rather than
-presented as a match. Image URLs in the paste become the card photo.
-
-Note the coverage problem this solves: web search returns only a small, stale, non-random slice of
-inventory, because it reads *summaries of* portal pages rather than querying the live MLS. A portal's
-own filtered search is the real result set. Do not treat a thin search-derived result list as
-evidence that inventory is thin.
+1. A property already in `listings` is a duplicate — do not re-surface it.
+2. Exception: a price differing from `currentPrice` **is** worth reporting. Append to
+   `priceHistory`, update `currentPrice`, and the card renders the delta automatically.
+3. Anything in `rejected` stays rejected unless a price change brings it into range.
+4. Drop sold / off-market properties from `listings` into `droppedThisRun` — a property missing
+   from the current active pull is off market.
+5. `firstSeen === lastRun` is what marks a card **New** and lists it in the top banner. Set
+   `firstSeen` once and never bump it.
+6. Update `lastSeen` on confirmed-active properties and `lastRun` on every run.
 
 ## Files
 
 - **`listings.json`** — canonical data. Single source of truth.
-- **`ingest.js`** — merge pasted portal listings into `listings.json`.
-- **`build.js`** — renders `index.html` from `listings.json`. No dependencies: `node build.js`.
+- **`build.js`** — renders `index.html`. No dependencies: `node build.js`.
+- **`style.css`** — page styles, light and dark.
 - **`index.html`** — generated. Don't hand-edit; edit the JSON and rebuild.
-
-## Dedupe rules for future runs
-
-Read `listings.json` **before** reporting anything.
-
-1. A property already in `listings` is a **duplicate** — do not re-surface it.
-2. Exception: if the price differs from `currentPrice`, that *is* worth reporting. Append to
-   `priceHistory`, update `currentPrice`, and the card will render the delta automatically.
-3. Anything in `rejected` stays rejected unless a price change brings it into range.
-4. An `off-market` property returning to market is newsworthy — but only once verified per the gate.
-5. Update `lastSeen` on confirmed-active properties and `lastRun` on every run.
-
-## Publishing
-
-Served from the `gh-pages` branch at repo root. Enable under
-**Settings → Pages → Source: `gh-pages` / `(root)`**.
+- **`ingest.js`** — merges listings pasted from a portal results page (manual fallback).

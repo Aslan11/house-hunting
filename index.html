@@ -4,266 +4,285 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>House Hunt — Shingle Springs · Rescue · Placerville</title>
-<style>
-  :root{
-    --bg:#f6f4f0; --card:#fff; --ink:#1c1a17; --muted:#6b665e;
-    --line:#e2ddd4; --accent:#2f6b4f; --accent-soft:#e6f0ea;
-    --warn:#8a6d1f; --warn-soft:#f8f0d8; --miss:#8a4b3a; --miss-soft:#f7e7e2;
-    --tile:#ece7de;
-  }
-  @media (prefers-color-scheme: dark){
-    :root{
-      --bg:#16181a; --card:#1f2225; --ink:#eceae6; --muted:#a09a91;
-      --line:#31363a; --accent:#7fc4a1; --accent-soft:#1e2f27;
-      --warn:#d9bd6a; --warn-soft:#2e2819; --miss:#e0a08c; --miss-soft:#2e211d;
-      --tile:#282c30;
-    }
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);
-    font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
-  .wrap{max-width:1080px;margin:0 auto;padding:40px 20px 72px}
-  header{border-bottom:1px solid var(--line);padding-bottom:24px;margin-bottom:32px}
-  h1{font-size:1.9rem;margin:0 0 8px;letter-spacing:-.02em}
-  .sub{color:var(--muted);margin:0}
-  .criteria{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
-  .chip{background:var(--card);border:1px solid var(--line);border-radius:999px;
-    padding:5px 12px;font-size:.82rem;color:var(--muted)}
-  h2{font-size:1.15rem;margin:40px 0 6px;letter-spacing:-.01em}
-  .sectnote{color:var(--muted);font-size:.88rem;margin:0 0 18px}
-  .grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fill,minmax(330px,1fr))}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;
-    overflow:hidden;display:flex;flex-direction:column}
-  .card.match{border-top:4px solid var(--accent)}
-  .card.caution{border-top:4px solid var(--warn)}
-  .card.miss{border-top:4px solid var(--miss)}
-  .body{padding:18px 20px 20px;display:flex;flex-direction:column;flex:1}
-
-  /* --- media --- */
-  .media{position:relative;aspect-ratio:3/2;background:var(--tile);
-    border-bottom:1px solid var(--line);overflow:hidden}
-  .media img{width:100%;height:100%;object-fit:cover;display:block}
-  .media .tile{display:none}
-  .media.nophoto .tile,.media.failed .tile{display:flex}
-  .media.failed img{display:none}
-  .tile{position:absolute;inset:0;flex-direction:column;align-items:center;justify-content:center;
-    gap:8px;text-decoration:none;color:var(--muted);background:
-      repeating-linear-gradient(45deg,transparent,transparent 12px,rgba(128,128,128,.05) 12px,rgba(128,128,128,.05) 24px);}
-  .tile:hover{color:var(--accent);background-color:var(--accent-soft)}
-  .tile-ico{font-size:2rem;opacity:.55}
-  .tile-txt{font-size:.85rem;font-weight:600}
-
-  .price{font-size:1.45rem;font-weight:650;letter-spacing:-.02em;margin:0}
-  .pricechg{display:block;font-size:.8rem;font-weight:700;margin-top:3px}
-  .pricechg.down{color:var(--accent)} .pricechg.up{color:var(--miss)}
-  .addr{font-weight:600;margin:6px 0 2px}
-  .city{color:var(--muted);font-size:.9rem;margin:0 0 14px}
-  .facts{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
-  .fact{background:var(--bg);border:1px solid var(--line);border-radius:6px;
-    padding:3px 9px;font-size:.8rem}
-  .pool{background:var(--accent-soft);border-color:transparent;color:var(--accent);font-weight:600}
-  .nopool{background:var(--miss-soft);border-color:transparent;color:var(--miss);font-weight:600}
-  .tag{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.06em;
-    text-transform:uppercase;padding:3px 8px;border-radius:5px;margin-bottom:12px;align-self:flex-start}
-  .tag.ok{background:var(--accent-soft);color:var(--accent)}
-  .tag.warn{background:var(--warn-soft);color:var(--warn)}
-  .tag.bad{background:var(--miss-soft);color:var(--miss)}
-  .note{font-size:.88rem;color:var(--muted);margin:0 0 16px;flex:1}
-  .note strong{color:var(--ink)}
-  a.btn{display:inline-block;text-decoration:none;color:var(--accent);font-weight:600;
-    font-size:.9rem;border:1px solid var(--line);border-radius:7px;padding:7px 12px;align-self:flex-start}
-  a.btn:hover{background:var(--accent-soft)}
-  .banner{background:var(--warn-soft);border:1px solid var(--line);border-left:4px solid var(--warn);
-    border-radius:10px;padding:16px 18px;margin-bottom:28px;font-size:.9rem}
-  .banner h3{margin:0 0 6px;font-size:.95rem}
-  .banner p{margin:0 0 8px;color:var(--muted)}
-  .banner p:last-child{margin-bottom:0}
-  .banner code{background:var(--bg);padding:1px 5px;border-radius:4px;font-size:.85em}
-  .tablewrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:12px}
-  table{width:100%;border-collapse:collapse;font-size:.88rem}
-  th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
-  th{font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
-  tr:last-child td{border-bottom:none}
-  footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);
-    color:var(--muted);font-size:.84rem}
-</style>
+<meta name="description" content="Verified active listings matching 4+ bed, 3+ bath, pool, 2.5+ acres under $1,500,000 in El Dorado County.">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="wrap">
 
 <header>
   <h1>House Hunt: El Dorado County</h1>
-  <p class="sub">Shingle Springs · Rescue · Placerville — updated <strong>2026-07-26</strong></p>
+  <p class="sub">Shingle Springs · Rescue · Placerville — updated <strong>2026-11-18</strong></p>
   <div class="criteria">
-    <span class="chip">5+ bedrooms</span>
+    <span class="chip">4+ bedrooms</span>
     <span class="chip">3+ bathrooms</span>
     <span class="chip">Pool required</span>
     <span class="chip">2.5+ acres (5+ preferred)</span>
-    <span class="chip">Max $1.5M</span>
+    <span class="chip">Max $1,500,000</span>
   </div>
 </header>
 
-<div class="banner">
-  <h3>&#9888; This search has no verified results yet</h3>
-  <p>The first run of this page presented four properties as matches. <strong>All of them were off
-  market.</strong> The cause: listing status was inferred from search-engine text, and search engines
-  keep indexing sold listings with &ldquo;For Sale&rdquo; in the title for years afterward. Every
-  listing portal and MLS site is blocked from the environment that generates this page, so no live
-  listing page can be read to check.</p>
-  <p>Nothing is shown as a match below until its status can be confirmed against a live source.
-  The properties on this page are kept as an <strong>archive of what was checked and ruled out</strong>,
-  so a genuine relist gets flagged rather than re-reported as new. See
-  <a href="#fix">how to fix the pipeline</a>.</p>
-  <p>Photos aren't embedded yet — every listing portal and image CDN is blocked from the
-     environment that generates this page, so photo URLs can't be discovered automatically. Each
-     card links straight to its gallery instead. Drop any image URL into a listing's
-     <code>photos</code> array in <code>listings.json</code> and it will render here on the next build.</p>
+<div class="banner new">
+  <h3>&#10024; 6 new matches this run</h3>
+  <p>Everything below is new to this list. The previous run's six properties were all off market and
+  have been dropped. Each of these is confirmed <strong>Active</strong> on two independent sources
+  and has a pool evidenced in the MLS remarks.</p>
+  <ul class="newlist">
+    <li><a href="#4770-feldspar-lane-placerville"><strong>$789,000</strong>
+      &mdash; 4770 Feldspar Lane, Placerville
+      <span>4bd/3ba &middot; 5 ac</span></a></li>
+    <li><a href="#1315-arrowbee-drive-placerville"><strong>$899,000</strong>
+      &mdash; 1315 Arrowbee Drive, Placerville
+      <span>4bd/3ba &middot; 5 ac</span></a></li>
+    <li><a href="#3720-four-springs-drive-rescue"><strong>$1,115,000</strong>
+      &mdash; 3720 Four Springs Drive, Rescue
+      <span>4bd/3ba &middot; 5.86 ac</span></a></li>
+    <li><a href="#2520-bedford-avenue-placerville"><strong>$1,275,000</strong>
+      &mdash; 2520 Bedford Avenue, Placerville
+      <span>5bd/3ba &middot; 16.74 ac</span></a></li>
+    <li><a href="#6881-sagittarius-road-placerville"><strong>$1,389,000</strong>
+      &mdash; 6881 Sagittarius Road, Placerville
+      <span>4bd/4ba &middot; 40 ac</span></a></li>
+    <li><a href="#4800-abbey-road-placerville"><strong>$1,500,000</strong>
+      &mdash; 4800 Abbey Road, Placerville
+      <span>4bd/6ba &middot; 11.04 ac</span></a></li>
+  </ul>
 </div>
 
-<h2 id="fix">Making this work</h2>
-<p class="sectnote">One of these unblocks real results. The first is the cheapest and also solves
-photos, since listing-alert emails carry both current status and image URLs:</p>
-<div class="tablewrap" style="margin-bottom:8px">
+
+
+<h2>Verified matches</h2>
+<p class="sectnote">Active, with a pool, 4+ bd / 3+ ba,
+2.5+ acres, at or under $1,500,000. Sorted by price.</p>
+<div class="grid">
+  <div id="4770-feldspar-lane-placerville" class="card match isnew">
+    <div class="media"><img src="https://www.compass.com/m/bfb9ab1df11dfd2c5a7d1bf112357b5fc27edea25c8e1de52269858b42c48979/640x480.jpg" alt="4770 Feldspar Lane, Placerville" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><a class="tile" href="https://www.compass.com/homedetails/4770-Feldspar-Ln-Placerville-CA-95667/C3FUP_pid/" rel="noopener"><span class="tile-ico" aria-hidden="true">&#9968;</span><span class="tile-txt">View photos on compass &rarr;</span></a><span class="newflag">New</span></div>
+    <div class="body">
+      <span class="tag ok">Verified match</span>
+      <p class="price">$789,000</p>
+      <p class="addr">4770 Feldspar Lane</p>
+      <p class="city">Placerville, CA 95667 &middot; MLS 226119678 &middot; <span class="dom">48 days on market</span></p>
+      <div class="facts"><span class="fact">4 bd</span><span class="fact">3 ba</span><span class="fact">2,512 sqft</span><span class="fact good">5 acres</span><span class="fact pool">Fenced in-ground pool + patio</span></div>
+      <p class="note">Best value on the list. A fenced in-ground pool and big patio on a flat 5 acres, with sweeping valley and mountain views. 4bd/3ba, 2,512 sqft, on market 48 days.</p>
+      <p class="verified">Active on both Compass (MLS feed) and MLSListings.com as of 2026-11-18</p>
+      <div class="btnrow">
+        <a class="btn" href="https://www.compass.com/homedetails/4770-Feldspar-Ln-Placerville-CA-95667/C3FUP_pid/" rel="noopener">View listing &rarr;</a> <a class="btn ghost" href="https://www.mlslistings.com/property/ME226119678" rel="noopener">Verify on MLS &rarr;</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="1315-arrowbee-drive-placerville" class="card match isnew">
+    <div class="media"><img src="https://www.compass.com/m/77b74b240c35f8a3d247abe955c47a9ebd2b4ed6a9ec45e2034d1eb41c0c589d/640x480.jpg" alt="1315 Arrowbee Drive, Placerville" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><a class="tile" href="https://www.compass.com/homedetails/1315-Arrowbee-Dr-Placerville-CA-95667/C23XO_pid/" rel="noopener"><span class="tile-ico" aria-hidden="true">&#9968;</span><span class="tile-txt">View photos on compass &rarr;</span></a><span class="newflag">New</span></div>
+    <div class="body">
+      <span class="tag ok">Verified match</span>
+      <p class="price">$899,000</p>
+      <p class="addr">1315 Arrowbee Drive</p>
+      <p class="city">Placerville, CA 95667 &middot; MLS 226085035 &middot; <span class="dom">104 days on market</span></p>
+      <div class="facts"><span class="fact">4 bd</span><span class="fact">3 ba</span><span class="fact">2,780 sqft</span><span class="fact good">5 acres</span><span class="fact pool">Sparkling in-ground pool</span></div>
+      <p class="note">In-ground pool, owned solar and landscaped grounds on a full 5 acres. 4bd/3ba, 2,780 sqft. 104 days on market, so there may be room to negotiate.</p>
+      <p class="verified">Active on both Compass (MLS feed) and MLSListings.com as of 2026-11-18</p>
+      <div class="btnrow">
+        <a class="btn" href="https://www.compass.com/homedetails/1315-Arrowbee-Dr-Placerville-CA-95667/C23XO_pid/" rel="noopener">View listing &rarr;</a> <a class="btn ghost" href="https://www.mlslistings.com/property/ME226085035" rel="noopener">Verify on MLS &rarr;</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="3720-four-springs-drive-rescue" class="card match isnew">
+    <div class="media"><img src="https://www.compass.com/m/23ecc9f81a4a2c6451bb802bc4a5bd6c2e62e3e92aa0709bf02a1461881a6a3b/640x480.jpg" alt="3720 Four Springs Drive, Rescue" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><a class="tile" href="https://www.compass.com/homedetails/3720-Four-Springs-Dr-Rescue-CA-95672/C11NH_pid/" rel="noopener"><span class="tile-ico" aria-hidden="true">&#9968;</span><span class="tile-txt">View photos on compass &rarr;</span></a><span class="newflag">New</span></div>
+    <div class="body">
+      <span class="tag ok">Verified match</span>
+      <p class="price">$1,115,000</p>
+      <p class="addr">3720 Four Springs Drive</p>
+      <p class="city">Rescue, CA 95672 &middot; MLS 226083791 &middot; <span class="dom">139 days on market</span></p>
+      <div class="facts"><span class="fact">4 bd</span><span class="fact">3 ba</span><span class="fact">2,506 sqft</span><span class="fact good">5.86 acres</span><span class="fact pool">Built-in pool</span></div>
+      <p class="note">The only Rescue property that meets every criterion. Built-in pool bordered by mature planting, 5.86 acres, 4bd/3ba, 2,506 sqft. 139 days on market.</p>
+      <p class="verified">Active on both Compass (MLS feed) and MLSListings.com as of 2026-11-18</p>
+      <div class="btnrow">
+        <a class="btn" href="https://www.compass.com/homedetails/3720-Four-Springs-Dr-Rescue-CA-95672/C11NH_pid/" rel="noopener">View listing &rarr;</a> <a class="btn ghost" href="https://www.mlslistings.com/property/ME226083791" rel="noopener">Verify on MLS &rarr;</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="2520-bedford-avenue-placerville" class="card match isnew">
+    <div class="media"><img src="https://www.compass.com/m/47f4b3990c76ba0dda4612ac8f8d63d896edd9cb9b3afa894e36f144521f51d4/640x480.jpg" alt="2520 Bedford Avenue, Placerville" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><a class="tile" href="https://www.compass.com/homedetails/2520-Bedford-Ave-Placerville-CA-95667/C1TXH_pid/" rel="noopener"><span class="tile-ico" aria-hidden="true">&#9968;</span><span class="tile-txt">View photos on compass &rarr;</span></a><span class="newflag">New</span></div>
+    <div class="body">
+      <span class="tag ok">Verified match</span>
+      <p class="price">$1,275,000</p>
+      <p class="addr">2520 Bedford Avenue</p>
+      <p class="city">Placerville, CA 95667 &middot; MLS BE41150059 &middot; <span class="dom">48 days on market</span></p>
+      <div class="facts"><span class="fact">5 bd</span><span class="fact">3 ba</span><span class="fact">3,331 sqft</span><span class="fact good">16.74 acres</span><span class="fact pool">Infinity-edge pool, waterfall + spa</span></div>
+      <p class="note">Most bedrooms of any match: 5bd/3 full ba, 3,331 sqft on 16.74 acres atop Bedford Canyon, gated private road. Infinity-edge pool with waterfall and spa; short-term-rental permitted. Listed in the East Bay MLS (BE41150059), not MetroList, which is why it is easy to miss on local searches. Previously listed Dec 2024 around $1.47M, so the current $1.275M is a significant cut.</p>
+      <p class="verified">Active on both Compass (MLS feed) and MLSListings.com as of 2026-11-18</p>
+      <div class="btnrow">
+        <a class="btn" href="https://www.compass.com/homedetails/2520-Bedford-Ave-Placerville-CA-95667/C1TXH_pid/" rel="noopener">View listing &rarr;</a> <a class="btn ghost" href="https://www.mlslistings.com/property/be41150059" rel="noopener">Verify on MLS &rarr;</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="6881-sagittarius-road-placerville" class="card match isnew">
+    <div class="media"><img src="https://www.compass.com/m/f0a1cc47a41ff3cf9b2dbd760ec54d55a1d06274ab454155c5537b0aa9193ced/640x480.jpg" alt="6881 Sagittarius Road, Placerville" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><a class="tile" href="https://www.compass.com/homedetails/6881-Sagittarius-Rd-Placerville-CA-95667/BT5RX_pid/" rel="noopener"><span class="tile-ico" aria-hidden="true">&#9968;</span><span class="tile-txt">View photos on compass &rarr;</span></a><span class="newflag">New</span></div>
+    <div class="body">
+      <span class="tag ok">Verified match</span>
+      <p class="price">$1,389,000</p>
+      <p class="addr">6881 Sagittarius Road</p>
+      <p class="city">Placerville, CA 95667 &middot; MLS 226064449 &middot; <span class="dom">155 days on market</span></p>
+      <div class="facts"><span class="fact">4 bd</span><span class="fact">4 ba</span><span class="fact">5,351 sqft</span><span class="fact good">40 acres</span><span class="fact pool">Hand-carved rock saltwater pool</span></div>
+      <p class="note">The acreage standout: 40 acres, 5,351 sqft, 4bd/4ba. Builder’s own home, with a hand-carved rock saltwater pool and waterfall, theatre room, 22kW generator and ~1,500 sqft of ADU potential. 155 days on market.</p>
+      <p class="verified">Active on both Compass (MLS feed) and MLSListings.com as of 2026-11-18</p>
+      <div class="btnrow">
+        <a class="btn" href="https://www.compass.com/homedetails/6881-Sagittarius-Rd-Placerville-CA-95667/BT5RX_pid/" rel="noopener">View listing &rarr;</a> <a class="btn ghost" href="https://www.mlslistings.com/property/ME226064449" rel="noopener">Verify on MLS &rarr;</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="4800-abbey-road-placerville" class="card match isnew">
+    <div class="media"><img src="https://www.compass.com/m/2e8fdcdd965a834fd55ef88d31d2ab4c8d4d3b9c00a97b4b22591f48c7226238/640x480.jpg" alt="4800 Abbey Road, Placerville" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><a class="tile" href="https://www.compass.com/homedetails/4800-Abbey-Rd-Placerville-CA-95667/DQ0A2_pid/" rel="noopener"><span class="tile-ico" aria-hidden="true">&#9968;</span><span class="tile-txt">View photos on compass &rarr;</span></a><span class="newflag">New</span></div>
+    <div class="body">
+      <span class="tag ok">Verified match</span>
+      <p class="price">$1,500,000</p>
+      <p class="addr">4800 Abbey Road</p>
+      <p class="city">Placerville, CA 95667 &middot; MLS 226133530 &middot; <span class="dom">18 days on market</span></p>
+      <div class="facts"><span class="fact">4 bd</span><span class="fact">6 ba</span><span class="fact">5,821 sqft</span><span class="fact good">11.04 acres</span><span class="fact pool">Two pools — one with waterfall slide</span></div>
+      <p class="note">At the very top of budget, exactly $1.5M. Gated 11-acre hilltop compound, 5,821 sqft, 4bd and 4 full + 2 half baths across two wings, dual pools (one with a waterfall slide, one with cabana), pickleball court, solar, well, and garaging for 20 cars. Seller financing offered. Newest listing here at 18 days.</p>
+      <p class="verified">Active on both Compass (MLS feed) and MLSListings.com as of 2026-11-18</p>
+      <div class="btnrow">
+        <a class="btn" href="https://www.compass.com/homedetails/4800-Abbey-Rd-Placerville-CA-95667/DQ0A2_pid/" rel="noopener">View listing &rarr;</a> <a class="btn ghost" href="https://www.mlslistings.com/property/ME226133530" rel="noopener">Verify on MLS &rarr;</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>Close, but with a caveat</h2>
+<p class="sectnote">All active and all with a pool, but each misses the brief in one specific way.
+Shown because the miss may or may not matter to you.</p>
+<div class="grid">
+  <div id="1234-rising-hill-road-west-placerville" class="card caution isnew">
+    <div class="media"><img src="https://www.compass.com/m/610f61262441b74df1257f547bbd07ee8f0dc15e417bb6a84ca6cb4b0f1ed5f0/640x480.jpg" alt="1234 Rising Hill Road West, Placerville" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><a class="tile" href="https://www.compass.com/homedetails/1234-Rising-Hill-Rd-W-Placerville-CA-95667/C2APM_pid/" rel="noopener"><span class="tile-ico" aria-hidden="true">&#9968;</span><span class="tile-txt">View photos on compass &rarr;</span></a><span class="newflag">New</span></div>
+    <div class="body">
+      <span class="tag warn">Active — 2.5 baths, not 3</span>
+      <p class="price">$685,000</p>
+      <p class="addr">1234 Rising Hill Road West</p>
+      <p class="city">Placerville, CA 95667 &middot; MLS 226079329 &middot; <span class="dom">149 days on market</span></p>
+      <div class="facts"><span class="fact">4 bd</span><span class="fact">2.5 ba</span><span class="fact">2,400 sqft</span><span class="fact">2.66 acres</span><span class="fact pool">In-ground pool with rock features</span></div>
+      <p class="note">Tempting at $685,000 with a private in-ground pool, barn and 2.66 acres, but MetroList records 2 full + 1 half bath. Compass rounds that to “3 ba”; it is really 2.5, so it misses the 3BA floor.</p>
+      <p class="verified">Active on both Compass (MLS feed) and MLSListings.com as of 2026-11-18</p>
+      <div class="btnrow">
+        <a class="btn" href="https://www.compass.com/homedetails/1234-Rising-Hill-Rd-W-Placerville-CA-95667/C2APM_pid/" rel="noopener">View listing &rarr;</a> <a class="btn ghost" href="https://www.mlslistings.com/property/ME226079329" rel="noopener">Verify on MLS &rarr;</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="4262-cameron-road-cameron-park" class="card caution isnew">
+    <div class="media"><img src="https://www.compass.com/m/8341baefdbba868245a012dea7472306e4ef5a256fbd6d530e2eea8b4145ab9d/640x480.jpg" alt="4262 Cameron Road, Cameron Park" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><a class="tile" href="https://www.compass.com/homedetails/4262-Cameron-Rd-Cameron-Park-CA-95682/C3MYU_pid/" rel="noopener"><span class="tile-ico" aria-hidden="true">&#9968;</span><span class="tile-txt">View photos on compass &rarr;</span></a><span class="newflag">New</span></div>
+    <div class="body">
+      <span class="tag warn">Active — outside target towns</span>
+      <p class="price">$1,035,000</p>
+      <p class="addr">4262 Cameron Road</p>
+      <p class="city">Cameron Park, CA 95682 &middot; MLS 226132718 &middot; <span class="dom">21 days on market</span></p>
+      <div class="facts"><span class="fact">4 bd</span><span class="fact">3 ba</span><span class="fact">2,348 sqft</span><span class="fact good">5.9 acres</span><span class="fact pool">Pool, shaded lounging areas</span></div>
+      <p class="note">Meets every criterion — 4bd/3ba, 5.9 acres, pool, $1,035,000 — but it is in Cameron Park, not one of your three towns. It shares the 95682 ZIP with Shingle Springs and sits a few minutes away, so including it in case the boundary is softer than the brief.</p>
+      <p class="verified">Active on both Compass (MLS feed) and MLSListings.com as of 2026-11-18</p>
+      <div class="btnrow">
+        <a class="btn" href="https://www.compass.com/homedetails/4262-Cameron-Rd-Cameron-Park-CA-95682/C3MYU_pid/" rel="noopener">View listing &rarr;</a> <a class="btn ghost" href="https://www.mlslistings.com/property/ME226132718" rel="noopener">Verify on MLS &rarr;</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="1781-springvale-road-placerville" class="card caution isnew">
+    <div class="media"><img src="https://www.compass.com/m/9891b11b1890d31f1e1a7de58eb6403e0803a6d4eee13e4cfb084b4ebe5ba9b5/640x480.jpg" alt="1781 Springvale Road, Placerville" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.media').classList.add('failed')"><a class="tile" href="https://www.compass.com/homedetails/1781-Springvale-Rd-Placerville-CA-95667/C0YBK_pid/" rel="noopener"><span class="tile-ico" aria-hidden="true">&#9968;</span><span class="tile-txt">View photos on compass &rarr;</span></a><span class="newflag">New</span></div>
+    <div class="body">
+      <span class="tag warn">Active — triplex, not one house</span>
+      <p class="price">$1,150,000</p>
+      <p class="addr">1781 Springvale Road</p>
+      <p class="city">Placerville, CA 95667 &middot; MLS 226100125 &middot; <span class="dom">103 days on market</span></p>
+      <div class="facts"><span class="fact">2,025 sqft</span><span class="fact good">10.27 acres</span><span class="fact pool">150,000-gallon pool — one of the county’s largest</span></div>
+      <p class="note">Spectacular pool and 10.27 acres, but MetroList classes it a <strong>triplex</strong>: a 3bd/2ba main house, a 1bd/1ba ADU and a pool-house studio. No single residence meets 4bd/3ba. Pitched as a short-term-rental or event venue. Flagging rather than matching.</p>
+      <p class="verified">Active on both Compass (MLS feed) and MLSListings.com as of 2026-11-18</p>
+      <div class="btnrow">
+        <a class="btn" href="https://www.compass.com/homedetails/1781-Springvale-Rd-Placerville-CA-95667/C0YBK_pid/" rel="noopener">View listing &rarr;</a> <a class="btn ghost" href="https://www.mlslistings.com/property/ME226100125" rel="noopener">Verify on MLS &rarr;</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<h2>Dropped since last run</h2>
+<p class="sectnote">Carried on the previous list but no longer in active inventory. Removed from the
+cards above so they are not re-reported; kept here so a genuine relist is recognisable.</p>
+<div class="tablewrap">
 <table>
-  <thead><tr><th>Option</th><th>What it fixes</th><th>Effort</th></tr></thead>
+  <thead><tr><th>Address</th><th>Why it was dropped</th></tr></thead>
   <tbody>
-    <tr><td><strong>Zillow/Redfin saved search &rarr; email alerts</strong> to this Gmail</td><td>Status + photos + price cuts, authoritative</td><td>~5 min, one-time</td></tr>
-    <tr><td>Have your agent set up an <strong>MLS/IDX client portal</strong> with email alerts</td><td>Same, plus full MLS data</td><td>One ask</td></tr>
-    <tr><td>Add a <strong>real-estate data API key</strong> to the environment</td><td>Direct queries, no email round-trip</td><td>Paid API</td></tr>
-    <tr><td><strong>Allowlist</strong> a listing domain in the environment's network policy</td><td>Direct reads, but portals still bot-block</td><td>Unreliable</td></tr>
+    <tr><td>1601 Velvet Horn Ln, Rescue</td><td>No longer in active inventory - off market</td></tr>
+    <tr><td>4100 Black Oak Dr, Shingle Springs</td><td>No longer in active inventory - off market</td></tr>
+    <tr><td>5856 Fernwood Dr, Shingle Springs</td><td>Sold June 2025 - off market</td></tr>
+    <tr><td>1527 Velvet Horn Ln, Rescue</td><td>Never listed; prior figure was an automated valuation</td></tr>
+    <tr><td>5400 Horizon Ct, Placerville</td><td>Sold March 2022 - off market, and had no pool</td></tr>
+    <tr><td>4280 Leisure Ln, Placerville</td><td>No longer in active inventory - off market, and had no pool</td></tr>
   </tbody>
 </table>
 </div>
-<p class="sectnote">With alerts flowing into Gmail, this page becomes reliable: current listings,
-correct status, real photos, and genuine price-change detection.</p>
 
-
-
-<h2>Active, but doesn't meet criteria</h2>
-<p class="sectnote">Confirmed on the market — listed here for transparency, not as a recommendation.</p>
-<div class="grid">
-  <div class="card caution">
-    <div class="media nophoto"><a class="tile" href="https://www.zillow.com/homedetails/1601-Velvet-Horn-Ln-Rescue-CA-95672/18612559_zpid/" rel="noopener"><span class="tile-ico" aria-hidden="true">&#9968;</span><span class="tile-txt">View photos on zillow &rarr;</span></a></div>
-    <div class="body">
-      <span class="tag warn">Active — but 3BR</span>
-      <p class="price">$1,100,000</p>
-      <p class="addr">1601 Velvet Horn Ln</p>
-      <p class="city">Rescue, CA 95672 &middot; MLS 226060031</p>
-      <div class="facts"><span class="fact">3 bd</span><span class="fact">3 ba</span><span class="fact">2,672 sqft</span><span class="fact">5 acres</span><span class="fact pool">Sports pool with water slide</span></div>
-      <p class="note">The only property this run that a source described as Active in 2026 (listed by eXp Realty, MLS 226060031). But it is 3bd/3ba, 2,672 sqft - fails the 5BR/3BA minimum. Last sold Aug 2023 for $1,050,000. CORRECTION: the earlier run listed this address as 5bd/5ba at $1,250,000 under MLS 226032589; that was a conflation of two different properties and was wrong.</p>
-      <a class="btn" href="https://www.zillow.com/homedetails/1601-Velvet-Horn-Ln-Rescue-CA-95672/18612559_zpid/" rel="noopener">View listing &rarr;</a>
-    </div>
-  </div>
-</div>
-
-<h2>Archive — checked, not available</h2>
-<p class="sectnote">Reported in error on the first run, or ruled out on the facts. Kept so they are
-not re-surfaced as new finds. MLS year prefixes are shown where known — <code>221…</code> is a 2021
-listing, <code>225…</code> a 2025 one.</p>
-<div class="grid">
-  <div class="card miss">
-    <div class="media nophoto"><a class="tile" href="https://www.redfin.com/CA/Shingle-Springs/4100-Black-Oak-Dr-95682/home/167321227" rel="noopener"><span class="tile-ico" aria-hidden="true">&#9968;</span><span class="tile-txt">View photos on redfin &rarr;</span></a></div>
-    <div class="body">
-      <span class="tag bad">Off market</span>
-      <p class="price">$1,250,000</p>
-      <p class="addr">4100 Black Oak Dr</p>
-      <p class="city">Shingle Springs, CA 95682 &middot; MLS 225006994</p>
-      <div class="facts"><span class="fact">5 bd</span><span class="fact">6 ba</span><span class="fact">5,188 sqft</span><span class="fact">5 acres</span><span class="fact pool">Hand-carved rock saltwater pool</span></div>
-      <p class="note">MLS 225006994 is a 2025 listing number; user confirms off market. Gated North Buckeye Rancheros, owned 10.8kW solar, roof 2023. Kept on file only so a genuine relist gets flagged.</p>
-      <a class="btn" href="https://www.redfin.com/CA/Shingle-Springs/4100-Black-Oak-Dr-95682/home/167321227" rel="noopener">View listing &rarr;</a>
-    </div>
-  </div>
-
-  <div class="card miss">
-    <div class="media nophoto"><a class="tile" href="https://www.remax.com/ca/shingle-springs/home-details/5856-fernwood-dr-shingle-springs-ca-95682/13419556434900242713" rel="noopener"><span class="tile-ico" aria-hidden="true">&#9968;</span><span class="tile-txt">View photos on remax &rarr;</span></a></div>
-    <div class="body">
-      <span class="tag bad">Off market</span>
-      <p class="price">$1,490,000</p>
-      <p class="addr">5856 Fernwood Dr</p>
-      <p class="city">Shingle Springs, CA 95682 &middot; MLS 225000829</p>
-      <div class="facts"><span class="fact">5 bd</span><span class="fact">4 ba</span><span class="fact">4,596 sqft</span><span class="fact">10 acres</span><span class="fact pool">Pool and spa</span></div>
-      <p class="note">MLS 225000829 is a 2025 listing number; a source showed it sold for $1,400,000 in June 2025. User confirms off market.</p>
-      <a class="btn" href="https://www.remax.com/ca/shingle-springs/home-details/5856-fernwood-dr-shingle-springs-ca-95682/13419556434900242713" rel="noopener">View listing &rarr;</a>
-    </div>
-  </div>
-
-  <div class="card miss">
-    <div class="media nophoto"><a class="tile" href="https://www.tophap.com/homes/details/1527-VELVET-HORN-LN-RESCUE-CA-95672/157323206" rel="noopener"><span class="tile-ico" aria-hidden="true">&#9968;</span><span class="tile-txt">View photos on tophap &rarr;</span></a></div>
-    <div class="body">
-      <span class="tag bad">Off market</span>
-      <p class="price">—</p>
-      <p class="addr">1527 Velvet Horn Ln</p>
-      <p class="city">Rescue, CA 95672</p>
-      <div class="facts"><span class="fact">6 bd</span><span class="fact">4.5 ba</span><span class="fact">3,892 sqft</span><span class="fact">5 acres</span><span class="fact pool">Pool and spa</span></div>
-      <p class="note">The ~$942K figure reported earlier was an automated valuation estimate, never a list price. No MLS number and no evidence it was ever listed. English Tudor, stables, riding arena.</p>
-      <a class="btn" href="https://www.tophap.com/homes/details/1527-VELVET-HORN-LN-RESCUE-CA-95672/157323206" rel="noopener">View listing &rarr;</a>
-    </div>
-  </div>
-
-  <div class="card miss">
-    <div class="media nophoto"><a class="tile" href="https://www.redfin.com/CA/Placerville/5400-Horizon-Ct-95667/home/167312343" rel="noopener"><span class="tile-ico" aria-hidden="true">&#9968;</span><span class="tile-txt">View photos on redfin &rarr;</span></a></div>
-    <div class="body">
-      <span class="tag bad">Off market</span>
-      <p class="price">$998,999</p>
-      <p class="addr">5400 Horizon Ct</p>
-      <p class="city">Placerville, CA 95667 &middot; MLS 221136905</p>
-      <div class="facts"><span class="fact">5 bd</span><span class="fact">3.5 ba</span><span class="fact">4,576 sqft</span><span class="fact">10 acres</span><span class="fact nopool">No pool — koi pond</span></div>
-      <p class="note">MLS 221136905 is a 2021 listing number, and a source shows it sold for $942,000 in March 2022. The $998,999 &#39;current&#39; price was a stale cached listing. Also had no pool.</p>
-      <a class="btn" href="https://www.redfin.com/CA/Placerville/5400-Horizon-Ct-95667/home/167312343" rel="noopener">View listing &rarr;</a>
-    </div>
-  </div>
-
-  <div class="card miss">
-    <div class="media nophoto"><a class="tile" href="https://www.redfin.com/CA/Placerville/4280-Leisure-Ln-95667/home/167327580" rel="noopener"><span class="tile-ico" aria-hidden="true">&#9968;</span><span class="tile-txt">View photos on redfin &rarr;</span></a></div>
-    <div class="body">
-      <span class="tag bad">Off market</span>
-      <p class="price">$1,173,000</p>
-      <p class="addr">4280 Leisure Ln</p>
-      <p class="city">Placerville, CA 95667 &middot; MLS 225153794</p>
-      <div class="facts"><span class="fact">5 bd</span><span class="fact">3 ba</span><span class="fact">3,672 sqft</span><span class="fact">5.6 acres</span><span class="fact nopool">No pool — pond</span></div>
-      <p class="note">2025 listing number; Trulia also carries a 2023 MLS (223062885) for the same address. No pool regardless.</p>
-      <a class="btn" href="https://www.redfin.com/CA/Placerville/4280-Leisure-Ln-95667/home/167327580" rel="noopener">View listing &rarr;</a>
-    </div>
-  </div>
-</div>
-
-<h2>Ruled out on the facts</h2>
-<p class="sectnote">Failed price, bedroom, bath or acreage minimums regardless of availability.</p>
+<h2>Checked and ruled out</h2>
+<p class="sectnote">Every other property in the three ZIPs that cleared the bed, bath, acreage and
+price filters. Listed so the same ground isn't re-covered next run.</p>
 <div class="tablewrap">
 <table>
   <thead><tr><th>Address</th><th>Price</th><th>Why not</th></tr></thead>
   <tbody>
-    <tr><td>5135 Bryant Rd, Shingle Springs</td><td>$1,690,000</td><td>Over budget; status unverified</td></tr>
-    <tr><td>1900 Deer Valley Rd, Rescue</td><td>$1,200,000</td><td>3bd/2ba, no pool</td></tr>
-    <tr><td>Howard Dr, Rescue (5.94 acres)</td><td>$2,275,000</td><td>Over budget</td></tr>
-    <tr><td>3359 Saint Ives Ct, Shingle Springs</td><td>$2,199,500</td><td>Over budget, only 4bd</td></tr>
-    <tr><td>765 Sierra View Ct, Shingle Springs</td><td>$3,499,999</td><td>Far over budget</td></tr>
-    <tr><td>5037 Milton Ranch Rd, Shingle Springs</td><td>$4,388,888</td><td>Far over budget</td></tr>
-    <tr><td>5040 Milton Ranch Rd, Shingle Springs</td><td>—</td><td>Not for sale — sold 2019 for $1.4M</td></tr>
-    <tr><td>5457 Bryant Rd, Shingle Springs</td><td>—</td><td>Not for sale — sold 2020 for $1,405,000</td></tr>
-    <tr><td>4661 Holm Rd, Placerville</td><td>$1,200,000</td><td>3bd/3ba — under bedroom minimum</td></tr>
-    <tr><td>2800 La Paz Rd, Placerville</td><td>$995,000</td><td>4bd/2ba — under both minimums</td></tr>
-    <tr><td>2931 Texas Hill Rd, Placerville</td><td>—</td><td>4bd/2.5ba — under both minimums</td></tr>
-    <tr><td>4370 Hillwood Dr, Shingle Springs</td><td>$699,000</td><td>0.25 acres</td></tr>
+    <tr><td>1777 Carl Rd, Rescue</td><td>$1,389,000</td><td>No pool - remarks say &quot;room to add a pool&quot;</td></tr>
+    <tr><td>3070 Gingham Ct, Placerville</td><td>$847,500</td><td>Sold 2 Oct 2026; also only 2 baths</td></tr>
+    <tr><td>4965 French Creek Rd, Shingle Springs</td><td>$1,625,000</td><td>Over budget by $125K (4bd/3ba, 3.26 ac)</td></tr>
+    <tr><td>4928 Flying C Rd, Shingle Springs</td><td>$1,699,000</td><td>Over budget by $199K (6bd/4ba, 5 ac)</td></tr>
+    <tr><td>3781 Cattle Dr, Shingle Springs</td><td>$1,850,000</td><td>Over budget (4bd/3ba, 5 ac)</td></tr>
+    <tr><td>6275 Chablis Dr, Shingle Springs</td><td>$1,850,000</td><td>Over budget (5bd/5ba, 10.07 ac)</td></tr>
+    <tr><td>3637 Meder Ct, Shingle Springs</td><td>$1,495,000</td><td>In budget and 5bd/4ba, but only 1.02 acres</td></tr>
+    <tr><td>5110 Broken Bow Ln, Rescue</td><td>$2,299,000</td><td>Far over budget</td></tr>
+    <tr><td>2402 Deer Valley Rd, Rescue</td><td>$1,299,000</td><td>3bd/3ba - under bedroom minimum</td></tr>
+    <tr><td>4207 Bear Paw Ct, Rescue</td><td>$1,150,000</td><td>Only 1.22 acres</td></tr>
+    <tr><td>8681 Riverwood Dr, Placerville</td><td>$790,000</td><td>No pool (23.83 ac, 4bd/3ba)</td></tr>
+    <tr><td>3281 Yearling Trail, Placerville</td><td>$850,000</td><td>No pool (10 ac, 5bd/3ba)</td></tr>
+    <tr><td>7220 Horseshoe Ln, Placerville</td><td>$1,149,000</td><td>No pool (8.6 ac)</td></tr>
+    <tr><td>1300 Large Oak Dr, Placerville</td><td>$1,099,000</td><td>No pool (6.72 ac, 4bd/4ba)</td></tr>
+    <tr><td>2610 Ranch Rd, Placerville</td><td>$499,000</td><td>No pool (6.3 ac, 6bd/4ba)</td></tr>
+    <tr><td>4081 Newtown Rd, Placerville</td><td>$879,000</td><td>No pool (6.79 ac)</td></tr>
+    <tr><td>3815 Lakeview Dr, Placerville</td><td>$1,150,000</td><td>No pool (5.1 ac); 317 days on market</td></tr>
+    <tr><td>6560 Agape Ct, Placerville</td><td>$599,000</td><td>No pool (5.02 ac)</td></tr>
+    <tr><td>2550 Tolowa Trail, Placerville</td><td>$555,000</td><td>No pool (5.02 ac)</td></tr>
+    <tr><td>6310 Butterfield Way, Placerville</td><td>$1,390,000</td><td>No pool (3.67 ac, 5bd/3ba)</td></tr>
+    <tr><td>2881 Countryside Dr, Placerville</td><td>$998,000</td><td>No pool (3.01 ac)</td></tr>
+    <tr><td>1815 Woodsman Ct, Placerville</td><td>$1,299,000</td><td>No pool (3 ac, 4bd/5ba)</td></tr>
   </tbody>
 </table>
 </div>
 
-<h2>What the search did establish</h2>
-<p class="sectnote">Even with unreliable status data, the shape of the market came through
-consistently across sources, and this part is worth keeping: <strong>the pool is the binding
-constraint, not the budget.</strong> Five-bedroom homes on 5+ acres under $1.5M are common in all
-three towns; ones with a pool are rare. Placerville is well stocked with large acreage homes at
-$1.0–1.2M that have <em>ponds</em> rather than pools. Shingle Springs pool properties tend to jump
-from roughly $1.5M straight to $2M+. So a genuine 5BR/3BA pool property on 5 acres near $1.25M is an
-outlier worth moving quickly on — which is also why stale listings at that price looked so
-convincing. Expect few candidates at any given moment, and prioritise speed when one appears.</p>
+<h2>How this list was built</h2>
+<div class="method">
+  <ol>
+    <li><strong>Full inventory pull.</strong> Every active listing in ZIPs 95682 (Shingle Springs),
+      95672 (Rescue) and 95667 (Placerville) was read from the Compass MLS feed —
+      <strong>406 listings</strong>, not a search-engine sample.</li>
+    <li><strong>Hard filters.</strong> 4+ bd, 3+ ba, 2.5+ acres,
+      at or under $1,500,000 &rarr; 22 candidates.</li>
+    <li><strong>Pool evidence.</strong> Each candidate's MLS remarks were read in full. Phrases like
+      &ldquo;room to add a pool&rdquo; were excluded — that removed one property that a naive
+      keyword match would have called a match.</li>
+    <li><strong>Independent status check.</strong> Every surviving property was re-checked by MLS
+      number on MLSListings.com. That confirmed all 9 as Active, and
+      corrected two bath counts that the first source had rounded up.</li>
+  </ol>
+  <p class="caveat"><strong>Known limits.</strong> Pool presence comes from listing remarks, so a
+  pool that goes unmentioned would be missed. Bath counts follow the MLS convention
+  &ldquo;full/half&rdquo;. Shingle Springs returned no match at any price under $1.5M this run —
+  its closest candidates are in the ruled-out table.</p>
+</div>
 
 <footer>
-  <p>Generated from <code>listings.json</code> by <code>build.js</code>.
-  6 properties on file, 12 ruled out,
-  <strong>0 verified as available</strong>.
-  Future runs flag only new listings and price changes — no repeats.</p>
+  <p>Generated 2026-11-18 from <code>listings.json</code> &middot; previous run
+  2026-07-26 &middot; 406 active listings scanned
+  &middot; 6 verified matches.</p>
+  <p>Listing data and photos &copy; the listing brokerages and MetroList / EBRD. For private use.</p>
 </footer>
 
 </div>
