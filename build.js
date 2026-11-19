@@ -204,11 +204,23 @@ const statusMoves = (data.runSummary && data.runSummary.statusChanges) || [];
    cannot drift as the MLS invents new status words. */
 const pendingMlsIds = new Set((data.pending || []).map((l) => String(l.mls)));
 const activeMlsIds = new Set((data.listings || []).map((l) => String(l.mls)));
-const wentPending = (s) => (pendingMlsIds.has(String(s.mls))
-  ? true
+const nowBucket = (s) => (pendingMlsIds.has(String(s.mls))
+  ? 'pending'
   : activeMlsIds.has(String(s.mls))
-    ? false
-    : !/^(active|for sale)\b/i.test(String(s.to || '')));
+    ? 'active'
+    : (/^(active|for sale)\b/i.test(String(s.to || '')) ? 'active' : 'pending'));
+/* …and the fix above was still half the question. Reading the bucket a row is in NOW decides
+   where it ended up and silently assumes it came from the other one. On 2026-11-19 both status
+   changes were Contingent -> Pending *within* the pending table — neither had been on the active
+   board — and both rendered as "It was on the active board last run", which is the 2026-11-12
+   error with the sign reversed: not a wrong direction this time, a transition that never happened.
+   mls-compose.py now records `fromBucket`/`toBucket`, which is the only place both are known.
+   `nowBucket` stays as the fallback for a summary written before that, and the `from` spelling is
+   used only to describe the move, never to classify it. */
+const moveOf = (s) => ({
+  from: s.fromBucket || (nowBucket(s) === 'pending' ? 'active' : 'pending'),
+  to: s.toBucket || nowBucket(s),
+});
 // The pool-less table moves independently of the board — a house with the right land, beds and
 // baths but no pool never touches `listings`. Before this, a run where that table gained a row,
 // cut two prices and lost one to the market still printed "Nothing moved".
@@ -610,13 +622,28 @@ const html = `<!DOCTYPE html>
         ${money(delta)}</strong> (${pct}%), ${money(p.from)} &rarr; ${money(p.to)}. It was already on
         the board, so it is listed with the standing matches below rather than as a new find.</li>`;
     }).join('\n    ')}
-    ${statusMoves.map((s) => (wentPending(s)
-      ? `<li><strong>${esc(s.address)}, ${esc(s.city)} has gone under contract.</strong> It was on
-         the active board last run and is now Sale Pending on the MLS of record. Still worth
-         watching — pending sales do fall through — but it is no longer available to offer on.</li>`
-      : `<li><strong>${esc(s.address)}, ${esc(s.city)} is back on the active board.</strong> It was
-         Sale Pending last run and the MLS of record now reports it For Sale again — the deal
-         appears to have fallen through.</li>`)).join('\n    ')}
+    ${statusMoves.map((s) => {
+      const mv = moveOf(s);
+      if (mv.from === 'active' && mv.to === 'pending') {
+        return `<li><strong>${esc(s.address)}, ${esc(s.city)} has gone under contract.</strong> It was on
+         the active board last run and is now ${esc(s.to)} on the MLS of record. Still worth
+         watching — pending sales do fall through — but it is no longer available to offer on.</li>`;
+      }
+      if (mv.from === 'pending' && mv.to === 'active') {
+        return `<li><strong>${esc(s.address)}, ${esc(s.city)} is back on the active board.</strong> It was
+         ${esc(s.from)} last run and the MLS of record now reports it ${esc(s.to)} — the deal
+         appears to have fallen through.</li>`;
+      }
+      if (mv.from === 'pending' && mv.to === 'pending') {
+        return `<li><strong>${esc(s.address)}, ${esc(s.city)} moved further along in escrow.</strong> It was
+         already under contract last run (${esc(s.from)}) and the MLS of record now reports
+         ${esc(s.to)}. It was not available to offer on last run and still is not; the change is that
+         a backup offer is a longer shot than it was.</li>`;
+      }
+      return `<li><strong>${esc(s.address)}, ${esc(s.city)} changed status while staying for sale.</strong>
+         The MLS of record now reports ${esc(s.to)} rather than ${esc(s.from)}. It is still on the
+         active board.</li>`;
+    }).join('\n    ')}
     ${dropped.length ? `<li><strong>${dropped.length} previously tracked ${dropped.length === 1 ? 'property' : 'properties'} removed</strong> — no longer on the market. Listed at the bottom.</li>` : ''}
     ${poollessMoved ? `<li><strong>Pool-less table:</strong> ${esc(poollessSummary)} — see
       &ldquo;Right land, no pool&rdquo; below.</li>` : ''}

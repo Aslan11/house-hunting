@@ -114,8 +114,13 @@ def read_sheet(sheet):
     desc = (re.search(r'<meta name="description" content="([^"]*)"', html) or [None, ""])[1]
     desc = unent(desc)
 
-    status = (re.search(r"\((Active|Pending|Contingent|Sold|Expired|Withdrawn|Cancelled|Canceled)\)",
-                        title, re.I) or [None, None])[1]
+    # The token is CamelCase and compound on this host: a listing deeper into escrow reads
+    # "(PendingDoNotShow)", not "(Pending)". Anchoring on a closed alternation returned None for
+    # it - a status the gate then read as "not active" for the right answer by accident, and would
+    # have read the same way for a status that mattered. Capture the whole parenthesised token
+    # when it begins with a known root, and let the caller decide what it means.
+    status = (re.search(r"\(((?:Active|Pending|Contingent|Sold|Expired|Withdrawn|Cancell?ed)"
+                        r"[A-Za-z ]*)\)", title, re.I) or [None, None])[1]
     # \b matters: without it "Beds?" matches the "Bed" inside an address like "2520 Bedford Ave".
     beds = (re.search(r"(\d+(?:\.\d+)?)\s*Beds?\b", title, re.I) or [None, None])[1]
     baths = (re.search(r"(\d+(?:\.\d+)?)\s*Baths?\b", title, re.I) or [None, None])[1]

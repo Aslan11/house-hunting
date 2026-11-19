@@ -1523,6 +1523,34 @@ repo's existing lessons arriving at a new host:
   second net, and its "waterfall" is decorative ponds and its "spa bath" a bathroom.
 - **It carries stale ACTIVE rows** — see immediately below.
 
+##### Remarks-only pool detection missed a confirmed pool match outright
+
+Measured **2026-11-19**. The caution above says the prose lies in both directions and names the
+two kinds of false *positive* this repo has caught. This run produced the clean false **negative**,
+and it is worth recording because of how quiet it was.
+
+**1815 Woodsman Court** (MLS 226134101) is on the board: MetroListPRO gives it `Has a Pool: Yes`
+with `Built-In, Gunite Construction`, and the RealGeeks sweep — which filters on the MLS's own pool
+field server-side — returns it. The Coldwell Banker feed carries the listing, the sweep fetched its
+detail page, and read `lotSizeAcres: "3.00"`, so it cleared beds, baths, price and land. Its
+`about.description` is 1,045 characters and contains the word *pool* **zero** times. It did not hit
+the `spa|hot tub|swim|water feature|waterfall|resort` net either — the only `spa` in the text is
+inside *expansive*, which `\bspa\b` correctly declines. So the row did not appear as a hit and did
+not appear as a flag. It simply was not in the output.
+
+The feed's description is a **shortened cut** of the agent remarks, the same thing the 4800 Abbey
+Road correction established from the other side. Here the cut removed the only sentence that
+mattered, and nothing in the sweep's output marks a row as "read but unresolved" — a listing whose
+prose happens not to mention its pool is indistinguishable from one that has no pool.
+
+The run's conclusion was still correct, and it is correct for a reason worth keeping explicit:
+`missingFromBoard` was empty, which is the **only** direction this sweep can speak to. A candidate
+it has that the board lacks is worth an MLS read; its silence about a property is not evidence of
+anything. That asymmetry is why `cb-crosscheck.py` exists to cover *other boards* and not to grade
+pools, and it is the practical reason the pool-filtered RealGeeks sweep was added on 2026-11-08: of
+the two cross-checks, only one reads a structured field, and this run is where that difference
+showed.
+
 ##### The first thing the new source found was a listing that is not there
 
 3784 Cattle Drive (MLS 226092223) reads ACTIVE at $1,050,000, 4bd, 5.0 acres, 101 days on market,
@@ -1803,6 +1831,37 @@ The general rule, and it is worth keeping separate from the spelling lesson: **a
 narration where one branch is unreachable is not a 50/50 bug — it is a guarantee.** When the page
 states a direction, derive it from the data that already encodes the direction.
 
+#### A seventh way: a status change inside one table, reported as a crossing
+
+Found on **2026-11-19**, in the fix for the sixth way. Both of that run's status changes were
+`Contingent - Show` → `Pending` and `Contingent` → `PendingDoNotShow`, on 4071 Voyager Way and
+3538 Wildwood Ln. Both properties were in `pending` last run and are in `pending` now. The banner
+announced each of them as:
+
+> **… has gone under contract.** It was on the active board last run and is now Sale Pending on
+> the MLS of record.
+
+Neither had been on the active board for weeks. This is not the sixth way with the sign flipped —
+it is a transition the page invented, which is worse, because a reader who knew the board would
+read it as two matches lost this run.
+
+The sixth-way fix replaced a status-string test with `data.pending` vs `data.listings`, and that is
+the right source for **where a row is now**. It cannot answer **where it came from**, and the
+two-sentence narration silently assumed the other bucket. A status change *within* a bucket had no
+category, so it fell into the only one on offer. That is the same shape as *"A run summary with no
+category for the thing that happened"*, arriving in the branch that was just repaired.
+
+The fix moves the decision to the only place both buckets are known: `mls-compose.py` writes
+`fromBucket` and `toBucket` onto each `statusChanges` entry, from the table each row actually sat
+in before and after, and `build.js` renders four cases rather than two — active→pending, →active,
+pending→pending, active→active. The `from`/`to` MLS spellings are now used only to *describe* a
+move, never to classify one. `nowBucket()` survives as the fallback for a summary composed before
+this change.
+
+Worth stating as its own rule, since this section keeps rediscovering it from new angles:
+**a narration with N sentences and no "none of the above" asserts one of them is true.** The guard
+is not a better test — it is a case the page can land in that says less.
+
 #### "Removed this run" outlived the run
 
 Same run, same section of the page. The 2026-11-12 board removed nothing, and the page published a
@@ -1838,6 +1897,28 @@ carries the date the card prints. Both foreign cards were re-read on 2026-10-27 
 **"read independently on 2026-10-25"**, and nothing distinguished that from a check that had simply
 not been made. `--refresh` re-reads a stamp this script wrote itself; a `foreign-verify.py` stamp is
 still never touched.
+
+#### A "Cross-enumerate" row that described the board's own sweep
+
+Noticed **2026-11-19**, in the previous run's stored data rather than on a live failure. The
+2026-11-18 board recorded `source.activeScanned: 308` / `pendingScanned: 44` / `inventoryScanned:
+352`, and `dataQuality.independentEnumeration` recorded **308 / 44 / 352** — the same three numbers.
+The page printed the second set under a step headed *"Cross-enumerate: the three cities were listed
+again straight from MetroListPRO's own city indexes."*
+
+On the ordinary refresh that row means something: the board comes from the Coldwell Banker IDX feed
+and `mls-enumerate.py --stamp` is a genuinely separate read from the MLS of record. On the no-spoof
+route it cannot, because **`mls-compose.py` composes the board from that same enumeration**. Listing
+the cities "again" from MetroListPRO is reading the board's own source a second time and reporting
+the agreement as corroboration — *"A verification claim nothing had tested"* with the test present
+but tautological.
+
+This run stamped nothing there and the row is simply absent, which is the right outcome and happens
+for the right reason: `mls-compose.py` rewrites `dataQuality` wholesale, so the key survives only
+when something re-stamps it after the compose. The rule to keep: **on the MetroListPRO route, the
+cross-checks are the ones that read a different feed** — `cb-crosscheck.py` (other boards) and
+`rg-crosscheck.js` (server-side pool field). Re-running the enumerator is a repeat, not a second
+opinion, and a page that calls it one is overstating what the run covered.
 
 #### Aggregators had three different prices for a listing the MLS sheet settled
 
@@ -1939,6 +2020,18 @@ Two things it is careful about, both of which are the repo's own lessons applied
   (`In Ground`, `Gunite`, …) is what distinguishes a real pool there. `Spa/Hot Tub` alone is
   deliberately **not** such a token: a spa is not a pool, and a sheet carrying only that is left
   unresolved rather than counted either way.
+
+- **The status token is compound, and the regex only knew the roots.** Added **2026-11-19**.
+  MLSListings writes the status in the `<title>` in CamelCase and does not stop at the plain word:
+  3538 Wildwood Ln read `(PendingDoNotShow)`, and a pattern anchored on
+  `\((Active|Pending|Contingent|…)\)` matched none of it and returned `None`. The stamp then
+  carried `"status": null, "activeThere": false` — the right answer for this listing, reached
+  without reading anything, which is the failure shape *"A check that never ran, reported as a
+  contradiction"* describes one section up. A status that mattered would have failed the same
+  silent way: `ActiveUnderContract`, `ActiveRelease`, any token the host appends to a root it
+  already uses. The pattern now captures the whole parenthesised token when it begins with a known
+  root, and `activeThere` still requires the token to be exactly `Active` — a longer word built on
+  the root is not the root, and deciding otherwise is how `ActiveUnderContract` becomes "for sale".
 
 On the run that introduced it, 2c confirmed both foreign cards on every field — price, beds, full
 baths, acreage and pool — and read `Active` on both. Note that MLSListings serves 3538 Wildwood Ln

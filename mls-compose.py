@@ -228,6 +228,12 @@ def main():
     pending.sort(key=lambda l: -l["currentPrice"])
 
     now_by_mls = {l["mls"]: l for l in listings + pending}
+    # Which table each row sat in, before and after. A status change is not necessarily a
+    # crossing: on 2026-11-19 both changes were Contingent -> Pending *inside* the pending
+    # table, and build.js - which could only see where a row is now - announced both as
+    # "was on the active board last run". Record the transition here, where both buckets are
+    # known, rather than leaving the page to infer it. (README "A seventh way".)
+    now_pending_mls = {l["mls"] for l in pending}
     summary = {"new": [], "priceChanges": [], "statusChanges": [], "relisted": [], "dropped": []}
     for mls, l in now_by_mls.items():
         prev = prev_by_mls.get(mls)
@@ -248,7 +254,9 @@ def main():
         if status_key(prev.get("mlsStatus")) != status_key(l.get("mlsStatus")):
             summary["statusChanges"].append({
                 "address": l["address"], "city": l["city"], "mls": l.get("mls"),
-                "from": prev.get("mlsStatus"), "to": l.get("mlsStatus")})
+                "from": prev.get("mlsStatus"), "to": l.get("mlsStatus"),
+                "fromBucket": "active" if mls in prev_matches else "pending",
+                "toBucket": "pending" if mls in now_pending_mls else "active"})
 
     dropped = list(board.get("dropped") or [])
     for mls, prev in prev_by_mls.items():
