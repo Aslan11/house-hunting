@@ -13,18 +13,18 @@
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-11-19",
-  "previousRun": "2026-11-18",
+  "lastRun": "2026-11-20",
+  "previousRun": "2026-11-19",
   "source": {
     "name": "MetroListPRO (MetroList MLS of record), complete city enumeration",
     "method": "Enumerated every active and pending residential record in the three cities from the MetroListPRO city indexes and read each detail page's Status, Has a Pool, Lot Size in Acres and full-bath fields. No User-Agent spoofing: MetroListPRO answers an ordinary request, which is why this route is available to every run. Listings on another MLS were each confirmed against a live record named in foreignVerifiedBy.",
-    "inventoryScanned": 353,
-    "activeScanned": 310,
+    "inventoryScanned": 352,
+    "activeScanned": 309,
     "pendingScanned": 43,
-    "passedBedsBathsPrice": 29,
+    "passedBedsBathsPrice": 30,
     "verifiedActiveMatches": 7,
     "pendingMatches": 0,
-    "mlsVerifiedOn": "2026-11-19",
+    "mlsVerifiedOn": "2026-11-20",
     "mlsVerifiedCount": 7,
     "mlsForeignSource": [
       {
@@ -53,7 +53,7 @@
   },
   "dataQuality": {
     "verifiedActiveListings": 7,
-    "coverageGap": "Closed for this run. MetroListPRO enumerates MetroList only, so it is blind to a new listing on another MLS. The Coldwell Banker IDX cross-check (cb-crosscheck.py, plain request, no User-Agent spoof) carries other boards — it sees both known foreign listings, including 3538 Wildwood Ln, which MetroListPRO has never indexed — and it swept 392 records across the three cities this run, finding no qualifying candidate the board did not already track. It is a cross-check, not the board: it has no structured pool field, its bath count cannot resolve the 3-full-bath minimum, and it carries stale ACTIVE rows, so the MLS of record still decides every promotion.",
+    "coverageGap": "This step enumerated MetroList only, so a listing carried by another MLS that is not already tracked could not have been found here. Both known foreign-MLS listings were re-read individually. Since 2026-10-31 this gap is closable without a spoofed User-Agent: run `python3 cb-crosscheck.py --stamp` after this composer — the Coldwell Banker IDX answers a plain request and, unlike the MetroList mirrors, carries other boards. If it ran, it overwrites this note with what it found.",
     "idxCrossCheck": {
       "ranOn": "2026-11-19",
       "source": "Coldwell Banker IDX (coldwellbanker.com), plain request, no UA spoof",
@@ -77,50 +77,31 @@
   "runSummary": {
     "new": [],
     "priceChanges": [],
-    "statusChanges": [
-      {
-        "address": "4071 Voyager Way",
-        "city": "Shingle Springs",
-        "mls": "226082753",
-        "from": "Contingent - Show",
-        "to": "Pending",
-        "fromBucket": "pending",
-        "toBucket": "pending"
-      },
-      {
-        "address": "3538 Wildwood Ln",
-        "city": "Placerville",
-        "mls": "226107286",
-        "from": "Contingent",
-        "to": "PendingDoNotShow",
-        "fromBucket": "pending",
-        "toBucket": "pending"
-      }
-    ],
+    "statusChanges": [],
     "relisted": [],
     "dropped": [],
     "poollessChanges": {
-      "added": [],
-      "priceChanges": [],
-      "statusChanges": [],
-      "gone": [
+      "added": [
         {
-          "address": "7991 S Shingle Road",
-          "city": "Shingle Springs",
-          "price": 1250000,
+          "address": "5366 Horizon Court",
+          "city": "Placerville",
+          "price": 749000,
           "beds": 4,
           "baths": 3,
           "fullBaths": 3,
           "halfBaths": 0,
-          "acres": 21.15,
-          "sqft": 2808,
-          "mls": "226067744",
-          "status": "Pending",
-          "url": "https://www.metrolistpro.com/homes/2/6/7991-S-SHINGLE-ROAD-SHINGLE-SPRINGS-CA-95682/226067744",
+          "acres": 9.87,
+          "sqft": 2336,
+          "mls": "226139705",
+          "status": "Active",
+          "url": "https://www.metrolistpro.com/homes/2/6/5366-HORIZON-COURT-PLACERVILLE-CA-95667/226139705",
           "reason": "MetroList records no pool",
           "mlsPool": "No"
         }
-      ]
+      ],
+      "priceChanges": [],
+      "statusChanges": [],
+      "gone": []
     },
     "nearMissChanges": {
       "added": [],
@@ -145,7 +126,7 @@
         }
       ],
       "beds": 4,
-      "baths": 5,
+      "baths": 5.0,
       "fullBaths": 4,
       "partialBaths": 2,
       "sqft": 5821,
@@ -176,7 +157,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-11-06",
-      "lastSeen": "2026-11-19",
+      "lastSeen": "2026-11-20",
       "flag": null
     },
     {
@@ -198,11 +179,11 @@
         }
       ],
       "beds": 4,
-      "baths": 4,
+      "baths": 4.0,
       "fullBaths": 4,
       "partialBaths": null,
       "sqft": 5351,
-      "acres": 40,
+      "acres": 40.0,
       "pool": true,
       "poolDetail": "Built-In, On Lot, Pool House, Pool Sweep, Salt Water, Other",
       "yearBuilt": "2005",
@@ -229,7 +210,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-11-19",
+      "lastSeen": "2026-11-20",
       "flag": null
     },
     {
@@ -251,7 +232,7 @@
       "fullBaths": 4,
       "partialBaths": 1,
       "sqft": 3560,
-      "acres": 3,
+      "acres": 3.0,
       "pool": true,
       "poolDetail": "Built-In, Gunite Construction",
       "yearBuilt": null,
@@ -278,7 +259,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-11-06",
-      "lastSeen": "2026-11-19",
+      "lastSeen": "2026-11-20",
       "flag": null
     },
     {
@@ -322,7 +303,7 @@
       "summary": "This is an exceptional property, fully permitted & short-term rental permitted (Airbnb & other short-term rentals). Welcome to this majestic luxury estate situated on over 16.74 acres. The large lot provides opportunities for an additional home. Positioned atop the serene Bedford Canyon, this estate boasts sweeping panoramic views that capture the natural beauty of sunrises, sunsets & stargazing. ",
       "notes": "",
       "firstSeen": "2026-10-02",
-      "lastSeen": "2026-11-19",
+      "lastSeen": "2026-11-20",
       "priceHistory": [
         {
           "date": "2026-10-02",
@@ -331,7 +312,7 @@
       ],
       "secondSource": {
         "name": "the MLSListings.com MLS sheet",
-        "checkedOn": "2026-11-19",
+        "checkedOn": "2026-11-20",
         "url": "https://www.mlslistings.com/property/BE41150059",
         "confirmed": [
           "price",
@@ -374,7 +355,7 @@
         }
       ],
       "beds": 4,
-      "baths": 3,
+      "baths": 3.0,
       "fullBaths": 3,
       "partialBaths": null,
       "sqft": 2506,
@@ -405,7 +386,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-11-19",
+      "lastSeen": "2026-11-20",
       "flag": null
     },
     {
@@ -431,11 +412,11 @@
         }
       ],
       "beds": 4,
-      "baths": 3,
+      "baths": 3.0,
       "fullBaths": 3,
       "partialBaths": null,
       "sqft": 2780,
-      "acres": 5,
+      "acres": 5.0,
       "pool": true,
       "poolDetail": "Built-In, Gunite Construction",
       "yearBuilt": "1971",
@@ -462,7 +443,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-09-08",
-      "lastSeen": "2026-11-19",
+      "lastSeen": "2026-11-20",
       "flag": null
     },
     {
@@ -480,11 +461,11 @@
         }
       ],
       "beds": 4,
-      "baths": 3,
+      "baths": 3.0,
       "fullBaths": 3,
       "partialBaths": null,
       "sqft": 2512,
-      "acres": 5,
+      "acres": 5.0,
       "pool": true,
       "poolDetail": "Built-In",
       "yearBuilt": 1992,
@@ -511,7 +492,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-11-10",
-      "lastSeen": "2026-11-19",
+      "lastSeen": "2026-11-20",
       "flag": null
     }
   ],
@@ -535,7 +516,7 @@
         }
       ],
       "beds": 4,
-      "baths": 3,
+      "baths": 3.0,
       "fullBaths": 3,
       "partialBaths": null,
       "sqft": 3132,
@@ -566,7 +547,7 @@
       "status": "match",
       "mlsStatus": "Pending",
       "firstSeen": "2026-08-13",
-      "lastSeen": "2026-11-19",
+      "lastSeen": "2026-11-20",
       "flag": null
     },
     {
@@ -610,7 +591,7 @@
       "summary": "Welcome to a property that doesn't ask you to choose between a home, a retreat, and country living - you get all three. Set among the Placerville foothills, 3538 Wildwood Lane is a place to swim, garden, gather and spread out. The two-story main home offers a private ground-level guest suite with its own entrance and full bath, plus a two-car garage and full basement access. Upstairs, the living s",
       "notes": "",
       "firstSeen": "2026-08-27",
-      "lastSeen": "2026-11-19",
+      "lastSeen": "2026-11-20",
       "priceHistory": [
         {
           "date": "2026-08-27",
@@ -627,7 +608,7 @@
       ],
       "secondSource": {
         "name": "the MLSListings.com MLS sheet",
-        "checkedOn": "2026-11-19",
+        "checkedOn": "2026-11-20",
         "url": "https://www.mlslistings.com/property/ME226107286",
         "confirmed": [
           "price",
@@ -645,6 +626,22 @@
     }
   ],
   "poolless": [
+    {
+      "address": "5366 Horizon Court",
+      "city": "Placerville",
+      "price": 749000,
+      "beds": 4,
+      "baths": 3,
+      "fullBaths": 3,
+      "halfBaths": 0,
+      "acres": 9.87,
+      "sqft": 2336,
+      "mls": "226139705",
+      "status": "Active",
+      "url": "https://www.metrolistpro.com/homes/2/6/5366-HORIZON-COURT-PLACERVILLE-CA-95667/226139705",
+      "reason": "MetroList records no pool",
+      "mlsPool": "No"
+    },
     {
       "address": "2500 Highway 50",
       "city": "Placerville",
@@ -765,7 +762,7 @@
       "baths": 4,
       "fullBaths": 4,
       "halfBaths": 1,
-      "acres": 5,
+      "acres": 5.0,
       "sqft": 4313,
       "mls": "226129641",
       "status": "Pending",

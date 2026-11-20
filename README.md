@@ -218,6 +218,58 @@ throttled this way. Do **not** replay the search `POST` directly and do **not** 
 `User-Agent` — the sandbox classifier refuses both. Loading the public page and reading the
 response it makes is allowed and is what works.
 
+Eighth time on **2026-11-20**, back on the `2026-07-26` base. Caught at the publish step again,
+by the 2026-11-15 file-count tell — `git ls-tree origin/gh-pages` listed 25 files against the
+working tree's 5 — and by a `gh-pages` log whose last entry was *yesterday* against a working tree
+whose last commit was four months old. By then the run had rebuilt `listings.json`, `build.js`,
+`README.md` and `NETWORK.md` from scratch and pushed them to its dev branch. Eight consecutive
+scheduled runs have now started from this base; it is the clone, not an accident.
+
+What makes this one worth recording is **which** from-scratch route it took, because the repo had
+already measured it and written the warning this run did not read:
+
+> *"Use Redfin to contradict a status, never to establish the inventory."*
+
+The rebuild enumerated Redfin's `/zipcode/<zip>/filter/…` pages — the exact path the 2026-08-23
+entry identifies as **silently incomplete** — and got 25 cards for 95667 against MetroListPRO's 242
+active Placerville records. It then ran a county-wide `/county/311/…` query, got the *same six*
+in-target matches, and took the agreement between two queries against one thin source as
+corroboration. Two narrow reads of the same feed agree with each other; that is not a second
+opinion, and it reads exactly like a complete result.
+
+Measured against the board it would have replaced, the six were right and the gaps were invisible:
+
+- **Missed `1315 Arrowbee Dr`** — active, tracked since July, and the *same* listing the 2026-08-17
+  Redfin spot check already recorded as missing from that feed. The repo had this property named,
+  in writing, as the specific thing Redfin's search drops.
+- **Missed both pendings**, having no `pending` concept, and so would have published
+  *"Shingle Springs currently has none at all"* — the identical sentence, about the identical
+  property (`4071 Voyager Way`), that the 2026-11-17 entry records. The warning was two sections
+  above the one being written over.
+- **Would have dropped both foreign-MLS cards**: Redfin surfaced 2520 Bedford Ave but the rebuild
+  had no `--foreign` concept to carry it, and 3538 Wildwood Ln never appeared at all.
+- **Reported all six as new**, because a board with no history has no other category — when the
+  actual news was that nothing moved.
+
+It also walked into the half-bath trap from the other side, harmlessly and by luck: it recorded
+`1815 Woodsman Ct` as "4bd/4.5ba" from Redfin's combined count. MetroList reads 4 full, so the card
+survives — but the arithmetic that saved it was not the gate, it was a coincidence.
+
+One genuinely new measurement, since it cost the session and should not need re-deriving: **Redfin
+photo URLs embed the MLS number** (`genIslnoResize.<mls>_<n>.webp`), so a search card doubles as a
+listing-number source without opening a detail page. That is all this run added, against a board
+that already had the answer.
+
+Two procedural notes for the next run:
+
+- `mls-compose.py` **has no `--help`**. Running it to look for one *executes a compose*, and
+  without `--foreign` arguments that silently drops both foreign-MLS cards — the documented
+  "never inferred gone from silence" failure, triggered by trying to read the usage. Read the
+  docstring with `ast.get_docstring` or `sed`, never by running it.
+- `mlsl-verify.py` leaves an existing stamp alone, so after re-reading the foreign sheets by hand
+  the page still cited *yesterday's* evidence until it was re-run with `--refresh`. If you verify
+  a foreign card live, refresh the stamp or the page under-claims its own freshness.
+
 ## Criteria
 
 | Requirement | Value |
