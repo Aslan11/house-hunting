@@ -13,18 +13,23 @@
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-11-20",
-  "previousRun": "2026-11-19",
+  "lastRun": "2026-11-21",
+  "previousRun": "2026-11-20",
   "source": {
-    "name": "MetroListPRO (MetroList MLS of record), complete city enumeration",
-    "method": "Enumerated every active and pending residential record in the three cities from the MetroListPRO city indexes and read each detail page's Status, Has a Pool, Lot Size in Acres and full-bath fields. No User-Agent spoofing: MetroListPRO answers an ordinary request, which is why this route is available to every run. Listings on another MLS were each confirmed against a live record named in foreignVerifiedBy.",
-    "inventoryScanned": 352,
-    "activeScanned": 309,
-    "pendingScanned": 43,
-    "passedBedsBathsPrice": 30,
+    "name": "MetroListPRO (MetroList MLS of record), filtered city search + per-property re-verification",
+    "method": "Two passes. (1) Discovery: for each of the three cities, the MetroListPRO search was driven with the MLS's own filters — Min. Lot Acres 2.5, Pool, Active Listings Only, Max. Price $1,500,000 — and every result was opened to read Status, Has a Pool, Lot Size in Acres and the separate full/half bath fields. (2) Re-verification: every property already on the board (7 active, 2 pending), plus all 10 pool-less and 5 near-miss rows, was re-read from its own detail page. No User-Agent spoofing; MetroListPRO answers an ordinary request. The two listings carried by another MLS were each re-checked against a live MLSListings.com sheet.",
+    "cityActiveInventory": {
+      "Shingle Springs": 22,
+      "Rescue": 16,
+      "Placerville": 145
+    },
+    "inventoryScanned": 183,
+    "activeScanned": 183,
+    "pendingScanned": 2,
+    "passedBedsBathsPrice": 13,
     "verifiedActiveMatches": 7,
     "pendingMatches": 0,
-    "mlsVerifiedOn": "2026-11-20",
+    "mlsVerifiedOn": "2026-11-21",
     "mlsVerifiedCount": 7,
     "mlsForeignSource": [
       {
@@ -43,7 +48,7 @@
     "foreignVerifiedBy": {
       "41150059": {
         "status": "Active",
-        "price": 1275000
+        "price": 1149888
       },
       "226107286": {
         "status": "PendingDoNotShow",
@@ -53,7 +58,7 @@
   },
   "dataQuality": {
     "verifiedActiveListings": 7,
-    "coverageGap": "This step enumerated MetroList only, so a listing carried by another MLS that is not already tracked could not have been found here. Both known foreign-MLS listings were re-read individually. Since 2026-10-31 this gap is closable without a spoofed User-Agent: run `python3 cb-crosscheck.py --stamp` after this composer — the Coldwell Banker IDX answers a plain request and, unlike the MetroList mirrors, carries other boards. If it ran, it overwrites this note with what it found.",
+    "coverageGap": "Discovery this run used the MLS's own Active-Listings-Only filter, so a newly *pending* pool property that was never seen active would not have been picked up as a new find; the two pending properties already tracked were re-read individually and both still stand. MetroList was the only index enumerated, so a listing carried by another MLS and not already tracked could not be found here — both known foreign-MLS listings were re-verified against MLSListings.com. To close the foreign-MLS gap, run `python3 cb-crosscheck.py --stamp`.",
     "idxCrossCheck": {
       "ranOn": "2026-11-19",
       "source": "Coldwell Banker IDX (coldwellbanker.com), plain request, no UA spoof",
@@ -72,33 +77,24 @@
       "clearedLandAndPool": 7,
       "missingFromBoard": [],
       "note": "The only source this repo has found that filters on the MLS pool field server-side, so the candidate set arrives narrowed instead of being recovered from hundreds of detail reads. MetroList only, so it is blind to a foreign-MLS listing and does not close coverageGap; and its bath count is full + half combined, so it cannot resolve the 3-full-bath minimum. A cross-check, never the board."
-    }
+    },
+    "falseDropAvoided": "3538 Wildwood Ln (226107286) now returns \"Listing Not Found\" from the MetroListPRO public detail page, which on its own looks exactly like the departure signal that dropped 5551 Saddlehorn Road on 2026-11-11. It was NOT dropped: its status is PendingDoNotShow, and a listing in that status is withheld from public IDX display while remaining under contract. The MLSListings sheet (ME226107286) still returns a live property page reading PendingDoNotShow at $829,000. The control confirms the distinction — 5551 Saddlehorn (ME226083864) returns no property page at all, just the MLSListings home page. One source going quiet is not a departure."
   },
   "runSummary": {
     "new": [],
-    "priceChanges": [],
+    "priceChanges": [
+      {
+        "address": "2520 Bedford Ave",
+        "city": "Placerville",
+        "from": 1275000,
+        "to": 1149888
+      }
+    ],
     "statusChanges": [],
     "relisted": [],
     "dropped": [],
     "poollessChanges": {
-      "added": [
-        {
-          "address": "5366 Horizon Court",
-          "city": "Placerville",
-          "price": 749000,
-          "beds": 4,
-          "baths": 3,
-          "fullBaths": 3,
-          "halfBaths": 0,
-          "acres": 9.87,
-          "sqft": 2336,
-          "mls": "226139705",
-          "status": "Active",
-          "url": "https://www.metrolistpro.com/homes/2/6/5366-HORIZON-COURT-PLACERVILLE-CA-95667/226139705",
-          "reason": "MetroList records no pool",
-          "mlsPool": "No"
-        }
-      ],
+      "added": [],
       "priceChanges": [],
       "statusChanges": [],
       "gone": []
@@ -108,7 +104,7 @@
       "priceChanges": [],
       "gone": []
     },
-    "unchanged": 7
+    "unchanged": 8
   },
   "listings": [
     {
@@ -126,7 +122,7 @@
         }
       ],
       "beds": 4,
-      "baths": 5.0,
+      "baths": 5,
       "fullBaths": 4,
       "partialBaths": 2,
       "sqft": 5821,
@@ -157,8 +153,10 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-11-06",
-      "lastSeen": "2026-11-20",
-      "flag": null
+      "lastSeen": "2026-11-21",
+      "flag": null,
+      "isNew": false,
+      "newThisRun": false
     },
     {
       "id": "6881-sagittarius-drive-placerville",
@@ -179,11 +177,11 @@
         }
       ],
       "beds": 4,
-      "baths": 4.0,
+      "baths": 4,
       "fullBaths": 4,
       "partialBaths": null,
       "sqft": 5351,
-      "acres": 40.0,
+      "acres": 40,
       "pool": true,
       "poolDetail": "Built-In, On Lot, Pool House, Pool Sweep, Salt Water, Other",
       "yearBuilt": "2005",
@@ -210,8 +208,10 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-11-20",
-      "flag": null
+      "lastSeen": "2026-11-21",
+      "flag": null,
+      "isNew": false,
+      "newThisRun": false
     },
     {
       "id": "1815-woodsman-court-placerville",
@@ -232,7 +232,7 @@
       "fullBaths": 4,
       "partialBaths": 1,
       "sqft": 3560,
-      "acres": 3.0,
+      "acres": 3,
       "pool": true,
       "poolDetail": "Built-In, Gunite Construction",
       "yearBuilt": null,
@@ -259,8 +259,10 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-11-06",
-      "lastSeen": "2026-11-20",
-      "flag": null
+      "lastSeen": "2026-11-21",
+      "flag": null,
+      "isNew": false,
+      "newThisRun": false
     },
     {
       "id": "2520-bedford-ave-placerville",
@@ -268,7 +270,7 @@
       "city": "Placerville",
       "zip": "95667",
       "mls": "41150059",
-      "currentPrice": 1275000,
+      "currentPrice": 1149888,
       "beds": 5,
       "baths": 3,
       "fullBaths": 3,
@@ -301,18 +303,22 @@
       "gallery": "https://www.coldwellbankerhomes.com/ca/placerville/2520-bedford-ave/pid_74058780/",
       "status": "match",
       "summary": "This is an exceptional property, fully permitted & short-term rental permitted (Airbnb & other short-term rentals). Welcome to this majestic luxury estate situated on over 16.74 acres. The large lot provides opportunities for an additional home. Positioned atop the serene Bedford Canyon, this estate boasts sweeping panoramic views that capture the natural beauty of sunrises, sunsets & stargazing. ",
-      "notes": "",
+      "notes": "Price cut $125,112 on 2026-11-21. Confirmed Active at $1,149,888 on its board of record (MAXEBRDI/bridgeMLS) via the MLSListings sheet, and corroborated independently by the century21.com listing page. Not on MetroList, so the MetroListPRO detail-page check does not apply to it.",
       "firstSeen": "2026-10-02",
-      "lastSeen": "2026-11-20",
+      "lastSeen": "2026-11-21",
       "priceHistory": [
         {
           "date": "2026-10-02",
           "price": 1275000
+        },
+        {
+          "date": "2026-11-21",
+          "price": 1149888
         }
       ],
       "secondSource": {
         "name": "the MLSListings.com MLS sheet",
-        "checkedOn": "2026-11-20",
+        "checkedOn": "2026-11-21",
         "url": "https://www.mlslistings.com/property/BE41150059",
         "confirmed": [
           "price",
@@ -326,7 +332,9 @@
         "activeThere": true,
         "poolFeatures": "In Ground, Spa/Hot Tub",
         "board": "BE"
-      }
+      },
+      "isNew": false,
+      "newThisRun": false
     },
     {
       "id": "3720-four-springs-drive-rescue",
@@ -355,7 +363,7 @@
         }
       ],
       "beds": 4,
-      "baths": 3.0,
+      "baths": 3,
       "fullBaths": 3,
       "partialBaths": null,
       "sqft": 2506,
@@ -386,8 +394,10 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-11-20",
-      "flag": null
+      "lastSeen": "2026-11-21",
+      "flag": null,
+      "isNew": false,
+      "newThisRun": false
     },
     {
       "id": "1315-arrowbee-dr-placerville",
@@ -412,11 +422,11 @@
         }
       ],
       "beds": 4,
-      "baths": 3.0,
+      "baths": 3,
       "fullBaths": 3,
       "partialBaths": null,
       "sqft": 2780,
-      "acres": 5.0,
+      "acres": 5,
       "pool": true,
       "poolDetail": "Built-In, Gunite Construction",
       "yearBuilt": "1971",
@@ -443,8 +453,10 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-09-08",
-      "lastSeen": "2026-11-20",
-      "flag": null
+      "lastSeen": "2026-11-21",
+      "flag": null,
+      "isNew": false,
+      "newThisRun": false
     },
     {
       "id": "4770-feldspar-lane-placerville",
@@ -461,11 +473,11 @@
         }
       ],
       "beds": 4,
-      "baths": 3.0,
+      "baths": 3,
       "fullBaths": 3,
       "partialBaths": null,
       "sqft": 2512,
-      "acres": 5.0,
+      "acres": 5,
       "pool": true,
       "poolDetail": "Built-In",
       "yearBuilt": 1992,
@@ -492,8 +504,10 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-11-10",
-      "lastSeen": "2026-11-20",
-      "flag": null
+      "lastSeen": "2026-11-21",
+      "flag": null,
+      "isNew": false,
+      "newThisRun": false
     }
   ],
   "pending": [
@@ -516,7 +530,7 @@
         }
       ],
       "beds": 4,
-      "baths": 3.0,
+      "baths": 3,
       "fullBaths": 3,
       "partialBaths": null,
       "sqft": 3132,
@@ -547,8 +561,10 @@
       "status": "match",
       "mlsStatus": "Pending",
       "firstSeen": "2026-08-13",
-      "lastSeen": "2026-11-20",
-      "flag": null
+      "lastSeen": "2026-11-21",
+      "flag": null,
+      "isNew": false,
+      "newThisRun": false
     },
     {
       "id": "3538-wildwood-ln-placerville",
@@ -591,7 +607,7 @@
       "summary": "Welcome to a property that doesn't ask you to choose between a home, a retreat, and country living - you get all three. Set among the Placerville foothills, 3538 Wildwood Lane is a place to swim, garden, gather and spread out. The two-story main home offers a private ground-level guest suite with its own entrance and full bath, plus a two-car garage and full basement access. Upstairs, the living s",
       "notes": "",
       "firstSeen": "2026-08-27",
-      "lastSeen": "2026-11-20",
+      "lastSeen": "2026-11-21",
       "priceHistory": [
         {
           "date": "2026-08-27",
@@ -622,7 +638,9 @@
         "activeThere": false,
         "poolFeatures": "Cover, Gunite, In Ground, Pool - Yes, Sweep",
         "board": "ME"
-      }
+      },
+      "isNew": false,
+      "newThisRun": false
     }
   ],
   "poolless": [
@@ -762,7 +780,7 @@
       "baths": 4,
       "fullBaths": 4,
       "halfBaths": 1,
-      "acres": 5.0,
+      "acres": 5,
       "sqft": 4313,
       "mls": "226129641",
       "status": "Pending",
