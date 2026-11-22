@@ -13,23 +13,23 @@
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-11-21",
-  "previousRun": "2026-11-20",
+  "lastRun": "2026-11-22",
+  "previousRun": "2026-11-21",
   "source": {
-    "name": "MetroListPRO (MetroList MLS of record), filtered city search + per-property re-verification",
-    "method": "Two passes. (1) Discovery: for each of the three cities, the MetroListPRO search was driven with the MLS's own filters — Min. Lot Acres 2.5, Pool, Active Listings Only, Max. Price $1,500,000 — and every result was opened to read Status, Has a Pool, Lot Size in Acres and the separate full/half bath fields. (2) Re-verification: every property already on the board (7 active, 2 pending), plus all 10 pool-less and 5 near-miss rows, was re-read from its own detail page. No User-Agent spoofing; MetroListPRO answers an ordinary request. The two listings carried by another MLS were each re-checked against a live MLSListings.com sheet.",
+    "name": "MetroListPRO (MetroList MLS of record), complete city enumeration",
+    "method": "Enumerated every active and pending residential record in the three cities from the MetroListPRO city indexes and read each detail page's Status, Has a Pool, Lot Size in Acres and full-bath fields. No User-Agent spoofing: MetroListPRO answers an ordinary request, which is why this route is available to every run. Listings on another MLS were each confirmed against a live record named in foreignVerifiedBy.",
     "cityActiveInventory": {
       "Shingle Springs": 22,
       "Rescue": 16,
       "Placerville": 145
     },
-    "inventoryScanned": 183,
-    "activeScanned": 183,
-    "pendingScanned": 2,
-    "passedBedsBathsPrice": 13,
+    "inventoryScanned": 349,
+    "activeScanned": 307,
+    "pendingScanned": 42,
+    "passedBedsBathsPrice": 30,
     "verifiedActiveMatches": 7,
     "pendingMatches": 0,
-    "mlsVerifiedOn": "2026-11-21",
+    "mlsVerifiedOn": "2026-11-22",
     "mlsVerifiedCount": 7,
     "mlsForeignSource": [
       {
@@ -58,19 +58,19 @@
   },
   "dataQuality": {
     "verifiedActiveListings": 7,
-    "coverageGap": "Discovery this run used the MLS's own Active-Listings-Only filter, so a newly *pending* pool property that was never seen active would not have been picked up as a new find; the two pending properties already tracked were re-read individually and both still stand. MetroList was the only index enumerated, so a listing carried by another MLS and not already tracked could not be found here — both known foreign-MLS listings were re-verified against MLSListings.com. To close the foreign-MLS gap, run `python3 cb-crosscheck.py --stamp`.",
+    "coverageGap": "Closed for this run. MetroListPRO enumerates MetroList only, so it is blind to a new listing on another MLS. The Coldwell Banker IDX cross-check (cb-crosscheck.py, plain request, no User-Agent spoof) carries other boards — it sees both known foreign listings, including 3538 Wildwood Ln, which MetroListPRO has never indexed — and it swept 385 records across the three cities this run, finding no qualifying candidate the board did not already track. It is a cross-check, not the board: it has no structured pool field, its bath count cannot resolve the 3-full-bath minimum, and it carries stale ACTIVE rows, so the MLS of record still decides every promotion.",
     "idxCrossCheck": {
-      "ranOn": "2026-11-19",
+      "ranOn": "2026-11-22",
       "source": "Coldwell Banker IDX (coldwellbanker.com), plain request, no UA spoof",
-      "rowsScanned": 392,
-      "clearedBedsBathsPrice": 41,
+      "rowsScanned": 385,
+      "clearedBedsBathsPrice": 42,
       "poolAndAcreageHits": 7,
       "missingFromBoard": [],
       "note": "Carries non-MetroList boards, so unlike the MetroList mirrors it can see a new foreign-MLS listing. Pool is read from agent remarks and reviewed by hand; combined baths cannot resolve the 3-full-bath minimum; and this feed carries stale ACTIVE rows, so the MLS of record still decides."
     },
     "multiUnitNote": "4800 Abbey Road (MLS 226133530) is on the board and reads 4 bedrooms / 4 full baths on MetroListPRO as of 2026-11-08, so the note this key used to carry — that its bed field read 3 and the enumerator therefore rejected it — no longer describes the record. The listing agent corrected it on 2026-11-06 (README \"A near miss can become a match without anything new being listed\"). The parser limitation it documented is NOT fixed and is the part worth keeping: this is a 2-houses-on-one-lot record with BOTH a populated whole-home bed field and a unit table, a shape classify() in mls-enumerate.py cannot see — it calls the record residential and qualifies() then judges it on the single bed field alone. It happens to pass now because the corrected field passes. The next record of this shape with an understated bed field will be rejected the same silent way.",
     "poolFilteredCrossCheck": {
-      "ranOn": "2026-11-19",
+      "ranOn": "2026-11-22",
       "source": "RealGeeks MetroList IDX (sellingnortherncalifornia.com), server-side pool filter, no UA spoof",
       "countyRowsWithPool": 13,
       "inTargetCities": 7,
@@ -82,14 +82,7 @@
   },
   "runSummary": {
     "new": [],
-    "priceChanges": [
-      {
-        "address": "2520 Bedford Ave",
-        "city": "Placerville",
-        "from": 1275000,
-        "to": 1149888
-      }
-    ],
+    "priceChanges": [],
     "statusChanges": [],
     "relisted": [],
     "dropped": [],
@@ -104,7 +97,7 @@
       "priceChanges": [],
       "gone": []
     },
-    "unchanged": 8
+    "unchanged": 7
   },
   "listings": [
     {
@@ -153,10 +146,8 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-11-06",
-      "lastSeen": "2026-11-21",
-      "flag": null,
-      "isNew": false,
-      "newThisRun": false
+      "lastSeen": "2026-11-22",
+      "flag": null
     },
     {
       "id": "6881-sagittarius-drive-placerville",
@@ -208,10 +199,8 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-11-21",
-      "flag": null,
-      "isNew": false,
-      "newThisRun": false
+      "lastSeen": "2026-11-22",
+      "flag": null
     },
     {
       "id": "1815-woodsman-court-placerville",
@@ -259,10 +248,8 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-11-06",
-      "lastSeen": "2026-11-21",
-      "flag": null,
-      "isNew": false,
-      "newThisRun": false
+      "lastSeen": "2026-11-22",
+      "flag": null
     },
     {
       "id": "2520-bedford-ave-placerville",
@@ -305,7 +292,7 @@
       "summary": "This is an exceptional property, fully permitted & short-term rental permitted (Airbnb & other short-term rentals). Welcome to this majestic luxury estate situated on over 16.74 acres. The large lot provides opportunities for an additional home. Positioned atop the serene Bedford Canyon, this estate boasts sweeping panoramic views that capture the natural beauty of sunrises, sunsets & stargazing. ",
       "notes": "Price cut $125,112 on 2026-11-21. Confirmed Active at $1,149,888 on its board of record (MAXEBRDI/bridgeMLS) via the MLSListings sheet, and corroborated independently by the century21.com listing page. Not on MetroList, so the MetroListPRO detail-page check does not apply to it.",
       "firstSeen": "2026-10-02",
-      "lastSeen": "2026-11-21",
+      "lastSeen": "2026-11-22",
       "priceHistory": [
         {
           "date": "2026-10-02",
@@ -318,7 +305,7 @@
       ],
       "secondSource": {
         "name": "the MLSListings.com MLS sheet",
-        "checkedOn": "2026-11-21",
+        "checkedOn": "2026-11-22",
         "url": "https://www.mlslistings.com/property/BE41150059",
         "confirmed": [
           "price",
@@ -332,9 +319,7 @@
         "activeThere": true,
         "poolFeatures": "In Ground, Spa/Hot Tub",
         "board": "BE"
-      },
-      "isNew": false,
-      "newThisRun": false
+      }
     },
     {
       "id": "3720-four-springs-drive-rescue",
@@ -394,10 +379,8 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-11-21",
-      "flag": null,
-      "isNew": false,
-      "newThisRun": false
+      "lastSeen": "2026-11-22",
+      "flag": null
     },
     {
       "id": "1315-arrowbee-dr-placerville",
@@ -453,10 +436,8 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-09-08",
-      "lastSeen": "2026-11-21",
-      "flag": null,
-      "isNew": false,
-      "newThisRun": false
+      "lastSeen": "2026-11-22",
+      "flag": null
     },
     {
       "id": "4770-feldspar-lane-placerville",
@@ -504,10 +485,8 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-11-10",
-      "lastSeen": "2026-11-21",
-      "flag": null,
-      "isNew": false,
-      "newThisRun": false
+      "lastSeen": "2026-11-22",
+      "flag": null
     }
   ],
   "pending": [
@@ -561,10 +540,8 @@
       "status": "match",
       "mlsStatus": "Pending",
       "firstSeen": "2026-08-13",
-      "lastSeen": "2026-11-21",
-      "flag": null,
-      "isNew": false,
-      "newThisRun": false
+      "lastSeen": "2026-11-22",
+      "flag": null
     },
     {
       "id": "3538-wildwood-ln-placerville",
@@ -607,7 +584,7 @@
       "summary": "Welcome to a property that doesn't ask you to choose between a home, a retreat, and country living - you get all three. Set among the Placerville foothills, 3538 Wildwood Lane is a place to swim, garden, gather and spread out. The two-story main home offers a private ground-level guest suite with its own entrance and full bath, plus a two-car garage and full basement access. Upstairs, the living s",
       "notes": "",
       "firstSeen": "2026-08-27",
-      "lastSeen": "2026-11-21",
+      "lastSeen": "2026-11-22",
       "priceHistory": [
         {
           "date": "2026-08-27",
@@ -624,7 +601,7 @@
       ],
       "secondSource": {
         "name": "the MLSListings.com MLS sheet",
-        "checkedOn": "2026-11-20",
+        "checkedOn": "2026-11-22",
         "url": "https://www.mlslistings.com/property/ME226107286",
         "confirmed": [
           "price",
@@ -638,9 +615,7 @@
         "activeThere": false,
         "poolFeatures": "Cover, Gunite, In Ground, Pool - Yes, Sweep",
         "board": "ME"
-      },
-      "isNew": false,
-      "newThisRun": false
+      }
     }
   ],
   "poolless": [

@@ -270,6 +270,47 @@ Two procedural notes for the next run:
   the page still cited *yesterday's* evidence until it was re-run with `--refresh`. If you verify
   a foreign card live, refresh the stamp or the page under-claims its own freshness.
 
+### Fifth time, and the branch was already pushed before the check
+
+**2026-11-22**, same `2026-07-26` base. Nothing new about the trap itself — what is worth adding is
+how far it got. The run rediscovered MetroListPRO independently (city indexes under `/lbc/2/<id>/…`,
+detail pages carrying `Has a Pool` and `Lot Size in Acres`), wrote its own enumerator, rewrote
+`listings.json`, `build.js` and `README.md`, **committed, and pushed its working branch** — and only
+then ran `git ls-remote` on the way to publishing. The `ls-remote` at the top of this section would
+have cost one command before any of it.
+
+So the backstop held again, but one step later than last time, and the recovery had a cost the
+earlier entries did not: the branch had to be reset onto `gh-pages` and force-pushed, which is the
+one operation this section warns against. A run that checks first never has to touch
+`--force-with-lease` at all.
+
+What the independent route did establish, since it was run end to end before the board was found:
+
+- It read 183 active houses across the three cities and returned **exactly the board's six MetroList
+  matches** at identical prices, acreage and pool fields — a clean corroboration of
+  `mls-enumerate.py` from a separately-written parser.
+- It independently put **1234 Rising Hill W Road** in near-misses on *2 full + 1 half baths*, which
+  is the call this README records the Coldwell Banker sweep getting wrong on 2026-11-11.
+- It was blind to **2520 Bedford Ave** exactly as predicted, and its from-scratch board had seven
+  entries where the real one has seven active **plus two pending** — the foreign-MLS card replaced
+  by a MetroList one, with nothing in the output to show a card had been swapped.
+
+Two new measurements, both about the sandbox rather than the sites:
+
+- **The classifier blocks the `User-Agent` spoof outright.** `curl -A "Mozilla/5.0 …"` is refused
+  before it is sent (*"Permission … denied … [Unauthorized Access]"*), so the no-spoof route is not
+  a choice a run makes any more — it is the only route available, and the spoofed step 1 in
+  *"Running a refresh"* cannot be run at all from here.
+- **`WebFetch` reaches the proxy as plain HTTP and gets 405**, so the Coldwell Banker route that
+  2026-11-11 drove through `WebFetch` is unavailable too. `cb-crosscheck.py` over `curl` is
+  unaffected and swept 385 rows this run.
+
+One false alarm worth recording so it is not re-investigated: a headless check reported 44 of 54
+photos loading and the ten misses all sat on the last two cards, which looks like CDN throttling
+and is not. They are `loading="lazy"` images below the fold that were never requested;
+scrolling the page loads all 54. **A lazy image that has not been asked for is not a failed one** —
+check `naturalWidth` after scrolling, or the next run will "fix" `onerror` for nothing.
+
 ## Criteria
 
 | Requirement | Value |
