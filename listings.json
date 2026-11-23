@@ -13,8 +13,8 @@
     "preferredAcres": 5,
     "maxPrice": 1500000
   },
-  "lastRun": "2026-11-22",
-  "previousRun": "2026-11-21",
+  "lastRun": "2026-11-23",
+  "previousRun": "2026-11-22",
   "source": {
     "name": "MetroListPRO (MetroList MLS of record), complete city enumeration",
     "method": "Enumerated every active and pending residential record in the three cities from the MetroListPRO city indexes and read each detail page's Status, Has a Pool, Lot Size in Acres and full-bath fields. No User-Agent spoofing: MetroListPRO answers an ordinary request, which is why this route is available to every run. Listings on another MLS were each confirmed against a live record named in foreignVerifiedBy.",
@@ -29,7 +29,7 @@
     "passedBedsBathsPrice": 30,
     "verifiedActiveMatches": 7,
     "pendingMatches": 0,
-    "mlsVerifiedOn": "2026-11-22",
+    "mlsVerifiedOn": "2026-11-23",
     "mlsVerifiedCount": 7,
     "mlsForeignSource": [
       {
@@ -60,7 +60,7 @@
     "verifiedActiveListings": 7,
     "coverageGap": "Closed for this run. MetroListPRO enumerates MetroList only, so it is blind to a new listing on another MLS. The Coldwell Banker IDX cross-check (cb-crosscheck.py, plain request, no User-Agent spoof) carries other boards — it sees both known foreign listings, including 3538 Wildwood Ln, which MetroListPRO has never indexed — and it swept 385 records across the three cities this run, finding no qualifying candidate the board did not already track. It is a cross-check, not the board: it has no structured pool field, its bath count cannot resolve the 3-full-bath minimum, and it carries stale ACTIVE rows, so the MLS of record still decides every promotion.",
     "idxCrossCheck": {
-      "ranOn": "2026-11-22",
+      "ranOn": "2026-11-23",
       "source": "Coldwell Banker IDX (coldwellbanker.com), plain request, no UA spoof",
       "rowsScanned": 385,
       "clearedBedsBathsPrice": 42,
@@ -70,7 +70,7 @@
     },
     "multiUnitNote": "4800 Abbey Road (MLS 226133530) is on the board and reads 4 bedrooms / 4 full baths on MetroListPRO as of 2026-11-08, so the note this key used to carry — that its bed field read 3 and the enumerator therefore rejected it — no longer describes the record. The listing agent corrected it on 2026-11-06 (README \"A near miss can become a match without anything new being listed\"). The parser limitation it documented is NOT fixed and is the part worth keeping: this is a 2-houses-on-one-lot record with BOTH a populated whole-home bed field and a unit table, a shape classify() in mls-enumerate.py cannot see — it calls the record residential and qualifies() then judges it on the single bed field alone. It happens to pass now because the corrected field passes. The next record of this shape with an understated bed field will be rejected the same silent way.",
     "poolFilteredCrossCheck": {
-      "ranOn": "2026-11-22",
+      "ranOn": "2026-11-23",
       "source": "RealGeeks MetroList IDX (sellingnortherncalifornia.com), server-side pool filter, no UA spoof",
       "countyRowsWithPool": 13,
       "inTargetCities": 7,
@@ -146,7 +146,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-11-06",
-      "lastSeen": "2026-11-22",
+      "lastSeen": "2026-11-23",
       "flag": null
     },
     {
@@ -199,7 +199,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-11-22",
+      "lastSeen": "2026-11-23",
       "flag": null
     },
     {
@@ -248,7 +248,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-11-06",
-      "lastSeen": "2026-11-22",
+      "lastSeen": "2026-11-23",
       "flag": null
     },
     {
@@ -292,7 +292,7 @@
       "summary": "This is an exceptional property, fully permitted & short-term rental permitted (Airbnb & other short-term rentals). Welcome to this majestic luxury estate situated on over 16.74 acres. The large lot provides opportunities for an additional home. Positioned atop the serene Bedford Canyon, this estate boasts sweeping panoramic views that capture the natural beauty of sunrises, sunsets & stargazing. ",
       "notes": "Price cut $125,112 on 2026-11-21. Confirmed Active at $1,149,888 on its board of record (MAXEBRDI/bridgeMLS) via the MLSListings sheet, and corroborated independently by the century21.com listing page. Not on MetroList, so the MetroListPRO detail-page check does not apply to it.",
       "firstSeen": "2026-10-02",
-      "lastSeen": "2026-11-22",
+      "lastSeen": "2026-11-23",
       "priceHistory": [
         {
           "date": "2026-10-02",
@@ -305,7 +305,7 @@
       ],
       "secondSource": {
         "name": "the MLSListings.com MLS sheet",
-        "checkedOn": "2026-11-22",
+        "checkedOn": "2026-11-23",
         "url": "https://www.mlslistings.com/property/BE41150059",
         "confirmed": [
           "price",
@@ -379,7 +379,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-07-26",
-      "lastSeen": "2026-11-22",
+      "lastSeen": "2026-11-23",
       "flag": null
     },
     {
@@ -436,7 +436,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-09-08",
-      "lastSeen": "2026-11-22",
+      "lastSeen": "2026-11-23",
       "flag": null
     },
     {
@@ -485,7 +485,7 @@
       "status": "match",
       "mlsStatus": "Active",
       "firstSeen": "2026-11-10",
-      "lastSeen": "2026-11-22",
+      "lastSeen": "2026-11-23",
       "flag": null
     }
   ],
@@ -540,7 +540,7 @@
       "status": "match",
       "mlsStatus": "Pending",
       "firstSeen": "2026-08-13",
-      "lastSeen": "2026-11-22",
+      "lastSeen": "2026-11-23",
       "flag": null
     },
     {
@@ -584,7 +584,7 @@
       "summary": "Welcome to a property that doesn't ask you to choose between a home, a retreat, and country living - you get all three. Set among the Placerville foothills, 3538 Wildwood Lane is a place to swim, garden, gather and spread out. The two-story main home offers a private ground-level guest suite with its own entrance and full bath, plus a two-car garage and full basement access. Upstairs, the living s",
       "notes": "",
       "firstSeen": "2026-08-27",
-      "lastSeen": "2026-11-22",
+      "lastSeen": "2026-11-23",
       "priceHistory": [
         {
           "date": "2026-08-27",
@@ -601,7 +601,7 @@
       ],
       "secondSource": {
         "name": "the MLSListings.com MLS sheet",
-        "checkedOn": "2026-11-22",
+        "checkedOn": "2026-11-23",
         "url": "https://www.mlslistings.com/property/ME226107286",
         "confirmed": [
           "price",
